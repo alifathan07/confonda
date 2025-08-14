@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BMCE Cheque</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .cheque-container {
+      width: 800px;
+      height: 350px;
+      background: #fff;
+      border: 2px solid #000;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .bank-logo {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-weight: bold;
+      font-size: 20px;
+      color: #0066cc;
+    }
+
+    .cheque-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40px;
+      align-items: center;
+    }
+
+    .cheque-row input, 
+    .cheque-row textarea {
+      border: none;
+      border-bottom: 1px solid #000;
+      font-size: 16px;
+      padding: 4px 6px;
+      width: 100%;
+      background: transparent;
+    }
+
+    .cheque-row label {
+      font-weight: bold;
+      margin-right: 10px;
+    }
+
+    .textarea-wrapper {
+      width: 60%;
+    }
+
+    .amount-numbers {
+      width: 30%;
+      text-align: right;
+    }
+
+    .amount-words {
+      margin-top: 20px;
+    }
+
+    .footer-row {
+      position: absolute;
+      bottom: 20px;
+      width: 90%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-row input {
+      width: 200px;
+      text-align: center;
+    }
+
+    .cheque-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(0,0,0,0.02),
+        rgba(0,0,0,0.02) 10px,
+        transparent 10px,
+        transparent 20px
+      );
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="cheque-container">
+    <div class="bank-logo">BMCE Bank</div>
+
+    <div class="cheque-row">
+      <div class="textarea-wrapper">
+        <label for="payee">À l’ordre de:</label>
+        <textarea id="payee" placeholder="Nom du bénéficiaire"></textarea>
+      </div>
+      <div class="amount-numbers">
+        <label for="amount">Montant:</label>
+        <input id="amount" type="text" placeholder="0,00 MAD">
+      </div>
+    </div>
+
+
+    
+
+    <div class="amount-words">
+      <label for="amount-words">Montant en lettres:</label>
+      <input id="amount-words" type="text" placeholder="Zéro dirhams et zéro centimes" style="width:100%;">
+    </div>
+
+    <div class="cheque-row" style="margin-top:40px;">
+      <div>
+        <label for="date">Date:</label>
+        <input id="date" type="text" placeholder="JJ/MM/AAAA">
+      </div>
+      <div>
+        <label for="city">A (Ville):</label>
+        <input id="city" type="text" placeholder="Casablanca">
+      </div>
+      <div>
+        <label for="account">N° Compte:</label>
+        <input id="account" type="text" placeholder="123456789">
+      </div>
+    </div>
+
+    <div class="footer-row">
+      <div>Signature:</div>
+      <div style="border-bottom:1px solid #000; width:200px;"></div>
+    </div>
+  </div>
+</body>
+</html>

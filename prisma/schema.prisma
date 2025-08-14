@@ -1,0 +1,247 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+  
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // Add more fields as needed
+}
+  
+   
+
+
+model Attestation {
+  id             Int         @id @default(autoincrement())
+  fournisseur    Fournisseur @relation(fields: [fournisseurId], references: [id])
+  fournisseurId  Int
+  date           DateTime
+  dateValidite   DateTime
+  status         String      // e.g. "pending", "valid", "invalid"
+  demandeEnvoyee Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model DemandeDePrix {
+  id            Int      @id @default(autoincrement())
+  date          DateTime @default(now())
+  fournisseur   Fournisseur @relation(fields: [fournisseurId], references: [id])
+  fournisseurId Int
+  articles      Article[]
+  devisPath     String? // PDF path
+  sentByEmail   Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Article {
+  id              Int      @id @default(autoincrement())
+  designation     String
+  demandeDePrix   DemandeDePrix? @relation(fields: [demandeDePrixId], references: [id])
+  demandeDePrixId Int?
+  commande        Commande? @relation(fields: [commandeId], references: [id])
+  commandeId      Int?
+  facture         Facture? @relation(fields: [factureId], references: [id])
+  factureId       Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Commande {
+  id            Int      @id @default(autoincrement())
+  numero        String   @unique
+  date          DateTime @default(now())
+  fournisseur   Fournisseur @relation(fields: [fournisseurId], references: [id])
+  fournisseurId Int
+  articles      Article[]
+  modeReglement String
+  delaiReglement String?
+  blPath        String? // Bon de Livraison PDF path
+  facturePath   String? // Facture PDF path
+  sentByEmail   Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Facture {
+  id            Int      @id @default(autoincrement())
+  numero        String   @unique
+  date          DateTime @default(now())
+  designation   String
+  prixTTC       Float
+  articles      Article[]
+  affectations  Affectation[]
+  modeReglement String
+  // reglements    Reglement[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Affectation {
+  id         Int      @id @default(autoincrement())
+  chantier   String
+  montant    Float
+  facture    Facture  @relation(fields: [factureId], references: [id])
+  factureId  Int
+}
+model Fournisseur {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String?
+  ice       String @unique
+  identifFiscal String
+  telFournisseur String
+  contact   String
+  telContact String
+  address   String?
+  attestations Attestation[] // One-to-many: a supplier can have many attestations
+
+  demandes     DemandeDePrix[]
+  commandes    Commande[]
+  prelevements Prelevement[]
+  cheques      Cheque[]
+  effets       Effet[]
+  payavenir Payavenir[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+model Cheque {
+  id                  Int      @id @default(autoincrement())
+  montant             Float? 
+  dateEtablissement   DateTime?
+  dateEcheance        DateTime?
+  statut              String   // en circulation, payé, impayé, annulé
+  // dateReglement is the date when the cheque was actually paid. NULL if it has not been paid yet.
+  dateReglement       DateTime?
+  fournisseur         Fournisseur @relation(fields: [fournisseurId], references: [id])
+  fournisseurId       Int
+  beneficiaire       String   // beneficiaire
+
+  banque              Banque   @relation("BanqueCheques", fields: [banqueId], references: [id])
+  banqueId            Int
+   numero           String   @unique   // ✅ Add this line if it's not already
+  // facture             Facture? @relation(fields: [factureId], references: [id])
+  // factureId           Int?
+   obs String?
+   montantLettres String?
+   ville String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model Effet {
+  id                  Int      @id @default(autoincrement())
+  montant             Float? 
+  dateEtablissement   DateTime?
+  dateEcheance        DateTime?
+  statut              String   // en circulation, payé, impayé, annulé
+  // dateReglement is the date when the cheque was actually paid. NULL if it has not been paid yet.
+  dateReglement       DateTime?
+  fournisseur         Fournisseur @relation(fields: [fournisseurId], references: [id])
+  fournisseurId       Int
+  beneficiaire       String   // beneficiaire
+
+  banque              Banque   @relation("BanqueEffets", fields: [banqueId], references: [id])
+  banqueId            Int
+  numero           String   @unique   // ✅ Add this line if it's not already
+  obs String?
+
+  // facture             Facture? @relation(fields: [factureId], references: [id])
+  // factureId           Int?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model Prelevement {
+  id              Int      @id @default(autoincrement())
+  fournisseur     Fournisseur @relation(fields: [fournisseurId], references: [id])
+  fournisseurId   Int
+  dateEcheance    DateTime
+  montant         Float
+  dateFinEcheance DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Payavenir {
+  id            Int      @id @default(autoincrement())
+  designation           String?
+  beneficiaire       String?   // beneficiaire
+  montant       Float?
+  dateEcheance   DateTime?
+  statut String?
+  dateReglement DateTime?
+  obs String?  
+  fournisseur         Fournisseur @relation(fields: [fournisseurId], references: [id])
+  fournisseurId       Int
+
+  banque              Banque   @relation("BanquePayavenir", fields: [banqueId], references: [id])
+  banqueId            Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+model Recavenir {
+  id            Int      @id @default(autoincrement())
+  designation           String?
+  beneficiaire       String?   // beneficiaire
+  montant       Float?
+  dateEcheance   DateTime?
+  statut String?
+  dateReglement DateTime?
+  obs String?  
+  client         Client @relation(fields: [clientId], references: [id])
+  clientId       Int
+
+  banque              Banque   @relation("BanqueRecavenir", fields: [banqueId], references: [id])
+  banqueId            Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+model Banque {
+  id         Int       @id @default(autoincrement())
+  name       String
+  rib        Int
+  agence     String
+  solde      Float
+  dateSolde  DateTime
+  positive   Float     @default(0.0)
+  negative   Float     @default(0.0)
+  dmlt       Float     @default(0.0)
+  cheques    Cheque[]  @relation("BanqueCheques")
+  effets     Effet[]   @relation("BanqueEffets")
+  payavenir Payavenir[] @relation("BanquePayavenir")
+  recavenir Recavenir[] @relation("BanqueRecavenir")
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+model Client {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String?
+  ice       String @unique
+  identifFiscal String
+  telClient String
+  contact   String
+  telContact String
+  address   String?
+  recavenir Recavenir[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

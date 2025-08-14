@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="Créer une banque" />
+  <meta name="author" content="Confonda" />
+  <title>Créer une banque</title>
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+  <style>
+    .form-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .form-section {
+      background: white;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+    
+    .form-title {
+      color: #4e73df;
+      font-weight: 700;
+      margin-bottom: 30px;
+      text-align: center;
+      font-size: 24px;
+    }
+    
+    .form-group {
+      margin-bottom: 25px;
+    }
+    
+    .form-label {
+      font-weight: 600;
+      color: #5a5c69;
+      margin-bottom: 8px;
+      display: block;
+    }
+    
+    .form-control {
+      border-radius: 8px;
+      border: 2px solid #e3e6f0;
+      padding: 12px 15px;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+      border-color: #4e73df;
+      box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+    
+    .btn-submit {
+      background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+      border: none;
+      color: white;
+      padding: 12px 30px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+      background: linear-gradient(135deg, #224abe 0%, #1a3a8f 100%);
+    }
+    
+    .btn-cancel {
+      background: #6c757d;
+      border: none;
+      color: white;
+      padding: 12px 30px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      margin-right: 15px;
+    }
+    
+    .btn-cancel:hover {
+      background: #5a6268;
+      transform: translateY(-2px);
+    }
+    
+    .required {
+      color: #e74a3b;
+    }
+    
+    .form-row {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .form-col {
+      flex: 1;
+    }
+    
+    @media (max-width: 768px) {
+      .form-row {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body id="page-top">
+  <div id="wrapper">
+    <%- include('../../../layouts/sidebar') %>
+    
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <%- include('../../../layouts/topbar') %>
+        
+        <div class="container-fluid">
+          <div class="form-container">
+            <div class="form-section">
+              <h2 class="form-title">
+                <i class="fas fa-university mr-2"></i>
+                Créer une nouvelle banque
+              </h2>
+              
+              <form action="/tresorerie/banques/create" method="POST" id="banqueForm">
+                <div class="form-row">
+                  <div class="form-col">
+                    <div class="form-group">
+                      <label for="name" class="form-label">
+                        Nom de la banque <span class="required">*</span>
+                      </label>
+                      <input 
+                        type="text" 
+                        class="form-control" 
+                        id="name" 
+                        name="name" 
+                        required
+                        placeholder="Ex: Banque Populaire"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div class="form-col">
+                    <div class="form-group">
+                      <label for="rib" class="form-label">
+                        RIB <span class="required">*</span>
+                      </label>
+                      <input 
+                        type="number" 
+                        class="form-control" 
+                        id="rib" 
+                        name="rib" 
+                        required
+                        placeholder="Ex: 007810000105200000123456"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-row">
+                  <div class="form-col">
+                    <div class="form-group">
+                      <label for="agence" class="form-label">
+                        Agence <span class="required">*</span>
+                      </label>
+                      <input 
+                        type="text" 
+                        class="form-control" 
+                        id="agence" 
+                        name="agence" 
+                        required
+                        placeholder="Ex: Agence Centrale"
+                      />
+                    </div>
+                  </div>
+                  
+                 
+                </div>
+                
+            
+              
+                
+               
+                <div class="text-center mt-4">
+                  <button type="button" class="btn-cancel" onclick="window.location.href='/tresorerie'">
+                    <i class="fas fa-times mr-2"></i>
+                    Annuler
+                  </button>
+                  <button type="submit" class="btn-submit">
+                    <i class="fas fa-save mr-2"></i>
+                    Créer la banque
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+  <script src="/js/sb-admin-2.min.js"></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('banqueForm');
+      
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Basic validation
+        const name = document.getElementById('name').value.trim();
+        const rib = document.getElementById('rib').value.trim();
+        const agence = document.getElementById('agence').value.trim();
+        
+        if (!name || !rib || !agence) {
+          alert('Veuillez remplir tous les champs obligatoires.');
+          return;
+        }
+        
+        // Submit form
+        form.submit();
+      });
+      
+      // Auto-format RIB input
+      const ribInput = document.getElementById('rib');
+      ribInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 24) {
+          value = value.substring(0, 24);
+        }
+        e.target.value = value;
+      });
+      
+      // Auto-format numeric inputs
+      const numericInputs = document.querySelectorAll('input[type="number"]');
+      numericInputs.forEach(input => {
+        input.addEventListener('blur', function(e) {
+          if (e.target.value !== '') {
+            e.target.value = parseFloat(e.target.value).toFixed(2);
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

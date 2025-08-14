@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="Fournisseurs" />
+  <meta name="author" content="Confonda" />
+  <title>Fournisseurs</title>
+
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+  <style>
+    /* Enhanced Excel-like Table */
+    .excel-table {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: 100%;
+      font-size: 15px;
+      font-family: Calibri, 'Segoe UI', sans-serif;
+      table-layout: fixed;
+      background-color: #fff;
+    }
+  
+    .excel-table th,
+    .excel-table td {
+      border: 1px solid #d0d7de;
+      padding: 10px 14px;
+      min-width: 120px;
+      height: 36px;
+      text-align: left;
+      vertical-align: middle;
+      background-color: #fff;
+      transition: background 0.2s;
+      outline: none;
+      color: #222;
+    }
+  
+    .excel-table th {
+      background-color: #f6f8fa;
+      font-weight: 700;
+      color: #0d1a4a;
+      font-size: 16px;
+    }
+  
+    .excel-table td[contenteditable="true"]:focus {
+      background-color: #dff0ff;
+      border: 2px solid #4a90e2;
+    }
+  
+    .excel-table tr:hover td {
+      background-color: #e3f0ff;
+    }
+  
+    .excel-table td::selection {
+      background-color: #cce5ff;
+    }
+  
+    .excel-dirty-row td {
+      background: #fff7b2 !important;
+    }
+  
+    .excel-delete-btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      width: 30px;
+      height: 30px;
+      font-size: 14px;
+      border-radius: 4px;
+      transition: background 0.2s ease-in-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  
+    .excel-delete-btn:hover {
+      background: #c0392b;
+    }
+  
+    .excel-table th.dragging {
+      opacity: 0.5;
+      background-color: #cce5ff;
+    }
+  
+    .excel-table th.drag-over {
+      outline: 2px dashed #4a90e2;
+      background-color: #eaf3ff;
+    }
+  
+    .excel-save-btn {
+      margin-top: 15px;
+      font-weight: bold;
+      letter-spacing: 0.3px;
+    }
+    .excel-table th.dragging {
+      opacity: 0.5;
+      background: #b3d4fc;
+    }
+    .excel-table th.drag-over {
+      outline: 2px dashed #4a90e2;
+      background: #eaf3ff;
+    }
+    .excel-delete-btn {
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s;
+      outline: none;
+      box-shadow: none;
+      padding: 0;
+    }
+    .excel-delete-btn:hover, .excel-delete-btn:focus {
+      background: #c0392b;
+      box-shadow: 0 0 0 2px #e74c3c33;
+    }
+    .excel-delete-btn i {
+      pointer-events: none;
+    }
+    .excel-dirty-row td {
+      background: #fffbe6 !important;
+    }
+  </style>
+  
+</head>
+<body id="page-top">
+  <div id="wrapper">
+    <%- include('../../../layouts/sidebar') %>
+
+    <!-- Page Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+      <!-- Main Content -->
+      <div id="content">
+        <!-- Topbar -->    
+         <%- include('../../../layouts/topbar') %>
+
+        <!-- End of Topbar -->
+
+        <!-- Begin Page Content -->
+        <div class="container-fluid">
+          <!-- Page Heading -->
+
+          <!-- DataTales Example -->
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">List Fournisseurs</h6>
+            </div>
+            <div class="card-body">
+              <div class="mb-4" style="display: flex; align-items: center; gap: 20px;">
+                <form id="excelUploadForm" enctype="multipart/form-data" method="POST" action="/" style="margin: 0;">
+                  <label for="excelFile" class="btn btn-success d-flex align-items-center" style="font-weight:600; font-size:15px; margin-bottom: 0; height: 42px;">
+                    <i class="fas fa-file-excel mr-2"></i> Importer Excel
+                    <input type="file" id="excelFile" name="excelFile" accept=".xlsx,.xls" style="display:none;">
+                  </label>
+                  
+                </form>
+                <button id="addRowBtn" class="btn btn-secondary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
+                  <i class="fas fa-plus mr-2"></i> Ajouter Fournisseur
+                </button>
+                <button id="saveTableBtn" class="btn btn-primary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
+                  <i class="fas fa-save mr-2"></i> Enregistrer
+                </button>
+                <span id="excelUploadMsg" style="font-size:15px; margin-left:10px;"></span>
+              </div>
+
+
+              <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                  const uploadForm = document.getElementById('excelUploadForm');
+                  const fileInput = document.getElementById('excelFile');
+                  const msg = document.getElementById('excelUploadMsg');
+
+                  // Automatically submit when a file is selected
+                  fileInput.addEventListener('change', function () {
+                    if (fileInput.files.length) {
+                      uploadForm.requestSubmit();
+                    }
+                  });
+
+                  uploadForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    if (!fileInput.files.length) {
+                      msg.textContent = 'Veuillez sélectionner un fichier Excel.';
+                      msg.style.color = 'red';
+                      return;
+                    }
+                    const formData = new FormData(uploadForm);
+                    msg.textContent = 'Importation en cours...';
+                    msg.style.color = '#1976d2';
+                    fetch('/achats/fournisseurs/import', {
+                      method: 'POST',
+                      body: formData
+                    })
+                    .then(res => res.text())
+                    .then(text => {
+                      msg.textContent = text;
+                      msg.style.color = 'green';
+                      setTimeout(() => window.location.reload(), 1200);
+                    })
+                    .catch(() => {
+                      msg.textContent = 'Erreur lors de l\'importation du fichier.';
+                      msg.style.color = 'red';
+                    });
+                  });
+                });
+              </script>
+              
+              <!-- Search bar for suppliers -->
+              <div class="mb-3" style="max-width: 350px;">
+                <input
+                  type="text"
+                  id="supplierSearch"
+                  class="form-control"
+                  placeholder="Rechercher un fournisseur..."
+                  style="font-size: 15px;"
+                />
+              </div>
+
+              <!-- Excel-style editable table (with draggable columns) -->
+              <div class="table-responsive">
+                <table id="editableTable" class="excel-table">
+                  <thead>
+                    <tr>
+                      <th draggable="true">Nom FR</th>
+                      <th draggable="true">Email</th>
+                      <th draggable="true">Adresse</th>
+                      <th draggable="true">Téléphone</th>
+                      <th draggable="true">Contact</th>
+                      <th draggable="true">Téléphone Contact</th>
+                      <th draggable="true">ICE</th>
+                      <th draggable="true">Identifiant Fiscal</th>
+                      <th style="width:70px;">Actions</th> <!-- Delete column -->
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% if (typeof suppliers !== 'undefined' && suppliers.length) { %>
+                      <% suppliers.forEach(supplier => { %>
+                        <tr data-id="<%= supplier.id %>">
+                          <td contenteditable="true" data-name="name"><%= supplier.name %></td>
+                          <td contenteditable="true" data-name="email"><%= supplier.email %></td>
+                          <td contenteditable="true" data-name="address"><%= supplier.address %></td>
+                          <td contenteditable="true" data-name="phone"><%= supplier.telFournisseur %></td>
+                          <td contenteditable="true" data-name="contact"><%= supplier.contact %></td>
+                          <td contenteditable="true" data-name="contactphone"><%= supplier.telContact %></td>
+                          <td contenteditable="true" data-name="ice"><%= supplier.ice %></td>
+                          <td contenteditable="true" data-name="idF"><%= supplier.identifFiscal %></td>
+                          <td><button class="delete-row excel-delete-btn" title="Supprimer" aria-label="Supprimer"><i class="fas fa-trash"></i></button></td>
+                        </tr>
+                      <% }) %>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
+
+
+
+              <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                  // Drag and drop columns
+                  const table = document.getElementById("editableTable");
+                  let dragSrcIdx = null;
+
+                  function swapColumns(table, fromIdx, toIdx) {
+                    // Swap header
+                    const headerRow = table.tHead.rows[0];
+                    if (fromIdx === toIdx) return;
+                    headerRow.insertBefore(headerRow.children[fromIdx], headerRow.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
+                    // Swap each row's cell
+                    Array.from(table.tBodies[0].rows).forEach(row => {
+                      row.insertBefore(row.children[fromIdx], row.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
+                    });
+                  }
+
+                  Array.from(table.tHead.rows[0].cells).forEach((th, idx) => {
+                    th.addEventListener('dragstart', function (e) {
+                      dragSrcIdx = idx;
+                      e.dataTransfer.effectAllowed = 'move';
+                      th.classList.add('dragging');
+                    });
+                    th.addEventListener('dragend', function () {
+                      dragSrcIdx = null;
+                      th.classList.remove('dragging');
+                      Array.from(table.tHead.rows[0].cells).forEach(cell => cell.classList.remove('drag-over'));
+                    });
+                    th.addEventListener('dragover', function (e) {
+                      e.preventDefault();
+                      th.classList.add('drag-over');
+                    });
+                    th.addEventListener('dragleave', function () {
+                      th.classList.remove('drag-over');
+                    });
+                    th.addEventListener('drop', function (e) {
+                      e.preventDefault();
+                      th.classList.remove('drag-over');
+                      if (dragSrcIdx !== null && dragSrcIdx !== idx) {
+                        swapColumns(table, dragSrcIdx, idx);
+                      }
+                    });
+                  });
+
+                  // Add Row functionality
+                  document.getElementById("addRowBtn").addEventListener("click", function () {
+  const tbody = table.querySelector("tbody");
+  const colCount = table.querySelectorAll("thead th").length;
+  const tr = document.createElement("tr");
+  for (let i = 0; i < colCount - 1; i++) { // -1 for delete col
+    const td = document.createElement("td");
+    td.contentEditable = "true";
+    const header = table.querySelectorAll("thead th")[i];
+    if (header && header.innerText) {
+      let dataName = '';
+      switch (header.innerText.trim()) {
+        case 'Nom FR': dataName = 'name'; break;
+        case 'Email': dataName = 'email'; break;
+        case 'Adresse': dataName = 'address'; break;
+        case 'Téléphone': dataName = 'phone'; break;
+        case 'Contact': dataName = 'contact'; break;
+        case 'Téléphone Contact': dataName = 'contactphone'; break;
+        case 'ICE': dataName = 'ice'; break;
+        case 'Identifiant Fiscal': dataName = 'idF'; break;
+      }
+      if (dataName) td.setAttribute('data-name', dataName);
+    }
+    tr.appendChild(td);
+  }
+  const tdDelete = document.createElement("td");
+  tdDelete.innerHTML = '<button class="delete-row excel-delete-btn" title="Supprimer" aria-label="Supprimer"><i class="fas fa-trash"></i></button>';
+  tr.appendChild(tdDelete);
+  tr.setAttribute("data-dirty", "true");
+  tr.classList.add("excel-dirty-row");
+  tbody.insertBefore(tr, tbody.firstChild); // Insert at the top instead of the bottom
+});
+
+
+                  // Delete row functionality (event delegation)
+                  table.querySelector("tbody").addEventListener("click", async function (e) {
+                    if (e.target.closest(".delete-row")) {
+                      const row = e.target.closest("tr");
+                      const id = row.getAttribute("data-id");
+                      if (confirm("Êtes-vous sûr de vouloir supprimer ce fournisseur ?")) {
+                        if (id) {
+                          try {
+                            const response = await fetch(`/achats/fournisseurs/${id}`, {
+                              method: "DELETE"
+                            });
+                            if (response.ok) {
+                              row.parentNode.removeChild(row);
+                              alert("Fournisseur supprimé avec succès.");
+                            } else {
+                              alert("Erreur lors de la suppression du fournisseur.");
+                            }
+                          } catch (err) {
+                            alert("Erreur réseau lors de la suppression.");
+                          }
+                        } else {
+                          // Not saved in DB, just remove from DOM
+                          row.parentNode.removeChild(row);
+                        }
+                      }
+                    }
+                  });
+
+                  // Mark row as dirty on cell edit
+                  table.addEventListener("input", function (e) {
+                    const cell = e.target.closest("td[data-name]");
+                    if (cell) {
+                      const row = cell.parentElement;
+                      row.setAttribute("data-dirty", "true");
+                      row.classList.add("excel-dirty-row");
+                    }
+                  });
+
+                  // Save functionality (send all dirty rows to backend)
+                  document.getElementById("saveTableBtn").addEventListener("click", async function () {
+                    const dirtyRows = Array.from(table.querySelectorAll("tbody tr[data-dirty='true']"));
+                    if (dirtyRows.length === 0) {
+                      alert("Aucune modification à enregistrer.");
+                      return;
+                    }
+                    let successCount = 0, failCount = 0;
+                    for (const row of dirtyRows) {
+                      const cells = Array.from(row.querySelectorAll("td[data-name]"));
+                      const data = {};
+                      cells.forEach(cell => {
+                        data[cell.getAttribute("data-name")] = cell.innerText.trim();
+                      });
+                      const id = row.getAttribute("data-id");
+                      let url, method;
+                      if (id) {
+                        url = `/achats/fournisseurs/${id}`;
+                        method = "PATCH";
+                      } else {
+                        url = "/achats/fournisseurs/create";
+                        method = "POST";
+                      }
+                      try {
+                        const response = await fetch(url, {
+                          method,
+                          headers: {
+                            "Content-Type": "application/json"
+                          },
+                          body: JSON.stringify(data)
+                        });
+                        if (response.ok) {
+                          // If created, set the new id
+                          if (!id) {
+                            const result = await response.json();
+                            if (result && result.id) {
+                              row.setAttribute("data-id", result.id);
+                            }
+                          }
+                          row.removeAttribute("data-dirty");
+                          row.classList.remove("excel-dirty-row");
+                          successCount++;
+                        } else {
+                          failCount++;
+                        }
+                      } catch (e) {
+                        failCount++;
+                      }
+                    }
+                    if (successCount > 0) alert(successCount + " fournisseur(s) enregistré(s)/modifié(s) avec succès !");
+                    if (failCount > 0) alert(failCount + " fournisseur(s) n'ont pas pu être enregistrés.");
+                  });
+
+                  // Supplier search functionality
+                  const searchInput = document.getElementById("supplierSearch");
+                  if (searchInput) {
+                    searchInput.addEventListener("input", function () {
+                      const filter = searchInput.value.toLowerCase();
+                      const rows = table.querySelectorAll("tbody tr");
+                      rows.forEach(row => {
+                        const text = row.innerText.toLowerCase();
+                        row.style.display = text.includes(filter) ? "" : "none";
+                      });
+                    });
+                  }
+                });
+              </script>
+             
+              <!-- End Excel-style editable table -->
+            </div>
+          </div>
+        </div>
+        <!-- /.container-fluid -->
+      </div>
+      <!-- End of Main Content -->
+
+      <!-- Footer -->
+      <footer class="sticky-footer bg-white">
+        <div class="container my-auto">
+          <div class="copyright text-center my-auto">
+            <span>Copyright &copy; Your Website 2020</span>
+          </div>
+        </div>
+      </footer>
+      <!-- End of Footer -->
+    </div>
+    <!-- End of Content Wrapper -->
+  </div>
+  <!-- End of Page Wrapper -->
+
+  <!-- Scroll to Top Button-->
+  <a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+  </a>
+
+  <!-- Logout Modal-->
+  <div
+    class="modal fade"
+    id="logoutModal"
+    tabindex="-1"
+    role="dialog"
+    aria-labelledby="exampleModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+          <button
+            class="close"
+            type="button"
+            data-dismiss="modal"
+            aria-label="Close"
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          Select "Logout" below if you are ready to end your current session.
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" data-dismiss="modal">
+            Cancel
+          </button>
+          <a class="btn btn-primary" href="/login">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap core JavaScript-->
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Core plugin JavaScript-->
+  <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+
+  <!-- Custom scripts for all pages-->
+  <script src="/js/sb-admin-2.min.js"></script>
+
+  <!-- Page level plugins -->
+  <script src="/vendor/datatables/jquery.dataTables.min.js"></script>
+  <script src="/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+  <!-- Page level custom scripts -->
+  <script src="/js/demo/datatables-demo.js"></script>
+</body>
+</html>

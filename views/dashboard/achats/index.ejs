@@ -1,0 +1,333 @@
+<title>Fournisseurs</title>
+
+<div id="wrapper">
+  <%- include('../../layouts/sidebar') %>
+  
+  <div id="content-wrapper" class="d-flex flex-column bg-light min-vh-100">
+    <div id="content">
+      <%- include('../../layouts/topbar') %>
+
+      <!-- Page Wrapper -->
+      <style>
+        /* Enhanced gradients and colors */
+        .bg-gradient-primary {
+          background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        }
+
+        /* Enhanced action cards */
+        .achat-buttons {
+          padding-top: 2rem;
+          gap: 2rem;
+        }
+
+        .achat-card {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          width: 240px;
+          height: 220px;
+          background: linear-gradient(145deg, #ffffff 0%, #f8f9fc 100%);
+          color: #4e73df;
+          text-decoration: none;
+          border-radius: 20px;
+          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          font-size: 1.1rem;
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+          text-align: center;
+          border: 2px solid transparent;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .achat-card::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+          transition: left 0.6s;
+        }
+
+        .achat-card:hover::before {
+          left: 100%;
+        }
+
+        .achat-card:hover {
+          background: linear-gradient(145deg, #f8f9fc 0%, #ffffff 100%);
+          transform: translateY(-8px) scale(1.02);
+          box-shadow: 0 15px 40px rgba(78, 115, 223, 0.2);
+          border-color: rgba(78, 115, 223, 0.2);
+          text-decoration: none;
+          color: #4e73df;
+        }
+
+        .card-icon-wrapper {
+          background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+          width: 70px;
+          height: 70px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 15px;
+          transition: all 0.3s ease;
+          box-shadow: 0 6px 15px rgba(78, 115, 223, 0.2);
+        }
+
+        .card-icon-wrapper i {
+          font-size: 28px;
+          color: #4e73df;
+          transition: all 0.3s ease;
+        }
+
+        .achat-card:hover .card-icon-wrapper {
+          transform: scale(1.1) rotate(5deg);
+          background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+          box-shadow: 0 8px 20px rgba(78, 115, 223, 0.4);
+        }
+
+        .achat-card:hover .card-icon-wrapper i {
+          color: white;
+        }
+
+        .card-title {
+          font-weight: 700;
+          font-size: 1.15rem;
+          color: #2d3748;
+          margin-bottom: 0.3rem;
+          display: block;
+        }
+
+        .card-subtitle {
+          font-weight: 500;
+          font-size: 0.85rem;
+          color: #718096;
+          opacity: 0.8;
+          display: block;
+        }
+
+        /* Enhanced scroll to top */
+        .scroll-to-top {
+          background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+          border: none;
+          width: 45px;
+          height: 45px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s ease;
+          box-shadow: 0 6px 15px rgba(78, 115, 223, 0.3);
+        }
+
+        .scroll-to-top:hover {
+          transform: translateY(-3px) scale(1.1);
+          box-shadow: 0 8px 20px rgba(78, 115, 223, 0.4);
+        }
+
+        /* Enhanced footer */
+        .sticky-footer {
+          background: linear-gradient(145deg, #ffffff 0%, #f8f9fc 100%) !important;
+          border-top: 1px solid rgba(78, 115, 223, 0.1);
+          box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Enhanced page heading */
+        .text-gray-800 {
+          color: #2d3748 !important;
+          font-weight: 700;
+          margin-bottom: 2rem;
+          text-align: center;
+          position: relative;
+        }
+
+        .text-gray-800::after {
+          content: '';
+          position: absolute;
+          bottom: -10px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 60px;
+          height: 3px;
+          background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+          border-radius: 2px;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+          .achat-buttons {
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+          }
+
+          .achat-card {
+            width: 90%;
+            max-width: 300px;
+            height: 200px;
+          }
+
+          .card-icon-wrapper {
+            width: 60px;
+            height: 60px;
+          }
+
+          .card-icon-wrapper i {
+            font-size: 24px;
+          }
+        }
+
+        /* Subtle animations */
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .achat-card {
+          animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .achat-card:nth-child(1) { animation-delay: 0.1s; }
+        .achat-card:nth-child(2) { animation-delay: 0.2s; }
+        .achat-card:nth-child(3) { animation-delay: 0.3s; }
+        .achat-card:nth-child(4) { animation-delay: 0.4s; }
+      </style>
+
+      <!-- Content Wrapper -->
+      <div id="content-wrapper" class="d-flex flex-column">
+
+        <!-- Main Content -->
+        <div id="content">
+
+          <!-- Begin Page Content -->
+          <div class="container-fluid">
+
+            <!-- Page Heading -->
+            <h1 class="h3 mb-4 text-gray-800">Achats</h1>
+
+            <div class="achat-buttons d-flex flex-wrap justify-content-center gap-4">
+              <a href="/achats/devis" class="achat-card shadow">
+                <div class="card-icon-wrapper">
+                  <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <span class="card-title">Devis</span>
+                <small class="card-subtitle">Gérer les devis</small>
+              </a>
+
+              <a href="/achats/commandes" class="achat-card shadow">
+                <div class="card-icon-wrapper">
+                  <i class="fas fa-clipboard-list"></i>
+                </div>
+                <span class="card-title">Commandes</span>
+                <small class="card-subtitle">Suivi des commandes</small>
+              </a>
+
+              <a href="/achats/factures" class="achat-card shadow">
+                <div class="card-icon-wrapper">
+                  <i class="fas fa-file-invoice"></i>
+                </div>
+                <span class="card-title">Factures</span>
+                <small class="card-subtitle">Gestion des factures</small>
+              </a>
+
+              <a href="/achats/fournisseurs" class="achat-card shadow">
+                <div class="card-icon-wrapper">
+                  <i class="fas fa-truck"></i>
+                </div>
+                <span class="card-title">Fournisseurs</span>
+                <small class="card-subtitle">Base fournisseurs</small>
+              </a>
+            </div>
+
+          </div>
+          <br><br>
+          <!-- /.container-fluid -->
+
+        </div>
+        <!-- End of Main Content -->
+
+        <!-- Footer -->
+        <footer class="sticky-footer bg-white">
+          <div class="container my-auto">
+            <div class="copyright text-center my-auto">
+              <span>Copyright &copy; Your Website 2020</span>
+            </div>
+          </div>
+        </footer>
+        <!-- End of Footer -->
+
+      </div>
+      <!-- End of Content Wrapper -->
+
+    </div>
+    <!-- End of Page Wrapper -->
+
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+      <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Logout Modal-->
+    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+            <a class="btn btn-primary" href="login.html">Logout</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript-->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Core plugin JavaScript-->
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+
+    <!-- Custom scripts for all pages-->
+    <script src="js/sb-admin-2.min.js"></script>
+
+    <!-- Page level plugins -->
+    <script src="vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+    <!-- Page level custom scripts -->
+    <script src="js/demo/datatables-demo.js"></script>
+
+    <script>
+      // Enhanced action card functionality
+      $(document).ready(function() {
+        // Add loading effect to action cards
+        $('.achat-card').on('click', function(e) {
+          const $icon = $(this).find('.card-icon-wrapper i');
+          $icon.addClass('fa-spin');
+          
+          setTimeout(function() {
+            $icon.removeClass('fa-spin');
+          }, 800);
+        });
+      });
+    </script>
+
+  </div>
+</div>
+
+</body>
+</html>

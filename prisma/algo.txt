@@ -1,0 +1,192 @@
+login -> Dashboard -> Cards for : 
+
+Achats : 
+        Demande prix : 
+            - creation :
+                - N° Demande de prix  (auto generate) 
+                - Date 
+                - Selection Fournisseur (ou ajouter Fr) 
+                - Designation articles
+                - telecharger devis (Fr)
+                - envoyer par email 
+                - imprimer
+        Commandes :     
+                - creation Bc (importer ou nouveau )
+                -  N° Commande  (auto generate) 
+                - Date 
+                - Selection Fournisseur (ou ajouter Fr) 
+                - Designation articles
+                - mode de Reglements (type)
+                - delais de Reglements
+                - telecharger Bl 
+                - telecharger Facture
+                - envoyer par email 
+                - imprimer
+        Factures (à saisir): 
+                - N° Facture 
+                - Date 
+                - Designation 
+                - Prix TTC 
+                - no limits of adding : 
+                    - affectation (Nom du chantier )
+                    - montant affectation 
+                - Mode Reglements : 
+                        - cheque
+                        - Effet 
+
+                        - Especes 
+                        - Virement 
+                        - prelevement
+
+          Fournisseurs : 
+            - Go to Prisma
+
+   Trésorerie  : 
+        Reglements : 
+                1 - Cheque : 
+                        - Nom Banques
+                        - N° Cheque 
+                        - Montant 
+                        - Benificer
+                        - Date Etablissement
+                        - Date Echéance 
+                        - Statut : 
+                              - en circulation (default)
+                              - payé (NEW INPUT : Date de Reglement)
+                              - inpayé    
+                              - annulé
+                2 - Effets : 
+                        - Nom Banques
+                        - N° Effets 
+                        - Montant 
+                        - Benificer
+                        - Date Etablissement
+                        - Date Echéance 
+                        - Statut : 
+                              - en circulation (default)
+                              - payé (NEW INPUT : Date de Reglement)
+                              - inpayé    
+                              - annulé
+
+
+                        
+                    
+      
+
+        prelevement : 
+                - Nom de Fr 
+                - date Echéance
+                - Montant 
+                - date fin Echéance (apres montant de prelevement === 0 )
+        
+        Autre Reglement a venir : 
+                - Nom de Reglement 
+                - montant
+                - - date Echéance 
+        + Banques :
+            - Nom de la banque
+            - solde de la banque a saisir 
+            - date du jours au ... (a saisir)
+            - cheque en circulation
+            - Effet en circulation 
+            - cheque impayé 
+
+
+            
+
+delais de patmenet pour chaque Fournisseur (60j 90j 120j )
+
+
+Tasks : 
+1 List Fournisseurs  : 
+        all fields in table : 
+        search .. : 
+        attestation de regularite fiscale (valide 6 mois) : 
+        if yes  : 
+           new input to write  date att 
+           new auto input increse by 180j
+        else : 
+           new button to send demander attestation 
+2- list factures : all in table 
+3 - list Reglements 
+4- releves bancaire : pdf to exel haddo 
+
+
+
+
+
+Attestation de Régularité Fiscale :
+
+Dans la table des fournisseurs :
+        - Ajouter une colonne "Actions" avec les boutons suivants selon le statut de l'attestation :
+                1. Si le fournisseur n'a pas d'attestation :
+                        - Bouton "Demander Attestation"
+                                - Au clic : envoyer une demande d'attestation (désactiver le bouton après envoi)
+                2. Si le fournisseur a une attestation :
+                        - Bouton "Ajouter/Modifier Attestation"
+                                - Au clic : ouvrir une popup avec deux champs :
+                                        - Date de l'attestation
+                                        - Date de validité (calculée automatiquement : date attestation + 180 jours)
+                                - Boutons dans la popup :
+                                        - "Enregistrer" : sauvegarder les informations
+                                        - "Annuler" : fermer la popup sans sauvegarder
+
+        - Filtrer les fournisseurs selon le statut de l'attestation :
+                - Fournisseurs avec attestation valide (date validité >= aujourd'hui)
+                - Fournisseurs avec attestation invalide (date validité < aujourd'hui)
+                - Fournisseurs sans attestation
+
+        - Les boutons d'action changent selon le statut :
+                - Si "Demander Attestation" a été cliqué, ne plus afficher ce bouton pour ce fournisseur.
+
+        - Possibilité de rechercher et filtrer les fournisseurs par statut d'attestation.
+
+list Reglements :  
+        banque : 
+        LIST BANQUE
+                - Banques : 
+                        - Nom de la banque
+                        - solde de la banque a saisir 
+                        - date du jours au ... (a saisir)
+                        - cheque en circulation :
+                                - Nom Banques
+                                - N° Effets 
+                                - Montant 
+                                - Benificer
+                                - Date Etablissement
+                                - Date Echéance
+                                - Statut : 
+                                - en circulation (default)
+                        - Effet en circulation
+Theresdorie : 
+        Bacnks : 
+            list of Bacnks : 
+                bmce : 
+                    - list des cheques : crud
+                    - situation  bancaire : 
+                        - case pour le sode banque
+                          - cheque en circulation 
+                           - la difference entre le solde et le cheques en circulation : (solde - cheques en circulation)
+                cih 
+                etc... 
+/// 
+ - situation  bancaire : 
+- case pour le sode banque
+        - list cheques en circulation 
+        - la difference entre le solde et µle cheques en circulation : (solde - cheques en circulation)
+
+
+
+
+        SELECTION : 
+         Statut 
+        Fournisseur
+        BANQUE
+        pdf download in situation
+Autre reglement : 
+                Date 
+                designation 
+                montant 
+                dateEcheance 
+                obsservation 
+                 

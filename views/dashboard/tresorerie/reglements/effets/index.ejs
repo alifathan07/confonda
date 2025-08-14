@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="Cheques" />
+  <meta name="author" content="Confonda" />
+  <title>Effets</title>
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+   <!-- Enhanced Status Styles -->
+      <style>
+        /* General Button Style */
+  .custom-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    text-transform: uppercase;
+  }
+
+  .custom-btn i {
+    font-size: 14px;
+  }
+
+  .custom-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Specific Color Variants */
+  .btn-success.custom-btn {
+    background-color: #28a745;
+    color: white;
+  }
+
+  .btn-success.custom-btn:hover {
+    background-color: #218838;
+  }
+
+  .btn-outline-success.custom-btn {
+    background-color: white;
+    color: #28a745;
+    border: 2px solid #28a745;
+  }
+
+  .btn-outline-success.custom-btn:hover {
+    background-color: #28a745;
+    color: white;
+  }
+
+  .btn-secondary.custom-btn {
+    background-color: #6c757d;
+    color: white;
+  }
+
+  .btn-secondary.custom-btn:hover {
+    background-color: #5a6268;
+  }
+
+  .btn-primary.custom-btn {
+    background-color: #007bff;
+    color: white;
+  }
+
+  .btn-primary.custom-btn:hover {
+    background-color: #0056b3;
+  }
+
+  .btn-warning.excel-save-btn {
+    font-size: 13px;
+    padding: 6px 10px;
+    border-radius: 6px;
+  }
+
+  .excel-delete-btn {
+    background-color: transparent;
+    color: #dc3545;
+    border: none;
+    padding: 6px;
+    font-size: 15px;
+    cursor: pointer;
+  }
+
+  .excel-delete-btn:hover {
+    color: #bd2130;
+  }
+         .excel-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .excel-table th,
+  .excel-table td {
+    border: 1px solid #dee2e6;
+    padding: 8px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .excel-table thead th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+  }
+
+  .excel-table tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+
+  .excel-table tbody tr:hover {
+    background-color: #e9ecef;
+  }
+        .statut-cell {
+          text-align: center !important;
+          vertical-align: middle !important;
+          padding: 8px !important;
+        }
+        
+        .statut-badge {
+          display: inline-block;
+          padding: 6px 12px;
+          font-weight: bold;
+          font-size: 12px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          border-radius: 20px;
+          border: 2px solid transparent;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          min-width: 100px;
+          text-align: center;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .statut-badge:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .statut-badge.en-circulation {
+          background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+          color: #856404;
+          border-color: #ffc107;
+        }
+        
+        .statut-badge.paye {
+          background: linear-gradient(135deg, #d4edda, #00b894);
+          color: #155724;
+          border-color: #28a745;
+        }
+        
+        .statut-badge.impaye {
+          background: linear-gradient(135deg, #fff3e0, #e17055);
+          color: #8a2e05;
+          border-color: #fd7e14;
+        }
+        
+        .statut-badge.annule {
+          background: linear-gradient(135deg, #f8d7da, #d63031);
+          color: #721c24;
+          border-color: #dc3545;
+        }
+        
+        .statut-select {
+          display: block;
+          margin: 0 auto;
+          font-weight: bold;
+          font-size: 13px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          border-radius: 20px;
+          padding: 8px 16px;
+          border: 2px solid #007bff;
+          background: linear-gradient(135deg, #ffffff, #f8f9fa);
+          cursor: pointer;
+          min-width: 120px;
+          text-align: center;
+          box-shadow: 0 2px 6px rgba(0,123,255,0.2);
+          transition: all 0.3s ease;
+          outline: none;
+        }
+        
+        .statut-select:focus {
+          border-color: #0056b3;
+          box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
+          transform: scale(1.02);
+        }
+        
+        .statut-select option {
+          padding: 8px;
+          font-weight: bold;
+          text-transform: uppercase;
+        }
+        
+        @keyframes statusChange {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+          100% { transform: scale(1); }
+        }
+        
+        .status-updating {
+          animation: statusChange 0.3s ease;
+        }
+      </style>
+      <body>
+        
+     <body id="page-top">
+
+<div id="wrapper">
+<%- include('../../../../layouts/sidebar') %>
+<div id="content-wrapper" class="d-flex flex-column">
+  <div id="content">
+   <%- include('../../../../layouts/topbar') %>
+  <div class="container-fluid">
+    <div class="card shadow mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">Liste des effets</h6>
+    </div>
+    <div class="card-body">
+      <div class="mb-4" style="display: flex; align-items: center; gap: 20px;">
+      <form id="excelUploadForm" enctype="multipart/form-data" method="POST" action="/" style="margin: 0;">
+        <label for="excelFile" class="btn btn-success d-flex align-items-center" style="font-weight:600; font-size:15px; margin-bottom: 0; height: 42px;">
+        <i class="fas fa-file-excel mr-2"></i> Importer Excel
+        <input type="file" id="excelFile" name="excelFile" accept=".xlsx,.xls" style="display:none;">
+        </label>
+      </form>
+      <button id="downloadExcelBtn" class="btn btn-outline-success d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
+        <i class="fas fa-file-download mr-2"></i> Télécharger Excel
+      </button>
+      <button id="addRowBtn" class="btn btn-secondary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
+        <i class="fas fa-plus mr-2"></i> Ajouter Effet
+      </button>
+      <button id="saveTableBtn" class="btn btn-primary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
+        <i class="fas fa-save mr-2"></i> Enregistrer
+      </button>
+      <span id="excelUploadMsg" style="font-size:15px; margin-left:10px;"></span>
+      </div>
+      <div class="mb-3" style="max-width: 350px;">
+      <input
+        type="text"
+        id="supplierSearch"
+        class="form-control"
+        placeholder="Rechercher un effet..."
+        style="font-size: 15px;"
+      />
+      </div>
+     
+      
+      <div class="table-responsive">
+      <%
+function formatDateToDDMMYYYY(dateInput) {
+if (!dateInput) return '';
+const date = new Date(dateInput);
+if (isNaN(date)) return dateInput; // fallback: if invalid date, show original
+
+const day = String(date.getDate()).padStart(2, '0');
+const month = String(date.getMonth() + 1).padStart(2, '0');
+const year = date.getFullYear();
+
+return `${day}/${month}/${year}`;
+}
+%>
+<div class="mb-3 d-flex align-items-center" style="max-width: 350px;">
+<select id="banqueFilter" class="form-control mr-2" style="font-size: 15px; width: 300px;">
+<option value="">-- Filtrer par banque --</option>
+<% banques.forEach(banque => { %><option value="<%= banque.name %>">
+  <%= banque.name %></option><% }); %></select>
+  <select id="supplierFilter" class="form-control" style="font-size: 15px; width: 250px;">
+  <option value="">-- Filtrer par fournisseur --</option>
+  <% fournisseurs.forEach(fournisseur => { %><option value="<%= fournisseur.name %>"><%= fournisseur.name %></option><% }); %>
+  </select></div>
+
+   
+
+      <table id="editableTable" class="excel-table">
+        <thead>
+        <tr style="position: sticky; top: 0; background-color: white; z-index: 1;">
+          <th draggable="true">Date</th>
+          <th draggable="true">N° Effet</th>
+          <th draggable="true">Banque</th>
+          <th draggable="true">Bénéficiaire</th>
+          <th draggable="true">Montant</th>
+          <th draggable="true">Echeance</th>
+          <th draggable="true">Statut</th>
+         
+          <th draggable="true">Date Reglement</th>
+
+          <th draggable="true">Observation</th>
+
+
+         
+          <th style="width:70px;">Actions</th> <!-- Delete column -->
+        </tr>
+        </thead>
+        <tbody>
+        <% if (typeof effets !== 'undefined' && effets.length) { %>
+          <% effets.forEach(effet => { %>
+          <tr data-id="<%= effet.id %>">
+
+            <td contenteditable="true" data-name="dateEtablissement"><%= formatDateToDDMMYYYY(effet.dateEtablissement) %></td>
+            <td contenteditable="true" data-name="numero"><%= effet.numero %></td>
+            <td contenteditable="true" data-name="banque" ><%= effet.banque ? effet.banque.name : '' %></td>
+            <td contenteditable="true" data-name="beneficiaire"><%= effet.beneficiaire %></td>
+            <td contenteditable="true" data-name="montant"><%= effet.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+            <td contenteditable="true" data-name="dateEcheance"><%= formatDateToDDMMYYYY(effet.dateEcheance) %></td>
+            <td data-name="statut" class="statut-cell">
+            <span 
+              class="statut-badge <%= effet.statut.toLowerCase().replace(/[éè]/g, 'e').replace(/\s+/g, '-') %>"
+              onclick="toggleSelect(this)">
+              <%= effet.statut %>
+            </span>
+            </td>
+
+            <td contenteditable="true" data-name="dateReglement"><%= formatDateToDDMMYYYY(effet.dateReglement) %></td>
+
+            <td contenteditable="true" data-name="obs"><%= effet.obs %></td>
+            <td>
+            <button class="delete-row excel-delete-btn" title="Supprimer" aria-label="Supprimer"><i class="fas fa-trash"></i></button>
+            <button class="update-row excel-save-btn btn btn-sm btn-warning" title="Mettre à jour" aria-label="Mettre à jour" style="margin-left:5px;"><i class="fas fa-edit"></i></button>
+            </td>
+            
+          </tr>
+          
+          <% }) %>
+        <% } %>
+        <tr>
+          <td colspan="4">Total</td>
+          <td id="total">
+          <%= effets.reduce((total, effet) => total + effet.montant, 0).toFixed(2) %>
+          </td>
+         
+         
+     
+        </tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+    </div>
+  </div>
+  </div>
+</div>
+</div>
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+const uploadForm = document.getElementById('excelUploadForm');
+const fileInput = document.getElementById('excelFile');
+const msg = document.getElementById('excelUploadMsg');
+const table = document.getElementById("editableTable");
+
+// Convert dd/mm/yyyy → yyyy-mm-dd ISO format or null if empty
+function convertDateToISO(dateStr) {
+if (!dateStr || dateStr.trim() === '') return null;
+const parts = dateStr.split('/');
+if (parts.length !== 3) return dateStr.trim(); // fallback: send raw text
+const [day, month, year] = parts;
+return `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+}
+
+// Function to update total - calculates only visible rows
+function updateTotal() {
+const rows = document.querySelectorAll("#editableTable tbody tr:not(:last-child)"); // Exclude the total row
+let total = 0;
+
+rows.forEach(row => {
+  if (row.style.display !== "none") {
+  const montantCell = row.querySelector("td[data-name='montant']");
+  if (montantCell) {
+    const value = parseFloat(montantCell.innerText.replace(/,/g, '.').replace(/[^\d.-]/g, ''));
+    if (!isNaN(value)) total += value;
+  }
+  }
+});
+
+const totalCell = document.getElementById("total");
+if (totalCell) {
+  totalCell.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+}
+
+// Auto-submit Excel upload form on file select
+fileInput.addEventListener('change', function () {
+if (fileInput.files.length) {
+  uploadForm.requestSubmit();
+}
+});
+
+uploadForm.addEventListener('submit', function(e) {
+e.preventDefault();
+if (!fileInput.files.length) {
+  msg.textContent = 'Veuillez sélectionner un fichier Excel.';
+  msg.style.color = 'red';
+  return;
+}
+const formData = new FormData(uploadForm);
+msg.textContent = 'Importation en cours...';
+msg.style.color = '#1976d2';
+fetch('/tresorerie/effets/import', {
+  method: 'POST',
+  body: formData
+})
+.then(res => res.text())
+.then(text => {
+  msg.textContent = text;
+  msg.style.color = 'green';
+  setTimeout(() => window.location.reload(), 1200);
+})
+.catch(() => {
+  msg.textContent = 'Erreur lors de l\'importation du fichier.';
+  msg.style.color = 'red';
+});
+});
+// Drag and drop columns
+let dragSrcIdx = null;
+function swapColumns(table, fromIdx, toIdx) {
+const headerRow = table.tHead.rows[0];
+if (fromIdx === toIdx) return;
+headerRow.insertBefore(headerRow.children[fromIdx], headerRow.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
+Array.from(table.tBodies[0].rows).forEach(row => {
+  row.insertBefore(row.children[fromIdx], row.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
+});
+}
+
+Array.from(table.tHead.rows[0].cells).forEach((th, idx) => {
+th.addEventListener('dragstart', function (e) {
+  dragSrcIdx = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  th.classList.add('dragging');
+});
+th.addEventListener('dragend', function () {
+  dragSrcIdx = null;
+  th.classList.remove('dragging');
+  Array.from(table.tHead.rows[0].cells).forEach(cell => cell.classList.remove('drag-over'));
+});
+th.addEventListener('dragover', function (e) {
+  e.preventDefault();
+  th.classList.add('drag-over');
+});
+th.addEventListener('dragleave', function () {
+  th.classList.remove('drag-over');
+});
+th.addEventListener('drop', function (e) {
+  e.preventDefault();
+  th.classList.remove('drag-over');
+  if (dragSrcIdx !== null && dragSrcIdx !== idx) {
+  swapColumns(table, dragSrcIdx, idx);
+  }
+});
+});
+
+// Enhanced function to get status class
+function getStatusClass(statut) {
+  const normalized = statut.toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove accents
+    .replace(/\s+/g, '-')
+    .trim();
+  
+  switch(normalized) {
+    case 'en-circulation': return 'en-circulation';
+    case 'paye': return 'paye';
+    case 'impaye': return 'impaye';
+    case 'annule': return 'annule';
+    default: return 'en-circulation';
+  }
+}
+
+// Add Row functionality
+document.getElementById("addRowBtn").addEventListener("click", function () {
+const tbody = table.querySelector("tbody");
+const colCount = table.querySelectorAll("thead th").length;
+const tr = document.createElement("tr");
+
+for (let i = 0; i < colCount - 1; i++) { // -1 for delete column
+  const td = document.createElement("td");
+  const header = table.querySelectorAll("thead th")[i];
+
+  if (header && header.innerText) {
+    let dataName = '';
+    switch (header.innerText.trim()) {
+      case 'N° Effet': 
+        dataName = 'numero'; 
+        td.contentEditable = "true"; 
+        break;
+      case 'Date': 
+        dataName = 'dateEtablissement'; 
+        td.contentEditable = "true"; 
+        break;
+      case 'Banque': 
+        dataName = 'banque'; 
+        td.contentEditable = "true"; 
+        break;
+      case 'Bénéficiaire': 
+        dataName = 'beneficiaire'; 
+        td.contentEditable = "true"; 
+        break;
+      case 'Montant': 
+        dataName = 'montant'; 
+        td.contentEditable = "true"; 
+        break;
+      case 'Echeance': 
+        dataName = 'dateEcheance'; 
+        td.contentEditable = "true"; 
+        break;
+     
+      case 'Date Reglement': 
+        dataName = 'dateReglement'; 
+        td.contentEditable = "true"; 
+        break;
+      
+      case 'Statut': 
+      dataName = 'statut'; 
+      td.classList.add('statut-cell');
+      
+      // Create enhanced select for statut
+      const select = document.createElement('select');
+      select.className = 'statut-select';
+
+      const statutOptions = ['En Circulation', 'Payé', 'Impayé', 'Annulé', 'Treso'];
+      statutOptions.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option;
+        opt.textContent = option;
+        select.appendChild(opt);
+      });
+      td.appendChild(select);
+      break;
+      case 'Observation': 
+        dataName = 'obs'; 
+        td.contentEditable = "true"; 
+        break;
+   }
+    if (dataName) td.setAttribute('data-name', dataName);
+  }
+  tr.appendChild(td);
+}
+
+const tdDelete = document.createElement("td");
+tdDelete.innerHTML = '<button class="delete-row excel-delete-btn" title="Supprimer" aria-label="Supprimer"><i class="fas fa-trash"></i></button><button class="update-row excel-save-btn btn btn-sm btn-warning" title="Mettre à jour" aria-label="Mettre à jour" style="margin-left:5px;"><i class="fas fa-edit"></i></button>';
+tr.appendChild(tdDelete);
+tr.setAttribute("data-dirty", "true");
+tr.classList.add("excel-dirty-row");
+tbody.insertBefore(tr, tbody.firstChild); // Insert at top
+
+updateTotal();
+});
+
+
+// Delete row functionality (event delegation)
+table.querySelector("tbody").addEventListener("click", async function (e) {
+if (e.target.closest(".delete-row")) {
+  const row = e.target.closest("tr");
+  const id = row.getAttribute("data-id");
+  console.log(id);
+  if (confirm("Êtes-vous sûr de vouloir supprimer ce chèque ?")) {
+  if (id) {
+    try {
+    const response = await fetch(`/tresorerie/effets/${id}`, {
+      method: "DELETE"
+    });
+    if (response.ok) {
+      row.parentNode.removeChild(row);
+      alert("Effet supprimé avec succès.");
+      // Update total after deletion
+      updateTotal();
+    } else {
+      alert("Erreur lors de la suppression du chèque.");
+    }
+    } catch (err) {
+    alert("Erreur réseau lors de la suppression.");
+    }
+  } else {
+    row.parentNode.removeChild(row);
+    // Update total after deletion
+    updateTotal();
+  }
+  }
+}
+
+// Update row functionality
+if (e.target.closest(".update-row")) {
+  // Keep button for manual update, but auto-update is handled below
+  const row = e.target.closest("tr");
+  await autoUpdateRow(row);
+}
+
+// Auto-update row after editing any cell
+table.addEventListener("blur", async function (e) {
+  const cell = e.target.closest("td[data-name]");
+  if (cell && cell.isContentEditable) {
+    const row = cell.parentElement;
+    if (row.getAttribute("data-id")) {
+      await autoUpdateRow(row);
+    }
+  }
+}, true);
+
+// Helper function for updating a row
+async function autoUpdateRow(row) {
+  if (!row.getAttribute("data-dirty")) return;
+  const cells = Array.from(row.querySelectorAll("td[data-name]"));
+  const data = {};
+  let id = row.getAttribute("data-id");
+
+  cells.forEach(cell => {
+    const key = cell.getAttribute("data-name");
+    let value;
+    if (cell.querySelector("select")) {
+      value = cell.querySelector("select").value;
+    } else {
+      value = cell.innerText.trim();
+    }
+    if (['dateEtablissement', 'dateEcheance', 'dateReglement'].includes(key)) {
+      value = convertDateToISO(value);
+    }
+    data[key] = value;
+  });
+
+  if (!id) {
+    // Only update if row is already saved
+    return;
+  }
+
+  try {
+    const response = await fetch(`/tresorerie/effets/${id}/`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+    if (response.ok) {
+      row.removeAttribute("data-dirty");
+      row.classList.remove("excel-dirty-row");
+      updateTotal();
+    }
+  } catch(err) {
+    console.log("Error : "  + err.message
+    );
+    
+  }
+}
+});
+
+// Mark row as dirty on cell edit and update total if montant changed
+table.addEventListener("input", function (e) {
+const cell = e.target.closest("td[data-name]");
+if (cell) {
+  const row = cell.parentElement;
+  row.setAttribute("data-dirty", "true");
+  row.classList.add("excel-dirty-row");
+  
+  // If the montant field was edited, update the total
+  if (cell.getAttribute("data-name") === "montant") {
+  updateTotal();
+  }
+}
+});
+
+// Save functionality (send all dirty rows to backend)
+// Save functionality (send all dirty rows to backend)
+document.getElementById("saveTableBtn").addEventListener("click", async function () {
+const dirtyRows = Array.from(table.querySelectorAll("tbody tr[data-dirty='true']"));
+if (dirtyRows.length === 0) {
+alert("Aucune modification à enregistrer.");
+return;
+}
+
+let successCount = 0, failCount = 0;
+
+for (const row of dirtyRows) {
+const cells = Array.from(row.querySelectorAll("td[data-name]"));
+const data = {};
+let id = row.getAttribute("data-id");
+
+cells.forEach(cell => {
+  const key = cell.getAttribute("data-name");
+  let value;
+  if (cell.querySelector("select")) {
+  value = cell.querySelector("select").value;
+  } else {
+  value = cell.innerText.trim();
+  }
+
+  if (['dateEtablissement', 'dateEcheance', 'dateReglement'].includes(key)) {
+  value = convertDateToISO(value);
+  }
+
+  data[key] = value;
+});
+
+let url = '';
+let method = '';
+
+if (id) {
+  url = `/tresorerie/effets/${id}/`;
+  method = "PUT";
+  window.location.reload();
+  return;
+ 
+} else {
+  const banqueCell = row.querySelector("td[data-name='banque']");
+  const banqueId = (banqueCell?.innerText || "").trim().split("/").pop();
+  url = `/tresorerie/effets/create`;
+  method = "POST";
+}
+
+try {
+  const response = await fetch(url, {
+  method,
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(data)
+  });
+
+  if (response.ok) {
+  if (!id) {
+    const result = await response.json();
+    if (result && result.id) {
+    row.setAttribute("data-id", result.id);
+    }
+  }
+  row.removeAttribute("data-dirty");
+  row.classList.remove("excel-dirty-row");
+  successCount++;
+  } else {
+  failCount++;
+  }
+} catch {
+  failCount++;
+}
+}
+
+if (successCount > 0) alert(successCount + " effet(s) enregistré(s)/modifié(s) avec succès !");
+if (failCount > 0) alert(failCount + " effet(s) n'ont pas pu être enregistrés.");
+
+// Update total after saving
+updateTotal();
+});
+
+
+// Supplier search functionality - UPDATED to include total calculation
+const searchInput = document.getElementById("supplierSearch");
+if (searchInput) {
+searchInput.addEventListener("input", function () {
+  const filter = searchInput.value.toLowerCase();
+  const rows = table.querySelectorAll("tbody tr:not(:last-child)"); // Exclude total row
+  rows.forEach(row => {
+  const text = row.innerText.toLowerCase();
+  row.style.display = text.includes(filter) ? "" : "none";
+  });
+  // Update total after search filter
+  updateTotal();
+});
+}
+
+// Bank filter functionality - UPDATED
+const banqueFilter = document.getElementById("banqueFilter");
+if (banqueFilter) {
+banqueFilter.addEventListener("change", function () {
+  const selectedBanque = banqueFilter.value.toLowerCase();
+  const rows = document.querySelectorAll("#editableTable tbody tr:not(:last-child)"); // Exclude total row
+
+  rows.forEach(row => {
+  const banqueCell = row.querySelector("td[data-name='banque']");
+  const banqueName = banqueCell ? banqueCell.innerText.toLowerCase() : "";
+  row.style.display = (selectedBanque === "" || banqueName === selectedBanque) ? "" : "none";
+  });
+  
+  // Update total after bank filter
+  updateTotal();
+});
+}
+
+// Supplier filter functionality - UPDATED
+const supplierFilter = document.getElementById("supplierFilter");
+if (supplierFilter) {
+supplierFilter.addEventListener("change", function () {
+  const selectedSupplier = supplierFilter.value.toLowerCase();
+  const rows = document.querySelectorAll("#editableTable tbody tr:not(:last-child)"); // Exclude total row
+
+  rows.forEach(row => {
+  const supplierCell = row.querySelector("td[data-name='beneficiaire']");
+  const supplierName = supplierCell ? supplierCell.innerText.toLowerCase() : "";
+  row.style.display = (selectedSupplier === "" || supplierName === selectedSupplier) ? "" : "none";
+  });
+  
+  // Update total after supplier filter
+  updateTotal();
+});
+}
+
+// Initialize total calculation on page load
+updateTotal();
+});
+
+// Download Excel functionality
+document.getElementById("downloadExcelBtn")?.addEventListener("click", function () {
+const table = document.getElementById("editableTable");
+const wb = XLSX.utils.book_new();
+
+// Convert HTML table to worksheet
+const ws = XLSX.utils.table_to_sheet(table, {
+raw: true,
+cellDates: true
+});
+
+// Add worksheet to workbook
+XLSX.utils.book_append_sheet(wb, ws, "Cheques");
+
+// Export to Excel file
+XLSX.writeFile(wb, "liste_cheques.xlsx");
+});
+
+// Enhanced toggleSelect function with professional styling
+function toggleSelect(spanElem) {
+const currentStatut = spanElem.textContent.trim();
+const statutOptions = ['En Circulation', 'Payé', 'Impayé', 'Annulé', 'Treso'];
+let hasChanged = false;
+
+const select = document.createElement('select');
+select.className = 'statut-select';
+
+statutOptions.forEach(option => {
+  const opt = document.createElement('option');
+  opt.value = option;
+  opt.textContent = option;
+  if (option.toLowerCase() === currentStatut.toLowerCase()) {
+    opt.selected = true;
+  }
+  select.appendChild(opt);
+});
+
+spanElem.parentNode.replaceChild(select, spanElem);
+select.focus();
+
+select.addEventListener('change', async function () {
+  const newStatut = select.value;
+  const row = select.closest('tr');
+  const effetId = row.getAttribute('data-id');
+
+  if (!effetId) {
+    alert("Impossible de modifier un effet non enregistré.");
+    select.blur();
+    return;
+  }
+
+  // Add loading animation
+  select.classList.add('status-updating');
+
+  try {
+    const res = await fetch(`/tresorerie/effets/${effetId}/update-statut`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ statut: newStatut }),
+    });
+
+    if (res.ok) {
+      hasChanged = true;
+      
+      const statusClass = getStatusClass(newStatut);
+      
+      const newSpan = document.createElement('span');
+      newSpan.className = `statut-badge ${statusClass}`;
+      newSpan.textContent = newStatut;
+      newSpan.onclick = () => toggleSelect(newSpan);
+
+      if (select.parentNode) {
+        select.parentNode.replaceChild(newSpan, select);
+      }
+      
+      // Add success animation
+      newSpan.classList.add('status-updating');
+      setTimeout(() => newSpan.classList.remove('status-updating'), 300);
+      
+    } else {
+      
+      window.location.href = `/tresorerie/effets/banque/${banqueId}`;
+
+      select.classList.remove('status-updating');
+      select.blur();
+    }
+  } catch (err) {
+    console.error("Erreur lors de la mise à jour du statut:", err);
+      alert("La Saisie de la date de paiment est obligatoire !");
+    
+
+    window.location.href = `/tresorerie/effets/banque/${banqueId}`;
+
+
+    console.log("Erreur réseau lors de la mise à jour du statut. " + err.message);
+    select.classList.remove('status-updating');
+    select.blur();
+  }
+});
+
+select.addEventListener('blur', () => {
+  if (hasChanged) return;
+
+  const statusClass = getStatusClass(currentStatut);
+  const span = document.createElement('span');
+  span.className = `statut-badge ${statusClass}`;
+  span.textContent = currentStatut;
+  span.onclick = () => toggleSelect(span);
+
+  if (select.parentNode) {
+    select.parentNode.replaceChild(span, select);
+  }
+});
+}
+
+</script>
+
+
+<script src="/vendor/jquery/jquery.min.js"></script>
+<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+<script src="/js/sb-admin-2.min.js"></script>
+<script src="/vendor/datatables/jquery.dataTables.min.js"></script>
+<script src="/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script src="/js/demo/datatables-demo.js"></script>
+</body>
