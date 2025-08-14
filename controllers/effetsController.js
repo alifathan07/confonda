@@ -375,7 +375,7 @@ export const showEffets = async (req, res) => {
     const banques = await prisma.banque.findMany();
     console.log(`✅ Found ${banques.length} banques`);
 
-    res.render("dashboard/Tresorerie/reglements/effets/index", {
+    res.render("dashboard/tresorerie/reglements/effets/index", {
       effets,
       fournisseurs,
       banques,

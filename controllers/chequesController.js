@@ -425,7 +425,7 @@ export const showCheques = async (req, res) => {
     const banques = await prisma.banque.findMany();
     console.log(`✅ Found ${banques.length} banques`);
 
-    res.render("dashboard/Tresorerie/reglements/cheques/index", {
+    res.render("dashboard/tresorerie/reglements/cheques/index", {
       cheques,
       fournisseurs,
       banques,
@@ -563,7 +563,7 @@ export const updateCheque = async (req, res) => {
 };
 
 export const createChequeUi = async (req, res) => {
-      res.render('dashboard/Tresorerie/reglements/cheques/create')
+      res.render('dashboard/tresorerie/reglements/cheques/create')
 };
 
 export const etablirCheque = async (req, res) => {

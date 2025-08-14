@@ -173,7 +173,7 @@ export const show = async (req, res) => {
         name: 'asc' // ou 'createdAt': 'desc' si tu as ce champ
       }
     });
-    res.render("dashboard/Achats/fournisseurs/index", { suppliers });
+    res.render("dashboard/achats/fournisseurs/index", { suppliers });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Erreur lors de la récupération des fournisseurs.' });
