@@ -1,15 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-  <meta name="description" content="Trésorerie" />
-  <meta name="author" content="Confonda" />
-  <title>Trésorerie</title>
-  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
-  <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
-  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tresorie</title>
   <style>
     /* Enhanced gradients and colors */
     .bg-gradient-primary {
@@ -75,17 +69,17 @@
     .bank-card .card-body {
       display: flex;
       align-items: center;
-      padding: 1.5rem 1.5rem;
-      gap: 1.5rem; /* horizontal gap between icon and content */
+      padding: 1.5rem;
+      gap: 1.5rem;
       flex-wrap: wrap;
     }
 
     .bank-card .flex-grow-1 {
       display: flex;
       flex-direction: column;
-      gap: 1rem; /* vertical gap between heading and input group */
+      gap: 1rem;
       flex: 1 1 auto;
-      min-width: 250px;
+      min-width: 200px;
     }
 
     .input-group > select {
@@ -94,7 +88,7 @@
 
     .input-group .input-group-append a.btn {
       white-space: nowrap;
-      margin-left: 0.75rem; /* gap between select and button */
+      margin-left: 0.75rem;
       display: flex;
       align-items: center;
       gap: 0.5rem;
@@ -110,7 +104,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      width: 240px;
+      width: 100%;
+      max-width: 240px;
       height: 220px;
       background: linear-gradient(145deg, #ffffff 0%, #f8f9fc 100%);
       color: #4e73df;
@@ -219,8 +214,8 @@
       box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
     }
 
-    /* Mobile responsiveness */
-    @media (max-width: 768px) {
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
       .achat-buttons .d-flex {
         flex-direction: column;
         align-items: center;
@@ -245,6 +240,39 @@
 
       .card-icon-wrapper i {
         font-size: 24px;
+      }
+
+      .bank-card .flex-grow-1 {
+        min-width: 100%;
+      }
+
+      .container-fluid {
+        padding: 1rem;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .btn-gradient-primary {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+      }
+
+      .bank-card .card-body {
+        padding: 1rem;
+        gap: 1rem;
+      }
+
+      .form-group select {
+        font-size: 0.9rem;
+        padding: 0.5rem;
+      }
+
+      .modal-content {
+        margin: 1rem;
+      }
+
+      .modal-body .form-group {
+        margin-bottom: 1rem;
       }
     }
 
@@ -345,35 +373,31 @@
       .banque-card {
         margin-bottom: 20px;
       }
-      
+
       .banque-details {
         padding: 10px;
       }
-      
+
       .detail-item {
         margin-bottom: 10px;
       }
     }
   </style>
 </head>
-
-<body id="page-top">
-  <div id="wrapper">
+<body>
+  <div id="wrapper" class="d-flex">
     <%- include('../../layouts/sidebar') %>
-
-    <div id="content-wrapper" class="d-flex flex-column bg-light min-vh-100">
+    <div id="content-wrapper" class="d-flex flex-column bg-light min-vh-100 w-100">
       <div id="content">
         <%- include('../../layouts/topbar') %>
-
         <div class="container-fluid py-4">
           <button class="btn btn-gradient-primary" data-toggle="modal" data-target="#ajouterBanqueModal">
             <i class="fas fa-plus mr-2"></i>
             Ajouter une banque
-
           </button>
-          <div class="row justify-content-center mb-5">
-            <div class="col-lg-6 col-md-8">
-              <div class="card shadow border-0 rounded-4 p-4 hover-shadow transition bank-card text-center">
+          <div class="row justify-content-center my-4">
+            <div class="col-12 col-md-8 col-lg-6">
+              <div class="card shadow border-0 rounded-4 p-3 p-md-4 bank-card text-center">
                 <a href="/tresorerie/situation" class="text-decoration-none text-dark d-flex flex-column align-items-center gap-3">
                   <div class="card-icon-wrapper">
                     <i class="fas fa-balance-scale"></i>
@@ -385,22 +409,21 @@
               </div>
             </div>
           </div>
-          
+
           <!-- Banque Cards Section -->
-          <div class="form-group my-4">
+          <div class="form-group my-4 px-3 px-md-0">
             <label for="bank">Sélectionner une banque :</label>
-            <select class="form-control" id="bank">
+            <select class="form-control custom-select" id="bank">
               <option value="">-- Choisir une banque --</option>
               <% banques.forEach(function(banque) { %>
                 <option value="<%= banque.id %>"><%= banque.name %> - <%= banque.agence %></option>
               <% }) %>
             </select>
           </div>
-          
+
           <!-- Action Cards -->
           <div class="achat-buttons" id="cards">
-            <!-- First row: 4 cards -->
-            <div class="d-flex flex-wrap justify-content-center mb-5" style="gap: 10px">
+            <div class="d-flex flex-wrap justify-content-center mb-4" style="gap: 1rem;">
               <a id="card-cheques" href="/tresorerie/cheques" class="achat-card shadow-lg">
                 <div class="card-icon-wrapper">
                   <i class="fas fa-money-check"></i>
@@ -417,13 +440,14 @@
 
               <a id="card-autres" href="/tresorerie/payavenir" class="achat-card shadow-lg">
                 <div class="card-icon-wrapper">
-                  <i class="fas fa-file-invoice-dollar"></i>  
+                  <i class="fas fa-file-invoice-dollar"></i>
                 </div>
                 <span class="card-title">Payements à venir</span>
               </a>
+
               <a id="card-autres" href="/tresorerie/recettes_a_venir" class="achat-card shadow-lg">
                 <div class="card-icon-wrapper">
-                  <i class="fas fa-file-invoice-dollar"></i>  
+                  <i class="fas fa-file-invoice-dollar"></i>
                 </div>
                 <span class="card-title">Recettes à venir</span>
               </a>
@@ -450,7 +474,6 @@
   </div>
 
   <!-- Modal Ajouter Banque -->
-   <!-- //banqueal -->
   <div class="modal fade" id="ajouterBanqueModal" tabindex="-1" role="dialog" aria-labelledby="ajouterBanqueLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content rounded-4">
@@ -483,15 +506,11 @@
     </div>
   </div>
 
- 
-  
-
   <!-- Scripts -->
   <script src="/vendor/jquery/jquery.min.js"></script>
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
   <script src="/js/sb-admin-2.min.js"></script>
-
 
   <script>
     function updateLinks(bankId) {
@@ -499,36 +518,30 @@
         alert("Veuillez sélectionner une banque");
         return;
       }
-      // Dynamically update all cards with banque ID
       $('#card-cheques').attr('href', `/tresorerie/cheques/banque/${bankId}`);
       $('#card-effets').attr('href', `/tresorerie/effets/banque/${bankId}`);
       $('#card-releves').attr('href', `/tresorerie/releves/banque/${bankId}`);
     }
-  
+
     $(document).ready(function () {
-      // When banque is selected, update all links
       $('#bank').on('change', function () {
         const selectedBankId = $(this).val();
         updateLinks(selectedBankId);
       });
-  
-      // Animation on card click
+
       $('.achat-card').on('click', function () {
         const $icon = $(this).find('.card-icon-wrapper i');
         $icon.addClass('fa-spin');
         setTimeout(() => $icon.removeClass('fa-spin'), 800);
       });
-  
-      // Create new banque with AJAX
+
       $('#formAjouterBanque').on('submit', function (e) {
         e.preventDefault();
-  
         const banqueData = {
           name: $('#bankName').val(),
           rib: $('#bankRib').val(),
           agence: $('#bankAgence').val()
         };
-  
         $.ajax({
           type: 'POST',
           url: '/tresorerie/banques/create',
@@ -548,4 +561,3 @@
   </script>
 </body>
 </html>
-

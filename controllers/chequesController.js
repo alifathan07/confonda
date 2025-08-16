@@ -93,7 +93,8 @@ export const importExelCheques = async (req, res) => {
   try {
     console.log('📖 Reading Excel file...');
     await workbook.xlsx.readFile(filePath);
-    const worksheet = workbook.getWorksheet(1);
+    const worksheet = workbook.worksheets[0]; // index 0 for first sheet in array
+
 
     if (!worksheet) {
       console.error('❌ No worksheet found in Excel file');
@@ -246,7 +247,7 @@ export const importExelCheques = async (req, res) => {
 
       const numero = numeroRaw || null;
       const montant = parseFloat(montantRaw) || null;
-      const beneficiaire = beneficiaireRaw || 'Default beneficiaire'; // Default value if not in Excel
+      const beneficiaire = beneficiaireRaw || ''; // Default value if not in Excel
       const banqueName = banqueRaw || 'Default Banque'; // Default value if not in Excel
       const dateEtablissement = parseExcelDate(dateEtablissementRaw);
       const dateEcheance = parseExcelDate(dateEcheanceRaw);
@@ -415,6 +416,7 @@ export const showCheques = async (req, res) => {
       include: {
         fournisseur: true,
         banque: true,
+      
       },
     });
     console.log(`✅ Found ${cheques.length} cheques`);
@@ -444,6 +446,7 @@ export const showCheques = async (req, res) => {
 
 // ✅ Cheques for specific banque
 export const showChequesForbanque = async (req, res) => {
+  const { id } = req.params
   const cheques = await prisma.cheque.findMany({
     where: {
       banqueId: Number(req.params.id)
@@ -459,7 +462,7 @@ export const showChequesForbanque = async (req, res) => {
   });
   const banques = await prisma.banque.findMany();
   const fournisseurs = await prisma.fournisseur.findMany()
-  res.render('dashboard/tresorerie/reglements/cheques/index', { cheques, banques , fournisseurs });
+  res.render('dashboard/tresorerie/reglements/cheques/index', { cheques, banques , fournisseurs, id });
 };
 export const deleteCheque = async (req, res) => {
   try {
@@ -493,6 +496,7 @@ export const updateCheque = async (req, res) => {
       dateEtablissement,
       dateReglement,
       statut,
+      obs,
       banque
     } = req.body;
 
@@ -534,20 +538,27 @@ export const updateCheque = async (req, res) => {
       });
     }
 
+    // 🛠️ Build the data object dynamically, only including fields that are provided
+    const data = {};
+
+    if (numero !== undefined) data.numero = numero;
+    if (montant !== undefined) {
+      // Convert montant to float only if provided
+      data.montant = parseFloat(montant.replace(/[^0-9,.]/g, '').replace(',', '.'));
+    }
+    if (beneficiaire !== undefined) data.beneficiaire = beneficiaire;
+    if (dateEcheance !== undefined) data.dateEcheance = new Date(dateEcheance);
+    if (dateEtablissement !== undefined) data.dateEtablissement = new Date(dateEtablissement);
+    if (dateReglement !== undefined) data.dateReglement = dateReglement ? new Date(dateReglement) : null;
+    if (statut !== undefined) data.statut = statut;
+    if (obs !== undefined) data.obs = obs;
+    if (fournisseur) data.fournisseur = { connect: { id: fournisseur.id } };
+    if (findBanque) data.banque = { connect: { id: findBanque.id } };
+
     // 🛠️ Update cheque
     const cheque = await prisma.cheque.update({
       where: { id: parseInt(id) },
-      data: {
-        numero,
-        montant: parseFloat(montant),
-        beneficiaire: beneficiaire,
-        dateEcheance: new Date(dateEcheance),
-        dateEtablissement: new Date(dateEtablissement),
-        dateReglement: dateReglement ? new Date(dateReglement) : null,
-        statut,
-        fournisseur: { connect: { id: fournisseur.id } },
-        banque: { connect: { id: findBanque.id } }
-      }
+      data
     });
 
     console.log(`✅ Cheque updated successfully: ${id}`);
@@ -563,12 +574,47 @@ export const updateCheque = async (req, res) => {
 };
 
 export const createChequeUi = async (req, res) => {
-      res.render('dashboard/tresorerie/reglements/cheques/create')
+   const {id} = req.params     
+   res.render('dashboard/tresorerie/reglements/cheques/create', {id})
 };
 
 export const etablirCheque = async (req, res) => {
     try {
         const { numero, montant, beneficiaire, dateEcheance, ville  } = req.body
+        const { id } = req.params
+        let fournisseur = await prisma.fournisseur.findFirst({
+          where: { name: beneficiaire },
+        });
+    
+        if (!fournisseur) {
+          fournisseur = await prisma.fournisseur.create({
+            data: {
+              name: beneficiaire,
+              ice: `ICE_${Date.now()}`,
+              identifFiscal: `FISCAL_${Date.now()}`,
+              telFournisseur: 'Default',
+              contact: 'Default',
+              telContact: 'Default',
+            },
+          });
+        }
+        let findBanque = await prisma.banque.findFirst({
+          where: { id: parseInt(id) },
+        });
+        if (!findBanque) {
+          findBanque = await prisma.banque.create({
+            data: {
+              name: 'Default',
+              rib: 0,
+              agence: 'Default Agence',
+              solde: 0,
+              dateSolde: new Date(),
+              positive: 0,
+              negative: 0,
+              dmlt: 0,
+            },
+          });
+        }
         const cheque = await prisma.cheque.create({
             data: {
                 numero,
@@ -578,12 +624,12 @@ export const etablirCheque = async (req, res) => {
                 dateEtablissement: new Date(),
                 statut: 'En circulation',
                 ville,
-                fournisseur: { connect: { name: beneficiaire } },
-                banque: { connect: { name: 'Default' } },
+                fournisseur: { connect: { id: fournisseur.id } },
+                banque: { connect: { id: findBanque.id } },
             }
         })
         console.log(`✅ Cheque created successfully: ${cheque.id}`);
-        res.json(cheque);
+        res.redirect(`/tresorerie/cheques/banque/${cheque.banqueId}`);
     } catch (error) {
       console.error('❌ Error creating cheque:', {
         error: error.message,
@@ -678,7 +724,7 @@ export const createCheque = async (req, res) => {
         beneficiaire,
         dateEcheance: new Date(dateEcheance),
         dateEtablissement: new Date(dateEtablissement),
-        dateReglement: dateReglement ? new Date(dateReglement) : new Date("2025-10-02"),
+        dateReglement: dateReglement ? new Date(dateReglement) : null,
         statut,
         fournisseur: { connect: { id: fournisseur.id } },
         banque: { connect: { id: findBanque.id } },

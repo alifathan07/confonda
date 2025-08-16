@@ -515,7 +515,7 @@ export const updateEffet = async (req, res) => {
       return res.status(400).json({ error: "Fournisseur (bénéficiaire) et banque sont requis." });
     }
 
-    // 📌 Check if fournisseur exists by name (if name is not unique)
+    // 📌 Check if fournisseur exists by name
     let fournisseur = await prisma.fournisseur.findFirst({ where: { name: beneficiaire } });
 
     if (!fournisseur) {
@@ -549,23 +549,44 @@ export const updateEffet = async (req, res) => {
       });
     }
 
-    // 🛠️ Update cheque
+    // 🛠️ Build the data object dynamically
+    const data = {};
+
+    if (numero !== undefined) data.numero = numero;
+    if (montant !== undefined) {
+      const cleanedMontant = montant.replace(/[^0-9,.]/g, '').replace(',', '.');
+      if (isNaN(parseFloat(cleanedMontant))) {
+        return res.status(400).json({ error: "Montant must be a valid number." });
+      }
+      data.montant = parseFloat(cleanedMontant);
+    }
+    if (beneficiaire !== undefined) data.beneficiaire = beneficiaire;
+    if (dateEcheance !== undefined) data.dateEcheance = new Date(dateEcheance);
+    if (dateEtablissement !== undefined) data.dateEtablissement = new Date(dateEtablissement);
+    if (dateReglement !== undefined) data.dateReglement = dateReglement ? new Date(dateReglement) : null;
+    if (statut !== undefined) data.statut = statut;
+    if (obs !== undefined) data.obs = obs;
+    if (montantPaye !== undefined) {
+      const cleanedMontantPaye = montantPaye.replace(/[^0-9,.]/g, '').replace(',', '.');
+      if (isNaN(parseFloat(cleanedMontantPaye))) {
+        return res.status(400).json({ error: "MontantPaye must be a valid number." });
+      }
+      data.montantPaye = parseFloat(cleanedMontantPaye);
+    }
+    if (reste !== undefined) {
+      const cleanedReste = reste.replace(/[^0-9,.]/g, '').replace(',', '.');
+      if (isNaN(parseFloat(cleanedReste))) {
+        return res.status(400).json({ error: "Reste must be a valid number." });
+      }
+      data.reste = parseFloat(cleanedReste);
+    }
+    if (fournisseur) data.fournisseur = { connect: { id: fournisseur.id } };
+    if (findBanque) data.banque = { connect: { id: findBanque.id } };
+
+    // 🛠️ Update effet
     const effet = await prisma.effet.update({
       where: { id: parseInt(id) },
-      data: {
-        numero,
-        montant: parseFloat(montant),
-        beneficiaire: beneficiaire,
-        dateEcheance: new Date(dateEcheance),
-        dateEtablissement: new Date(dateEtablissement),
-        dateReglement: dateReglement ? new Date(dateReglement) : null,
-        statut,
-        obs,
-        montantPaye: parseFloat(montantPaye), // ✅ Convert to Float
-        reste: parseFloat(reste), // ✅ Convert to Float
-        fournisseur: { connect: { id: fournisseur.id } },
-        banque: { connect: { id: findBanque.id } }
-      }
+      data
     });
 
     console.log(`✅ Effet updated successfully: ${id}`);

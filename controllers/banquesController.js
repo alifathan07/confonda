@@ -95,7 +95,7 @@ export const getSituationBancaire = async (req, res) => {
       console.log(cheques);
       const effets = await prisma.effet.findMany({
         where: {
-          statut: { in: ['En Circulation', 'Impayé'] },
+          statut: { in: ['En Circulation', 'Impayé', 'en garantie'] },
           dateEcheance: {
             gte: fromDate,
             lte: toDate,

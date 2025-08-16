@@ -47,8 +47,8 @@ dashboardRouter.get('/dashboard' , (req, res) => {
         dashboardRouter.get('/tresorerie/banques/create', showCreate);
         dashboardRouter.post('/tresorerie/banques/create', createBanque);
         // -----------Trésorerie :  Cheques-----------------
-        dashboardRouter.get('/tresorerie/cheques/create/format', createChequeUi);
-        dashboardRouter.post('/tresorerie/cheques/create/format', etablirCheque);
+        dashboardRouter.get('/tresorerie/cheques/create/format/:id', createChequeUi);
+        dashboardRouter.post('/tresorerie/cheques/create/format/:id', etablirCheque);
         dashboardRouter.get('/tresorerie/cheques', showCheques);
         dashboardRouter.post('/tresorerie/cheques/create', createCheque);
         dashboardRouter.get('/tresorerie/cheques/banques', displayBanquesForcheques);

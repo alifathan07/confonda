@@ -1,81 +1,174 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="Tableau de bord fournisseurs et règlements">
     <meta name="author" content="Confonda">
-
-   
-    <style>
-        .nav-item {
-  position: sticky;
-  top: 0; /* or adjust top offset for spacing */
-  background: inherit; /* keep sidebar background */
-  z-index: 1050; /* make sure it stays on top */
-}
-
-    </style>
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet">
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <style>
+        .nav-item {
+            position: sticky;
+            top: 0;
+            background: inherit;
+            z-index: 1050;
+        }
+
+        /* Mobile sidebar styles */
+        .sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        /* Hide sidebar on mobile by default */
+        @media (max-width: 767.98px) {
+            .sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                width: 250px;
+                z-index: 1100;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            /* Style for mobile toggle button */
+            .sidebar-toggle-btn {
+                display: block;
+                position: fixed;
+                top: 15px;
+                left: 15px;
+                z-index: 1200;
+                background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                transition: all 0.3s ease;
+            }
+
+            .sidebar-toggle-btn:hover {
+                transform: scale(1.1);
+                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        /* Show sidebar on desktop */
+        @media (min-width: 768px) {
+            .sidebar {
+                transform: translateX(0);
+                position: relative;
+                width: 250px;
+            }
+
+            .sidebar-toggle-btn {
+                display: none;
+            }
+        }
+    </style>
 </head>
-
 <body id="page-top">
-    
-<!-- Sidebar -->
-<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+    <!-- Mobile Toggle Button -->
+    <button class="sidebar-toggle-btn" id="mobileSidebarToggle">
+        <i class="fas fa-bars"></i>
+    </button>
 
-    <!-- Sidebar - Brand -->
-    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/dashboard">
-        <div class="sidebar-brand-icon rotate-n-15">
-            <i class="fas fa-boxes"></i>
+    <!-- Sidebar -->
+    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+        <!-- Sidebar - Brand -->
+        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/dashboard">
+            <div class="sidebar-brand-icon rotate-n-15">
+                <i class="fas fa-boxes"></i>
+            </div>
+            <div class="sidebar-brand-text mx-3">Cooperall</div>
+        </a>
+
+        <!-- Divider -->
+        <hr class="sidebar-divider my-0">
+
+        <!-- Nav Item - Dashboard -->
+        <li class="nav-item" style="font-size: 12px;">
+            <a class="nav-link py-3" href="/dashboard" style="font-size: 15px;">
+                <i class="fas fa-fw fa-tachometer-alt" style="font-size:17px;"></i>
+                <span style="font-size: 15px">Tableau de bord</span>
+            </a>
+        </li>
+
+        <!-- Divider -->
+        <hr class="sidebar-divider">
+
+        <!-- Nav Item - Payment Methods -->
+        <li class="nav-item" style="font-size: 12px;">
+            <a class="nav-link py-3" href="/tresorerie" style="font-size: 15px;">
+                <i class="fas fa-fw fa-credit-card" style="font-size:17px;"></i>
+                <span style="font-size: 15px">Trésorerie</span>
+            </a>
+        </li>
+
+        <!-- Divider -->
+        <hr class="sidebar-divider d-none d-md-block">
+
+        <!-- Sidebar Toggler (Desktop) -->
+        <div class="text-center d-none d-md-inline">
+            <button class="rounded-circle border-0" id="sidebarToggle"></button>
         </div>
-        <div class="sidebar-brand-text mx-3">Cooperall</div>
-    </a>
-  
-    <!-- Divider -->
-    <hr class="sidebar-divider my-0">
-  
-    <!-- Nav Item - Dashboard -->
-    <li class="nav-item" style="font-size: 12px;">
-        <a class="nav-link py-3" href="/dashboard" style="font-size: 15px;">
-            <i class="fas fa-fw fa-tachometer-alt" style="font-size:17px;"></i>
-            <span style="font-size: 15px">Tableau de bord</span>
-        </a>
-    </li>
-  
-    <!-- Divider -->
-    <hr class="sidebar-divider">
-  
-    <!-- Nav Item - Suppliers -->
-    <li class="nav-item fixed" style="font-size: 12px;">
-        <a class="nav-link py-3" href="/achats" style="font-size: 15px;">
-            <i class="fas fa-fw fa-chart-line" style="font-size:17px;"></i>
-            <span style="font-size: 15px">Achats</span>
-        </a>
-    </li>
-  
-    <hr class="sidebar-divider">
-  
-    <!-- Nav Item - Payment Methods -->
-    <li class="nav-item fixed" style="font-size: 12px;">
-        <a class="nav-link py-3" href="/tresorerie" style="font-size: 15px;">
-            <i class="fas fa-fw fa-credit-card" style="font-size:17px;"></i>
-            <span style="font-size: 15px">Trésorerie </span>
-        </a>
-    </li>
-  
-    <!-- Divider -->
-    <hr class="sidebar-divider d-none d-md-block">
-  
-    <!-- Sidebar Toggler -->
-    <div class="text-center d-none d-md-inline">
-        <button class="rounded-circle border-0" id="sidebarToggle"></button>
-    </div>
-  
-</ul>
-  
-<!-- End of Sidebar -->
+    </ul>
+    <!-- End of Sidebar -->
+
+    <!-- Scripts -->
+    <script src="/vendor/jquery/jquery.min.js"></script>
+    <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="/js/sb-admin-2.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Ensure sidebar is closed by default on mobile
+            if ($(window).width() < 768) {
+                $('#accordionSidebar').removeClass('active');
+            }
+
+            // Toggle sidebar on mobile
+            $('#mobileSidebarToggle').on('click', function (e) {
+                e.preventDefault();
+                $('#accordionSidebar').toggleClass('active');
+                // Update toggle button icon
+                const icon = $(this).find('i');
+                if ($('#accordionSidebar').hasClass('active')) {
+                    icon.removeClass('fa-bars').addClass('fa-times');
+                } else {
+                    icon.removeClass('fa-times').addClass('fa-bars');
+                }
+            });
+
+            // Close sidebar when clicking outside on mobile
+            $(document).on('click', function (e) {
+                if ($(window).width() < 768) {
+                    if (!$(e.target).closest('#accordionSidebar').length && !$(e.target).closest('#mobileSidebarToggle').length) {
+                        $('#accordionSidebar').removeClass('active');
+                        $('#mobileSidebarToggle').find('i').removeClass('fa-times').addClass('fa-bars');
+                    }
+                }
+            });
+
+            // Handle window resize to ensure sidebar state
+            $(window).on('resize', function () {
+                if ($(window).width() >= 768) {
+                    $('#accordionSidebar').removeClass('active');
+                    $('#mobileSidebarToggle').find('i').removeClass('fa-times').addClass('fa-bars');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
