@@ -181,7 +181,7 @@
             /* Position each field exactly on the BMCE cheque - FROM TOP */
             .print-payee {
                 position: absolute;
-                top: 37mm !important; /* From very top of page */
+                top: 36mm !important; /* From very top of page */
                 left: 50mm !important;
                 width: 85mm;
                 font-size: 15pt;
@@ -193,8 +193,8 @@
 
             .print-amount {
                 position: absolute;
-                top: 10mm !important; /* From very top of page */
-                left: 180mm !important;
+                top: 11mm !important; /* From very top of page */
+                left: 170mm !important;
                 font-size: 11pt;
                 font-weight: bold;
                 font-size: 15pt;
@@ -207,11 +207,11 @@
             .print-amount-words {
                 position: absolute;
                 top: 22mm !important; /* From very top of page */
-                left: 55mm !important;
+                left: 63mm !important;
                 font-weight: bold;
                 width: 170mm;
                 font-size: 17px;
-                max-width: 150mm;
+                max-width: 128mm;
                     white-space: normal;      /* allow wrapping */
                 word-wrap: break-word;    /* break long words if needed */
                 
@@ -234,7 +234,7 @@
 
             .print-city {
                 position: absolute;
-                top: 45mm !important; /* From very top of page */
+                top: 44mm !important; /* From very top of page */
                 left: 110mm !important;
                 font-size: 9pt;
                 font-weight: bold;
@@ -267,7 +267,7 @@
 
     <div class="cheque-container">
 
-        <div class="bank-logo">BMCI Bank</div>
+        <div class="bank-logo">AWB Bank</div>
 
         <form id="chequeForm" action="/tresorerie/cheques/create/format/<%=id %>" method="POST">
             <div class="cheque-row">

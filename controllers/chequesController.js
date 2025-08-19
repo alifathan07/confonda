@@ -586,6 +586,10 @@ export const bmci = async (req, res) => {
   const {id} = req.params     
   res.render('dashboard/tresorerie/reglements/cheques/etablir/bmci', {id})
 };
+export const awb = async (req, res) => {
+  const {id} = req.params     
+  res.render('dashboard/tresorerie/reglements/cheques/etablir/awb', {id})
+};
 
 export const etablirCheque = async (req, res) => {
     try {
