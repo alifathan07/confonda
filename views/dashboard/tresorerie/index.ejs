@@ -316,8 +316,10 @@
       background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
     }
 
+
     .banque-card:hover {
       transform: translateY(-5px);
+      
       box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
       border-color: rgba(78, 115, 223, 0.3);
     }
@@ -416,7 +418,7 @@
             <select class="form-control custom-select" id="bank">
               <option value="">-- Choisir une banque --</option>
               <% banques.forEach(function(banque) { %>
-                <option value="<%= banque.id %>"><%= banque.name %> - <%= banque.agence %></option>
+                <option value="<%= banque.id %>"><%= banque.name %></option>
               <% }) %>
             </select>
           </div>
@@ -445,7 +447,7 @@
                 <span class="card-title">Payements à venir</span>
               </a>
 
-              <a id="card-autres" href="/tresorerie/recettes_a_venir" class="achat-card shadow-lg">
+              <a id="card-recetes" href="/tresorerie/recettes_a_venir" class="achat-card shadow-lg">
                 <div class="card-icon-wrapper">
                   <i class="fas fa-file-invoice-dollar"></i>
                 </div>

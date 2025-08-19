@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chèque BMCE</title>
+    <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
+    <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+    <style>
+        /* Screen styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .cheque-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .bank-logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c5aa0;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .cheque-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .cheque-row .form-group {
+            flex: 1;
+        }
+
+        .textarea-wrapper {
+            flex: 2;
+        }
+
+        .amount-numbers {
+            flex: 1;
+        }
+
+        .amount-words {
+            margin-bottom: 20px;
+        }
+
+        .footer-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .signature-line {
+            flex: 1;
+            height: 1px;
+            border-bottom: 1px solid #333;
+            margin: 0 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background-color: #2c5aa0;
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        /* Print styles - This is where the magic happens */
+        @media print {
+            @page {
+                size: A4 ;
+                margin: 0 !important;
+            }
+            
+            *, *::before, *::after {
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                background: transparent !important;
+                color: black !important;
+                box-sizing: border-box !important;
+            }
+
+            html {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 210mm;
+                height: 297mm;
+            }
+
+            body {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 210mm;
+                height: 297mm;
+                font-family: 'Courier New', monospace;
+                font-size: 12pt;
+                overflow: hidden;
+                position: relative;
+            }
+
+            /* Hide everything except the print content */
+            .cheque-container,
+            .bank-logo,
+            form,
+            .form-group,
+            .cheque-row,
+            .footer-row,
+            label,
+            input,
+            textarea,
+            button {
+                display: none !important;
+                visibility: hidden !important;
+            }
+
+            /* Show only the print overlay - ZERO SPACE FROM TOP */
+            .print-overlay {
+    display: block !important;
+    visibility: visible !important;
+    position: absolute !important;
+    top: 150px !important;
+    left: -39px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 210mm !important;
+    height: 99mm !important;
+    border: 1px dashed #ccc;
+    transform: rotate(90deg); /* Rotate 90 degrees clockwise */
+    transform-origin: center center; /* Pivot around the center */
+}
+
+            /* Position each field exactly on the BMCE cheque - FROM TOP */
+            .print-payee {
+                position: absolute;
+                top: 30mm !important; /* From very top of page */
+                left: 50mm !important;
+                width: 85mm;
+                font-size: 10pt;
+                font-weight: bold;
+                line-height: 1.1;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .print-amount {
+                position: absolute;
+                top: 8mm !important; /* From very top of page */
+                left: 140mm !important;
+                font-size: 11pt;
+                font-weight: bold;
+                text-align: left;
+                width: 50mm;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .print-amount-words {
+                position: absolute;
+                top: 24mm !important; /* From very top of page */
+                left: 30mm !important;
+                width: 170mm;
+                font-size: 9pt;
+                font-weight: bold;
+                text-transform: uppercase;
+                line-height: 1.1;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .print-date {
+                position: absolute;
+                top: 36mm !important; /* From very top of page */
+                left: 150mm !important;
+                font-size: 9pt;
+                font-weight: bold;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .print-city {
+                position: absolute;
+                top: 36mm !important; /* From very top of page */
+                left: 105mm !important;
+                font-size: 9pt;
+                font-weight: bold;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .print-cheque-number {
+                position: absolute;
+                top: 80mm !important; /* From very top of page */
+                left: 65mm !important;
+                font-size: 9pt;
+                font-weight: bold;
+                text-align: left;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+        }
+
+        /* Hidden print overlay */
+        .print-overlay {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <button class="btn btn-primary" onclick="window.history.back()">Retour</button>
+
+    <div class="cheque-container">
+
+        <div class="bank-logo">BMCE Bank</div>
+
+        <form id="chequeForm" action="/tresorerie/cheques/create/format/<%=id %>" method="POST">
+            <div class="cheque-row">
+                <div class="form-group textarea-wrapper">
+                    <label for="payee">À l'ordre de:</label>
+                    <textarea id="payee" rows="2" placeholder="Nom du bénéficiaire" name="beneficiaire"></textarea>
+                </div>
+                <div class="form-group amount-numbers">
+                    <label for="amount">Montant:</label>
+                    <input id="amount" type="text" placeholder="0,00 MAD" name="montant">
+                </div>
+            </div>
+
+            <div class="form-group amount-words">
+                <label for="amount-words">Montant en lettres:</label>
+                <input id="amount-words" type="text" placeholder="Zéro dirhams et zéro centimes">
+            </div>
+
+            <div class="cheque-row">
+                <div class="form-group">
+                    <label for="date">Date:</label>
+                    <input id="date" type="date" name="dateEcheance">
+                </div>
+                <div class="form-group">
+                    <label for="city">À (Ville):</label>
+                    <input id="city" type="text" placeholder="Casablanca" value="Casablanca" name="ville">
+                </div>
+                <div class="form-group">
+                    <label for="account">N° Chèque:</label>
+                    <input id="account" type="text" placeholder="Numéro du chèque" name="numero">
+                </div>
+            </div>
+
+            <div class="footer-row">
+                <div>Signature:</div>
+                <div class="signature-line"></div>
+                <button type="button" class="btn btn-primary" id="printBtn">Imprimer le Chèque</button>
+                <button type="submit" class="btn btn-secondary">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- This is what gets printed - positioned exactly for the cheque -->
+    <div class="print-overlay">
+        <div class="print-payee" id="print-payee"></div>
+        <div class="print-amount" id="print-amount"></div>
+        <div class="print-amount-words" id="print-amount-words"></div>
+        <div class="print-date" id="print-date"></div>
+        <div class="print-city" id="print-city"></div>
+        <div class="print-cheque-number" id="print-cheque-number"></div>
+    </div>
+
+    <script>
+        // French number-to-words conversion function
+        function numberToFrenchWords(number) {
+            const units = ["", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf"];
+            const teens = ["dix", "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept", "dix-huit", "dix-neuf"];
+            const tens = ["", "", "vingt", "trente", "quarante", "cinquante", "soixante", "soixante-dix", "quatre-vingt", "quatre-vingt-dix"];
+
+            function convertLessThanThousand(n) {
+                if (n === 0) return "";
+                let result = "";
+                if (n >= 100) {
+                    if (n === 100) {
+                        result += "cent";
+                    } else if (n < 200) {
+                        result += "cent ";
+                    } else {
+                        result += units[Math.floor(n / 100)] + " cent";
+                        if (n % 100 === 0) result += "s";
+                        else result += " ";
+                    }
+                    n %= 100;
+                }
+                if (n >= 20) {
+                    result += tens[Math.floor(n / 10)];
+                    if (n % 10 > 0) result += "-" + units[n % 10];
+                } else if (n >= 10) {
+                    result += teens[n - 10];
+                } else if (n > 0) {
+                    result += units[n];
+                }
+                return result.trim();
+            }
+
+            function numberToWords(n) {
+                if (n === 0) return "zéro";
+                let parts = [];
+                let index = 0;
+                const thousands = ["", "mille", "million", "milliard"];
+                
+                while (n > 0) {
+                    let chunk = n % 1000;
+                    if (chunk > 0) {
+                        let chunkText = convertLessThanThousand(chunk);
+                        if (index === 1 && chunk === 1) {
+                            chunkText = "mille";
+                        } else if (index > 0) {
+                            chunkText += " " + thousands[index];
+                            if (chunk > 1 && index > 1) chunkText += "s";
+                        }
+                        parts.unshift(chunkText);
+                    }
+                    n = Math.floor(n / 1000);
+                    index++;
+                }
+                return parts.join(" ");
+            }
+
+            return numberToWords(number);
+        }
+
+        // Update print fields when form changes
+        function updatePrintFields() {
+            document.getElementById('print-payee').textContent = document.getElementById('payee').value;
+            
+            const amount = document.getElementById('amount').value;
+            document.getElementById('print-amount').textContent = amount ? amount + ' DH' : '';
+            
+            document.getElementById('print-amount-words').textContent = document.getElementById('amount-words').value;
+            
+            const date = document.getElementById('date').value;
+            if (date) {
+                const formattedDate = new Date(date).toLocaleDateString('fr-FR');
+                document.getElementById('print-date').textContent = formattedDate;
+            }
+            
+            document.getElementById('print-city').textContent = document.getElementById('city').value;
+            document.getElementById('print-cheque-number').textContent = document.getElementById('account').value;
+        }
+
+        // Handle amount input and convert to words
+        document.getElementById("amount").addEventListener("input", function () {
+            let input = this.value.replace(/[^0-9,.]/g, "").replace(",", ".");
+            let amountWordsInput = document.getElementById("amount-words");
+            
+            if (!input || isNaN(parseFloat(input))) {
+                amountWordsInput.value = "Zéro dirhams et zéro centimes";
+                updatePrintFields();
+                return;
+            }
+
+            let [dirhams, centimes = "0"] = input.split(".");
+            dirhams = parseInt(dirhams) || 0;
+            centimes = parseInt(centimes.padEnd(2, "0").substring(0, 2)) || 0;
+
+            let dirhamsText = numberToFrenchWords(dirhams);
+            let centimesText = numberToFrenchWords(centimes);
+
+            dirhamsText = dirhamsText.charAt(0).toUpperCase() + dirhamsText.slice(1);
+            let result = `${dirhamsText} dirham${dirhams !== 1 ? "s" : ""}`;
+            if (centimes > 0) {
+                result += ` et ${centimesText} centime${centimes !== 1 ? "s" : ""}`;
+            } else {
+                result += " et zéro centimes";
+            }
+            amountWordsInput.value = result;
+            updatePrintFields();
+        });
+
+        // Update print fields on any input change
+        document.querySelectorAll('input, textarea').forEach(input => {
+            input.addEventListener('input', updatePrintFields);
+            input.addEventListener('change', updatePrintFields);
+        });
+
+        // Print button functionality
+        document.getElementById("printBtn").addEventListener("click", function () {
+            // Update print fields before printing
+            updatePrintFields();
+            
+            // Print the page
+            window.print();
+        });
+
+        // Test alignment button
+        document.getElementById("testBtn").addEventListener("click", function () {
+            // Fill with test data
+            document.getElementById('payee').value = "SOCIÉTÉ TEST SARL\nCASABLANCA";
+            document.getElementById('amount').value = "1250.75";
+            document.getElementById('date').value = "2025-08-16";
+            document.getElementById('city').value = "CASABLANCA";
+            document.getElementById('account').value = "0001234567";
+            
+            // Trigger amount conversion
+            document.getElementById('amount').dispatchEvent(new Event('input'));
+            updatePrintFields();
+            
+            alert("Données de test ajoutées! Utilisez 'Imprimer le Chèque' pour tester l'alignement.");
+        });
+
+        // Initialize print fields
+        updatePrintFields();
+    </script>
+</body>
+</html>

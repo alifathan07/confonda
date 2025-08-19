@@ -7,7 +7,7 @@ import path from 'path';
 import fs from 'fs';
 import prisma from '../db.js';
 import { createBanque, deleteBanque, displayBanques, displayBanquesForcheques, getSituationBancaire, showCreate, updateSituationBancaire } from '../controllers/banquesController.js';
-import { createCheque, createChequeUi, deleteCheque, etablirCheque, importExelCheques, showCheques, showChequesForbanque, updateCheque, updateChequeStatut } from '../controllers/chequesController.js';
+import { bmce, bmci, createCheque, deleteCheque, etablirCheque, importExelCheques, showCheques, showChequesForbanque, updateCheque, updateChequeStatut } from '../controllers/chequesController.js';
 import {createEffet, deleteEffet, importExelEffets, showEffets, showEffetsForbanque, updateEffet, updateEffetStatut} from '../controllers/effetsController.js';
 import { createPayavenir, deletePayavenir, showPayavenir, updatePayavenir, updatePayavenirStatut } from '../controllers/payavenirController.js';
 import { createRecavenir, deleteRecavenir, showRecavenir, updateRecavenir, updateRecavenirStatut } from '../controllers/recavenirController.js';
@@ -47,7 +47,8 @@ dashboardRouter.get('/dashboard' , (req, res) => {
         dashboardRouter.get('/tresorerie/banques/create', showCreate);
         dashboardRouter.post('/tresorerie/banques/create', createBanque);
         // -----------Trésorerie :  Cheques-----------------
-        dashboardRouter.get('/tresorerie/cheques/create/format/:id', createChequeUi);
+        dashboardRouter.get('/tresorerie/cheques/create/format/bmce', bmce);
+        dashboardRouter.get('/tresorerie/cheques/create/format/bmci', bmci);
         dashboardRouter.post('/tresorerie/cheques/create/format/:id', etablirCheque);
         dashboardRouter.get('/tresorerie/cheques', showCheques);
         dashboardRouter.post('/tresorerie/cheques/create', createCheque);

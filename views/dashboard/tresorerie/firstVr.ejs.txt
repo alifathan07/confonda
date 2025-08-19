@@ -1,473 +1,563 @@
-<title>Fournisseurs</title>
-
-<div id="wrapper">
-  <%- include('../../layouts/sidebar') %>
-
-  <div id="content-wrapper" class="d-flex flex-column bg-light min-vh-100">
-    <div id="content">
-      <%- include('../../layouts/topbar') %>
-
-      <div class="container-fluid py-4">
-
-        <!-- Bank Selection Panel -->
-        <div class="row justify-content-center mb-4">
-          <div class="col-lg-6 col-md-8 my-3 px-4">
-            <div class="card shadow-lg border-0 rounded-4 bank-card">
-              <div class="card-body p-4 d-flex align-items-center gap-4 flex-wrap">
-                <div style="margin: 0 auto" class="icon-circle bg-gradient-primary text-white me-3">
-                  
-                      <i class="fas fa-university fa-lg"></i>
-                    
-                  </div>
-                <div class="flex-grow-1 d-flex flex-column gap-3">
-                    <center>
-                        <h5 class="fw-bold text-dark mb-0">Sélectionner une banque</h5>
-
-                    </center>
-                  <div class="input-group mt-3">
-                    <select id="bank" class="form-control custom-select" style="height: 48px">
-                        <option value="">selectionner une banque</option>
-                        <% banques.forEach(element => { %>
-                      
-                      <option value="<%= element.id %>"><%= element.name %></option>
-
-                     <% }) %>
-                     
-                    </select>
-                    
-                   
-                       
-                    <div class="input-group-append">
-                      <button class="btn btn-gradient-primary" data-toggle="modal" data-target="#ajouterBanqueModal">
-                        <i class="fas fa-plus"></i> ajouter une banque
-                      </button>
-                    </div>
-                    
-                  
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Action Cards -->
-        <div class="achat-buttons">
-          <!-- First row: 4 cards -->
-          <div class="d-flex flex-wrap justify-content-center  mb-5" style="gap: 10px">
-            <a href="/tresorerie/cheques" class="achat-card shadow-lg">
-              <div class="card-icon-wrapper">
-                <i class="fas fa-money-check"></i>
-              </div>
-              <span class="card-title">Cheques</span>
-              <small class="card-subtitle">Gérer les paiements</small>
-            </a>
-
-            <a href="/achats/commandes" class="achat-card shadow-lg">
-              <div class="card-icon-wrapper">
-                <i class="fas fa-hand-holding-usd"></i>
-              </div>
-              <span class="card-title">Effets</span>
-              <small class="card-subtitle">Prélèvements automatiques</small>
-            </a>
-
-            <a href="/achats/factures" class="achat-card shadow-lg">
-              <div class="card-icon-wrapper">
-                <i class="fas fa-file-invoice-dollar"></i>
-              </div>
-              <span class="card-title">Autres règlements</span>
-              <small class="card-subtitle">Règlements à venir</small>
-            </a>
-           
-            <a href="/achats/releves-bancaires" class="achat-card shadow-lg">
-              <div class="card-icon-wrapper">
-                <i class="fas fa-file-alt"></i>
-              </div>
-              <span class="card-title">Relevés bancaires</span>
-              <small class="card-subtitle">Relevés mensuels</small>
-            </a>
-          </div>
-
-          <!-- Second row: Situation bancaire alone -->
-          <div class="d-flex justify-content-center">
-            <a href="/achats/situation-bancaire" class="achat-card shadow-lg" style="width: 1800px">
-              <div class="card-icon-wrapper">
-                <i class="fas fa-balance-scale"></i>
-              </div>
-              <span class="card-title">Situation bancaire</span>
-              <small class="card-subtitle">Bilan des avoirs</small>
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <footer class="sticky-footer bg-white mt-auto">
-      <div class="container my-auto">
-        <div class="copyright text-center my-auto">
-          <span>Copyright &copy; Your Website 2025</span>
-        </div>
-      </div>
-    </footer>
-  </div>
-</div>
-
-<!-- Scroll to Top -->
-<a class="scroll-to-top rounded" href="#page-top">
-  <i class="fas fa-angle-up"></i>
-</a>
-
-<!-- Improved Styles -->
-<style>
-  /* Enhanced gradients and colors */
-  .bg-gradient-primary {
-    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
-  }
-
-  .btn-gradient-primary {
-    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
-    border: none;
-    color: white;
-    border-radius: 10px;
-    padding: 0.6rem 1.2rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-  }
-
-  .btn-gradient-primary:hover {
-    background: linear-gradient(135deg, #224abe 0%, #1e3a8a 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(78, 115, 223, 0.4);
-    color: white;
-  }
-
-  /* Enhanced bank card */
-  .bank-card {
-    background: linear-gradient(145deg, #ffffff 0%, #f8f9fc 100%);
-    border: 1px solid rgba(78, 115, 223, 0.1);
-    transition: all 0.3s ease;
-  }
-
-  .bank-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
-  }
-
-  .icon-circle {
-    width: 55px;
-    height: 55px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%) !important;
-    box-shadow: 0 8px 20px rgba(78, 115, 223, 0.3);
-  }
-
-  .custom-select {
-    border-radius: 10px;
-    border: 2px solid #e3e6f0;
-    padding: 0.6rem 1rem;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-    background: white;
-  }
-
-  .custom-select:focus {
-    border-color: #4e73df;
-    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
-    outline: none;
-  }
-
-  /* Spacing and flex updates */
-  .bank-card .card-body {
-    display: flex;
-    align-items: center;
-    padding: 1.5rem 1.5rem;
-    gap: 1.5rem; /* horizontal gap between icon and content */
-    flex-wrap: wrap;
-  }
-
-  .bank-card .flex-grow-1 {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem; /* vertical gap between heading and input group */
-    flex: 1 1 auto;
-    min-width: 250px;
-  }
-
-  .input-group > select {
-    flex: 1 1 auto;
-  }
-
-  .input-group .input-group-append a.btn {
-    white-space: nowrap;
-    margin-left: 0.75rem; /* gap between select and button */
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  /* Enhanced action cards */
-  .achat-buttons {
-    padding-top: 2rem;
-  }
-
-  .achat-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 240px;
-    height: 220px;
-    background: linear-gradient(145deg, #ffffff 0%, #f8f9fc 100%);
-    color: #4e73df;
-    text-decoration: none;
-    border-radius: 20px;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    font-size: 1.1rem;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    border: 2px solid transparent;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .achat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-    transition: left 0.6s;
-  }
-
-  .achat-card:hover::before {
-    left: 100%;
-  }
-
-  .achat-card:hover {
-    background: linear-gradient(145deg, #f8f9fc 0%, #ffffff 100%);
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 15px 40px rgba(78, 115, 223, 0.2);
-    border-color: rgba(78, 115, 223, 0.2);
-    text-decoration: none;
-    color: #4e73df;
-  }
-
-  .card-icon-wrapper {
-    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 15px;
-    transition: all 0.3s ease;
-    box-shadow: 0 6px 15px rgba(78, 115, 223, 0.2);
-  }
-
-  .card-icon-wrapper i {
-    font-size: 28px;
-    color: #4e73df;
-    transition: all 0.3s ease;
-  }
-
-  .achat-card:hover .card-icon-wrapper {
-    transform: scale(1.1) rotate(5deg);
-    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
-    box-shadow: 0 8px 20px rgba(78, 115, 223, 0.4);
-  }
-
-  .achat-card:hover .card-icon-wrapper i {
-    color: white;
-  }
-
-  .card-title {
-    font-weight: 700;
-    font-size: 1.15rem;
-    color: #2d3748;
-    margin-bottom: 0.3rem;
-    display: block;
-  }
-
-  .card-subtitle {
-    font-weight: 500;
-    font-size: 0.85rem;
-    color: #718096;
-    opacity: 0.8;
-    display: block;
-  }
-
-  /* Enhanced scroll to top */
-  .scroll-to-top {
-    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
-    border: none;
-    width: 45px;
-    height: 45px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    box-shadow: 0 6px 15px rgba(78, 115, 223, 0.3);
-  }
-
-  .scroll-to-top:hover {
-    transform: translateY(-3px) scale(1.1);
-    box-shadow: 0 8px 20px rgba(78, 115, 223, 0.4);
-  }
-
-  /* Enhanced footer */
-  .sticky-footer {
-    background: linear-gradient(145deg, #ffffff 0%, #f8f9fc 100%) !important;
-    border-top: 1px solid rgba(78, 115, 223, 0.1);
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-  }
-
-  /* Mobile responsiveness */
-  @media (max-width: 768px) {
-    .achat-buttons .d-flex {
-      flex-direction: column;
-      align-items: center;
-      gap: 1.5rem;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tresorie</title>
+  <style>
+    /* Enhanced gradients and colors */
+    .bg-gradient-primary {
+      background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
     }
 
-    .achat-card {
-      width: 90%;
-      max-width: 300px;
-      height: 200px;
+    .btn-gradient-primary {
+      background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+      border: none;
+      color: white;
+      border-radius: 10px;
+      padding: 0.6rem 1.2rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn-gradient-primary:hover {
+      background: linear-gradient(135deg, #224abe 0%, #1e3a8a 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(78, 115, 223, 0.4);
+      color: white;
+    }
+
+    /* Enhanced bank card */
+    .bank-card {
+      background: linear-gradient(145deg, #ffffff 0%, #f8f9fc 100%);
+      border: 1px solid rgba(78, 115, 223, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .bank-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
     }
 
     .icon-circle {
-      width: 50px;
-      height: 50px;
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #4e73df 0%, #224abe 100%) !important;
+      box-shadow: 0 8px 20px rgba(78, 115, 223, 0.3);
+    }
+
+    .custom-select {
+      border-radius: 10px;
+      border: 2px solid #e3e6f0;
+      padding: 0.6rem 1rem;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    .custom-select:focus {
+      border-color: #4e73df;
+      box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+      outline: none;
+    }
+
+    /* Spacing and flex updates */
+    .bank-card .card-body {
+      display: flex;
+      align-items: center;
+      padding: 1.5rem;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .bank-card .flex-grow-1 {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      flex: 1 1 auto;
+      min-width: 200px;
+    }
+
+    .input-group > select {
+      flex: 1 1 auto;
+    }
+
+    .input-group .input-group-append a.btn {
+      white-space: nowrap;
+      margin-left: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Enhanced action cards */
+    .achat-buttons {
+      padding-top: 2rem;
+    }
+
+    .achat-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 240px;
+      height: 220px;
+      background: linear-gradient(145deg, #ffffff 0%, #f8f9fc 100%);
+      color: #4e73df;
+      text-decoration: none;
+      border-radius: 20px;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      font-size: 1.1rem;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      border: 2px solid transparent;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .achat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      transition: left 0.6s;
+    }
+
+    .achat-card:hover::before {
+      left: 100%;
+    }
+
+    .achat-card:hover {
+      background: linear-gradient(145deg, #f8f9fc 0%, #ffffff 100%);
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 15px 40px rgba(78, 115, 223, 0.2);
+      border-color: rgba(78, 115, 223, 0.2);
+      text-decoration: none;
+      color: #4e73df;
     }
 
     .card-icon-wrapper {
-      width: 60px;
-      height: 60px;
+      background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 15px;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 15px rgba(78, 115, 223, 0.2);
     }
 
     .card-icon-wrapper i {
-      font-size: 24px;
+      font-size: 28px;
+      color: #4e73df;
+      transition: all 0.3s ease;
     }
-  }
 
-  /* Subtle animations */
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
+    .achat-card:hover .card-icon-wrapper {
+      transform: scale(1.1) rotate(5deg);
+      background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+      box-shadow: 0 8px 20px rgba(78, 115, 223, 0.4);
     }
-    to {
-      opacity: 1;
-      transform: translateY(0);
+
+    .achat-card:hover .card-icon-wrapper i {
+      color: white;
     }
-  }
 
-  .achat-card {
-    animation: fadeInUp 0.6s ease forwards;
-  }
+    .card-title {
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: #2d3748;
+      margin-bottom: 0.3rem;
+      display: block;
+    }
 
-  .achat-card:nth-child(1) { animation-delay: 0.1s; }
-  .achat-card:nth-child(2) { animation-delay: 0.2s; }
-  .achat-card:nth-child(3) { animation-delay: 0.3s; }
-  .achat-card:nth-child(4) { animation-delay: 0.4s; }
-</style>
-<div class="modal fade" id="ajouterBanqueModal" tabindex="-1" role="dialog" aria-labelledby="ajouterBanqueLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content rounded-4">
-      <div class="modal-header bg-gradient-primary text-white">
-        <h5 class="modal-title" id="ajouterBanqueLabel">Ajouter une banque</h5>
-        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Fermer">
-          <span aria-hidden="true">&times;</span>
-        </button>
+    .card-subtitle {
+      font-weight: 500;
+      font-size: 0.85rem;
+      color: #718096;
+      opacity: 0.8;
+      display: block;
+    }
+
+    /* Enhanced scroll to top */
+    .scroll-to-top {
+      background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+      border: none;
+      width: 45px;
+      height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 6px 15px rgba(78, 115, 223, 0.3);
+    }
+
+    .scroll-to-top:hover {
+      transform: translateY(-3px) scale(1.1);
+      box-shadow: 0 8px 20px rgba(78, 115, 223, 0.4);
+    }
+
+    /* Enhanced footer */
+    .sticky-footer {
+      background: linear-gradient(145deg, #ffffff 0%, #f8f9fc 100%) !important;
+      border-top: 1px solid rgba(78, 115, 223, 0.1);
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+      .achat-buttons .d-flex {
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+      }
+
+      .achat-card {
+        width: 90%;
+        max-width: 300px;
+        height: 200px;
+      }
+
+      .icon-circle {
+        width: 50px;
+        height: 50px;
+      }
+
+      .card-icon-wrapper {
+        width: 60px;
+        height: 60px;
+      }
+
+      .card-icon-wrapper i {
+        font-size: 24px;
+      }
+
+      .bank-card .flex-grow-1 {
+        min-width: 100%;
+      }
+
+      .container-fluid {
+        padding: 1rem;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .btn-gradient-primary {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+      }
+
+      .bank-card .card-body {
+        padding: 1rem;
+        gap: 1rem;
+      }
+
+      .form-group select {
+        font-size: 0.9rem;
+        padding: 0.5rem;
+      }
+
+      .modal-content {
+        margin: 1rem;
+      }
+
+      .modal-body .form-group {
+        margin-bottom: 1rem;
+      }
+    }
+
+    /* Subtle animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .achat-card {
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    .achat-card:nth-child(1) { animation-delay: 0.1s; }
+    .achat-card:nth-child(2) { animation-delay: 0.2s; }
+    .achat-card:nth-child(3) { animation-delay: 0.3s; }
+    .achat-card:nth-child(4) { animation-delay: 0.4s; }
+
+    /* Banque Cards Styles */
+    .banque-card {
+      background: linear-gradient(145deg, #ffffff 0%, #f8f9fc 100%);
+      border: 1px solid rgba(78, 115, 223, 0.1);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .banque-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    }
+
+    .banque-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+      border-color: rgba(78, 115, 223, 0.3);
+    }
+
+    .banque-details {
+      background: rgba(78, 115, 223, 0.05);
+      border-radius: 10px;
+      padding: 15px;
+      margin: 15px 0;
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .detail-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #6c757d;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .detail-value {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #2d3748;
+    }
+
+    .banque-actions {
+      border-top: 1px solid rgba(78, 115, 223, 0.1);
+      padding-top: 15px;
+    }
+
+    .banque-actions .btn {
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 8px 12px;
+      transition: all 0.3s ease;
+    }
+
+    .banque-actions .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Responsive adjustments for banque cards */
+    @media (max-width: 768px) {
+      .banque-card {
+        margin-bottom: 20px;
+      }
+
+      .banque-details {
+        padding: 10px;
+      }
+
+      .detail-item {
+        margin-bottom: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="wrapper" class="d-flex">
+    <%- include('../../layouts/sidebar') %>
+    <div id="content-wrapper" class="d-flex flex-column bg-light min-vh-100 w-100">
+      <div id="content">
+        <%- include('../../layouts/topbar') %>
+        <div class="container-fluid py-4">
+          <button class="btn btn-gradient-primary" data-toggle="modal" data-target="#ajouterBanqueModal">
+            <i class="fas fa-plus mr-2"></i>
+            Ajouter une banque
+          </button>
+          <div class="row justify-content-center my-4">
+            <div class="col-12 col-md-8 col-lg-6">
+              <div class="card shadow border-0 rounded-4 p-3 p-md-4 bank-card text-center">
+                <a href="/tresorerie/situation" class="text-decoration-none text-dark d-flex flex-column align-items-center gap-3">
+                  <div class="card-icon-wrapper">
+                    <i class="fas fa-balance-scale"></i>
+                  </div>
+                  <h5 class="card-title" style="font-family: 'Poppins', sans-serif; letter-spacing: 1px; font-size: 1.25rem;">
+                    SITUATION BANCAIRE
+                  </h5>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Banque Cards Section -->
+          <div class="form-group my-4 px-3 px-md-0">
+            <label for="bank">Sélectionner une banque :</label>
+            <select class="form-control custom-select" id="bank">
+              <option value="">-- Choisir une banque --</option>
+              <% banques.forEach(function(banque) { %>
+                <option value="<%= banque.id %>"><%= banque.name %> - <%= banque.agence %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <!-- Action Cards -->
+          <div class="achat-buttons" id="cards">
+            <div class="d-flex flex-wrap justify-content-center mb-4" style="gap: 1rem;">
+              <a id="card-cheques" href="/tresorerie/cheques" class="achat-card shadow-lg">
+                <div class="card-icon-wrapper">
+                  <i class="fas fa-money-check"></i>
+                </div>
+                <span class="card-title">Chèques</span>
+              </a>
+
+              <a id="card-effets" href="/tresorerie/effets" class="achat-card shadow-lg">
+                <div class="card-icon-wrapper">
+                  <i class="fas fa-hand-holding-usd"></i>
+                </div>
+                <span class="card-title">Effets</span>
+              </a>
+
+              <a id="card-autres" href="/tresorerie/payavenir" class="achat-card shadow-lg">
+                <div class="card-icon-wrapper">
+                  <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <span class="card-title">Payements à venir</span>
+              </a>
+
+              <a id="card-recettes" href="/tresorerie/recettes_a_venir" class="achat-card shadow-lg">
+                <div class="card-icon-wrapper">
+                  <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <span class="card-title">Recettes à venir</span>
+              </a>
+
+              <a id="card-releves" href="#" class="achat-card shadow-lg">
+                <div class="card-icon-wrapper">
+                  <i class="fas fa-file-alt"></i>
+                </div>
+                <span class="card-title">Relevés bancaires</span>
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
-      <form id="formAjouterBanque">
-        <div class="modal-body">
-          <div class="form-group">
-            <label for="bankName">Nom de la banque</label>
-            <input type="text" class="form-control" id="bankName" name="name" required>
+
+      <footer class="sticky-footer bg-white mt-auto">
+        <div class="container my-auto">
+          <div class="copyright text-center my-auto">
+            <span>Copyright &copy; Your Website 2025</span>
           </div>
-          <div class="form-group">
-            <label for="bankRIB">RIB</label>
-            <input type="number" class="form-control" id="bankRib" name="rib" required>
-          </div>
-          <div class="form-group">
-            <label for="bankRIB">Agence</label>
-            <input type="text" class="form-control" id="bankAgence" name="agence" required>
-          </div>
-         
         </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-gradient-primary">Ajouter</button>
-        </div>
-      </form>
+      </footer>
     </div>
   </div>
-</div>
 
-<!-- Scripts -->
-<script src="vendor/jquery/jquery.min.js"></script>
-<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="vendor/jquery-easing/jquery.easing.min.js"></script>
-<script src="js/sb-admin-2.min.js"></script>
+  <!-- Modal Ajouter Banque -->
+  <div class="modal fade" id="ajouterBanqueModal" tabindex="-1" role="dialog" aria-labelledby="ajouterBanqueLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content rounded-4">
+        <div class="modal-header bg-gradient-primary text-white">
+          <h5 class="modal-title" id="ajouterBanqueLabel">Ajouter une banque</h5>
+          <button type="button" class="close text-white" data-dismiss="modal" aria-label="Fermer">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form id="formAjouterBanque" action="/tresorerie/banques/create" method="POST">
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="bankName">Nom de la banque</label>
+              <input type="text" class="form-control" id="bankName" name="name" required>
+            </div>
+            <div class="form-group">
+              <label for="bankRib">RIB</label>
+              <input type="number" class="form-control" id="bankRib" name="rib" required>
+            </div>
+            <div class="form-group">
+              <label for="bankAgence">Agence</label>
+              <input type="text" class="form-control" id="bankAgence" name="agence" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-gradient-primary">Ajouter</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
-<script>
-  // Enhanced bank selection functionality
-  $(document).ready(function() {
-    $('#bank').on('change', function() {
-      const $this = $(this);
-      if ($this.val()) {
-        $this.css({
-          'border-color': '#4e73df',
-          'background-color': '#f8f9fc'
-        });
-      } else {
-        $this.css({
-          'border-color': '#e3e6f0',
-          'background-color': 'white'
-        });
+  <!-- Scripts -->
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+  <script src="/js/sb-admin-2.min.js"></script>
+
+  <script>
+    function updateLinks(bankId) {
+      if (!bankId) {
+        alert("Veuillez sélectionner une banque");
+        return;
       }
-    });
-
-    // Add loading effect to action cards
-    $('.achat-card').on('click', function(e) {
-      const $icon = $(this).find('.card-icon-wrapper i');
-      $icon.addClass('fa-spin');
-
-      setTimeout(function() {
-        $icon.removeClass('fa-spin');
-      }, 800);
-    });
-  });
-  $('#formAjouterBanque').on('submit', function (e) {
-  e.preventDefault();
-
-  const banqueData = {
-    name: $('#bankName').val(),
-    rib: $('#bankRib').val(),
-    agence: $('#bankAgence').val()
-  };
-
-  $.ajax({
-    type: 'POST',
-    url: '/tresorerie/banques/create', // Make sure this endpoint exists in your backend
-    data: banqueData,
-    success: function (response) {
-      alert('Banque ajoutée avec succès');
-      $('#ajouterBanqueModal').modal('hide');
-      location.reload(); // Optional: reload to refresh the bank select
-    },
-    error: function (err) {
-      console.error(err);
-      alert("Erreur lors de l'ajout de la banque");
+      $('#card-cheques').attr('href', `/tresorerie/cheques/banque/${bankId}`);
+      $('#card-effets').attr('href', `/tresorerie/effets/banque/${bankId}`);
+      $('#card-releves').attr('href', `/tresorerie/releves/banque/${bankId}`);
     }
-  });
-});
 
-</script>
-<!-- Ajouter Banque Modal -->
+    $(document).ready(function () {
+      $('#bank').on('change', function () {
+        const selectedBankId = $(this).val();
+        updateLinks(selectedBankId);
+      });
+
+      $('.achat-card').on('click', function () {
+        const $icon = $(this).find('.card-icon-wrapper i');
+        $icon.addClass('fa-spin');
+        setTimeout(() => $icon.removeClass('fa-spin'), 800);
+      });
+
+      $('#formAjouterBanque').on('submit', function (e) {
+        e.preventDefault();
+        const banqueData = {
+          name: $('#bankName').val(),
+          rib: $('#bankRib').val(),
+          agence: $('#bankAgence').val()
+        };
+        $.ajax({
+          type: 'POST',
+          url: '/tresorerie/banques/create',
+          data: banqueData,
+          success: function (response) {
+            alert('Banque ajoutée avec succès');
+            $('#ajouterBanqueModal').modal('hide');
+            location.reload();
+          },
+          error: function (err) {
+            console.error(err);
+            alert("Erreur lors de l'ajout de la banque");
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

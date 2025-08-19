@@ -419,6 +419,7 @@ export const showCheques = async (req, res) => {
       
       },
     });
+    const {id} = req.params
     console.log(`✅ Found ${cheques.length} cheques`);
 
     const fournisseurs = await prisma.fournisseur.findMany();
@@ -431,11 +432,13 @@ export const showCheques = async (req, res) => {
       cheques,
       fournisseurs,
       banques,
+      id
     });
   } catch (error) {
     console.error('❌ Error fetching cheques:', {
       error: error.message,
       stack: error.stack
+
     });
     res.status(500).json({ error: "Erreur lors de la récupération des chèques." });
   }
@@ -460,9 +463,11 @@ export const showChequesForbanque = async (req, res) => {
       },
     },
   });
+  const banqueName = await prisma.banque.findUnique({where:{id:Number(id)}})
+
   const banques = await prisma.banque.findMany();
   const fournisseurs = await prisma.fournisseur.findMany()
-  res.render('dashboard/tresorerie/reglements/cheques/index', { cheques, banques , fournisseurs, id });
+  res.render('dashboard/tresorerie/reglements/cheques/index', { cheques, banques , fournisseurs, id, banqueName });
 };
 export const deleteCheque = async (req, res) => {
   try {
@@ -573,9 +578,13 @@ export const updateCheque = async (req, res) => {
   }
 };
 
-export const createChequeUi = async (req, res) => {
-   const {id} = req.params     
-   res.render('dashboard/tresorerie/reglements/cheques/create', {id})
+export const bmce = async (req, res) => {
+  const {id} = req.params     
+  res.render('dashboard/tresorerie/reglements/cheques/etablir/bmce', {id})
+};
+export const bmci = async (req, res) => {
+  const {id} = req.params     
+  res.render('dashboard/tresorerie/reglements/cheques/etablir/bmci', {id})
 };
 
 export const etablirCheque = async (req, res) => {
@@ -629,7 +638,8 @@ export const etablirCheque = async (req, res) => {
             }
         })
         console.log(`✅ Cheque created successfully: ${cheque.id}`);
-        res.redirect(`/tresorerie/cheques/banque/${cheque.banqueId}`);
+        res.redirect(`/tresorerie/cheques/banque/${id}`)
+        
     } catch (error) {
       console.error('❌ Error creating cheque:', {
         error: error.message,

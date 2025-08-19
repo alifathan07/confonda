@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import gradient from 'gradient-string';
 
 
 import session from 'express-session';
@@ -54,5 +55,5 @@ app.use(dashboardRouter);
 
 // Start the server
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(gradient(['cyan', 'pink'])(`Server is running on http://localhost:${PORT}`));
 });

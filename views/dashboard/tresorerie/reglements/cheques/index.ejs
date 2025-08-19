@@ -222,7 +222,11 @@
   <div class="container-fluid">
     <div class="card shadow mb-4">
     <div class="card-header py-3">
+      <% if (id) { %>
+      <h6 class="m-0 font-weight-bold text-primary">Liste des chèques <%= banqueName.name %>  </h6>
+      <% } else { %>
       <h6 class="m-0 font-weight-bold text-primary">Liste des chèques</h6>
+      <% } %>
     </div>
     <div class="card-body">
       <div class="mb-4" style="display: flex; align-items: center; gap: 20px;">
@@ -235,11 +239,39 @@
       <button id="downloadExcelBtn" class="btn btn-outline-success d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
         <i class="fas fa-file-download mr-2"></i> Télécharger Excel
       </button>
-      <a href="/tresorerie/cheques/create/format/<%=id %>">
-        <button class="btn btn-danger d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
-          <i class="fas fa-plus mr-2"></i> établir un cheque
-        </button>
-      </a>
+      <!-- based ont the name of banque come from banqueName.name i will change the href  -->
+      <% if (id) { %>
+       <%
+  // List of banks you have cheque formats for
+  const supportedBanks = banques.map(banque => banque.name.toLowerCase());
+
+  // Normalize the user input to lowercase
+  const bankKey = banqueName.name.toLowerCase();
+%>
+
+<% if (supportedBanks.includes(bankKey)) { %>
+  <a href="/tresorerie/cheques/create/format/<%= bankKey %>" 
+     class="btn btn-outline-danger d-flex align-items-center" 
+     type="button" 
+     style="font-weight:600; font-size:15px; height: 42px;">
+    <i class="fas fa-file-invoice-dollar mr-2"></i> Etablir cheque
+  </a>
+<% } %>
+
+      
+      <% } %>
+               
+      <script>
+        document.getElementById('dropdownBtn').addEventListener('click', () => {
+          document.getElementById('dropdownMenu').classList.toggle('show');
+        });
+        
+      </script>
+      <style>
+        .dropdown-menu.show {
+          display: block;
+        }
+      </style>
       <button id="addRowBtn" class="btn btn-secondary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
         <i class="fas fa-plus mr-2"></i> Ajouter Chèque
       </button>
