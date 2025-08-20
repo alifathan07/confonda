@@ -335,8 +335,14 @@ export const importExelCheques = async (req, res) => {
 
         // Check if cheque already exists
         const existing = await prisma.cheque.findUnique({
-          where: { numero: cheque.numero }
-        });
+  where: {
+    banqueId_numero: {
+      banqueId: banque.id,
+      numero: cheque.numero
+    }
+  }
+});
+
 
         const chequeData = {
           montant: cheque.montant,
@@ -590,69 +596,110 @@ export const awb = async (req, res) => {
   const {id} = req.params     
   res.render('dashboard/tresorerie/reglements/cheques/etablir/awb', {id})
 };
+export const cam = async (req, res) => {
+  const {id} = req.params     
+  res.render('dashboard/tresorerie/reglements/cheques/etablir/cam', {id})
+};
+export const cdm = async (req, res) => {
+  const {id} = req.params     
+  res.render('dashboard/tresorerie/reglements/cheques/etablir/cam', {id})
+};
 
 export const etablirCheque = async (req, res) => {
-    try {
-        const { numero, montant, beneficiaire, dateEcheance, ville  } = req.body
-        const { id } = req.params
-        let fournisseur = await prisma.fournisseur.findFirst({
-          where: { name: beneficiaire },
-        });
-    
-        if (!fournisseur) {
-          fournisseur = await prisma.fournisseur.create({
-            data: {
-              name: beneficiaire,
-              ice: `ICE_${Date.now()}`,
-              identifFiscal: `FISCAL_${Date.now()}`,
-              telFournisseur: 'Default',
-              contact: 'Default',
-              telContact: 'Default',
-            },
-          });
-        }
-        let findBanque = await prisma.banque.findFirst({
-          where: { id: parseInt(id) },
-        });
-        if (!findBanque) {
-          findBanque = await prisma.banque.create({
-            data: {
-              name: 'Default',
-              rib: 0,
-              agence: 'Default Agence',
-              solde: 0,
-              dateSolde: new Date(),
-              positive: 0,
-              negative: 0,
-              dmlt: 0,
-            },
-          });
-        }
-        const cheque = await prisma.cheque.create({
-            data: {
-                numero,
-                montant: parseFloat(montant),
-                beneficiaire,
-                dateEcheance: new Date(dateEcheance),
-                dateEtablissement: new Date(),
-                statut: 'En circulation',
-                ville,
-                fournisseur: { connect: { id: fournisseur.id } },
-                banque: { connect: { id: findBanque.id } },
-            }
-        })
-        console.log(`✅ Cheque created successfully: ${cheque.id}`);
-        res.redirect(`/tresorerie/cheques/banque/${id}`)
-        
-    } catch (error) {
-      console.error('❌ Error creating cheque:', {
-        error: error.message,
-        stack: error.stack,
-        body: req.body,
+  try {
+    const { numero, montant, beneficiaire, dateEcheance, ville } = req.body
+    const { id } = req.params  // banque id
+
+    // --- Check if fournisseur exists ---
+    let fournisseur = await prisma.fournisseur.findFirst({
+      where: { name: beneficiaire },
+    });
+
+    if (!fournisseur) {
+      fournisseur = await prisma.fournisseur.create({
+        data: {
+          name: beneficiaire,
+          ice: `ICE_${Date.now()}`,
+          identifFiscal: `FISCAL_${Date.now()}`,
+          telFournisseur: 'Default',
+          contact: 'Default',
+          telContact: 'Default',
+        },
       });
-      res.status(500).json({ error: "Erreur lors de la création du chèque." });
     }
+
+    // --- Check banque ---
+    let findBanque = await prisma.banque.findFirst({
+      where: { id: parseInt(id) },
+    });
+    if (!findBanque) {
+      findBanque = await prisma.banque.create({
+        data: {
+          name: 'Default',
+          rib: 0,
+          agence: 'Default Agence',
+          solde: 0,
+          dateSolde: new Date(),
+          positive: 0,
+          negative: 0,
+          dmlt: 0,
+        },
+      });
+    }
+
+    // --- Get last cheque number for this banque ---
+    const lastCheque = await prisma.cheque.findFirst({
+      where: { banqueId: findBanque.id },
+      orderBy: { id: 'desc' },
+    });
+
+    let nextNumero;
+
+    if (numero && !lastCheque) {
+      // User provided a starting numero & no cheques yet → use it
+      nextNumero = numero;
+    } else if (numero && lastCheque) {
+      // If user provides something while cheques already exist → ignore & increment
+      const lastNumero = parseInt(lastCheque.numero, 10);
+      nextNumero = isNaN(lastNumero) ? numero : String(lastNumero + 1);
+    } else if (!numero && !lastCheque) {
+      // No user input & no cheques yet → default start 1
+      nextNumero = "1";
+    } else {
+      // Auto increment based on last cheque
+      const lastNumero = parseInt(lastCheque.numero, 10);
+      nextNumero = isNaN(lastNumero) ? "1" : String(lastNumero + 1);
+    }
+
+    // --- Create cheque ---
+    const cheque = await prisma.cheque.create({
+      data: {
+        numero: nextNumero,
+        montant: parseFloat(montant),
+        beneficiaire,
+        dateEcheance: new Date(dateEcheance),
+        dateEtablissement: new Date(),
+        statut: 'En circulation',
+        ville,
+        fournisseur: { connect: { id: fournisseur.id } },
+        banque: { connect: { id: findBanque.id } },
+      }
+    });
+
+    console.log(`✅ Cheque created successfully: ${cheque.id}`);
+    res.redirect(`/tresorerie/cheques/banque/${id}`);
+
+  } catch (error) {
+    console.error('❌ Error creating cheque:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+    });
+    res.status(500).json({ error: "Erreur lors de la création du chèque." });
+  }
 };
+
+
 
 export const updateChequeStatut = async (req, res) => {
   try {

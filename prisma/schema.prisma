@@ -127,24 +127,26 @@ model Cheque {
   montant             Float? 
   dateEtablissement   DateTime?
   dateEcheance        DateTime?
-  statut              String   // en circulation, payé, impayé, annulé
-  // dateReglement is the date when the cheque was actually paid. NULL if it has not been paid yet.
+  statut              String   
   dateReglement       DateTime?
   fournisseur         Fournisseur @relation(fields: [fournisseurId], references: [id])
   fournisseurId       Int
-  beneficiaire       String   // beneficiaire
+  beneficiaire        String   
 
   banque              Banque   @relation("BanqueCheques", fields: [banqueId], references: [id])
   banqueId            Int
-   numero           String   @unique   // ✅ Add this line if it's not already
-  // facture             Facture? @relation(fields: [factureId], references: [id])
-  // factureId           Int?
-   obs String?
-   montantLettres String?
-   ville String?
+
+  numero              String   // remove the @unique here ❌
+
+  obs                 String?
+  montantLettres      String?
+  ville               String?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+
+  @@unique([banqueId, numero])   // ✅ compound unique constraint
 }
+
 
 model Effet {
   id                  Int      @id @default(autoincrement())
