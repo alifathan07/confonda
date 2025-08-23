@@ -188,5 +188,8 @@ Autre reglement :
                 designation 
                 montant 
                 dateEcheance 
-                obsservation 
-                 
+                obsservatio
+ EFFETS : 
+        Date  aujourdhui 
+        cause === obs 
+                       

@@ -374,11 +374,12 @@ export const showEffets = async (req, res) => {
 
     const banques = await prisma.banque.findMany();
     console.log(`✅ Found ${banques.length} banques`);
-
+    const {id} = req.params 
     res.render("dashboard/tresorerie/reglements/effets/index", {
       effets,
       fournisseurs,
       banques,
+      id
     });
   } catch (error) {
     console.error('❌ Error fetching effets:', {
@@ -389,7 +390,35 @@ export const showEffets = async (req, res) => {
   }
 };
 
+// export const showEffetsForbanque = async (req, res) => {
+//   const {id} = req.params
+//   const effets = await prisma.effet.findMany({
+//     where: {
+//       banqueId: Number(id)
+//     },
+//     include: {
+//       banque: {
+//         select: { name: true },
+//       },
+//       fournisseur: {
+//         select: { name: true },
+//       },
+//     },
+//   });
+//   const banques = await prisma.banque.findMany();
+//   const fournisseurs = await prisma.fournisseur.findMany();
+//   const banqueName = await prisma.banque.findMany({
+//     where : {
+//       id : Number(id)
+//     }
+//   })
+  
+//   res.render('dashboard/tresorerie/reglements/effets/index', { effets, banques , fournisseurs, id, banqueName });
+// };
+
+
 export const showEffetsForbanque = async (req, res) => {
+  const { id } = req.params
   const effets = await prisma.effet.findMany({
     where: {
       banqueId: Number(req.params.id)
@@ -403,11 +432,38 @@ export const showEffetsForbanque = async (req, res) => {
       },
     },
   });
+  const banqueName = await prisma.banque.findUnique({where:{id:Number(id)}})
+
   const banques = await prisma.banque.findMany();
   const fournisseurs = await prisma.fournisseur.findMany()
-  res.render('dashboard/tresorerie/reglements/effets/index', { effets, banques , fournisseurs });
+  res.render('dashboard/tresorerie/reglements/effets/index', { effets, banques , fournisseurs, id, banqueName });
 };
 
+
+export const Ebmce = async (req, res) => {
+  const {id} = req.params     
+  res.render('dashboard/tresorerie/reglements/effets/etablir/bmce', {id})
+};
+export const Ebmci = async (req, res) => {
+  const {id} = req.params     
+  res.render('dashboard/tresorerie/reglements/effets/etablir/bmci', {id})
+};
+export const Eawb = async (req, res) => {
+  const {id} = req.params     
+  res.render('dashboard/tresorerie/reglements/effets/etablir/awb', {id})
+};
+export const Ecam = async (req, res) => {
+  const {id} = req.params     
+  res.render('dashboard/tresorerie/reglements/effets/etablir/cam', {id})
+};
+export const Ebp = async (req, res) => {
+  const {id} = req.params     
+  res.render('dashboard/tresorerie/reglements/effets/etablir/bp', {id})
+};
+export const Ecdm = async (req, res) => {
+  const {id} = req.params     
+  res.render('dashboard/tresorerie/reglements/effets/etablir/cdm', {id})
+};
 
 export const createEffet = async (req, res) => {
   try {

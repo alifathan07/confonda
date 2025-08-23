@@ -8,7 +8,7 @@ import fs from 'fs';
 import prisma from '../db.js';
 import { createBanque, deleteBanque, displayBanques, displayBanquesForcheques, getSituationBancaire, showCreate, updateChequeInStituation, updateSituationBancaire } from '../controllers/banquesController.js';
 import { awb, bmce, bmci, bp, cam, cdm, createCheque, deleteCheque, etablirCheque, importExelCheques, showCheques, showChequesForbanque, updateCheque, updateChequeStatut } from '../controllers/chequesController.js';
-import {createEffet, deleteEffet, importExelEffets, showEffets, showEffetsForbanque, updateEffet, updateEffetStatut} from '../controllers/effetsController.js';
+import {createEffet, deleteEffet, Eawb, Ebmce, Ebmci, Ebp, Ecam, Ecdm, importExelEffets, showEffets, showEffetsForbanque, updateEffet, updateEffetStatut} from '../controllers/effetsController.js';
 import { createPayavenir, deletePayavenir, showPayavenir, updatePayavenir, updatePayavenirStatut } from '../controllers/payavenirController.js';
 import { createRecavenir, deleteRecavenir, showRecavenir, updateRecavenir, updateRecavenirStatut } from '../controllers/recavenirController.js';
 export const dashboardRouter = express.Router();
@@ -53,6 +53,15 @@ dashboardRouter.get('/dashboard' , (req, res) => {
         dashboardRouter.get('/tresorerie/cheques/create/format/credit_agricole/:id', cam);
         dashboardRouter.get('/tresorerie/cheques/create/format/cdm/:id', cdm);
         dashboardRouter.get('/tresorerie/cheques/create/format/bp/:id', bp);
+
+
+        // -----------Trésorerie :  Effets -----------------
+        dashboardRouter.get('/tresorerie/effets/create/format/bmce/:id', Ebmce);
+        dashboardRouter.get('/tresorerie/effets/create/format/bmci/:id', Ebmci);
+        dashboardRouter.get('/tresorerie/effets/create/format/awb/:id', Eawb);
+        dashboardRouter.get('/tresorerie/effets/create/format/credit_agricole/:id', Ecam);
+        dashboardRouter.get('/tresorerie/effets/create/format/cdm/:id', Ecdm);
+        dashboardRouter.get('/tresorerie/effets/create/format/bp/:id', Ebp);
 
 
         dashboardRouter.post('/tresorerie/cheques/create/format/:id', etablirCheque);

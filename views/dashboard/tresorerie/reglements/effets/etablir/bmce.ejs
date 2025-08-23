@@ -181,8 +181,8 @@
             /* Position each field exactly on the BMCE cheque - FROM TOP */
             .print-payee {
                 position: absolute;
-                top: 33mm !important; /* From very top of page */
-                left: 50mm !important;
+                top: -20px !important; /* No space from top */
+                left: 180mm !important;
                 width: 85mm;
                 font-size: 15pt;
                 font-weight: bold;
@@ -190,11 +190,35 @@
                 margin: 0 !important;
                 padding: 0 !important;
             }
+            .print-tireur {
+                position: absolute;
+                top: 4mm !important; /* From very top of page */
+                left: 55mm !important;
+                width: 85mm;
+                font-size: 17pt;
+                font-weight: bold;
+                line-height: 1.1;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            
+            .print-cause {
+                position: absolute;
+                top: 18mm !important; /* From very top of page */
+                left: 140mm !important;
+                width: 85mm;
+                font-size: 12pt;
+                font-weight: bold;
+                max-width: 50mm;
+                line-height: 1.1;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
 
             .print-amount {
                 position: absolute;
-                top: 8mm !important; /* From very top of page */
-                left: 170mm !important;
+                top: 19mm !important; /* From very top of page */
+                left: 230mm !important;
                 font-size: 11pt;
                 font-weight: bold;
                 font-size: 15pt;
@@ -206,12 +230,12 @@
 
             .print-amount-words {
                 position: absolute;
-                top: 22mm !important; /* From very top of page */
-                left: 63mm !important;
+                top: 35mm !important; /* From very top of page */
+                left: 230mm !important;
                 font-weight: bold;
                 width: 170mm;
-                font-size: 17px;
-                max-width: 128mm;
+                font-size: 14px;
+                max-width: 50mm;
                     white-space: normal;      /* allow wrapping */
                 word-wrap: break-word;    /* break long words if needed */
                 
@@ -223,8 +247,8 @@
 
             .print-date {
                 position: absolute;
-                top: 40mm !important; /* From very top of page */
-                left: 172mm !important;
+                top: 6mm !important; /* From very top of page */
+                left: 230mm !important;
                 font-size: 9pt;
                 font-weight: bold;
                 font-size: 15pt;
@@ -234,15 +258,25 @@
 
             .print-city {
                 position: absolute;
-                top: 40mm !important; /* From very top of page */
-                left: 125mm !important;
+               top: 6mm !important; /* From very top of page */
+                left: 135mm !important;
+                font-size: 5px;
+                font-weight: bold;
+                font-size: 15pt;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .print-dateaujou {
+                position: absolute;
+                 top: 6mm !important; /* From very top of page */
+                left: 185mm !important;
+                
                 font-size: 9pt;
                 font-weight: bold;
                 font-size: 15pt;
                 margin: 0 !important;
                 padding: 0 !important;
             }
-
             .print-cheque-number {
                 position: absolute;
                 top: 80mm !important; /* From very top of page */
@@ -263,18 +297,26 @@
     </style>
 </head>
 <body>
+
+    
     <button class="btn btn-primary" onclick="window.history.back()">Retour</button>
 
     <div class="cheque-container">
 
-        <div class="bank-logo">BMCE Bank</div>
+        <div class="bank-logo">BMCE Bank </div>
 
-        <form id="chequeForm" action="/tresorerie/cheques/create/format/<%=id %>" method="POST">
+        <form id="chequeForm" action="/tresorerie/effets/create/format/<%=id %>" method="POST">
             <div class="cheque-row">
                 <div class="form-group textarea-wrapper">
-                    <label for="payee">À l'ordre de:</label>
+                    <label for="payee">Beneficiaire : </label>
                     <textarea id="payee" rows="2" placeholder="Nom du bénéficiaire" name="beneficiaire"></textarea>
                 </div>
+                 <div class="form-group textarea-wrapper">
+                    <label for="date">Date Echeance : </label>
+                    <input type="date" id="date" rows="2" placeholder="Date Echeance" name="dateEcheance">
+                </div>
+
+                
                 <div class="form-group amount-numbers">
                     <label for="amount">Montant:</label>
                     <input id="amount" type="text" placeholder="0,00 MAD" name="montant">
@@ -287,16 +329,22 @@
             </div>
 
             <div class="cheque-row">
-                <div class="form-group">
-                    <label for="date">Date:</label>
-                    <input id="date" type="date" name="dateEcheance">
+                
+                 <div class="form-group">
+                    <label for="date">La cause :</label>
+                    <input id="cause" type="text" name="obs">
                 </div>
+                 
                 <div class="form-group">
                     <label for="city">À (Ville):</label>
                     <input id="city" type="text" placeholder="Casablanca" name="ville">
                 </div>
                 <div class="form-group">
-                    <label for="account">N° Chèque:</label>
+                    <label for="dateaujou">Date Ajourdhui :</label>
+                    <input id="dateaujou" type="text" value="<%= new Date().toLocaleDateString('fr-FR') %>" name="dateaujou" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="account">N° Effet:</label>
                     <input id="account" type="text" placeholder="Numéro du chèque" name="numero">
                 </div>
             </div>
@@ -306,7 +354,8 @@
                 <div class="signature-line"></div>
                 <button type="button" class="btn btn-primary" id="printBtn">Imprimer le Chèque</button>
                 <!-- <button type="submit" class="btn btn-secondary">Enregistrer</button>* -->
-                <button type="submit" class="btn btn-secondary" >Enregistrer</button>
+                <!-- <button type="submit" class="btn btn-secondary" >Enregistrer</button> -->
+                <button type="button" class="btn btn-secondary" id="testBtn">Test Alignement</button>
             </div>
         </form>
     </div>
@@ -314,6 +363,9 @@
     <!-- This is what gets printed - positioned exactly for the cheque -->
     <div class="print-overlay">
         <div class="print-payee" id="print-payee"></div>
+         <div class="print-tireur" id="print-tireur"></div>
+        <div class="print-cause" id="print-cause"></div>
+        <div class="print-dateaujou" id="print-dateaujou"></div>
         <div class="print-amount" id="print-amount"></div>
         <div class="print-amount-words" id="print-amount-words"></div>
         <div class="print-date" id="print-date"></div>
@@ -424,6 +476,7 @@
 
 function updatePrintFields() {
             document.getElementById('print-payee').textContent = document.getElementById('payee').value;
+            document.getElementById('print-tireur').textContent = document.getElementById('payee').value;
             
             const amount = document.getElementById('amount').value;
             document.getElementById('print-amount').textContent = amount ? amount + ' DH' : '';
@@ -438,6 +491,8 @@ function updatePrintFields() {
             
             document.getElementById('print-city').textContent = document.getElementById('city').value;
             document.getElementById('print-cheque-number').textContent = document.getElementById('account').value;
+            document.getElementById('print-cause').textContent = document.getElementById('cause').value;
+            document.getElementById('print-dateaujou').textContent = document.getElementById('dateaujou').value;
         }
 
         // Handle amount input and convert to words
