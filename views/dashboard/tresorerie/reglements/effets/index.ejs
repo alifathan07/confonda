@@ -309,7 +309,7 @@ return `${day}/${month}/${year}`;
             <td contenteditable="true" data-name="numero"><%= effet.numero %></td>
             <td contenteditable="true" data-name="banque" ><%= effet.banque ? effet.banque.name : '' %></td>
             <td contenteditable="true" data-name="beneficiaire"><%= effet.beneficiaire %></td>
-            <td contenteditable="true" data-name="montant"><%= effet.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+            <td contenteditable="true" data-name="montant"><%= effet.montant ?  effet.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "" %></td>
             <td contenteditable="true" data-name="dateEcheance"><%= formatDateToDDMMYYYY(effet.dateEcheance) %></td>
             <td data-name="statut" class="statut-cell">
             <span 

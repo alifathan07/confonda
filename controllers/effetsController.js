@@ -50,7 +50,7 @@ export const importExelEffets = async (req, res) => {
   try {
     console.log('📖 Reading Excel file...');
     await workbook.xlsx.readFile(filePath);
-    const worksheet = workbook.getWorksheet(1);
+    const worksheet = workbook.worksheets[0]; // index 0 for first sheet in array
 
     if (!worksheet) {
       console.error('❌ No worksheet found in Excel file');
@@ -196,7 +196,7 @@ export const importExelEffets = async (req, res) => {
 
       const numero = numeroRaw || null;
       const montant = parseFloat(montantRaw) || null;
-      const beneficiaire = beneficiaireRaw || 'Default beneficiaire';
+      const beneficiaire = beneficiaireRaw || 'annulé';
       const banqueName = banqueRaw || 'Default Banque';
       const dateEtablissement = parseExcelDate(dateEtablissementRaw);
       const dateEcheance = parseExcelDate(dateEcheanceRaw);

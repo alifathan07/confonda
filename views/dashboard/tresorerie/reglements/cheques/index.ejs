@@ -248,8 +248,15 @@
   // Normalize the user input to lowercase
   const bankKey = banqueName.name.toLowerCase();
 %>
+<% if (bankKey === "credit agricole" && supportedBanks.includes("credit agricole")) { %>
+      <a href="/tresorerie/cheques/create/format/credit_agricole/<%=id%>" 
+     class="btn btn-outline-danger d-flex align-items-center" 
+     type="button" 
+     style="font-weight:600; font-size:15px; height: 42px;">
+    <i class="fas fa-file-invoice-dollar mr-2"></i> Etablir cheque
+  </a>
 
-<% if (supportedBanks.includes(bankKey)) { %>
+<% }else if (supportedBanks.includes(bankKey)) { %>
   <a href="/tresorerie/cheques/create/format/<%= bankKey %>/<%=id%>" 
      class="btn btn-outline-danger d-flex align-items-center" 
      type="button" 

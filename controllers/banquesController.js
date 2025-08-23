@@ -84,6 +84,7 @@ export const getSituationBancaire = async (req, res) => {
           dateEcheance: true,
           beneficiaire: true,
           statut: true,
+          obs : true,
           banque: {
             select: { name: true },
           },
@@ -95,7 +96,7 @@ export const getSituationBancaire = async (req, res) => {
       console.log(cheques);
       const effets = await prisma.effet.findMany({
         where: {
-          statut: { in: ['En Circulation', 'Impayé', 'en garantie'] },
+          statut: { in: ['En Circulation', 'Impayé'] },
           dateEcheance: {
             gte: fromDate,
             lte: toDate,
@@ -202,38 +203,54 @@ export const getSituationBancaire = async (req, res) => {
     }
   };
 export const updateSituationBancaire = async (req, res) => {
-try {
-  
+  try {
     const { positive, negative, dmlt, banqueId } = req.body;
 
+    // Function to parse French-formatted numbers
+    const parseFrenchNumber = (value) => {
+      if (value === "" || value == null) return null; // Preserve null/empty values
+      // Remove spaces, replace comma with dot, and parse as float
+      return parseFloat(value.replace(/\s/g, '').replace(',', '.'));
+    };
+
     // Ensure all arrays are aligned
-    const updates = banqueId.map((id, index) => ({
-    id: parseInt(id),
-    positive: parseFloat(positive[index]),
-    negative: parseFloat(negative[index]),
-    dmlt: parseFloat(dmlt[index]),
-    }));
+    const updates = banqueId.map((id, index) => {
+      let data = {};
+
+      // Only update fields that have valid values
+      if (positive[index] !== "" && positive[index] != null) {
+        data.positive = parseFrenchNumber(positive[index]);
+      }
+      if (negative[index] !== "" && negative[index] != null) {
+        data.negative = parseFrenchNumber(negative[index]);
+      }
+      if (dmlt[index] !== "" && dmlt[index] != null) {
+        data.dmlt = parseFrenchNumber(dmlt[index]);
+      }
+
+      return {
+        id: parseInt(id),
+        data,
+      };
+    });
 
     // Run updates in parallel
     await Promise.all(
-    updates.map(b =>
+      updates.map(b =>
         prisma.banque.update({
-        where: { id: b.id },
-        data: {
-            positive: b.positive,
-            negative: b.negative,
-            dmlt: b.dmlt,
-        },
+          where: { id: b.id },
+          data: b.data,
         })
-    )
+      )
     );
 
     res.redirect('/tresorerie/situation');
-} catch (error) {
+  } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Erreur lors de la mise à jour de la situation bancaire.' });
-}
+  }
 };
+
 export const deleteBanque = async(req,res) => {
   const {id} = req.body;
   await prisma.banque.delete({
@@ -243,11 +260,41 @@ export const deleteBanque = async(req,res) => {
   res.json('success')
 }
 
-  
-  
-  
-  
-  
+
+
+export const updateChequeInStituation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      
+      obs,
+    } = req.body;
+
+    
+
+   
+    const data = {};
+
+    
+    if (obs !== undefined) data.obs = obs;
+
+    // 🛠️ Update cheque
+    const cheque = await prisma.cheque.update({
+      where: { id: parseInt(id) },
+      data
+    });
+
+    console.log(`✅ Cheque updated successfully: ${id}`);
+    res.redirect('/tresorerie/situation')
+
+  } catch (error) {
+    console.error('❌ Error updating cheque:', {
+      message: error.message,
+      stack: error.stack
+    });
+    res.status(500).json({ error: "Erreur lors de la mise à jour du chèque." });
+  }
+};
 // export const getSituationBancaire = async (req, res) => {
 //     const { id } = req.params; // banque id
   

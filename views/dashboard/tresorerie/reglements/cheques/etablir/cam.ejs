@@ -181,7 +181,7 @@
             /* Position each field exactly on the BMCE cheque - FROM TOP */
             .print-payee {
                 position: absolute;
-                top: 33mm !important; /* From very top of page */
+                top: 35mm !important; /* From very top of page */
                 left: 50mm !important;
                 width: 85mm;
                 font-size: 15pt;
@@ -193,8 +193,8 @@
 
             .print-amount {
                 position: absolute;
-                top: 8mm !important; /* From very top of page */
-                left: 170mm !important;
+                top: 5mm !important; /* From very top of page */
+                left: 190mm !important;
                 font-size: 11pt;
                 font-weight: bold;
                 font-size: 15pt;
@@ -207,7 +207,7 @@
             .print-amount-words {
                 position: absolute;
                 top: 22mm !important; /* From very top of page */
-                left: 63mm !important;
+                left: 69mm !important;
                 font-weight: bold;
                 width: 170mm;
                 font-size: 17px;
@@ -223,7 +223,7 @@
 
             .print-date {
                 position: absolute;
-                top: 40mm !important; /* From very top of page */
+                top: 38mm !important; /* From very top of page */
                 left: 172mm !important;
                 font-size: 9pt;
                 font-weight: bold;
@@ -234,7 +234,7 @@
 
             .print-city {
                 position: absolute;
-                top: 40mm !important; /* From very top of page */
+                top: 38mm !important; /* From very top of page */
                 left: 125mm !important;
                 font-size: 9pt;
                 font-weight: bold;
@@ -267,7 +267,7 @@
 
     <div class="cheque-container">
 
-        <div class="bank-logo">Credit Agricole Du  Maroc</div>
+        <div class="bank-logo">Credit Agricole Bank</div>
 
         <form id="chequeForm" action="/tresorerie/cheques/create/format/<%=id %>" method="POST">
             <div class="cheque-row">

@@ -6,8 +6,8 @@ import ExcelJS from 'exceljs';
 import path from 'path';
 import fs from 'fs';
 import prisma from '../db.js';
-import { createBanque, deleteBanque, displayBanques, displayBanquesForcheques, getSituationBancaire, showCreate, updateSituationBancaire } from '../controllers/banquesController.js';
-import { awb, bmce, bmci, cam, cdm, createCheque, deleteCheque, etablirCheque, importExelCheques, showCheques, showChequesForbanque, updateCheque, updateChequeStatut } from '../controllers/chequesController.js';
+import { createBanque, deleteBanque, displayBanques, displayBanquesForcheques, getSituationBancaire, showCreate, updateChequeInStituation, updateSituationBancaire } from '../controllers/banquesController.js';
+import { awb, bmce, bmci, bp, cam, cdm, createCheque, deleteCheque, etablirCheque, importExelCheques, showCheques, showChequesForbanque, updateCheque, updateChequeStatut } from '../controllers/chequesController.js';
 import {createEffet, deleteEffet, importExelEffets, showEffets, showEffetsForbanque, updateEffet, updateEffetStatut} from '../controllers/effetsController.js';
 import { createPayavenir, deletePayavenir, showPayavenir, updatePayavenir, updatePayavenirStatut } from '../controllers/payavenirController.js';
 import { createRecavenir, deleteRecavenir, showRecavenir, updateRecavenir, updateRecavenirStatut } from '../controllers/recavenirController.js';
@@ -50,8 +50,9 @@ dashboardRouter.get('/dashboard' , (req, res) => {
         dashboardRouter.get('/tresorerie/cheques/create/format/bmce/:id', bmce);
         dashboardRouter.get('/tresorerie/cheques/create/format/bmci/:id', bmci);
         dashboardRouter.get('/tresorerie/cheques/create/format/awb/:id', awb);
-        dashboardRouter.get('/tresorerie/cheques/create/format/cam/:id', cam);
+        dashboardRouter.get('/tresorerie/cheques/create/format/credit_agricole/:id', cam);
         dashboardRouter.get('/tresorerie/cheques/create/format/cdm/:id', cdm);
+        dashboardRouter.get('/tresorerie/cheques/create/format/bp/:id', bp);
 
 
         dashboardRouter.post('/tresorerie/cheques/create/format/:id', etablirCheque);
@@ -63,6 +64,8 @@ dashboardRouter.get('/dashboard' , (req, res) => {
         dashboardRouter.post('/tresorerie/cheques/import', upload.single('excelFile'),   importExelCheques );
         dashboardRouter.delete('/tresorerie/cheques/:id', deleteCheque);
         dashboardRouter.patch('/tresorerie/cheques/:id', updateCheque);
+        dashboardRouter.patch('/tresorerie/cheques/situation/:id', updateChequeInStituation);
+        
         dashboardRouter.put('/tresorerie/cheques/:id/update-statut', updateChequeStatut);
         
         

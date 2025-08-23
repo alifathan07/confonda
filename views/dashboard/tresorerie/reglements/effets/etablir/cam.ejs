@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chèque CDM</title>
+    <title>Chèque Credit Agricole</title>
     <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
     <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
@@ -181,8 +181,8 @@
             /* Position each field exactly on the BMCE cheque - FROM TOP */
             .print-payee {
                 position: absolute;
-                top: 35mm !important; /* From very top of page */
-                left: 52mm !important;
+                top: 33mm !important; /* From very top of page */
+                left: 50mm !important;
                 width: 85mm;
                 font-size: 15pt;
                 font-weight: bold;
@@ -193,8 +193,8 @@
 
             .print-amount {
                 position: absolute;
-                top: 2mm !important; /* From very top of page */
-                left: 180mm !important;
+                top: 5mm !important; /* From very top of page */
+                left: 200mm !important;
                 font-size: 11pt;
                 font-weight: bold;
                 font-size: 15pt;
@@ -207,7 +207,7 @@
             .print-amount-words {
                 position: absolute;
                 top: 22mm !important; /* From very top of page */
-                left: 67mm !important;
+                left: 65mm !important;
                 font-weight: bold;
                 width: 170mm;
                 font-size: 17px;
@@ -223,19 +223,19 @@
 
             .print-date {
                 position: absolute;
-                top: 43mm !important; /* From very top of page */
-                left: 192mm !important;
+                top: 40mm !important; /* From very top of page */
+                left: 172mm !important;
                 font-size: 9pt;
                 font-weight: bold;
                 font-size: 15pt;
                 margin: 0 !important;
                 padding: 0 !important;
-            }
+            }   
 
             .print-city {
                 position: absolute;
-                top: 43mm !important; /* From very top of page */
-                left: 151mm !important;
+                top: 40mm !important; /* From very top of page */
+                left: 125mm !important;
                 font-size: 9pt;
                 font-weight: bold;
                 font-size: 15pt;
@@ -267,7 +267,7 @@
 
     <div class="cheque-container">
 
-        <div class="bank-logo">CDM Bank</div>
+        <div class="bank-logo">Credit Agricole Du  Maroc</div>
 
         <form id="chequeForm" action="/tresorerie/cheques/create/format/<%=id %>" method="POST">
             <div class="cheque-row">

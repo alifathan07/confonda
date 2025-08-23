@@ -392,29 +392,45 @@
                         <th>Actions</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      <% banques.forEach((b, index) => { %>
-                        <tr>
-                          <td><strong><%= b.name %></strong></td>
-                          <td>
-                            <input type="number" name="positive[]" step="0.01" value="<%= b.positive?.toFixed(2) %>" class="form-control text-right" />
-                          </td>
-                          <td>
-                            <input type="number" name="negative[]" step="0.01" value="<%= b.negative?.toFixed(2) %>" class="form-control text-right" />
-                          </td>
-                          <td></td>
-                          <td>
-                            <input type="number" name="dmlt[]" step="0.01" value="<%= b.dmlt?.toFixed(2) %>" class="form-control text-right" />
-                          </td>
-                          <td>
-                            <button type="button" class="btn btn-danger" onclick="deleteBanque(<%= b.id %>)" aria-label="Supprimer banque">
-                              <i class="fas fa-trash"></i>
-                            </button>
-                          </td>
-                          <input type="hidden" name="banqueId[]" value="<%= b.id %>" />
-                        </tr>
-                      <% }); %>
-                    </tbody>
+                   <tbody>
+  <% banques.forEach((b, index) => { %>
+    <tr>
+      <td><strong><%= b.name %></strong></td>
+      <td>
+        <input 
+          type="text" 
+          name="positive[]" 
+          value="<%= b.positive != null ?  b.positive.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '' %>"
+          class="form-control text-right" 
+        />
+      </td>
+      <td>
+        <input 
+          type="text" 
+          name="negative[]" 
+          value="<%= b.negative != null ? b.negative.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '' %>" 
+          class="form-control text-right" 
+        />
+      </td>
+      <td></td>
+      <td>
+        <input 
+          type="text" 
+          name="dmlt[]" 
+          value="<%= b.dmlt != null ? b.dmlt.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '' %>" 
+          class="form-control text-right" 
+        />
+      </td>
+      <td>
+        <button type="button" class="btn btn-danger" onclick="deleteBanque(<%= b.id %>)" aria-label="Supprimer banque">
+          <i class="fas fa-trash"></i>
+        </button>
+      </td>
+      <input type="hidden" name="banqueId[]" value="<%= b.id %>" />
+    </tr>
+  <% }); %>
+</tbody>
+
                     <tfoot>
                       <tr>
                         <td>Total</td>
@@ -594,159 +610,220 @@
           </div>
 
           <!-- Chèques à payer -->
-          <div class="card mb-4 fade-in">
-            <div class="card-header">
-              <h2>Chèques à payer</h2>
-            </div>
-            <div class="filter-section">
-              <form class="form-inline">
-                <label>Statut :</label>
-                <select id="statutFilterCheques" class="form-control">
-                  <option value="">Tous</option>
-                  <option value="En circulation">En Circulation</option>
-                  <option value="Impayé">Impayé</option>
-                </select>
-                <label>Fournisseur :</label>
-                <select id="fournisseurFilterCheques" class="form-control">
-                  <option value="">Tous</option>
-                  <% fournisseurs.forEach(f => { %>
-                    <option value="<%= f.name %>"><%= f.name %></option>
-                  <% }) %>
-                </select>
-                <label>Banque :</label>
-                <select id="banqueFilterCheques" class="form-control">
-                  <option value="">Tous</option>
-                  <% banques.forEach(b => { %>
-                    <option value="<%= b.name %>"><%= b.name %></option>
-                  <% }) %>
-                </select>
-                <button class="btn btn-primary" type="button" aria-label="Annuler filtre">Annuler</button>
-                <input type="date" name="from" class="form-control" value="01/01/2020" hidden>
-                <label>Au :</label>
-                <input type="date" name="to" class="form-control" value="<%= to %>">
-                <button class="btn btn-primary" type="submit" aria-label="Filtrer">Filtrer</button>
-              </form>
-            </div>
-            <div class="card-body">
-              <% if (cheques.length === 0) { %>
-                <p class="text-center text-muted">Aucun chèque trouvé.</p>
-              <% } else { %>
-                <div class="table-responsive">
-                  <table id="chequesTable" class="excel-table">
-                    <thead>
-                      <tr>
-                        <th>Numéro</th>
-                        <th>Montant</th>
-                        <th>Date Échéance</th>
-                        <th>Bénéficiaire</th>
-                        <th>Banque</th>
-                        <th>Statut</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <% cheques.forEach(c => { %>
-                        <tr class="cheque-row" data-fournisseur="<%= c.beneficiaire %>" data-banque="<%= c.banque.name %>" data-statut="<%= c.statut %>">
-                          <td><%= c.numero %></td>
-                          <td class="text-right"><%= c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD</td>
-                          <td><%= new Date(c.dateEcheance).toLocaleDateString() %></td>
-                          <td><%= c.beneficiaire %></td>
-                          <td><%= c.banque.name %></td>
-                          <td>
-                            <span class="badge badge-<%= c.statut === 'En circulation' ? 'info' : c.statut === 'Impayé' ? 'danger' : 'success' %>">
-                              <%= c.statut %>
-                            </span>
-                          </td>
-                        </tr>
-                      <% }); %>
-                    </tbody>
-                    <tfoot>
-                      <tr>
-                        <td>Total</td>
-                        <td class="text-right"><%= cheques.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD</td>
-                        <td colspan="4"></td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-              <% } %>
-            </div>
-          </div>
-
+         <div class="card mb-4 fade-in">
+  <div class="card-header">
+    <h2>Chèques à payer</h2>
+  </div>
+  <div class="filter-section">
+    <form class="form-inline">
+      <label>Statut :</label>
+      <select id="statutFilterCheques" class="form-control">
+        <option value="">Tous</option>
+        <option value="En circulation">En Circulation</option>
+        <option value="Impayé">Impayé</option>
+      </select>
+      <label>Fournisseur :</label>
+      <select id="fournisseurFilterCheques" class="form-control">
+        <option value="">Tous</option>
+        <% fournisseurs.forEach(f => { %>
+          <option value="<%= f.name %>"><%= f.name %></option>
+        <% }) %>
+      </select>
+      <label>Banque :</label>
+      <select id="banqueFilterCheques" class="form-control">
+        <option value="">Tous</option>
+        <% banques.forEach(b => { %>
+          <option value="<%= b.name %>"><%= b.name %></option>
+        <% }) %>
+      </select>
+      <button class="btn btn-primary" type="button" aria-label="Annuler filtre">Annuler</button>
+      <input type="date" name="from" class="form-control" value="01/01/2020" hidden>
+      <label>Au :</label>
+      <input type="date" name="to" class="form-control" value="<%= to %>">
+      <button class="btn btn-primary" type="submit" aria-label="Filtrer">Filtrer</button>
+    </form>
+  </div>
+  <div class="card-body">
+    <% if (cheques.length === 0) { %>
+      <p class="text-center text-muted">Aucun chèque trouvé.</p>
+    <% } else { %>
+      <div class="table-responsive">
+        <table id="chequesTable" class="excel-table">
+          <thead>
+            <tr>
+              <th>Numéro</th>
+              <th>Montant</th>
+              <th>Date Échéance</th>
+              <th>Bénéficiaire</th>
+              <th>Banque</th>
+              <th>Statut</th>
+              <th>obs</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% cheques.forEach(c => { %>
+              <tr class="cheque-row" data-fournisseur="<%= c.beneficiaire %>" data-banque="<%= c.banque.name %>" data-statut="<%= c.statut %>">
+                <td><%= c.numero %></td>
+                <td class="text-right montant"><%= c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD</td>
+                <td><%= new Date(c.dateEcheance).toLocaleDateString() %></td>
+                <td><%= c.beneficiaire %></td>
+                <td><%= c.banque.name %></td>
+                <td>
+                  <span class="badge badge-<%= c.statut === 'En circulation' || c.statut === 'En Circulation'  ? 'info' : c.statut === 'Impayé' ? 'danger' : 'success' %>">
+                    <%= c.statut %>
+                  </span> 
+                </td>
+               <form action="/tresorerie/cheques/situation/<%= c.id %>?_method=PATCH" method="post">
+  <td>
+    <input type="text" value="<%= c.obs %>" class="form-control" name="obs">
+  </td>
+</form>
+              </tr>
+            <% }); %>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Total</td>
+              <td class="text-right" id="totalMontantCellCheques">0,00 MAD</td>
+              <td colspan="4"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
           <!-- Effets à payer -->
-          <div class="card mb-4 fade-in">
-            <div class="card-header">
-              <h2>Effets à payer</h2>
-            </div>
-            <div class="filter-section">
-              <form class="form-inline">
-                <label>Statut :</label>
-                <select id="statutFilterEffets" class="form-control">
-                  <option value="">Tous</option>
-                  <option value="En circulation">En Circulation</option>
-                  <option value="Impayé">Impayé</option>
-                  <option value="En garantie">En Garantie</option>
-                </select>
-                <label>Fournisseur :</label>
-                <select id="fournisseurFilterEffets" class="form-control">
-                  <option value="">Tous</option>
-                  <% fournisseurs.forEach(f => { %>
-                    <option value="<%= f.name %>"><%= f.name %></option>
-                  <% }) %>
-                </select>
-                <label>Banque :</label>
-                <select id="banqueFilterEffets" class="form-control">
-                  <option value="">Tous</option>
-                  <% banques.forEach(b => { %>
-                    <option value="<%= b.name %>"><%= b.name %></option>
-                  <% }) %>
-                </select>
-                <button class="btn btn-primary" type="button" aria-label="Annuler filtre">Annuler</button>
-              </form>
-            </div>
-            <div class="card-body">
-              <% if (effets.length === 0) { %>
-                <p class="text-center text-muted">Aucun effet trouvé.</p>
-              <% } else { %>
-                <div class="table-responsive">
-                  <table id="effetsTable" class="excel-table">
-                    <thead>
-                      <tr>
-                        <th>Numéro</th>
-                        <th>Montant</th>
-                        <th>Date Échéance</th>
-                        <th>Bénéficiaire</th>
-                        <th>Banque</th>
-                        <th>Statut</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <% effets.forEach(e => { %>
-                        <tr class="effet-row" data-fournisseur="<%= e.beneficiaire %>" data-banque="<%= e.banque.name %>" data-statut="<%= e.statut %>">
-                          <td><%= e.numero %></td>
-                          <td class="text-right"><%= e.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD</td>
-                          <td><%= new Date(e.dateEcheance).toLocaleDateString() %></td>
-                          <td><%= e.beneficiaire %></td>
-                          <td><%= e.banque.name %></td>
-                          <td>
-                            <span class="badge badge-<%= e.statut === 'En circulation' || e.statut === 'en circulation' ? 'info' : e.statut === 'En garantie' || e.statut === 'en garantie' ? 'warning' : e.statut === 'Impayé' || e.statut === 'impayé' ? 'danger' : 'success' %>">
-                              <%= e.statut %>
-                            </span>
-                          </td>
-                        </tr>
-                      <% }); %>
-                    </tbody>
-                    <tfoot>
-                      <tr>
-                        <td>Total</td>
-                        <td class="text-right"><%= effets.reduce((acc, e) => acc + e.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD</td>
-                        <td colspan="4"></td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-              <% } %>
-            </div>
-          </div>
+         <div class="card mb-4 fade-in">
+  <div class="card-header">
+    <h2>Effets à payer</h2>
+  </div>
+  <div class="filter-section">
+    <form class="form-inline">
+      <label>Statut :</label>
+      <select id="statutFilterEffets" class="form-control">
+        <option value="">Tous</option>
+        <option value="En circulation">En Circulation</option>
+        <option value="Impayé">Impayé</option>
+      </select>
+      <label>Fournisseur :</label>
+      <select id="fournisseurFilterEffets" class="form-control">
+        <option value="">Tous</option>
+        <% fournisseurs.forEach(f => { %>
+          <option value="<%= f.name %>"><%= f.name %></option>
+        <% }) %>
+      </select>
+      <label>Banque :</label>
+      <select id="banqueFilterEffets" class="form-control">
+        <option value="">Tous</option>
+        <% banques.forEach(b => { %>
+          <option value="<%= b.name %>"><%= b.name %></option>
+        <% }) %>
+      </select>
+      <button id="resetFilters" class="btn btn-primary" type="button" aria-label="Annuler filtre">Annuler</button>
+    </form>
+  </div>
+  <div class="card-body">
+    <% if (effets.length === 0) { %>
+      <p class="text-center text-muted">Aucun effet trouvé.</p>
+    <% } else { %>
+      <div class="table-responsive">
+        <table id="effetsTable" class="excel-table">
+          <thead>
+            <tr>
+              <th>Numéro</th>
+              <th>Montant</th>
+              <th>Date Échéance</th>
+              <th>Bénéficiaire</th>
+              <th>Banque</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% effets.forEach(e => { %>
+              <tr class="effet-row" data-fournisseur="<%= e.beneficiaire %>" data-banque="<%= e.banque.name %>" data-statut="<%= e.statut %>">
+                <td><%= e.numero %></td>
+                <td class="text-right"><%= e.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD</td>
+                <td><%= new Date(e.dateEcheance).toLocaleDateString() %></td>
+                <td><%= e.beneficiaire %></td>
+                <td><%= e.banque.name %></td>
+                <td>
+                  <span class="badge badge-<%= e.statut === 'En circulation' || e.statut === 'en circulation' ? 'info' : e.statut === 'En garantie' || e.statut === 'en garantie' ? 'warning' : e.statut === 'Impayé' || e.statut === 'impayé' ? 'danger' : 'success' %>">
+                    <%= e.statut %>
+                  </span>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Total</td>
+              <td class="text-right" id="totalMontant"><%= effets.reduce((acc, e) => acc + e.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD</td>
+              <td colspan="4"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const statutFilter = document.getElementById('statutFilterEffets');
+  const fournisseurFilter = document.getElementById('fournisseurFilterEffets');
+  const banqueFilter = document.getElementById('banqueFilterEffets');
+  const resetButton = document.getElementById('resetFilters');
+  const table = document.getElementById('effetsTable');
+  const rows = table ? table.querySelectorAll('tbody tr.effet-row') : [];
+  const totalMontant = document.getElementById('totalMontant');
+
+  function applyFilters() {
+    let total = 0;
+    const statutValue = statutFilter.value.toLowerCase();
+    const fournisseurValue = fournisseurFilter.value;
+    const banqueValue = banqueFilter.value;
+
+    rows.forEach(row => {
+      const statut = row.dataset.statut.toLowerCase();
+      const fournisseur = row.dataset.fournisseur;
+      const banque = row.dataset.banque;
+
+      const statutMatch = !statutValue || statut === statutValue;
+      const fournisseurMatch = !fournisseurValue || fournisseur === fournisseurValue;
+      const banqueMatch = !banqueValue || banque === banqueValue;
+
+      if (statutMatch && fournisseurMatch && banqueMatch) {
+        row.style.display = '';
+        const montantText = row.querySelector('td:nth-child(2)').textContent;
+        const montant = parseFloat(montantText.replace(/[^\d,.]/g, '').replace(',', '.'));
+        total += montant;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    if (totalMontant) {
+      totalMontant.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' MAD';
+    }
+  }
+
+  function resetFilters() {
+    statutFilter.value = '';
+    fournisseurFilter.value = '';
+    banqueFilter.value = '';
+    applyFilters();
+  }
+
+  if (statutFilter) statutFilter.addEventListener('change', applyFilters);
+  if (fournisseurFilter) fournisseurFilter.addEventListener('change', applyFilters);
+  if (banqueFilter) banqueFilter.addEventListener('change', applyFilters);
+  if (resetButton) resetButton.addEventListener('click', resetFilters);
+
+  // Apply filters initially
+  applyFilters();
+});
+</script>
 
           <!-- Paiements à venir -->
           <div class="card mb-4 fade-in">

@@ -600,9 +600,13 @@ export const cam = async (req, res) => {
   const {id} = req.params     
   res.render('dashboard/tresorerie/reglements/cheques/etablir/cam', {id})
 };
+export const bp = async (req, res) => {
+  const {id} = req.params     
+  res.render('dashboard/tresorerie/reglements/cheques/etablir/bp', {id})
+};
 export const cdm = async (req, res) => {
   const {id} = req.params     
-  res.render('dashboard/tresorerie/reglements/cheques/etablir/cam', {id})
+  res.render('dashboard/tresorerie/reglements/cheques/etablir/cdm', {id})
 };
 
 export const etablirCheque = async (req, res) => {
