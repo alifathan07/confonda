@@ -192,4 +192,18 @@ Autre reglement :
  EFFETS : 
         Date  aujourdhui 
         cause === obs 
+
+        Tasks for 25/08/2025 : 
+                
+                - Add list Virement and crud for it 
+                - Make Soldes and Recettes à venir look different from all thincks 
+                        i have left to show that this what i will receive 
+                - cheques all totals on the situation banquaire 
+                - Optional if i have time  : 
+                        - Recettes à venir make crud inside sitation banquaire
+                 
+                    Virement : 
+
+                      Date ,  banque , benificiaire , montant , DateReglement , OBS 
+
                        

@@ -549,6 +549,100 @@ export const createEffet = async (req, res) => {
   }
 };
 
+export const etablirEffet = async (req, res) => {
+  try {
+    const { numero, montant, beneficiaire, dateEcheance, ville, obs } = req.body
+    const { id } = req.params  // banque id
+
+    // --- Check if fournisseur exists ---
+    let fournisseur = await prisma.fournisseur.findFirst({
+      where: { name: beneficiaire },
+    });
+
+    if (!fournisseur) {
+      fournisseur = await prisma.fournisseur.create({
+        data: {
+          name: beneficiaire,
+          ice: `ICE_${Date.now()}`,
+          identifFiscal: `FISCAL_${Date.now()}`,
+          telFournisseur: 'Default',
+          contact: 'Default',
+          telContact: 'Default',
+        },
+      });
+    }
+
+    // --- Check banque ---
+    let findBanque = await prisma.banque.findFirst({
+      where: { id: parseInt(id) },
+    });
+    if (!findBanque) {
+      findBanque = await prisma.banque.create({
+        data: {
+          name: 'Default',
+          rib: 0,
+          agence: 'Default Agence',
+          solde: 0,
+          dateSolde: new Date(),
+          positive: 0,
+          negative: 0,
+          dmlt: 0,
+        },
+      });
+    }
+
+    // --- Get last cheque number for this banque ---
+    const lastEffet = await prisma.effet.findFirst({
+      where: { banqueId: findBanque.id },
+      orderBy: { id: 'desc' },
+    });
+
+    let nextNumero;
+
+    if (numero && !lastEffet) {
+      // User provided a starting numero & no cheques yet → use it
+      nextNumero = numero;
+    } else if (numero && lastEffet) {
+      // If user provides something while cheques already exist → ignore & increment
+      const lastNumero = parseInt(lastEffet.numero, 10);
+      nextNumero = isNaN(lastNumero) ? numero : String(lastNumero + 1);
+    } else if (!numero && !lastEffet) {
+      // No user input & no cheques yet → default start 1
+      nextNumero = "1";
+    } else {
+      // Auto increment based on last cheque
+      const lastNumero = parseInt(lastEffet.numero, 10);
+      nextNumero = isNaN(lastNumero) ? "1" : String(lastNumero + 1);
+    }
+
+    // --- Create cheque ---
+    const effet = await prisma.effet.create({
+      data: {
+        numero: nextNumero,
+        montant: parseFloat(montant),
+        beneficiaire,
+        dateEcheance: new Date(dateEcheance),
+        dateEtablissement: new Date(),
+        statut: 'En circulation',
+        ville,
+        obs,
+        fournisseur: { connect: { id: fournisseur.id } },
+        banque: { connect: { id: findBanque.id } },
+      }
+    });
+
+    console.log(`✅ Effet created successfully: ${effet.id}`);
+    res.redirect(`/tresorerie/effets/banque/${id}`);
+
+  } catch (error) {
+    console.error('❌ Error creating cheque:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+    });
+    res.status(500).json({ error: "Erreur lors de la création du chèque." });
+  }
+};
 
 export const updateEffet = async (req, res) => {
   try {

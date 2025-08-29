@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE `virement` ADD COLUMN `cause` VARCHAR(191) NULL,
+    ADD COLUMN `montantLettres` VARCHAR(191) NULL,
+    ADD COLUMN `rib` INTEGER NULL,
+    ADD COLUMN `rtgs` BOOLEAN NOT NULL DEFAULT false;

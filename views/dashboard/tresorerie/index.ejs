@@ -460,6 +460,14 @@
                 </div>
                 <span class="card-title">Relevés bancaires</span>
               </a>
+
+
+              <a id="card-virement" href="/tresorerie/virements" class="achat-card shadow-lg">
+                <div class="card-icon-wrapper">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <span class="card-title">Virements</span>
+              </a>
             </div>
           </div>
         </div>
@@ -523,6 +531,7 @@
       $('#card-cheques').attr('href', `/tresorerie/cheques/banque/${bankId}`);
       $('#card-effets').attr('href', `/tresorerie/effets/banque/${bankId}`);
       $('#card-releves').attr('href', `/tresorerie/releves/banque/${bankId}`);
+      $('#card-virement').attr('href', `/tresorerie/virements/banque/${bankId}`);
     }
 
     $(document).ready(function () {

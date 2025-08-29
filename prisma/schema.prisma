@@ -106,6 +106,8 @@ model Fournisseur {
   name      String
   email     String?
   ice       String @unique
+  rib      Int @unique
+  objet String?
   identifFiscal String
   telFournisseur String
   contact   String
@@ -119,6 +121,7 @@ model Fournisseur {
   cheques      Cheque[]
   effets       Effet[]
   payavenir Payavenir[]
+  virements Virement[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -162,13 +165,15 @@ model Effet {
 
   banque              Banque   @relation("BanqueEffets", fields: [banqueId], references: [id])
   banqueId            Int
-  numero           String   @unique   // ✅ Add this line if it's not already
+  numero           String      // ✅ Add this line if it's not already
   obs String?
-
+  montantLettres      String?
+  ville               String?
   // facture             Facture? @relation(fields: [factureId], references: [id])
   // factureId           Int?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+  @@unique([banqueId, numero])   // ✅ compound unique constraint
 }
 
 model Prelevement {
@@ -216,6 +221,27 @@ model Recavenir {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+model Virement {
+  id            Int      @id @default(autoincrement())
+  designation           String?
+  beneficiaire       String?   // beneficiaire
+  montant       Float?
+  date           DateTime?
+  dateReglement DateTime?
+  obs String?  
+  objet String?
+  cause String?
+  rtgs Boolean @default(false)
+  rib Int?
+  montantLettres String?
+  fournisseur         Fournisseur? @relation(fields: [fournisseurId], references: [id])
+  fournisseurId       Int?
+  banque              Banque   @relation("BanqueVirements", fields: [banqueId], references: [id])
+  banqueId            Int
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
 model Banque {
   id         Int       @id @default(autoincrement())
   name       String
@@ -230,6 +256,7 @@ model Banque {
   effets     Effet[]   @relation("BanqueEffets")
   payavenir Payavenir[] @relation("BanquePayavenir")
   recavenir Recavenir[] @relation("BanqueRecavenir")
+  virements  Virement[] @relation("BanqueVirements")
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 }

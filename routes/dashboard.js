@@ -8,9 +8,10 @@ import fs from 'fs';
 import prisma from '../db.js';
 import { createBanque, deleteBanque, displayBanques, displayBanquesForcheques, getSituationBancaire, showCreate, updateChequeInStituation, updateSituationBancaire } from '../controllers/banquesController.js';
 import { awb, bmce, bmci, bp, cam, cdm, createCheque, deleteCheque, etablirCheque, importExelCheques, showCheques, showChequesForbanque, updateCheque, updateChequeStatut } from '../controllers/chequesController.js';
-import {createEffet, deleteEffet, Eawb, Ebmce, Ebmci, Ebp, Ecam, Ecdm, importExelEffets, showEffets, showEffetsForbanque, updateEffet, updateEffetStatut} from '../controllers/effetsController.js';
+import {createEffet, deleteEffet, Eawb, Ebmce, Ebmci, Ebp, Ecam, Ecdm, etablirEffet, importExelEffets, showEffets, showEffetsForbanque, updateEffet, updateEffetStatut} from '../controllers/effetsController.js';
 import { createPayavenir, deletePayavenir, showPayavenir, updatePayavenir, updatePayavenirStatut } from '../controllers/payavenirController.js';
 import { createRecavenir, deleteRecavenir, showRecavenir, updateRecavenir, updateRecavenirStatut } from '../controllers/recavenirController.js';
+import { createVirement, deleteVirement, generateVirementPDF, index, postVirement, showUpdateVirement, suppliersList, updateVire } from '../controllers/VirementController.js';
 export const dashboardRouter = express.Router();
 dashboardRouter.use(isAuthenticated)
 
@@ -56,6 +57,8 @@ dashboardRouter.get('/dashboard' , (req, res) => {
 
 
         // -----------Trésorerie :  Effets -----------------
+    
+        dashboardRouter.post('/tresorerie/effets/create/format/:id', etablirEffet);
         dashboardRouter.get('/tresorerie/effets/create/format/bmce/:id', Ebmce);
         dashboardRouter.get('/tresorerie/effets/create/format/bmci/:id', Ebmci);
         dashboardRouter.get('/tresorerie/effets/create/format/awb/:id', Eawb);
@@ -106,3 +109,14 @@ dashboardRouter.get('/dashboard' , (req, res) => {
         dashboardRouter.delete('/tresorerie/recettes_a_venir/:id', deleteRecavenir);
         dashboardRouter.patch('/tresorerie/recettes_a_venir/:id', updateRecavenir);
         dashboardRouter.put('/tresorerie/recettes_a_venir/:id/update-statut', updateRecavenirStatut);
+         // < -----------Trésorerie :  Virements ----------------- >
+         
+        dashboardRouter.get('/tresorerie/virements/banque/:id/create', createVirement);
+        dashboardRouter.get('/tresorerie/virements/banque/:banqueId', index);
+
+        dashboardRouter.get('/tresorerie/virements/banque/:banqueId/update/:id', showUpdateVirement);
+        dashboardRouter.patch('/tresorerie/virements/banque/:banqueId/update/:id', updateVire);
+        dashboardRouter.get('/tresorerie/virements/banque/:id/pdf', generateVirementPDF);
+        dashboardRouter.post('/tresorerie/virements/banque/:id/create', postVirement);
+        dashboardRouter.delete('/tresorerie/virements/banque/:banqueId/delete/:id', deleteVirement);
+        dashboardRouter.get('/api/fournisseurs', suppliersList);

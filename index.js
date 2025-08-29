@@ -9,9 +9,13 @@ import expressMySQLSession from 'express-mysql-session';
 import { $Enums } from '@prisma/client';
 import { dashboardRouter } from './routes/dashboard.js';
 import { authRouter } from './routes/auth.js';
+import PDFDocument from "pdfkit";
+import fs from "fs";
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+app.use(methodOverride('_method'));
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -44,9 +48,8 @@ app.use(session({
     }
 }));
 
-// Basic route to render index.ejs
+// Basic route to render index.ejss
 
-app.use(methodOverride('_method'));
 
 app.use(authRouter);
 app.use(dashboardRouter);
