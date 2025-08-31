@@ -468,6 +468,14 @@
                 </div>
                 <span class="card-title">Virements</span>
               </a>
+
+               <a id="card-mise" href="/tresorerie/miseadis" class="achat-card shadow-lg">
+                <div class="card-icon-wrapper">
+                    <i class="fas fa-file-signature"></i>
+
+                </div>
+                <span class="card-title">Mise a Disposition</span>
+              </a>
             </div>
           </div>
         </div>
@@ -501,7 +509,7 @@
             </div>
             <div class="form-group">
               <label for="bankRib">RIB</label>
-              <input type="number" class="form-control" id="bankRib" name="rib" required>
+              <input type="text" class="form-control" id="bankRib" name="rib" required>
             </div>
             <div class="form-group">
               <label for="bankAgence">Agence</label>
@@ -532,6 +540,7 @@
       $('#card-effets').attr('href', `/tresorerie/effets/banque/${bankId}`);
       $('#card-releves').attr('href', `/tresorerie/releves/banque/${bankId}`);
       $('#card-virement').attr('href', `/tresorerie/virements/banque/${bankId}`);
+      $('#card-mise').attr('href', `/tresorerie/miseadis/banque/${bankId}`);
     }
 
     $(document).ready(function () {

@@ -12,6 +12,7 @@ import {createEffet, deleteEffet, Eawb, Ebmce, Ebmci, Ebp, Ecam, Ecdm, etablirEf
 import { createPayavenir, deletePayavenir, showPayavenir, updatePayavenir, updatePayavenirStatut } from '../controllers/payavenirController.js';
 import { createRecavenir, deleteRecavenir, showRecavenir, updateRecavenir, updateRecavenirStatut } from '../controllers/recavenirController.js';
 import { createVirement, deleteVirement, generateVirementPDF, index, postVirement, showUpdateVirement, suppliersList, updateVire } from '../controllers/VirementController.js';
+import { createMiseadis, deleteMiseadis, generateMiseadisPDF, indexDis, postMiseadis, showUpdateMiseadis, updateMis } from '../controllers/misediscontrollrt.js';
 export const dashboardRouter = express.Router();
 dashboardRouter.use(isAuthenticated)
 
@@ -113,10 +114,18 @@ dashboardRouter.get('/dashboard' , (req, res) => {
          
         dashboardRouter.get('/tresorerie/virements/banque/:id/create', createVirement);
         dashboardRouter.get('/tresorerie/virements/banque/:banqueId', index);
-
         dashboardRouter.get('/tresorerie/virements/banque/:banqueId/update/:id', showUpdateVirement);
         dashboardRouter.patch('/tresorerie/virements/banque/:banqueId/update/:id', updateVire);
         dashboardRouter.get('/tresorerie/virements/banque/:id/pdf', generateVirementPDF);
         dashboardRouter.post('/tresorerie/virements/banque/:id/create', postVirement);
         dashboardRouter.delete('/tresorerie/virements/banque/:banqueId/delete/:id', deleteVirement);
+        // < -----------Trésorerie :  Mise a Disposition ----------------- >
+        dashboardRouter.get('/tresorerie/miseadis/banque/:id/create', createMiseadis);
+        dashboardRouter.get('/tresorerie/miseadis/banque/:banqueId', indexDis);
+        dashboardRouter.get('/tresorerie/miseadis/banque/:banqueId/update/:id', showUpdateMiseadis);
+        dashboardRouter.patch('/tresorerie/miseadis/banque/:banqueId/update/:id', updateMis);
+        dashboardRouter.get('/tresorerie/miseadis/banque/:id/pdf', generateMiseadisPDF);
+        dashboardRouter.post('/tresorerie/miseadis/banque/:id/create', postMiseadis);
+        dashboardRouter.delete('/tresorerie/miseadis/banque/:banqueId/delete/:id', deleteMiseadis);
+
         dashboardRouter.get('/api/fournisseurs', suppliersList);

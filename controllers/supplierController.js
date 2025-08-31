@@ -121,7 +121,7 @@ export const importExel = async(req, res) => {
   }
 export const create = async (req, res) => {
   try {
-    const { name, email, address,  phone, contact, contactphone, ice, idF } = req.body;
+    const { name, email, address,  phone, contact, contactphone, ice, idF, rib } = req.body;
     const supplier = await prisma.fournisseur.create({
       data: {
         name : name,
@@ -132,6 +132,7 @@ export const create = async (req, res) => {
         telFournisseur: phone,
         contact,
         telContact: contactphone,
+        rib : rib
       },
     });
    

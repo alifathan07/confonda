@@ -7,23 +7,21 @@ export const createBanque = async (req, res) => {
   try {
     const { name, rib, agence } = req.body;
 
-    // If one new banque, wrap as array
-    const names = Array.isArray(name) ? name : [name];
-    
-    for (let i = 0; i < names.length; i++) {
-      await prisma.banque.create({
-        data: {
-          name: names[i],
-          rib: parseInt(rib[i] || 0),
-          agence: agence[i],
-          solde: 0,
-          positive: 0,
-          negative: 0,
-          dmlt: 0,
-          dateSolde: new Date(),
-        }
-      });
-    }
+    // Convert RIB to string to match Prisma schema
+    const ribString = String(rib);
+
+    await prisma.banque.create({
+      data: {
+        name: name,
+        rib: ribString, // ✅ now it's a string
+        agence: agence,
+        solde: 0,
+        positive: 0,
+        negative: 0,
+        dmlt: 0,
+        dateSolde: new Date(),
+      }
+    });
 
     res.redirect(req.header('Referer') || '/tresorerie');
   } catch (error) {
@@ -31,6 +29,8 @@ export const createBanque = async (req, res) => {
     res.status(500).json({ error: 'Erreur lors de la création des banques.' });
   }
 };
+
+
 export const displayBanques = async(req, res) => {
     try {
         const banques = await prisma.banque.findMany();

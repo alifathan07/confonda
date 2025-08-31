@@ -37,6 +37,7 @@ export const createPayavenir = async (req, res) => {
           data: {
             name: beneficiaire,
             ice: `ICE_${Date.now()}`,
+            rib : `RIB_${Date.now()}`,
             identifFiscal: `FISCAL_${Date.now()}`,
             telFournisseur: 'Default',
             contact: 'Default',

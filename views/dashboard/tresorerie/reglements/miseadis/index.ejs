@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
   <meta name="description" content="Cheques" />
   <meta name="author" content="Confonda" />
-  <title>Payements à venir</title>
+  <title>Mise A Disposition</title>
   <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
   <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
@@ -222,7 +222,7 @@
   <div class="container-fluid">
     <div class="card shadow mb-4">
     <div class="card-header py-3">
-      <h6 class="m-0 font-weight-bold text-primary">Liste des payements à venir</h6>
+      <h6 class="m-0 font-weight-bold text-primary">Liste des Mises a Disposition</h6>
     </div>
     <div class="card-body">
       <div class="mb-4" style="display: flex; align-items: center; gap: 20px;">
@@ -232,12 +232,14 @@
       <button id="downloadExcelBtn" class="btn btn-outline-success d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
         <i class="fas fa-file-download mr-2"></i> Télécharger Excel
       </button>
-      <button id="addRowBtn" class="btn btn-secondary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
-        <i class="fas fa-plus mr-2"></i> Ajouter 
-      </button>
-      <button id="saveTableBtn" class="btn btn-primary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
-        <i class="fas fa-save mr-2"></i> Enregistrer
-      </button>
+      <a href="/tresorerie/miseadis/banque/<%= banqueId %>/create" 
+   class="btn btn-secondary d-flex align-items-center" 
+   type="button" 
+   style="font-weight:600; font-size:15px; height: 42px;">
+    <i class="fas fa-plus mr-2"></i> Ajouter
+</a>
+
+     
       <span id="excelUploadMsg" style="font-size:15px; margin-left:10px;"></span>
       </div>
       <div class="mb-3" style="max-width: 350px;">
@@ -252,91 +254,99 @@
      
       
       <div class="table-responsive">
-      <%
+     <% 
+// Fonction pour formater les dates en jj/mm/aaaa
 function formatDateToDDMMYYYY(dateInput) {
-if (!dateInput) return '';
-const date = new Date(dateInput);
-if (isNaN(date)) return dateInput; // fallback: if invalid date, show original
-
-const day = String(date.getDate()).padStart(2, '0');
-const month = String(date.getMonth() + 1).padStart(2, '0');
-const year = date.getFullYear();
-
-return `${day}/${month}/${year}`;
+    if (!dateInput) return '';
+    const date = new Date(dateInput);
+    if (isNaN(date)) return dateInput; 
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
 }
 %>
-<div class="mb-3 d-flex align-items-center" style="max-width: 350px;">
-<select id="banqueFilter" class="form-control mr-2" style="font-size: 15px; width: 300px;">
-<option value="">-- Filtrer par banque --</option>
-<% banques.forEach(banque => { %><option value="<%= banque.name %>">
-  <%= banque.name %></option><% }); %></select>
-  <select id="supplierFilter" class="form-control" style="font-size: 15px; width: 250px;">
-  <option value="">-- Filtrer par fournisseur --</option>
-  <% fournisseurs.forEach(fournisseur => { %><option value="<%= fournisseur.name %>"><%= fournisseur.name %></option><% }); %>
-  </select></div>
 
-   
-
-      <table id="editableTable" class="excel-table">
-        <thead>
+<table id="editableTable" class="excel-table">
+    <thead>
         <tr style="position: sticky; top: 0; background-color: white; z-index: 1;">
-          <th draggable="true">Designation</th>
-          <th draggable="true">Banque</th>
-          <th draggable="true">Bénéficiaire</th>
-          <th draggable="true">Montant</th>
-          <th draggable="true">Date d'échéance</th>
-          <th draggable="true">Statut</th>
-         
-
-          <th draggable="true">Observation</th>
-
-
-         
-          <th style="width:70px;">Actions</th> <!-- Delete column -->
+            <th draggable="true">Bénéficiaire</th>
+            <th draggable="true">Banque</th>
+            <th draggable="true">Montant</th>
+            <th draggable="true">Date Saisie</th>
+            <th draggable="true">Observation</th>
+            <th style="width: 180px;">Actions</th>
         </tr>
-        </thead>
-        <tbody>
-        <% if (typeof payavenirs !== 'undefined' && payavenirs.length) { %>
-          <% payavenirs.forEach(payement => { %>
-          <tr data-id="<%= payement.id %>">
-
-            <td contenteditable="true" data-name="designation"><%= payement.designation %></td>
-            <td contenteditable="true" data-name="banque" ><%= payement.banque.name %></td>
-            <td contenteditable="true" data-name="beneficiaire"><%= payement.fournisseur.name%></td>
-            <td contenteditable="true" data-name="montant"><%= Number(payement.montant).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
-            <td contenteditable="true" data-name="dateEcheance"><%= formatDateToDDMMYYYY(payement.dateEcheance) %></td>
-            <td data-name="statut" class="statut-cell">
-            <span 
-              class="statut-badge <%= payement.statut.toLowerCase().replace(/[éè]/g, 'e').replace(/\s+/g, '-') %>"
-              onclick="toggleSelect(this)">
-              <%= payement.statut %>
-            </span>
-            </td>
-
-
-            <td contenteditable="true" data-name="obs"><%= payement.obs %></td>
-            <td>
-            <button class="delete-row excel-delete-btn" title="Supprimer" aria-label="Supprimer"><i class="fas fa-trash"></i></button>
-            <button class="update-row excel-save-btn btn btn-sm btn-warning" title="Mettre à jour" aria-label="Mettre à jour" style="margin-left:5px;"><i class="fas fa-edit"></i></button>
-            </td>
-            
-          </tr>
-          
-          <% }) %>
+    </thead>
+    <tbody>
+        <% if (typeof miseadis !== 'undefined' && miseadis.length) { %>
+            <% miseadis.forEach(miseadispo => { %>
+            <tr data-id="<%= miseadispo.id %>">
+                <td contenteditable="true" data-name="beneficiaire"><%= miseadispo.beneficiaire || '' %></td>
+                <td contenteditable="true" data-name="banque"><%= miseadispo.banque?.name || '' %></td>
+                <td contenteditable="true" data-name="montant"><%= Number(miseadispo.montant).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                <td contenteditable="true" data-name="dateEcheance"><%= formatDateToDDMMYYYY(miseadispo.date) %></td>
+                <td contenteditable="true" data-name="obs"><%= miseadispo.obs || '' %></td>
+                <td>
+                    <div class="btn-group" role="group">
+                        <a href="/tresorerie/miseadis/banque/<%= banqueId %>/update/<%= miseadispo.id %>" class="btn btn-primary btn-sm" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button class="btn btn-danger btn-sm" title="Supprimer" onclick="supprimerVirement(<%= miseadispo.id %>)">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="downloadPDF(<%= miseadispo.id %>)">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            <% }) %>
         <% } %>
-        <tr>
-          <td colspan="4">Total</td>
-          <td id="total">
-            <%= Number(
-                payavenirs.reduce((total, payement) => total + Number(payement.montant), 0)
-              ).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
-                        </td>
-         
-         
-     
-        </tr>
-        </tbody>
-      </table>
+    </tbody>
+</table>
+
+<script>
+async function supprimerVirement(id) {
+    try {
+        if (confirm('Êtes-vous sûr de vouloir supprimer ce miseadispo ?')) {
+            const res = await fetch(`/tresorerie/miseadis/banque/<%= banqueId %>/delete/${id}`, {
+                method: 'DELETE'
+            });
+            if (res.ok) {
+                alert('Virement supprimé avec succès.');
+                location.reload();
+            } else {
+                alert('Erreur lors de la suppression du miseadispo.');
+            }
+        }
+    } catch (error) {
+        console.error(error);
+    }
+    
+}
+async function downloadPDF(id) {
+    try {
+        const res = await fetch(`/tresorerie/miseadis/banque/${id}/pdf`);
+        if (!res.ok) throw new Error('Erreur lors du téléchargement');
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `miseadispo_${id}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+    } catch (err) {
+        console.error(err);
+        alert('Erreur lors du téléchargement du PDF');
+    }
+}
+</script>
+
       </div>
     </div>
     </div>

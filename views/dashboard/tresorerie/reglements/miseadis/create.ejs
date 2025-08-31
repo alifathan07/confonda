@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
   <meta name="description" content="Cheques" />
   <meta name="author" content="Confonda" />
-  <title>Virements</title>
+  <title>Mise A Disposition</title>
   <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
   <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
@@ -24,20 +24,35 @@
                     <div class="card shadow mb-4">
                         <div class="card-header py-3">
                             <h4 class="m-0 font-weight-bold text-primary">
-                                <i class="fas fa-exchange-alt"></i> Nouveau Virement
+                                <i class="fas fa-exchange-alt"></i> Nouveau Mise a Disposition
                             </h4>
                         </div>
                         <div class="card-body">
-                            <form action="/tresorerie/virements/banque/<%=banqueId %>/create" method="POST" class="needs-validation" novalidate>
+                            <form action="/tresorerie/miseadis/banque/<%=banqueId %>/create" method="POST" class="needs-validation" novalidate>
                                 <div class="form-row">
                                     <div class="form-group col-12 d-flex justify-content-center">
-                                        <div class="col-md-6">
-                                            <label for="date">Date de saisie</label>
-                                            <input type="date" class="form-control" id="date" name="date" value="<%= new Date().toISOString().split('T')[0] %>" required>
-                                        </div>
+                                        <%
+  const today = new Date();
+  const offset = today.getTimezoneOffset();
+  const localDate = new Date(today.getTime() - (offset * 60 * 1000));
+  const formatted = localDate.toISOString().split("T")[0];
+%>
+
+<div class="col-md-6">
+  <label for="date">Date</label>
+  <input 
+    type="date" 
+    class="form-control" 
+    id="date" 
+    name="date" 
+    value="<%= formatted %>" 
+    required
+  >
+</div>
+
                                         <div class="col-md-6">
                                             <label for="date">Objet</label>
-                                            <input type="text" class="form-control" id="objet" name="objet" value="Orde de virement" required>
+                                            <input type="text" class="form-control" id="objet" name="objet" value="MISE A DISPOSITION" required>
                                         </div>
                                     </div>
                                    
@@ -48,6 +63,10 @@
                                         <input type="text" class="form-control" id="beneficiaire" name="beneficiaire" required placeholder="Nom du bénéficiaire">
                                     </div>
                                     <div class="form-group col-12 col-md-6">
+                                        <label for="beneficiaire">CIN</label>
+                                        <input type="text" class="form-control" id="cin" name="cin" required>
+                                    </div>
+                                    <div class="form-group col-12 col-md-6">
                                         <label for="montant">Montant</label>
                                         <div class="input-group">
                                             <input type="number" step="0.01" class="form-control" id="montant" name="montant" required placeholder="Montant">
@@ -55,24 +74,14 @@
                                             </div>
                                         </div> 
                                     </div>
-                                    <div class="form-group col-12 col-md-6">
-                                        <label for="cause">Cause</label>
-                                        <input type="text" class="form-control" id="cause" name="cause" required placeholder="Cause">
-                                    </div>
-                                    <div class="form-group col-12 col-md-6 d-flex align-items-center">
-                                        <div class="custom-control custom-switch">
-                                        <input type="hidden" name="rtgs" value="0">
-                                        <input type="checkbox" class="custom-control-input" id="rtgs" name="rtgs" value="1" <%= rtgs ? 'checked' : '' %>>
-
-                                            <label class="custom-control-label" for="rtgs">RTGS</label>
-                                        </div>
-                                    </div>
+                                 
+                                   
                                 </div>
                                   
                                 <div class="form-row">
                                     <div class="form-group col-12 col-md-6">
-                                        <label for="dateReglement">Date de règlement</label>
-                                        <input type="date" class="form-control" id="dateReglement" name="dateReglement" required>
+                                        <label for="dateReglement">Date débit</label>
+                                        <input type="date" class="form-control" id="dateReglement" name="dateReglement" value="<%= new Date() %>" required>
                                     </div>
                                     <div class="form-group col-12 col-md-6">
                                         <label for="obs">Observations</label>
@@ -155,48 +164,8 @@
                                     document.getElementById('montantLettre').value = text;
                                 }, 150));
                                 </script>
-                                <div class="form-group col-12 col-md-6">
-                                    <label for="rib">RIB</label>
-                                    <input type="text" class="form-control" id="rib" name="rib" required placeholder="RIB du bénéficiaire">
-                                </div>
                                 <script src="/vendor/jquery/jquery.min.js"></script>
-<script>
-$(document).ready(function () {
-    let fournisseurs = [];
 
-    // Charger la liste des fournisseurs depuis l'API
-    $.ajax({
-        url: '/api/fournisseurs',
-        method: 'GET',
-        success: function (data) {
-            fournisseurs = data;
-            console.log("Fournisseurs chargés :", fournisseurs);
-        },
-        error: function (xhr, status, error) {
-            console.error('Erreur lors de la récupération des fournisseurs:', error);
-        }
-    });
-
-    // Écoute en direct pendant la saisie
-    $('#beneficiaire').on('input', function () {
-        const inputName = $(this).val().trim().toLowerCase();
-
-        if (inputName.length > 1) { // commence à chercher après 2 caractères
-            const found = fournisseurs.find(f =>
-                f.name.toLowerCase().startsWith(inputName) // auto-match dès le début
-            );
-
-            if (found) {
-                $('#rib').val(found.rib);
-            } else {
-                $('#rib').val(""); // vide si aucun match
-            }
-        } else {
-            $('#rib').val("");
-        }
-    });
-});
-</script>
 
                              
                                 <div class="d-flex flex-column flex-md-row">

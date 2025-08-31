@@ -14,247 +14,255 @@
       
       <body>
         
-     <body id="page-top">
-    <div id="wrapper">
-        <%- include('../../../../layouts/sidebar') %>
-        <div id="content-wrapper" class="d-flex flex-column">
-            <div id="content">
-                <%- include('../../../../layouts/topbar') %>
-                <div class="container-fluid">
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <h4 class="m-0 font-weight-bold text-primary">
-                                <i class="fas fa-exchange-alt"></i>  Virement
-                            </h4>
-                        </div>
-                        <div class="card-body">
-                            <form action="/tresorerie/virements/banque/<%= banqueId %>/update/<%= virement.id %>" method="POST" class="needs-validation" novalidate>
-                            <input type="hidden" name="_method" value="PATCH">
-                                <div class="form-row">
-                                    <div class="form-group col-12 d-flex justify-content-center">
-                                        <div class="col-md-6">
-                                            <label for="date">Date de saisie</label>
-                                            <input type="date" class="form-control" id="date" name="date" value="<%= virement.date ? virement.date.toISOString().slice(0,10) : '' %>" required>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label for="date">Objet</label>
-                                            <input type="text" class="form-control" id="objet" name="objet" required value="<%= virement.objet %>">
-                                        </div>
-                                    </div>
-                                   
+        <body id="page-top">
+            <div id="wrapper">
+                <%- include('../../../../layouts/sidebar') %>
+                <div id="content-wrapper" class="d-flex flex-column">
+                    <div id="content">
+                        <%- include('../../../../layouts/topbar') %>
+                        <div class="container-fluid">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h4 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-exchange-alt"></i> Virement
+                                    </h4>
                                 </div>
-                                <div class="form-row">
-                                    <div class="form-group col-12 col-md-6">
-                                        <label for="fournisseurId">Bénéficiaire</label>
-                                        <input type="text" class="form-control" id="fournisseurId" name="beneficiaire" required placeholder="Nom du bénéficiaire" value="<%= virement.beneficiaire %>">
-                                    </div>
-                                    <div class="form-group col-12 col-md-6">
-                                        <label for="montant">Montant</label>
-                                        <div class="input-group">
-                                            <input type="number" step="0.01" class="form-control" id="montant" name="montant" required placeholder="Montant" value="<%= virement.montant %>">
-                                            <div class="input-group-append">
+                                <div class="card-body">
+                                    <form id="virementForm">
+                                        <div class="form-row">
+                                            <div class="form-group col-12 d-flex justify-content-center">
+                                                <div class="col-md-6">
+                                                    <label for="date">Date de saisie</label>
+                                                    <input type="date" class="form-control" id="date" name="date" value="<%= virement.date ? virement.date.toISOString().slice(0,10) : '' %>">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="objet">Objet</label>
+                                                    <input type="text" class="form-control" id="objet" name="objet" value="<%= virement.objet %>">
+                                                </div>
                                             </div>
-                                        </div> 
-                                    </div>
-                                    <div class="form-group col-12 col-md-6">
-                                        <label for="cause">Cause</label>
-                                        <input type="text" class="form-control" id="cause" name="cause" required placeholder="Cause" value="<%= virement.cause %>">
-                                    </div>
-                                    <div class="form-group col-12 col-md-6 d-flex align-items-center">
-                                        <div class="custom-control custom-switch">
-                                            <input type="checkbox" class="custom-control-input" id="rtgs" name="rtgs" value="RTGS" <%= virement.rtgs  ? 'checked' : '' %>>
-                                            <label class="custom-control-label" for="rtgs">RTGS</label>
                                         </div>
-                                    </div>
+                                        <div class="form-row">
+                                            <div class="form-group col-12 col-md-6">
+                                                <label for="beneficiaire">Bénéficiaire</label>
+                                                <input type="text" class="form-control" id="beneficiaire" name="beneficiaire" placeholder="Nom du bénéficiaire" value="<%= virement.beneficiaire %>">
+                                            </div>
+                                            <div class="form-group col-12 col-md-6">
+                                                <label for="montant">Montant</label>
+                                                <div class="input-group">
+                                                    <input type="number" step="0.01" class="form-control" id="montant" name="montant" placeholder="Montant" value="<%= virement.montant %>">
+                                                    <div class="input-group-append"></div>
+                                                </div> 
+                                            </div>
+                                            <div class="form-group col-12 col-md-6">
+                                                <label for="cause">Cause</label>
+                                                <input type="text" class="form-control" id="cause" name="cause" placeholder="Cause" value="<%= virement.cause %>">
+                                            </div>
+                                            <div class="form-group col-12 col-md-6 d-flex align-items-center">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox" class="custom-control-input" id="rtgs" name="rtgs" value="RTGS" <%= virement.rtgs ? 'checked' : '' %>>
+                                                    <label class="custom-control-label" for="rtgs">RTGS</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group col-12 col-md-6">
+                                                <label for="dateReglement">Date de règlement</label>
+                                                <input type="date" class="form-control" id="dateReglement" name="dateReglement" value="<%= virement.dateReglement ? virement.dateReglement.toISOString().slice(0,10) : '' %>">
+                                            </div>
+                                            <div class="form-group col-12 col-md-6">
+                                                <label for="obs">Observations</label>
+                                                <textarea class="form-control" id="obs" name="obs" rows="2" placeholder="Notes ou remarques"><%= virement.obs %></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="form-group col-12 col-md-6">
+                                            <label for="montantLettre">Montant en lettres</label>
+                                            <input type="text" class="form-control" id="montantLettre" name="montantLettre" readonly placeholder="Montant en lettres">
+                                        </div>
+                                        <div class="form-group col-12 col-md-6">
+                                            <label for="rib">RIB</label>
+                                            <input type="hidden" id="fournisseurId" name="fournisseurId" value="<%= virement.fournisseurId %>">
+                                            <input type="text" class="form-control" id="rib" name="rib" value="<%= fournisseur.rib %>">
+                                        </div>
+                                        <div class="d-flex flex-column flex-md-row">
+                                            <button type="submit" class="btn btn-success custom-btn mb-2 mb-md-0">
+                                                <i class="fas fa-save"></i> Enregistrer
+                                            </button>
+                                            <button type="button" class="btn btn-primary" onclick="downloadPDF(<%= virement.id %>)">
+                                                <i class="fas fa-download"></i> Télécharger PDF
+                                            </button>
+                                            <a href="/dashboard/tresorerie/reglements/virements/<%= banqueId %> " class="btn btn-secondary custom-btn ml-md-2">
+                                                <i class="fas fa-arrow-left"></i> Annuler
+                                            </a>
+                                        </div>
+                                    </form>
                                 </div>
-                                  
-                                
-                                <div class="form-row">
-                                    <div class="form-group col-12 col-md-6">
-                                        <label for="dateReglement">Date de règlement</label>
-                                        <input type="date" class="form-control" id="dateReglement" name="dateReglement" required value="<%= virement.dateReglement ? virement.dateReglement.toISOString().slice(0,10) : '' %>">
-                                    </div>
-                                    <div class="form-group col-12 col-md-6">
-                                        <label for="obs">Observations</label>
-                                        <textarea class="form-control" id="obs" name="obs" rows="2" placeholder="Notes ou remarques">
-                                                <%= virement.obs %>
-                                        </textarea>
-                                    </div>
-                                </div>
-                                <div class="form-group col-12 col-md-6">
-                                    <label for="montantLettre">Montant en lettres</label>
-                                    <input type="text" class="form-control" id="montantLettre" name="montantLettre" readonly placeholder="Montant en lettres">
-                                </div>
-                                <script>
-                                // Cache for conversion results to improve efficiency
-                                const montantWordsCache = new Map();
-
-                                function numberToFrenchWords(n) {
-                                    // Only handle up to 999999 for performance
-                                    const ones = ["zéro","un","deux","trois","quatre","cinq","six","sept","huit","neuf"];
-                                    const tens = ["","dix","vingt","trente","quarante","cinquante","soixante","soixante-dix","quatre-vingt","quatre-vingt-dix"];
-                                    if (montantWordsCache.has(n)) return montantWordsCache.get(n);
-                                    let result = "";
-                                    if (n < 10) result = ones[n];
-                                    else if (n < 20) {
-                                        if (n === 10) result = "dix";
-                                        else if (n === 11) result = "onze";
-                                        else if (n === 12) result = "douze";
-                                        else if (n === 13) result = "treize";
-                                        else if (n === 14) result = "quatorze";
-                                        else if (n === 15) result = "quinze";
-                                        else if (n === 16) result = "seize";
-                                        else result = "dix-" + ones[n-10];
-                                    }
-                                    else if (n < 100) {
-                                        let t = Math.floor(n/10), o = n%10;
-                                        let sep = o === 1 && t !== 8 ? " et " : (o > 0 ? "-" : "");
-                                        result = tens[t] + (o > 0 ? sep + ones[o] : "");
-                                    }
-                                    else if (n < 1000) {
-                                        let h = Math.floor(n/100), r = n%100;
-                                        let hundred = h === 1 ? "cent" : ones[h] + " cent";
-                                        if (r === 0) result = hundred;
-                                        else result = hundred + " " + numberToFrenchWords(r);
-                                    }
-                                    else if (n < 1000000) {
-                                        let th = Math.floor(n/1000), r = n%1000;
-                                        let thousand = th === 1 ? "mille" : numberToFrenchWords(th) + " mille";
-                                        if (r === 0) result = thousand;
-                                        else result = thousand + " " + numberToFrenchWords(r);
-                                    }
-                                    else result = n; // fallback
-                                    montantWordsCache.set(n, result);
-                                    return result;
-                                }
-
-                                // Debounce function to limit conversion calls
-                                function debounce(fn, delay) {
-                                    let timer = null;
-                                    return function(...args) {
-                                        clearTimeout(timer);
-                                        timer = setTimeout(() => fn.apply(this, args), delay);
-                                    };
-                                }
-
-                                document.getElementById('montant').addEventListener('input', debounce(function() {
-                                    const val = this.value;
-                                    if (!val) {
-                                        document.getElementById('montantLettre').value = "";
-                                        return;
-                                    }
-                                    const num = parseInt(val, 10);
-                                    let text = "";
-                                    if (!isNaN(num) && num >= 0) {
-                                        text = numberToFrenchWords(num);
-                                        if (val.includes('.')) {
-                                            const decimals = val.split('.')[1];
-                                            if (decimals && parseInt(decimals, 10) > 0) {
-                                                text += " virgule " + numberToFrenchWords(parseInt(decimals, 10));
-                                            }
-                                        }
-                                    }
-                                    document.getElementById('montantLettre').value = text;
-                                }, 150));
-                                </script>
-                                  <div class="form-group col-12 col-md-6">
-                                    <label for="rib">RIB</label>
-                                   <input type="hidden" id="fournisseurOid" name="fournisseurid" value="<%= virement.fournisseurId %>">
-                                    <input type="text" class="form-control" id="rib" name="rib" required value="<%= fournisseur.rib %>">
-
-                                </div>
-                                <script src="/vendor/jquery/jquery.min.js"></script>
-<script>
-$(document).ready(function () {
-    let fournisseurs = [];
-
-    // Charger la liste des fournisseurs depuis l'API
-    $.ajax({
-        url: '/api/fournisseurs',
-        method: 'GET',
-        success: function (data) {
-            fournisseurs = data;
-            console.log("Fournisseurs chargés :", fournisseurs);
-        },
-        error: function (xhr, status, error) {
-            console.error('Erreur lors de la récupération des fournisseurs:', error);
-        }
-    });
-
-    // Écoute en direct pendant la saisie
-    $('#beneficiaire').on('input', function () {
-        const inputName = $(this).val().trim().toLowerCase();
-
-        if (inputName.length > 1) { // commence à chercher après 2 caractères
-            const found = fournisseurs.find(f =>
-                f.name.toLowerCase().startsWith(inputName) // auto-match dès le début
-            );
-
-            if (found) {
-                $('#rib').val(found.rib);
-            } else {
-                $('#rib').val(""); // vide si aucun match
-            }
-        } else {
-            $('#rib').val("");
-        }
-    });
-});
-</script>
-
-                                <div class="d-flex flex-column flex-md-row">
-                                    <button type="submit" class="btn btn-success custom-btn mb-2 mb-md-0">
-                                        <i class="fas fa-save"></i> Enregistrer
-                                    </button>
-                                 <button type="button" class="btn btn-primary" onclick="downloadPDF(<%= virement.id %>)">
-  <i class="fas fa-download"></i> Télécharger PDF
-</button>
-
-<script>
-async function downloadPDF(id) {
-  try {
-    const res = await fetch(`/tresorerie/virements/banque/${id}/pdf`);
-    if (!res.ok) throw new Error('Erreur lors du téléchargement');
-
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `virement_${id}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-  } catch (err) {
-    console.error(err);
-    alert('Erreur lors du téléchargement du PDF');
-  }
-}
-</script>
-
-                                    
-                                    <a href="/dashboard/tresorerie/reglements/virements" class="btn btn-secondary custom-btn ml-md-2">
-                                        <i class="fas fa-arrow-left"></i> Annuler
-                                    </a>
-                                </div>
-                            </form>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-
-
-<script src="/vendor/jquery/jquery.min.js"></script>
-<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
-<script src="/js/sb-admin-2.min.js"></script>
-<script src="/vendor/datatables/jquery.dataTables.min.js"></script>
-<script src="/vendor/datatables/dataTables.bootstrap4.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-<script src="/js/demo/datatables-demo.js"></script>
-</body>
+        
+            <!-- Include Axios -->
+            <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+            <script src="/vendor/jquery/jquery.min.js"></script>
+            <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+            <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+            <script src="/js/sb-admin-2.min.js"></script>
+            <script src="/vendor/datatables/jquery.dataTables.min.js"></script>
+            <script src="/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+            <script src="/js/demo/datatables-demo.js"></script>
+        
+            <script>
+                // Cache for conversion results to improve efficiency
+                const montantWordsCache = new Map();
+        
+                function numberToFrenchWords(n) {
+                    const ones = ["zéro", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf"];
+                    const tens = ["", "dix", "vingt", "trente", "quarante", "cinquante", "soixante", "soixante-dix", "quatre-vingt", "quatre-vingt-dix"];
+                    if (montantWordsCache.has(n)) return montantWordsCache.get(n);
+                    let result = "";
+                    if (n < 10) result = ones[n];
+                    else if (n < 20) {
+                        if (n === 10) result = "dix";
+                        else if (n === 11) result = "onze";
+                        else if (n === 12) result = "douze";
+                        else if (n === 13) result = "treize";
+                        else if (n === 14) result = "quatorze";
+                        else if (n === 15) result = "quinze";
+                        else if (n === 16) result = "seize";
+                        else result = "dix-" + ones[n - 10];
+                    } else if (n < 100) {
+                        let t = Math.floor(n / 10), o = n % 10;
+                        let sep = o === 1 && t !== 8 ? " et " : (o > 0 ? "-" : "");
+                        result = tens[t] + (o > 0 ? sep + ones[o] : "");
+                    } else if (n < 1000) {
+                        let h = Math.floor(n / 100), r = n % 100;
+                        let hundred = h === 1 ? "cent" : ones[h] + " cent";
+                        if (r === 0) result = hundred;
+                        else result = hundred + " " + numberToFrenchWords(r);
+                    } else if (n < 1000000) {
+                        let th = Math.floor(n / 1000), r = n % 1000;
+                        let thousand = th === 1 ? "mille" : numberToFrenchWords(th) + " mille";
+                        if (r === 0) result = thousand;
+                        else result = thousand + " " + numberToFrenchWords(r);
+                    } else result = n; // fallback
+                    montantWordsCache.set(n, result);
+                    return result;
+                }
+        
+                // Debounce function to limit conversion calls
+                function debounce(fn, delay) {
+                    let timer = null;
+                    return function (...args) {
+                        clearTimeout(timer);
+                        timer = setTimeout(() => fn.apply(this, args), delay);
+                    };
+                }
+        
+                document.getElementById('montant').addEventListener('input', debounce(function () {
+                    const val = this.value;
+                    if (!val) {
+                        document.getElementById('montantLettre').value = "";
+                        return;
+                    }
+                    const num = parseInt(val, 10);
+                    let text = "";
+                    if (!isNaN(num) && num >= 0) {
+                        text = numberToFrenchWords(num);
+                        if (val.includes('.')) {
+                            const decimals = val.split('.')[1];
+                            if (decimals && parseInt(decimals, 10) > 0) {
+                                text += " virgule " + numberToFrenchWords(parseInt(decimals, 10));
+                            }
+                        }
+                    }
+                    document.getElementById('montantLettre').value = text;
+                }, 150));
+        
+                $(document).ready(function () {
+                    let fournisseurs = [];
+        
+                    // Load suppliers from API
+                    $.ajax({
+                        url: '/api/fournisseurs',
+                        method: 'GET',
+                        success: function (data) {
+                            fournisseurs = data;
+                            console.log("Fournisseurs chargés :", fournisseurs);
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Erreur lors de la récupération des fournisseurs:', error);
+                        }
+                    });
+        
+                    // Auto-complete RIB based on beneficiary input
+                    $('#beneficiaire').on('input', function () {
+                        const inputName = $(this).val().trim().toLowerCase();
+                        if (inputName.length > 1) {
+                            const found = fournisseurs.find(f => f.name.toLowerCase().startsWith(inputName));
+                            if (found) {
+                                $('#rib').val(found.rib);
+                                $('#fournisseurId').val(found.id);
+                            } else {
+                                $('#rib').val("");
+                                $('#fournisseurId').val("");
+                            }
+                        } else {
+                            $('#rib').val("");
+                            $('#fournisseurId').val("");
+                        }
+                    });
+        
+                    // Handle form submission with Axios
+                    $('#virementForm').on('submit', function (e) {
+                        e.preventDefault(); // Prevent default form submission
+        
+                        // Collect form data
+                        const formData = {
+                            date: $('#date').val(),
+                            objet: $('#objet').val(),
+                            beneficiaire: $('#beneficiaire').val(),
+                            montant: parseFloat($('#montant').val()) || 0,
+                            cause: $('#cause').val(),
+                            rtgs: $('#rtgs').is(':checked'),
+                            dateReglement: $('#dateReglement').val(),
+                            obs: $('#obs').val(),
+                            montantLettre: $('#montantLettre').val(),
+                            fournisseurId: $('#fournisseurId').val(),
+                            rib: $('#rib').val()
+                        };
+        
+                        // Send data via Axios
+                        axios.patch(`/tresorerie/virements/banque/<%= banqueId %>/update/<%= virement.id %>`, formData)
+                            .then(response => {
+                                alert('Virement mis à jour avec succès !');
+                                window.location.href = '/tresorerie/virements/banque/' + '<%= banqueId %>';
+                            })
+                            .catch(error => {
+                                console.error('Erreur lors de la mise à jour du virement:', error);
+                                alert('Erreur lors de la mise à jour du virement. Veuillez réessayer.');
+                            });
+                    });
+                });
+        
+                async function downloadPDF(id) {
+                    try {
+                        const res = await fetch(`/tresorerie/virements/banque/${id}/pdf`);
+                        if (!res.ok) throw new Error('Erreur lors du téléchargement');
+                        const blob = await res.blob();
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `virement_${id}.pdf`;
+                        document.body.appendChild(link);
+                        link.click();
+                        link.remove();
+                        URL.revokeObjectURL(url);
+                    } catch (err) {
+                        console.error(err);
+                        alert('Erreur lors du téléchargement du PDF');
+                    }
+                }
+            </script>
+        </body>

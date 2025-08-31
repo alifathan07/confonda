@@ -303,6 +303,7 @@ export const importExelCheques = async (req, res) => {
                 data: {
                     name: cheque.beneficiaire,
                     ice: `ICE_${Date.now()}`,
+                    rib: `RIB_${Date.now()}`,
                     identifFiscal: `FISCAL_${Date.now()}`,
                     telFournisseur: 'Default',
                     contact: 'Default',

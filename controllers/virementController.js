@@ -24,7 +24,7 @@ export const createVirement = async(req , res) => {
 }
 export const postVirement = async (req, res) => {
     try {
-        const { beneficiaire, date, dateReglement, montant, obs, rib, montantLettre, objet } = req.body;
+        const { beneficiaire, date, dateReglement, montant, obs, rib, montantLettre, objet, cause } = req.body;
         const banqueId = parseInt(req.params.id);
 
         if (isNaN(banqueId)) {
@@ -57,7 +57,7 @@ export const postVirement = async (req, res) => {
         if (fournisseur && !fournisseur.ice) {
             await prisma.fournisseur.update({
                 where: { id: fournisseur.id },
-                data: { rib: Number(rib) }
+                data: { rib: rib }
             });
         }
 
@@ -70,7 +70,7 @@ export const postVirement = async (req, res) => {
                     telFournisseur: 'Default',
                     contact: 'Default',
                     telContact: 'Default',
-                    rib: Number(rib)
+                    rib: rib
                 }
             });
         }
@@ -80,12 +80,13 @@ export const postVirement = async (req, res) => {
             data: {
                 beneficiaire,
                 date: new Date(date),
-                dateReglement: new Date(dateReglement),
+                dateReglement: dateReglement ? new Date(dateReglement) : null,
                 montant: parseFloat(montant),
                 obs,
                 montantLettres: montantLettre,
                 rtgs, // ✅ boolean here
                 objet,
+                cause,
                 fournisseur: { connect: { id: fournisseur.id } },
                 banque: { connect: { id: banqueId } }
             }
@@ -128,59 +129,83 @@ export const showUpdateVirement = async (req, res) => {
 };
 
 export const updateVire = async (req, res) => {
-    const id = Number(req.params.id);
-    const banqueId = Number(req.params.banqueId);
+    try {
+        const id = Number(req.params.id);
+        const banqueId = Number(req.params.banqueId);
+        const { beneficiaire, date, dateReglement, montant, obs, rib, montantLettre, objet, cause, rtgs } = req.body;
 
-    if (isNaN(banqueId) || isNaN(id)) {
-        return res.status(400).json({ error: "ID invalide." });
-    }
+        // Validate IDs
+        if (isNaN(banqueId) || isNaN(id)) {
+            return res.status(400).json({ error: "ID invalide." });
+        }
 
-    // Extract form fields
-    const { beneficiaire, date, dateReglement, montant, obs, rib, objet } = req.body;
-    let rtgs = req.body.rtgs === "RTGS"; // checkbox
-
-    // ✅ Update fournisseur (if exists or create new)
-    let fournisseur = await prisma.fournisseur.findFirst({
-        where: { name: beneficiaire }
-    });
-
-    if (fournisseur) {
-        await prisma.fournisseur.update({
-            where: { id: fournisseur.id },
-            data: { rib }
+        // Check if banque exists
+        const banqueExists = await prisma.banque.findUnique({
+            where: { id: banqueId }
         });
-    } else {
-        fournisseur = await prisma.fournisseur.create({
+        if (!banqueExists) {
+            return res.status(404).json({ error: "Banque non trouvée." });
+        }
+
+        // Normalize rtgs value
+        let rtgsValue = rtgs;
+        let rtgsBoolean = false;
+
+        if (Array.isArray(rtgsValue)) {
+            rtgsBoolean = rtgsValue.includes("1") || rtgsValue.includes("RTGS") || rtgsValue.includes(true);
+        } else {
+            rtgsBoolean = rtgsValue === "1" || rtgsValue === "RTGS" || rtgsValue === true;
+        }
+
+        // Fournisseur logic
+        let fournisseur = await prisma.fournisseur.findFirst({
+            where: { name: beneficiaire }
+        });
+
+        if (fournisseur && !fournisseur.ice) {
+            await prisma.fournisseur.update({
+                where: { id: fournisseur.id },
+                data: { rib }
+            });
+        }
+
+        if (!fournisseur) {
+            fournisseur = await prisma.fournisseur.create({
+                data: {
+                    name: beneficiaire,
+                    ice: `ICE_${Date.now()}`,
+                    identifFiscal: `FISCAL_${Date.now()}`,
+                    telFournisseur: "Default",
+                    contact: "Default",
+                    telContact: "Default",
+                    rib
+                }
+            });
+        }
+
+        // Update virement
+        const updatedVirement = await prisma.virement.update({
+            where: { id },
             data: {
-                name: beneficiaire,
-                ice: `ICE_${Date.now()}`,
-                identifFiscal: `FISCAL_${Date.now()}`,
-                telFournisseur: "Default",
-                contact: "Default",
-                telContact: "Default",
-                rib,
+                beneficiaire,
+                date: new Date(date),
+                dateReglement: dateReglement ? new Date(dateReglement) : null,
+                montant: parseFloat(montant),
+                obs,
+                montantLettres: montantLettre, // Use montantLettre from form
+                rtgs: rtgsBoolean,
+                objet,
+                cause,
+                fournisseur: { connect: { id: fournisseur.id } },
                 banque: { connect: { id: banqueId } }
             }
         });
+
+        res.status(200).json({ message: "Virement mis à jour avec succès." });
+    } catch (error) {
+        console.error("Erreur lors de la mise à jour du virement :", error);
+        res.status(500).json({ error: "Erreur lors de la mise à jour du virement." });
     }
-
-    // ✅ Update virement
-    const updatedVirement = await prisma.virement.update({
-        where: { id },
-        data: {
-            beneficiaire,
-            date: new Date(date),
-            dateReglement: new Date(dateReglement),
-            montant: parseFloat(montant),
-            obs,
-            rtgs,
-            objet,
-            fournisseur: { connect: { id: fournisseur.id } },
-            banque: { connect: { id: banqueId } }
-        }
-    });
-
-    res.redirect(`/tresorerie/virements/banque/${banqueId}`); // ✅ redirect to list
 };
 
 
@@ -217,7 +242,7 @@ export const generateVirementPDF = async (req, res) => {
 
         // Page dimensions: A4 = 595pt width, 842pt height; usable area after 50pt margins = 495pt width, 742pt height
         const maxY = 742; // Usable height
-
+        const sentence = `A L'ATTENTION de monsieur le directeur de la banque \n` + virement.banque.name + ` Agence ` + virement.banque.agence
         // ===== WATERMARK =====
         doc.save()
            .opacity(0.05)
@@ -235,12 +260,12 @@ export const generateVirementPDF = async (req, res) => {
         doc.font('Helvetica')
            .fontSize(10)
            .fillColor('#555555')
-           .text(`CASABLANCA, ${new Date().toLocaleDateString('fr-FR')}`, 400, 20, { align: 'right' }) // Moved up from 30 to 20
+           .text(`CASABLANCA, ${new Date().toLocaleDateString('fr-FR')}`, 400, 100, { align: 'right' }) // Moved up from 30 to 20
         
         doc.font('Helvetica')
            .fontSize(10)
            .fillColor('#555555')
-           .text(`A latestation de monsieur le directeur de ` + virement.banque.name + ` Agence ` + virement.banque.agence , 400, 50, { align: 'right' }) // Moved up from 30 to 20
+           .text(sentence.toUpperCase(), 350, 150, { align: 'left' }) // Moved up from 30 to 20
         
        
         // Modernized "Objet" and Intro Section
@@ -248,7 +273,12 @@ export const generateVirementPDF = async (req, res) => {
            .font('Helvetica-Bold')
            .fontSize(14)
            .fillColor('#1A4D99')
-           .text(`Objet : ${virement.objet || 'N/A'}`, 50, doc.y, { width: 495, align: 'left' });
+           .text(`Objet : ${virement.objet || 'N/A'} ${virement.rtgs ? 'RTGS' : ''}`, 50, doc.y, { width: 495, align: 'left' });
+        doc.moveDown(1)
+            .font('Helvetica')
+            .fontSize(12)
+            .fillColor('#333333')
+            .text(virement.cause)
 
         doc.moveDown(1)
            .font('Helvetica')
@@ -268,16 +298,35 @@ export const generateVirementPDF = async (req, res) => {
         const boxWidth = 495; // Adjusted to fit within margins (595 - 50 - 50)
         const rowHeight = 30;
         const headerHeight = 35;
-
-        const details = [
-            { title: 'Montant', value: `${(virement.montant || 0).toFixed(2)} MAD` },
-            { title: 'Montant en lettres', value: virement.montantLettres || 'N/A' },
+        function parseFrenchNumber(value) {
+            if (!value) return 0;
+          
+            // Remove spaces and replace comma with dot
+            const cleanValue = value.toString().replace(/\s/g, '').replace(',', '.');
+            const numValue = parseFloat(cleanValue);
+            return isNaN(numValue) ? 0 : numValue;
+          }
+          
+          const details = [
             { title: 'Bénéficiaire', value: virement.beneficiaire || 'N/A' },
+          
+            {
+              title: 'Montant',
+              value: virement.montant
+                ? parseFrenchNumber(virement.montant) // 👈 ensure parsing works even if string
+                    .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    .replace(/\u202F/g, ' ') // replace thin non-breaking space
+                    .replace(/\u00A0/g, ' ') // replace non-breaking space
+                    + " dirhams"
+                : 'N/A'
+            },
+          
+            { title: 'Montant en lettres', value: virement.montantLettres ? virement.montantLettres + ' dirhams' : 'N/A' },
             { title: 'Banque', value: virement.banque?.name || 'N/A' },
             { title: 'RIB', value: virement.fournisseur?.rib || 'N/A' },
             { title: 'Agence', value: virement.banque?.agence || 'N/A' },
-        ];
-
+          ];
+          
         // Check if table fits on page
         if (startY + headerHeight + details.length * rowHeight > maxY - 100) {
             doc.addPage();
@@ -285,21 +334,7 @@ export const generateVirementPDF = async (req, res) => {
         }
 
         // Table Header
-        doc.rect(boxX, startY, boxWidth, headerHeight)
-           .fill('#1A4D99')
-           .stroke();
-
-        doc.font('Helvetica-Bold')
-           .fontSize(12)
-           .fillColor('#FFFFFF')
-           .text('Détails', boxX + 15, startY + 10, { width: 180 });
-
-        doc.font('Helvetica-Bold')
-           .fontSize(12)
-           .fillColor('#FFFFFF')
-           .text('Information', boxX + 220, startY + 10, { width: boxWidth - 240 });
-
-        let currentY = startY + headerHeight;
+        let currentY = startY;
 
         // Table Rows
         details.forEach((item, i) => {
@@ -323,44 +358,27 @@ export const generateVirementPDF = async (req, res) => {
         });
 
         // Border around table
-        doc.rect(boxX, startY, boxWidth, headerHeight + details.length * rowHeight)
+        doc.rect(boxX, startY, boxWidth, details.length * rowHeight)
            .strokeColor('#CCCCCC')
            .lineWidth(1)
            .stroke();
 
         // ===== OBSERVATIONS =====
-        if (virement.obs && typeof virement.obs === 'string' && virement.obs.trim()) {
-            doc.moveDown(3); // Increased from 2
-            let obsY = doc.y;
-            // Check if observations fit on page
-            if (obsY + 50 > maxY - 100) { // Reserve space for footer
-                doc.addPage();
-                obsY = 50;
-            }
-            doc.font('Helvetica-Bold')
-               .fontSize(12)
-               .fillColor('#1A4D99')
-               .text('Observations', 50, obsY, { underline: true })
-               .moveDown(0.5);
-            doc.font('Helvetica')
-               .fontSize(11)
-               .fillColor('#333333')
-               .text(virement.obs.trim(), 50, doc.y, { width: 495, align: 'left' });
-        }
+        
 
         // ===== FOOTER =====
-        let footerY = 700; // Lowered from 750 to ensure fit
+        let footerY = 745; // Lowered from 750 to ensure fit
         if (doc.y > footerY - 50) { // Ensure footer doesn't overlap content
             doc.addPage();
             footerY = 50;
         }
-        doc.rect(0, footerY, 595, 90)
-           .fill('#F2F2F2')
+        doc.rect(0, footerY, 690, 90)
+           .fill('#AB3029')
            .stroke();
 
         doc.font('Helvetica')
            .fontSize(9)
-           .fillColor('#555555')
+           .fillColor('#FFFFFF')
            .text(
                'Company XYZ - 123 Rue Fictive, Casablanca, Maroc',
                50,
@@ -393,3 +411,5 @@ export const deleteVirement = async (req, res) => {
     });
     res.status(200).json({ message: "Virement supprimé avec succès" });
 }
+
+

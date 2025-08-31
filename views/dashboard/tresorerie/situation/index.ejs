@@ -12,7 +12,8 @@
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
   <style>
     :root {
-      --primary-color: #3b82f6;
+      --primary-color: #ab3029;
+      --second-color: #e97872;
       --secondary-color: #6b7280;
       --success-color: #22c55e;
       --warning-color: #facc15;
@@ -83,7 +84,7 @@
     }
 
     .excel-table th {
-      background: var(--primary-color);
+      background: var(--second-color);
       color: white;
       font-weight: 400;
       padding: 0.5rem;
@@ -372,7 +373,43 @@
         <%- include('../../../layouts/topbar') %>
         <div class="container-fluid">
           <h1 class="page-title fade-in">Situation Bancaire</h1>
-
+          <div class="filter-section">
+            <form class="form-inline">
+              <label>Au :</label>
+              <input type="date" name="to" id="toDate" class="form-control" value="<%= to %>">
+          
+              <button class="btn btn-primary" type="submit" aria-label="Filtrer">Filtrer</button>
+              
+              <label>Statut :</label>
+              <select id="statutFilterCheques" class="form-control">
+                <option value="">Tous</option>
+                <option value="En circulation">En Circulation</option>
+                <option value="Impayé">Impayé</option>
+              </select>
+          
+              <label>Fournisseur :</label>
+              <select id="fournisseurFilterCheques" class="form-control">
+                <option value="">Tous</option>
+                <% fournisseurs.forEach(f => { %>
+                  <option value="<%= f.name %>"><%= f.name %></option>
+                <% }) %>
+              </select>
+          
+              <label>Banque :</label>
+              <select id="banqueFilterCheques" class="form-control">
+                <option value="">Tous</option>
+                <% banques.forEach(b => { %>
+                  <option value="<%= b.name %>"><%= b.name %></option>
+                <% }) %>
+              </select>
+          
+              <button class="btn btn-primary" type="button" aria-label="Annuler filtre" id="resetDateBtn">
+                Annuler
+              </button>
+          
+              <input type="date" name="from" class="form-control" value="01/01/2020" hidden>
+            </form>
+          </div>
           <!-- Daily Solde Input Table -->
           <form id="soldeForm" action="/tresorerie/situation" method="POST">
             <div class="card mb-4 fade-in">
@@ -389,7 +426,6 @@
                         <th>Solde Négatif</th>
                         <th></th>
                         <th>Dette MLT</th>
-                        <th>Actions</th>
                       </tr>
                     </thead>
                    <tbody>
@@ -400,7 +436,8 @@
         <input 
           type="text" 
           name="positive[]" 
-          value="<%= b.positive != null ?  b.positive.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '' %>"
+          value="<%= b.positive != null ?  b.positive.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') 
+          : '' %>"
           class="form-control text-right" 
         />
       </td>
@@ -408,53 +445,58 @@
         <input 
           type="text" 
           name="negative[]" 
-          value="<%= b.negative != null ? b.negative.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '' %>" 
+          value="<%= b.negative != null ? b.negative.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') 
+          : '' %>"  
           class="form-control text-right" 
         />
       </td>
       <td></td>
       <td>
         <input 
-          type="text" 
-          name="dmlt[]" 
-          value="<%= b.dmlt != null ? b.dmlt.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '' %>" 
-          class="form-control text-right" 
-        />
-      </td>
-      <td>
-        <button type="button" class="btn btn-danger" onclick="deleteBanque(<%= b.id %>)" aria-label="Supprimer banque">
-          <i class="fas fa-trash"></i>
-        </button>
+        type="text" 
+        name="dmlt[]" 
+        value="<%= b.dmlt != null 
+          ? b.dmlt.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') 
+          : '' %>" 
+        class="form-control text-right" 
+      />
+      
       </td>
       <input type="hidden" name="banqueId[]" value="<%= b.id %>" />
     </tr>
   <% }); %>
 </tbody>
 
-                    <tfoot>
-                      <tr>
-                        <td>Total</td>
-                        <td>
-                          <input type="text" name="totalPositive" class="form-control text-right" 
-                            value="<%= (banques.reduce((acc, b) => acc + b.positive, 0)).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>" readonly />
-                        </td>
-                        <td>
-                          <input type="text" name="totalNegative" class="form-control text-right" 
-                            value="<%= (banques.reduce((acc, b) => acc + b.negative, 0)).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>" readonly />
-                        </td>
-                        <td></td>
-                        <td>
-                          <input type="text" name="totalDmlt" class="form-control text-right" 
-                            value="<%= (banques.reduce((acc, b) => acc + b.dmlt, 0)).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>" readonly />
-                        </td>
-                        <td></td>
-                      </tr>
-                    </tfoot>
+  <tfoot>
+    <tr>
+      <td>Total</td>
+      <td>
+        <input type="text" name="totalPositive" class="form-control text-right" 
+        value="<%= (banques.reduce((acc, b) => acc + b.positive, 0))
+        .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        .replace(/\u202F/g, ' ') %>"
+       readonly />
+      </td>
+      <td>
+        <input type="text" name="totalNegative" class="form-control text-right" 
+          value="<%= (banques.reduce((acc, b) => acc + b.negative, 0))
+          .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          .replace(/\u202F/g, ' ') %>" readonly />
+      </td>
+      <td></td>
+      <td>
+        <input type="text" name="totalDmlt" class="form-control text-right" 
+          value="<%= (banques.reduce((acc, b) => acc + b.dmlt, 0))
+         .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+         .replace(/\u202F/g, ' ')  %>" readonly />
+      </td>
+      <td></td>
+    </tr>
+  </tfoot>
                   </table>
                 </div>
               </div>
               <div class="card-footer d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-success" onclick="openBanqueModal()" aria-label="Ajouter banque">Ajouter Banque</button>
                 <button type="submit" class="btn btn-primary" hidden>Mettre à jour</button>
               </div>
             </div>
@@ -467,28 +509,9 @@
             </div>
             <div class="filter-section">
               <form class="form-inline">
-                <label>Statut :</label>
-                <select id="statutFilterRecette" class="form-control">
-                  <option value="">Tous</option>
-                  <option value="échu">Échu</option>
-                  <option value="impayé">Impayé</option>
-                  <option value="non échu">Non échu</option>
-                </select>
-                <label>Client :</label>
-                <select id="clientFilterRecette" class="form-control">
-                  <option value="">Tous</option>
-                  <% clients.forEach(c => { %>
-                    <option value="<%= c.name %>"><%= c.name %></option>
-                  <% }) %>
-                </select>
-                <label>Banque :</label>
-                <select id="banqueFilterRecette" class="form-control">
-                  <option value="">Tous</option>
-                  <% banques.forEach(b => { %>
-                    <option value="<%= b.name %>"><%= b.name %></option>
-                  <% }) %>
-                </select>
-                <button class="btn btn-primary" type="button" aria-label="Annuler filtre">Annuler</button>
+               
+               
+                <a href="/tresorerie/recettes_a_venir" class="btn btn-primary" type="button" aria-label="Annuler filtre">Ajouter une recette </a>
               </form>
             </div>
             <div class="card-body">
@@ -512,7 +535,7 @@
                         <tr class="recavenir-row" data-client="<%= c.client.name %>" data-banque="<%= c.banque.name %>" data-statut="<%= c.statut %>">
                           <td><%= c.client.name %></td>
                           <td><%= c.designation %></td>
-                          <td class="text-right"><%= c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD</td>
+                          <td class="text-right"><%= c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %> MAD</td>
                           <td><%= new Date(c.dateEcheance).toLocaleDateString() %></td>
                           <td>
                             <span class="badge badge-<%= c.statut === 'échu' ? 'warning' : c.statut === 'impayé' ? 'danger' : 'success' %>">
@@ -526,7 +549,7 @@
                     <tfoot>
                       <tr>
                         <td colspan="2">Total</td>
-                        <td class="text-right"><%= recavenirs.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD</td>
+                        <td class="text-right"><%= recavenirs.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %> MAD</td>
                         <td colspan="3"></td>
                       </tr>
                     </tfoot>
@@ -537,43 +560,7 @@
           </div>
 
           <!-- Total Général -->
-          <div class="card mb-4 fade-in">
-            <div class="card-header">
-              <h2>Total Général au <input type="date" name="to" class="form-control d-inline-block" value="<%= !to ? new Date().toISOString().split('T')[0] : to %>" style="width: auto;" disabled></h2>
-            </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col-md-3 col-sm-6">
-                  <div class="stats-card">
-                    <i class="fas fa-money-check-alt stats-icon"></i>
-                    <div class="stats-number"><%= (cheques.reduce((acc, c) => acc + c.montant, 0)).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD</div>
-                    <div class="stats-label">Total Chèques</div>
-                  </div>
-                </div>
-                <div class="col-md-3 col-sm-6">
-                  <div class="stats-card">
-                    <i class="fas fa-file-invoice stats-icon"></i>
-                    <div class="stats-number"><%= (effets.reduce((acc, e) => acc + e.montant, 0)).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD</div>
-                    <div class="stats-label">Total Effets</div>
-                  </div>
-                </div>
-                <div class="col-md-3 col-sm-6">
-                  <div class="stats-card">
-                    <i class="fas fa-arrow-up stats-icon"></i>
-                    <div class="stats-number"><%= (recavenirs.reduce((acc, c) => acc + c.montant, 0)).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD</div>
-                    <div class="stats-label">Total Recettes</div>
-                  </div>
-                </div>
-                <div class="col-md-3 col-sm-6">
-                  <div class="stats-card">
-                    <i class="fas fa-chart-line stats-icon"></i>
-                    <div class="stats-number"><%= ((cheques.reduce((acc, c) => acc + c.montant, 0)) + (effets.reduce((acc, e) => acc + e.montant, 0)) + (payavenirs.reduce((acc, c) => acc + c.montant, 0))).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD</div>
-                    <div class="stats-label">Total Général</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          
 
           <!-- Banque Modal -->
           <div class="modal fade" id="banqueModal" tabindex="-1" role="dialog" aria-labelledby="banqueModalLabel" aria-hidden="true">
@@ -593,7 +580,7 @@
                     </div>
                     <div class="form-group">
                       <label for="rib">RIB</label>
-                      <input type="number" class="form-control" id="rib" name="rib" required>
+                      <input type="text" class="form-control" id="rib" name="rib" required>
                     </div>
                     <div class="form-group">
                       <label for="agence">Agence</label>
@@ -614,35 +601,16 @@
   <div class="card-header">
     <h2>Chèques à payer</h2>
   </div>
-  <div class="filter-section">
-    <form class="form-inline">
-      <label>Statut :</label>
-      <select id="statutFilterCheques" class="form-control">
-        <option value="">Tous</option>
-        <option value="En circulation">En Circulation</option>
-        <option value="Impayé">Impayé</option>
-      </select>
-      <label>Fournisseur :</label>
-      <select id="fournisseurFilterCheques" class="form-control">
-        <option value="">Tous</option>
-        <% fournisseurs.forEach(f => { %>
-          <option value="<%= f.name %>"><%= f.name %></option>
-        <% }) %>
-      </select>
-      <label>Banque :</label>
-      <select id="banqueFilterCheques" class="form-control">
-        <option value="">Tous</option>
-        <% banques.forEach(b => { %>
-          <option value="<%= b.name %>"><%= b.name %></option>
-        <% }) %>
-      </select>
-      <button class="btn btn-primary" type="button" aria-label="Annuler filtre">Annuler</button>
-      <input type="date" name="from" class="form-control" value="01/01/2020" hidden>
-      <label>Au :</label>
-      <input type="date" name="to" class="form-control" value="<%= to %>">
-      <button class="btn btn-primary" type="submit" aria-label="Filtrer">Filtrer</button>
-    </form>
-  </div>
+  
+  
+  <script>
+    document.getElementById("resetDateBtn").addEventListener("click", function () {
+      const dateInput = document.getElementById("toDate");
+      dateInput.value = "";        // clear date
+      dateInput.form.submit();     // submit form with empty "to"
+    });
+  </script>
+  
   <div class="card-body">
     <% if (cheques.length === 0) { %>
       <p class="text-center text-muted">Aucun chèque trouvé.</p>
@@ -698,31 +666,7 @@
   <div class="card-header">
     <h2>Effets à payer</h2>
   </div>
-  <div class="filter-section">
-    <form class="form-inline">
-      <label>Statut :</label>
-      <select id="statutFilterEffets" class="form-control">
-        <option value="">Tous</option>
-        <option value="En circulation">En Circulation</option>
-        <option value="Impayé">Impayé</option>
-      </select>
-      <label>Fournisseur :</label>
-      <select id="fournisseurFilterEffets" class="form-control">
-        <option value="">Tous</option>
-        <% fournisseurs.forEach(f => { %>
-          <option value="<%= f.name %>"><%= f.name %></option>
-        <% }) %>
-      </select>
-      <label>Banque :</label>
-      <select id="banqueFilterEffets" class="form-control">
-        <option value="">Tous</option>
-        <% banques.forEach(b => { %>
-          <option value="<%= b.name %>"><%= b.name %></option>
-        <% }) %>
-      </select>
-      <button id="resetFilters" class="btn btn-primary" type="button" aria-label="Annuler filtre">Annuler</button>
-    </form>
-  </div>
+ 
   <div class="card-body">
     <% if (effets.length === 0) { %>
       <p class="text-center text-muted">Aucun effet trouvé.</p>
@@ -758,7 +702,7 @@
           <tfoot>
             <tr>
               <td>Total</td>
-              <td class="text-right" id="totalMontant"><%= effets.reduce((acc, e) => acc + e.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD</td>
+              <td class="text-right" id="totalMontant"><%= effets.reduce((acc, e) => acc + e.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %> MAD</td>
               <td colspan="4"></td>
             </tr>
           </tfoot>
@@ -906,7 +850,43 @@ document.addEventListener('DOMContentLoaded', function() {
               <% } %>
             </div>
           </div>
-
+          <div class="card mb-4 fade-in">
+            <div class="card-header">
+              <h2>Total Général au <input type="date" name="to" class="form-control d-inline-block" value="<%= !to ? new Date().toISOString().split('T')[0] : to %>" style="width: auto;" disabled></h2>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-3 col-sm-6">
+                  <div class="stats-card">
+                    <i class="fas fa-money-check-alt stats-icon"></i>
+                    <div class="stats-number"><%= (cheques.reduce((acc, c) => acc + c.montant, 0)).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD</div>
+                    <div class="stats-label">Total Chèques</div>
+                  </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                  <div class="stats-card">
+                    <i class="fas fa-file-invoice stats-icon"></i>
+                    <div class="stats-number"><%= (effets.reduce((acc, e) => acc + e.montant, 0)).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD</div>
+                    <div class="stats-label">Total Effets</div>
+                  </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                  <div class="stats-card">
+                    <i class="fas fa-arrow-up stats-icon"></i>
+                    <div class="stats-number"><%= (recavenirs.reduce((acc, c) => acc + c.montant, 0)).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD</div>
+                    <div class="stats-label">Total Recettes</div>
+                  </div>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                  <div class="stats-card">
+                    <i class="fas fa-chart-line stats-icon"></i>
+                    <div class="stats-number"><%= ((cheques.reduce((acc, c) => acc + c.montant, 0)) + (effets.reduce((acc, e) => acc + e.montant, 0)) + (payavenirs.reduce((acc, c) => acc + c.montant, 0))).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD</div>
+                    <div class="stats-label">Total Général</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           <!-- Download Buttons -->
           <div class="card mb-4 fade-in">
             <div class="card-header">
@@ -1081,7 +1061,8 @@ document.addEventListener('DOMContentLoaded', function() {
   
         const totalCell = document.getElementById('totalMontantCellCheques');
         if (totalCell) {
-          totalCell.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          totalCell.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') 
+        
         }
         
         // Update display total
@@ -1206,7 +1187,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
       // Filter effets rows
       function filterEffetsRows() {
-        const selectedStatut = statutSelectEffets.value.toLowerCase();
+        const selectedStatut = statutSelectEffts.value.toLowerCase();
         const selectedFournisseur = fournisseurSelectEffets.value.toLowerCase();
         const selectedBanque = banqueSelectEffets.value.toLowerCase();
         let visibleRowCount = 0;

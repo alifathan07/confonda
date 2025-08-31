@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="Cheques" />
+  <meta name="author" content="Confonda" />
+  <title>Mise A Disposition</title>
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+   <!-- Enhanced Status Styles -->
+      
+      <body>
+        
+     <body id="page-top">
+    <div id="wrapper">
+        <%- include('../../../../layouts/sidebar') %>
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <%- include('../../../../layouts/topbar') %>
+                <div class="container-fluid">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h4 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-exchange-alt"></i>  miseadis
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <form action="/tresorerie/miseadis/banque/<%= banqueId %>" method="POST" class="needs-validation" novalidate>
+                                <div class="form-row">
+                                    <div class="form-group col-12 d-flex justify-content-center">
+                                        <%
+  const today = new Date();
+  const offset = today.getTimezoneOffset();
+  const localDate = new Date(today.getTime() - (offset * 60 * 1000));
+  const formatted = localDate.toISOString().split("T")[0];
+%>
+
+                                        <div class="col-md-6">
+                                            <label for="date">Date</label>
+                                            <input 
+                                                type="date" 
+                                                class="form-control" 
+                                                id="date" 
+                                                name="date" 
+                                                value="<%= formatted %>" 
+                                                required
+                                            >
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="objet">Objet</label>
+                                            <input type="text" class="form-control" id="objet" name="objet" value="MISE A DISPOSITION" required>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-12 col-md-6">
+                                        <label for="beneficiaire">Bénéficiaire</label>
+                                        <input type="text" class="form-control" id="beneficiaire" name="beneficiaire" required placeholder="Nom du bénéficiaire" value="<%= miseadis.beneficiaire %>">
+                                    </div>
+                                    <div class="form-group col-12 col-md-6">
+                                        <label for="cin">CIN</label>
+                                        <input type="text" class="form-control" id="cin" name="cin" required value="<%= miseadis.cin %> ">
+                                    </div>
+                                    <div class="form-group col-12 col-md-6">
+                                        <label for="montant">Montant</label>
+                                        <div class="input-group">
+                                            <input 
+                                                type="number" 
+                                                class="form-control" 
+                                                id="montant" 
+                                                name="montant" 
+                                                required 
+                                                placeholder="Montant" 
+                                                value="<%= miseadis.montant || '' %>">
+
+                                        </div> 
+                                    </div>
+                                    <div class="form-group col-12 col-md-6">
+                                        <label for="dateReglement">Date débit</label>
+                                        <input type="date" class="form-control" id="dateReglement" name="dateReglement" value="<%= formatted %>" required>
+                                    </div>
+                                    <div class="form-group col-12 col-md-6">
+                                        <label for="obs">Observations</label>
+                                        <textarea class="form-control" id="obs" name="obs" rows="2" placeholder="Notes ou remarques">
+                                            <%= miseadis.obs %>
+                                        </textarea>
+                                    </div>
+                                    <div class="form-group col-12 col-md-6">
+                                        <label for="montantLettre">Montant en lettres</label>
+                                        <input type="text" class="form-control" id="montantLettre" name="montantLettre" readonly placeholder="Montant en lettres" value="<%= miseadis.montantLettres %> ">
+                                    </div>
+                                </div>
+                                <div class="d-flex flex-column flex-md-row">
+                                    <button type="submit" class="btn btn-success custom-btn mb-2 mb-md-0">
+                                        <i class="fas fa-save"></i> Enregistrer
+                                    </button>
+                                    <a href="/dashboard/tresorerie/reglements/miseadis" class="btn btn-secondary custom-btn ml-md-2">
+                                        <i class="fas fa-arrow-left"></i> Annuler
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+<script src="/vendor/jquery/jquery.min.js"></script>
+<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+<script src="/js/sb-admin-2.min.js"></script>
+<script src="/vendor/datatables/jquery.dataTables.min.js"></script>
+<script src="/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script src="/js/demo/datatables-demo.js"></script>
+</body>

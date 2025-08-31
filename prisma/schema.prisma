@@ -106,7 +106,8 @@ model Fournisseur {
   name      String
   email     String?
   ice       String @unique
-  rib      Int @unique
+  rib        String
+  
   objet String?
   identifFiscal String
   telFournisseur String
@@ -122,6 +123,7 @@ model Fournisseur {
   effets       Effet[]
   payavenir Payavenir[]
   virements Virement[]
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -242,10 +244,27 @@ model Virement {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+model Miseadis {
+  id              Int      @id @default(autoincrement())
+  beneficiaire    String?   // beneficiaire
+  montant         Float?
+  date            DateTime?
+  dateReglement   DateTime?
+  obs String?  
+  cin String?
+  objet String?
+  cause String?
+  montantLettres String?
+  banque              Banque   @relation("BanqueMiseadis", fields: [banqueId], references: [id])
+  banqueId            Int
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
 model Banque {
   id         Int       @id @default(autoincrement())
   name       String
-  rib        Int
+  rib        String 
   agence     String
   solde      Float
   dateSolde  DateTime
@@ -257,6 +276,7 @@ model Banque {
   payavenir Payavenir[] @relation("BanquePayavenir")
   recavenir Recavenir[] @relation("BanqueRecavenir")
   virements  Virement[] @relation("BanqueVirements")
+  miseadis  Miseadis[] @relation("BanqueMiseadis")
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 }

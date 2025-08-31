@@ -10,27 +10,50 @@
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet">
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
     <style>
-        .nav-item {
+        :root {
+            --primary-color: #ab3029;
+            --second-color: #F68C6A;
+            --sidebar-width: 250px;
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            background: var(--second-color);
             position: sticky;
             top: 0;
-            background: inherit;
-            z-index: 1050;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: transform 0.3s ease-in-out;
+            width: var(--sidebar-width);
+        }
+
+        .navbar-nav .nav-item .nav-link {
+            color: white;
+            background: var(--primary-color);
+            font-size: 15px;
+            padding: 15px;
+        }
+
+        .nav-item {
+            background: var(--second-color);
+        }
+
+        /* Main content styling */
+        .content-wrapper {
+            margin-left: 0;
+            padding: 0px;
+            transition: margin-left 0.3s ease-in-out;
         }
 
         /* Mobile sidebar styles */
-        .sidebar {
-            transition: transform 0.3s ease-in-out;
-        }
-
-        /* Hide sidebar on mobile by default */
         @media (max-width: 767.98px) {
             .sidebar {
                 transform: translateX(-100%);
                 position: fixed;
                 top: 0;
                 left: 0;
-                height: 100vh;
-                width: 250px;
+                width: var(--sidebar-width);
                 z-index: 1100;
             }
 
@@ -45,7 +68,7 @@
                 top: 15px;
                 left: 15px;
                 z-index: 1200;
-                background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+                background: var(--second-color);
                 color: white;
                 border: none;
                 border-radius: 50%;
@@ -62,19 +85,33 @@
                 transform: scale(1.1);
                 box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
             }
+
+            .content-wrapper {
+                margin-left: 0;
+            }
         }
 
-        /* Show sidebar on desktop */
+        /* Desktop sidebar styles */
         @media (min-width: 768px) {
             .sidebar {
                 transform: translateX(0);
-                position: relative;
-                width: 250px;
+                position: fixed;
+                width: var(--sidebar-width);
+                height: 100vh;
             }
 
             .sidebar-toggle-btn {
                 display: none;
             }
+
+            .content-wrapper {
+                margin-left: var(--sidebar-width);
+            }
+        }
+
+        /* Ensure sidebar content stays visible */
+        .sidebar-brand, .nav-item {
+            width: 100%;
         }
     </style>
 </head>
@@ -85,7 +122,7 @@
     </button>
 
     <!-- Sidebar -->
-    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+    <ul class="navbar-nav sidebar sidebar-dark accordion" id="accordionSidebar">
         <!-- Sidebar - Brand -->
         <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/dashboard">
             <div class="sidebar-brand-icon rotate-n-15">
@@ -98,10 +135,10 @@
         <hr class="sidebar-divider my-0">
 
         <!-- Nav Item - Dashboard -->
-        <li class="nav-item" style="font-size: 12px;">
-            <a class="nav-link py-3" href="/dashboard" style="font-size: 15px;">
-                <i class="fas fa-fw fa-tachometer-alt" style="font-size:17px;"></i>
-                <span style="font-size: 15px">Tableau de bord</span>
+        <li class="nav-item">
+            <a class="nav-link py-3" href="/dashboard">
+                <i class="fas fa-fw fa-tachometer-alt" style="font-size: 17px;"></i>
+                <span>Tableau de bord</span>
             </a>
         </li>
 
@@ -109,10 +146,10 @@
         <hr class="sidebar-divider">
 
         <!-- Nav Item - Payment Methods -->
-        <li class="nav-item" style="font-size: 12px;">
-            <a class="nav-link py-3" href="/tresorerie" style="font-size: 15px;">
-                <i class="fas fa-fw fa-credit-card" style="font-size:17px;"></i>
-                <span style="font-size: 15px">Trésorerie</span>
+        <li class="nav-item">
+            <a class="nav-link py-3" href="/tresorerie">
+                <i class="fas fa-fw fa-credit-card" style="font-size: 17px;"></i>
+                <span>Trésorerie</span>
             </a>
         </li>
 
@@ -125,6 +162,12 @@
         </div>
     </ul>
     <!-- End of Sidebar -->
+
+    <!-- Main Content -->
+    <div class="content-wrapper">
+       
+    </div>
+    <!-- End of Main Content -->
 
     <!-- Scripts -->
     <script src="/vendor/jquery/jquery.min.js"></script>
@@ -142,13 +185,8 @@
             $('#mobileSidebarToggle').on('click', function (e) {
                 e.preventDefault();
                 $('#accordionSidebar').toggleClass('active');
-                // Update toggle button icon
                 const icon = $(this).find('i');
-                if ($('#accordionSidebar').hasClass('active')) {
-                    icon.removeClass('fa-bars').addClass('fa-times');
-                } else {
-                    icon.removeClass('fa-times').addClass('fa-bars');
-                }
+                icon.toggleClass('fa-bars fa-times');
             });
 
             // Close sidebar when clicking outside on mobile
