@@ -31,11 +31,19 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const MySQLStore = expressMySQLSession(session);
 const sessionStore = new MySQLStore({
-    host: 'localhost',
-    user: 'root',
-    password: '',
+    host: 'confonda.cpmgwqsgyfq7.eu-north-1.rds.amazonaws.com',
+    user: 'admin',
+    password: 'alifathan-66',
     database: 'confonda'
 });
+app.set('trust proxy', 1);
+session({
+  cookie: {
+    secure: true, // if HTTPS
+    sameSite: 'none'
+  }
+})
+
 app.use(session({
     secret: 'phpvsnodejs', // secret key to sign the session ID
     resave: false,
@@ -43,13 +51,10 @@ app.use(session({
     store: sessionStore,
     cookie: {
         maxAge: 1000 * 60 * 60 * 2, // 2 hours
-        secure: false, // set to true if using HTTPS
+        secure: true, // set to true if using HTTPS
         httpOnly: true
     }
 }));
-
-// Basic route to render index.ejss
-
 
 app.use(authRouter);
 app.use(dashboardRouter);
