@@ -56,6 +56,10 @@ app.use(session({
     }
 }));
 
+
+// Basic route to render index.ejss
+
+
 app.use(authRouter);
 app.use(dashboardRouter);
 // Dashboard route
