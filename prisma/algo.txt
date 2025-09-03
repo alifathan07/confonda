@@ -206,4 +206,9 @@ Autre reglement :
 
                       Date ,  banque , benificiaire , montant , DateReglement , OBS 
 
+
+
+Tasks : 
+        - ajouter un tableau pur l
+
                        

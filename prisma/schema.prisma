@@ -136,8 +136,7 @@ model Cheque {
   dateReglement       DateTime?
   fournisseur         Fournisseur @relation(fields: [fournisseurId], references: [id])
   fournisseurId       Int
-  beneficiaire        String   
-
+  beneficiaire        String
   banque              Banque   @relation("BanqueCheques", fields: [banqueId], references: [id])
   banqueId            Int
 

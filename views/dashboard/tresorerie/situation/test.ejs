@@ -35,60 +35,6 @@
       min-height: 100vh;
       margin: 0;
     }
-    .custom-card {
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  background: white;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
-  margin-bottom: 1rem;
-}
-
-.custom-card-header {
-  background: #3829ab;
-  color: white;
-  padding: 0.75rem 1rem;
-  border-radius: 6px 6px 0 0;
-}
-
-.custom-card-header h2 {
-  font-size: 1.1rem;
-  margin: 0;
-  font-weight: 500;
-}
-
-.custom-card-body {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px; /* spacing between buttons */
-  justify-content: center;
-  align-items: center;
-  padding: 1rem;
-}
-
-.custom-btn {
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: white;
-  transition: background 0.2s ease;
-}
-
-.custom-btn i {
-  font-size: 1rem;
-}
-
-/* Color Variants */
-.btn-primary { background: #3829ab; }
-.btn-info    { background: #6a5ae7; }
-
-
-.btn-primary:hover { background: #2d218a; }
-.btn-info:hover    { background: #5746d6; }
 
     .container-fluid {
       padding: 1rem;
@@ -482,7 +428,7 @@
               </div>
               <div class="card-body">
                 <div class="table-responsive">
-                  <table id="soldeTable" class="excel-table table table-bordered">
+                  <table class="excel-table table table-bordered">
                     <thead>
                       <tr>
                         <th>Banque</th>
@@ -698,7 +644,7 @@
                           </td>
                           <td>
                             <form action="/tresorerie/cheques/situation/<%= c.id %>?_method=PATCH" method="POST">
-                              <input id="obs" type="text" value="<%= c.obs %>" class="form-control" name="obs">
+                              <input type="text" value="<%= c.obs %>" class="form-control" name="obs">
                             </form>
                           </td>
                         </tr>
@@ -739,8 +685,6 @@
                         <th>Montant</th>
                         <th>Date Échéance</th>
                         <th>Statut</th>
-                        <th>Observation</th>
-
                       </tr>
                     </thead>
                     <tbody>
@@ -756,11 +700,6 @@
                             <span class="badge badge-<%= e.statut.toLowerCase() === 'en circulation' ? 'info' : e.statut.toLowerCase() === 'en garantie' ? 'warning' : e.statut.toLowerCase() === 'impayé' ? 'danger' : 'success' %>">
                               <%= e.statut %>
                             </span>
-                          </td>
-                          <td>
-                            <form action="/tresorerie/effets/situation/<%= e.id %>?_method=PATCH" method="POST">
-                              <input id="obs" type="text" value="<%= e.obs %>" class="form-control" name="obs">
-                            </form>
                           </td>
                         </tr>
                       <% }) %>
@@ -838,16 +777,12 @@
           <!-- Total Général -->
           <div class="card mb-4 fade-in">
             <div class="card-header">
-              <h2>Total Général des Paiements à effectuer au 
-                <input type="date" class="form-control d-inline-block" 
-                  value="<%= to || new Date().toISOString().split('T')[0] %>" 
-                  style="width: auto;" disabled>
-              </h2>
+              <h2>Total Général au <input type="date" class="form-control d-inline-block" 
+                value="<%= to || new Date().toISOString().split('T')[0] %>" style="width: auto;" disabled></h2>
             </div>
             <div class="card-body">
-              <!-- Added spacing fix -->
               <div class="row">
-                <div class="col-md-3 col-sm-6 p-2">
+                <div class="col-md-3 col-sm-6 mb-3">
                   <div class="stats-card">
                     <i class="fas fa-money-check-alt stats-icon"></i>
                     <div class="stats-number" id="displayTotalChequesCard">
@@ -856,8 +791,7 @@
                     <div class="stats-label">Total Chèques</div>
                   </div>
                 </div>
-          
-                <div class="col-md-3 col-sm-6 p-2">
+                <div class="col-md-3 col-sm-6 mb-3">
                   <div class="stats-card">
                     <i class="fas fa-file-invoice stats-icon"></i>
                     <div class="stats-number" id="displayTotalEffetsCard">
@@ -866,8 +800,7 @@
                     <div class="stats-label">Total Effets</div>
                   </div>
                 </div>
-          
-                <div class="col-md-3 col-sm-6 p-2">
+                <div class="col-md-3 col-sm-6 mb-3">
                   <div class="stats-card">
                     <i class="fas fa-arrow-up stats-icon"></i>
                     <div class="stats-number">
@@ -876,8 +809,7 @@
                     <div class="stats-label">Total Paiements à venir</div>
                   </div>
                 </div>
-          
-                <div class="col-md-3 col-sm-6 p-2">
+                <div class="col-md-3 col-sm-6 mb-3">
                   <div class="stats-card">
                     <i class="fas fa-chart-line stats-icon"></i>
                     <div class="stats-number" id="displayTotalGeneralCard">
@@ -891,77 +823,29 @@
           </div>
           
 
-          <!-- Total Recettes et Solde -->
+          <!-- Download Buttons -->
           <div class="card mb-4 fade-in">
             <div class="card-header">
-              <h2>Total Solde Bancaire Positif et Recettes à venir au
-                <input type="date" class="form-control d-inline-block" 
-                  value="<%= to || new Date().toISOString().split('T')[0] %>" 
-                  style="width: auto;" disabled>
-              </h2>
-            </div>
-            <div class="card-body">
-              <!-- Added spacing fix -->
-              <div class="row">
-                
-          
-                <div class="col-md-3 col-sm-6 p-2">
-                  <div class="stats-card">
-                    <i class="fas fa-money-check-alt stats-icon"></i>
-
-                    <div class="stats-number" id="displayTotalEffetsCard">
-                      <%= banques.reduce((acc, b) => acc + (b.positive || 0), 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
-                    </div>
-                    <div class="stats-label">Solde Positif</div>
-                  </div>
-                </div>
-          
-                <div class="col-md-3 col-sm-6 p-2">
-                  <div class="stats-card">
-                    <i class="fas fa-file-invoice stats-icon"></i>
-
-                    <div class="stats-number" id="displayTotalChequesCard">
-                      <%= recavenirs.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %> 
-                    </div>
-                    <div class="stats-label">Total Recettes à venir</div>
-                  </div>
-                </div>
-                
-              </div>
-            </div>
-          </div>
-          
-          
-
-          <!-- Download Buttons -->
-           
-          <div class="custom-card fade-in">
-            <div class="custom-card-header">
               <h2>Téléchargements</h2>
             </div>
-            <div class="custom-card-body">
-              <button class="custom-btn btn-primary" onclick="downloadFullPagePDF()" aria-label="Télécharger PDF complet">
+            <div class="card-body d-flex flex-wrap gap-2 justify-content-center">
+              <button class="btn btn-primary" style="background-color: #3829ab;" onclick="downloadFullPagePDF()" aria-label="Télécharger PDF complet">
                 <i class="fas fa-file-pdf"></i> PDF Complet
               </button>
-          
-              <button class="custom-btn btn-info" onclick="downloadChequesPDF()" aria-label="Télécharger PDF chèques">
+              <button class="btn btn-info" style="background-color: #3829ab;" onclick="downloadChequesPDF()" aria-label="Télécharger PDF chèques">
                 <i class="fas fa-money-check-alt"></i> PDF Chèques
               </button>
-          
-              <button class="custom-btn btn-primary" onclick="downloadEffetsPDF()" aria-label="Télécharger PDF effets">
+              <button class="btn btn-warning" onclick="downloadEffetsPDF()" aria-label="Télécharger PDF effets">
                 <i class="fas fa-file-invoice"></i> PDF Effets
               </button>
-          
-              <button class="custom-btn btn-info" onclick="downloadPayavenirsPDF()" aria-label="Télécharger PDF paiements">
-                <i class="fas fa-hand-holding-usd"></i> PDF Paiements à venir
+              <button class="btn btn-success" onclick="downloadPayavenirsPDF()" aria-label="Télécharger PDF paiements">
+                <i class="fas fa-hand-holding-usd"></i> PDF Paiements
               </button>
-          
-              <button class="custom-btn btn-primary" onclick="downloadRecettesPDF()" aria-label="Télécharger PDF recettes">
-                <i class="fas fa-arrow-up"></i> PDF Recettes à venir
+              <button class="btn btn-success" onclick="downloadRecettesPDF()" aria-label="Télécharger PDF recettes">
+                <i class="fas fa-arrow-up"></i> PDF Recettes
               </button>
             </div>
           </div>
-          
         </div>
       </div>
     </div>
@@ -1119,20 +1003,20 @@ const totalMontantGeneral = document.getElementById('displayTotalGeneral');
     });
 
     // Update footers
-    if (totalMontantCheques) totalMontantCheques.textContent = formatFrenchNumber(totalCheques.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ')) + ' ';
-    if (totalMontantEffets) totalMontantEffets.textContent = formatFrenchNumber(totalEffets.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ')) + ' ';
+    if (totalMontantCheques) totalMontantCheques.textContent = formatFrenchNumber(totalCheques) + ' ';
+    if (totalMontantEffets) totalMontantEffets.textContent = formatFrenchNumber(totalEffets) + ' ';
 
     // Update general
-    if (totalMontantGeneral) totalMontantGeneral.textContent = formatFrenchNumber((totalCheques + totalEffets).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ')) + ' ';
+    if (totalMontantGeneral) totalMontantGeneral.textContent = formatFrenchNumber(totalCheques + totalEffets) + ' ';
 
     // Update dashboard cards (if you have them)
     const chequesCard = document.getElementById('displayTotalChequesCard');
     const effetsCard = document.getElementById('displayTotalEffetsCard');
     const generalCard = document.getElementById('displayTotalGeneralCard');
 
-    if (chequesCard) chequesCard.textContent = formatFrenchNumber(totalCheques.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ')) + ' ';
-    if (effetsCard) effetsCard.textContent = formatFrenchNumber(totalEffets.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ')) + ' ';
-    if (generalCard) generalCard.textContent = formatFrenchNumber((totalCheques + totalEffets).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ')) + ' ';
+    if (chequesCard) chequesCard.textContent = formatFrenchNumber(totalCheques) + ' ';
+    if (effetsCard) effetsCard.textContent = formatFrenchNumber(totalEffets) + ' ';
+    if (generalCard) generalCard.textContent = formatFrenchNumber(totalCheques + totalEffets) + ' ';
   }
 
   // Reset
@@ -1158,54 +1042,53 @@ const totalMontantGeneral = document.getElementById('displayTotalGeneral');
 });
 
 function downloadFullPagePDF() {
-  // Display loading message
-  const loadingMsg = createLoadingMessage();
-  document.body.appendChild(loadingMsg);
+// Display loading message
+const loadingMsg = createLoadingMessage();
+document.body.appendChild(loadingMsg);
 
-  // Load jsPDF and autoTable plugin sequentially
-  loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
-    .then(() => loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js'))
-    .then(() => generatePDF())
-    .catch(error => handleError(error, loadingMsg))
-    .finally(() => document.body.removeChild(loadingMsg));
+// Load jsPDF and autoTable plugin sequentially
+loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
+  .then(() => loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js'))
+  .then(() => generatePDF())
+  .catch(error => handleError(error, loadingMsg))
+  .finally(() => document.body.removeChild(loadingMsg));
 
-  // Helper function to create loading message
-  function createLoadingMessage() {
-    const div = document.createElement('div');
-    div.innerHTML = '<div class="alert alert-info" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">Génération du PDF complet en cours...</div>';
-    return div;
-  }
+// Helper function to create loading message
+function createLoadingMessage() {
+  const div = document.createElement('div');
+  div.innerHTML = '<div class="alert alert-info" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">Génération du PDF complet en cours...</div>';
+  return div;
+}
 
-  // Helper function to load scripts dynamically
-  function loadScript(src) {
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = src;
-      script.onload = resolve;
-      script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
-      document.head.appendChild(script);
-    });
-  }
+// Helper function to load scripts dynamically
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+    document.head.appendChild(script);
+  });
+}
 
-  // Helper function to format numbers in French format with space instead of '/'
-  function formatFrenchNumber(value) {
-    if (isNaN(value)) return '0,00';
-    return value
-      .toFixed(2)
-      .replace(/\B(?=(\d{3})+(?!\d))/g, ' ') // Use space as thousand separator
-      .replace('.', ','); // Use comma for decimal
-  }
+// Helper function to format numbers in French format with space instead of '/'
+function formatFrenchNumber(value) {
+  if (isNaN(value)) return '0,00';
+  return value
+    .toFixed(2)
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ' ') // Use space as thousand separator
+    .replace('.', ','); // Use comma for decimal
+}
 
-  // Helper function to parse French number strings
-  function parseFrenchNumber(text) {
-    if (!text) return 0;
-    // Remove any '/' and replace with space, then handle standard French format
-    return parseFloat(text.replace(/[\/\s]/g, '').replace(',', '.')) || 0;
-  }
+// Helper function to parse French number strings
+function parseFrenchNumber(text) {
+  if (!text) return 0;
+  // Remove any '/' and replace with space, then handle standard French format
+  return parseFloat(text.replace(/[\/\s]/g, '').replace(',', '.')) || 0;
+}
 
-  // Helper function to add a section table with borders
-  // Helper function to add a section table with borders
-function addSectionTable(pdf, title, headers, data, yPosition, columnStyles, hasTotals = true, customOptions = {}) {
+// Helper function to add a section table
+function addSectionTable(pdf, title, headers, data, yPosition, columnStyles, hasTotals = true) {
   if (yPosition > 220) {
     pdf.addPage();
     yPosition = 20;
@@ -1221,27 +1104,13 @@ function addSectionTable(pdf, title, headers, data, yPosition, columnStyles, has
       body: data,
       startY: yPosition,
       theme: 'striped',
-      styles: {
-        fontSize: 10,
-        cellPadding: 2,
-        lineWidth: 0.2,
-        lineColor: [0, 0, 0],
-      },
-      headStyles: {
-        fillColor: [52, 144, 220], // default blue
-        textColor: 255,
-        fontStyle: 'bold',
-        lineWidth: 0.2,
-        lineColor: [0, 0, 0],
-      },
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [52, 144, 220], textColor: 255, fontStyle: 'bold' },
       columnStyles,
-      ...customOptions, // ✅ merge extra options like green header
       didParseCell: (data) => {
         if (hasTotals && data.row.index === data.table.body.length - 1) {
           data.cell.styles.fontStyle = 'bold';
           data.cell.styles.fillColor = [240, 240, 240];
-          data.cell.styles.lineWidth = 0.2;
-          data.cell.styles.lineColor = [0, 0, 0];
         }
       },
     });
@@ -1253,832 +1122,958 @@ function addSectionTable(pdf, title, headers, data, yPosition, columnStyles, has
   }
 }
 
-  // Main function to generate the PDF
-  function generatePDF() {
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('p', 'mm', 'a4');
+// Main function to generate the PDF
+function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF('p', 'mm', 'a4');
 
-    // Add header and date
-    pdf.setFontSize(20);
-    pdf.text('Situation Bancaire Complète', 20, 20);
-    pdf.setFontSize(12);
+  // Add header and date
+  pdf.setFontSize(20);
+  pdf.text('Situation Bancaire Complète', 20, 20);
+  pdf.setFontSize(12);
+  pdf.text(`Date: ${new Date().toLocaleDateString('fr-FR')}`, 20, 30);
+  let yPosition = 45;
 
-    pdf.text(`Généré le: ${new Date().toLocaleString('fr-FR')}`, 30, 30);
-
-    let yPosition = 50;
-
-   // Section 1: Situation Bancaire
-const bankData = [];
+  // Section 1: Situation Bancaire
+  const bankData = [];
 let totalPositive = 0,
-  totalNegative = 0,
-  totalDmlt = 0;
+totalNegative = 0,
+totalDmlt = 0;
 
-document.querySelectorAll('#soldeTable tbody tr').forEach((row) => {
-  const cells = row.querySelectorAll('td');
-  if (cells.length >= 4) {
-    const bankName =
-      cells[0].textContent.trim() ||
-      cells[0].querySelector('strong')?.textContent.trim();
+document.querySelectorAll('#situationBancaire tbody tr').forEach((row) => {
+const cells = row.querySelectorAll('td');
+if (cells.length >= 5) {
+  // Extract bank name
+  const bankName =
+    cells[0].textContent.trim() ||
+    cells[0].querySelector('strong')?.textContent.trim();
 
-    const positiveInput = cells[1].querySelector('input')?.value.trim();
-    const negativeInput = cells[2].querySelector('input')?.value.trim();
-    const dmltInput = cells[3].querySelector('input')?.value.trim();
+  // Extract values from input fields
+  const positiveInput = cells[1].querySelector('input')?.value.trim();
+  const negativeInput = cells[2].querySelector('input')?.value.trim();
+  const dmltInput = cells[4].querySelector('input')?.value.trim();
 
-    const positive = parseFrenchNumber(positiveInput);
-    const negative = parseFrenchNumber(negativeInput);
-    const dmlt = parseFrenchNumber(dmltInput);
+  // Parse French-formatted numbers
+  const positive = parseFrenchNumber(positiveInput);
+  const negative = parseFrenchNumber(negativeInput);
+  const dmlt = parseFrenchNumber(dmltInput);
 
-    if (!isNaN(positive)) totalPositive += positive;
-    if (!isNaN(negative)) totalNegative += negative;
-    if (!isNaN(dmlt)) totalDmlt += dmlt;
+  // Ensure valid numbers before adding to totals
+  if (!isNaN(positive)) totalPositive += positive;
+  if (!isNaN(negative)) totalNegative += negative;
+  if (!isNaN(dmlt)) totalDmlt += dmlt;
 
-    bankData.push([
-      bankName,
-      formatFrenchNumber(positive),
-      formatFrenchNumber(negative),
-      formatFrenchNumber(dmlt),
-    ]);
-  }
+  // Push formatted data to bankData
+  bankData.push([
+    bankName,
+    formatFrenchNumber(positive),
+    formatFrenchNumber(negative),
+    formatFrenchNumber(dmlt),
+  ]);
+}
 });
 
 // Add totals to bankData
 bankData.push([
-  'TOTAL',
-  totalPositive.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' '),
-  totalNegative.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' '),
-  totalDmlt.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' '),
+'TOTAL',
+formatFrenchNumber(totalPositive),
+formatFrenchNumber(totalNegative),
+formatFrenchNumber(totalDmlt),
 ]);
 
 // Add table to PDF
 yPosition = addSectionTable(
-  pdf,
-  '1. Soldes Bancaires',
-  ['Banque', 'Solde positif', 'Solde négatif', 'Dette à moyen et long terme'],
-  bankData,
-  yPosition,
-  {
-    0: { halign: 'left' },
-    1: { halign: 'right' },
-    2: { halign: 'right' },
-    3: { halign: 'right' },
-  },
-  true,
-  { headStyles: { fillColor: [0, 128, 0], textColor: 255, halign: 'center' } } // ✅ green header
+pdf,
+'1. Situation Bancaire',
+['Banque', 'Solde Positif', 'Solde Négatif', 'Dette Moyen Long Terme'],
+bankData,
+yPosition,
+{ 0: { halign: 'left' }, 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' } }
 );
+  // Section 2: Chèques en circulation
+  const visibleCheques = [];
+  let chequesTotalAmount = 0;
 
-// Section 2 : Recettes à venir
-const recetteData = [];
-let totalRecette = 0;
-
-document.querySelectorAll('#recavenirsTable tbody tr').forEach((row) => {
-  const cells = row.querySelectorAll('td');
-  if (cells.length >= 6) {
-    const client = cells[0].textContent.trim();
-    const designation = cells[1].textContent.trim();
-    const montantInput = cells[2].textContent.trim().replace(/\s/g, '').replace(',', '.');
-    const dateEcheance = cells[3].textContent.trim();
-    const statut = cells[4].textContent.trim();
-    const banque = cells[5].textContent.trim();
-
-    const montant = parseFrenchNumber(montantInput);
-    if (!isNaN(montant)) totalRecette += montant;
-
-    recetteData.push([
-      client,
-      designation,
-      formatFrenchNumber(montant),
-      dateEcheance,
-      statut,
-      banque
-    ]);
-  }
-});
-
-// Ligne de total
-recetteData.push([
-  'TOTAL',
-  '',
-  formatFrenchNumber(totalRecette),
-  '',
-  '',
-  ''
-]);
-
-// Ajout tableau au PDF
-yPosition = addSectionTable(
-  pdf,
-  '2. Recettes à venir',
-  ['Client', 'Désignation', 'Montant', 'Date Échéance', 'Statut', 'Banque'],
-  recetteData,
-  yPosition,
-  {
-    0: { halign: 'left' },
-    1: { halign: 'left' },
-    2: { halign: 'right' },
-    3: { halign: 'center' },
-    4: { halign: 'center' },
-    5: { halign: 'left' }
-  },
-  true, // hasTotals
-  { headStyles: { fillColor: [0, 128, 0], textColor: 255, halign: 'center' } } // <-- header vert
-);
-
-    
-
-// --- Section : Chèques en circulation ---
-const visibleCheques = [];
-let chequesTotalAmount = 0;
-
-document.querySelectorAll('.cheque-row').forEach(row => {
-  if (row.style.display !== 'none') {
-    const cells = row.querySelectorAll('td');
-    if (cells.length >= 8) { 
-      const montantValue = parseFrenchNumber(cells[4].textContent.trim()); // colonne Montant
-      chequesTotalAmount += montantValue;
-      visibleCheques.push([
-        cells[1].textContent.trim(), // Numéro
-        formatFrenchNumber(montantValue), // Montant
-        cells[5].textContent.trim(), // Date Échéance
-        cells[3].textContent.trim(), // Bénéficiaire
-        cells[2].textContent.trim(), // Banque
-        cells[6].textContent.trim(), // Statut
-        cells[7].querySelector('input')?.value || cells[7].textContent.trim(), // observation
-      ]);
+  document.querySelectorAll('.cheque-row').forEach(row => {
+    if (row.style.display !== 'none') {
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 6) {
+        const montantValue = parseFrenchNumber(cells[1].textContent.trim());
+        chequesTotalAmount += montantValue;
+        visibleCheques.push([
+          cells[0].textContent.trim(),
+          formatFrenchNumber(montantValue),
+          cells[2].textContent.trim(),
+          cells[3].textContent.trim(),
+          cells[4].textContent.trim(),
+          cells[5].textContent.trim(),
+        ]);
+      }
     }
-  }
-});
+  });
 
-if (visibleCheques.length > 0) {
-  visibleCheques.push(['TOTAL', formatFrenchNumber(chequesTotalAmount), '', '', '', '']);
+  if (visibleCheques.length > 0) {
+    visibleCheques.push(['TOTAL', formatFrenchNumber(chequesTotalAmount), '', '', '', '']);
+  }
+
+  yPosition = addSectionTable(
+    pdf,
+    '2. Chèques en circulation',
+    ['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut'],
+    visibleCheques,
+    yPosition,
+    {
+      0: { halign: 'left', cellWidth: 25 },
+      1: { halign: 'right', cellWidth: 25 },
+      2: { halign: 'center', cellWidth: 25 },
+      3: { halign: 'left', cellWidth: 40 },
+      4: { halign: 'left', cellWidth: 30 },
+      5: { halign: 'center', cellWidth: 25 },
+    }
+  );
+
+  // Section 3: Effets en circulation
+  const visibleEffets = [];
+  let effetsTotalAmount = 0;
+
+  document.querySelectorAll('.effet-row').forEach(row => {
+    if (row.style.display !== 'none') {
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 6) {
+        const montantValue = parseFrenchNumber(cells[1].textContent.trim());
+        effetsTotalAmount += montantValue;
+        visibleEffets.push([
+          cells[0].textContent.trim(),
+          formatFrenchNumber(montantValue),
+          cells[2].textContent.trim(),
+          cells[3].textContent.trim(),
+          cells[4].textContent.trim(),
+          cells[5].textContent.trim(),
+        ]);
+      }
+    }
+  });
+
+  if (visibleEffets.length > 0) {
+    visibleEffets.push(['TOTAL', formatFrenchNumber(effetsTotalAmount), '', '', '', '']);
+  }
+
+  yPosition = addSectionTable(
+    pdf,
+    '3. Effets en circulation',
+    ['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut'],
+    visibleEffets,
+    yPosition,
+    {
+      0: { halign: 'left', cellWidth: 25 },
+      1: { halign: 'right', cellWidth: 25 },
+      2: { halign: 'center', cellWidth: 25 },
+      3: { halign: 'left', cellWidth: 40 },
+      4: { halign: 'left', cellWidth: 30 },
+      5: { halign: 'center', cellWidth: 25 },
+    }
+  );
+
+  // Section 4: Paiements à venir
+  const visiblePayavenirs = [];
+  let payavenirsTotalAmount = 0;
+
+  document.querySelectorAll('.payavenir-row').forEach(row => {
+    if (row.style.display !== 'none') {
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 7) {
+        const montantValue = parseFrenchNumber(cells[1].textContent.trim());
+        payavenirsTotalAmount += montantValue;
+        visiblePayavenirs.push([
+          cells[0].textContent.trim(),
+          formatFrenchNumber(montantValue),
+          cells[2].textContent.trim(),
+          cells[3].textContent.trim(),
+          cells[4].textContent.trim(),
+          cells[5].textContent.trim(),
+          cells[6].textContent.trim(),
+        ]);
+      }
+    }
+  });
+
+  if (visiblePayavenirs.length > 0) {
+    visiblePayavenirs.push(['TOTAL', formatFrenchNumber(payavenirsTotalAmount), '', '', '', '', '']);
+  }
+
+  yPosition = addSectionTable(
+    pdf,
+    '4. Paiements à venir',
+    ['Désignation', 'Montant', 'Date Échéance', 'Statut', 'Date Paiement', 'Fournisseur', 'Banque'],
+    visiblePayavenirs,
+    yPosition,
+    {
+      0: { halign: 'left', cellWidth: 35 },
+      1: { halign: 'right', cellWidth: 25 },
+      2: { halign: 'center', cellWidth: 25 },
+      3: { halign: 'center', cellWidth: 20 },
+      4: { halign: 'center', cellWidth: 25 },
+      5: { halign: 'left', cellWidth: 30 },
+      6: { halign: 'left', cellWidth: 25 },
+    }
+  );
+
+  // Section 5: Résumé Général
+  if (yPosition > 220) {
+    pdf.addPage();
+    yPosition = 20;
+  }
+
+  pdf.setFontSize(16);
+  pdf.text('5. Résumé Général', 20, yPosition);
+  yPosition += 15;
+
+  const generalTotal = chequesTotalAmount + effetsTotalAmount + payavenirsTotalAmount;
+  const summaryData = [
+    ['Total Chèques', formatFrenchNumber(chequesTotalAmount)],
+    ['Total Effets', formatFrenchNumber(effetsTotalAmount)],
+    ['Total Paiements à venir', formatFrenchNumber(payavenirsTotalAmount)],
+    ['TOTAL GÉNÉRAL', formatFrenchNumber(generalTotal)],
+  ];
+
+  pdf.autoTable({
+    head: [['Description', 'Montant']],
+    body: summaryData,
+    startY: yPosition,
+    theme: 'striped',
+    styles: { fontSize: 12, cellPadding: 4 },
+    headStyles: { fillColor: [52, 144, 220], textColor: 255, fontStyle: 'bold' },
+    columnStyles: {
+      0: { halign: 'left', cellWidth: 80 },
+      1: { halign: 'right', cellWidth: 50 },
+    },
+    didParseCell: (data) => {
+      if (data.row.index === 3) {
+        data.cell.styles.fontStyle = 'bold';
+        data.cell.styles.fillColor = [76, 175, 80];
+        data.cell.styles.textColor = 255;
+        data.cell.styles.fontSize = 14;
+      }
+    },
+  });
+
+  // Add footer statistics
+  const finalY = pdf.lastAutoTable.finalY + 15;
+  pdf.setFontSize(10);
+  pdf.text(`Nombre de chèques: ${visibleCheques.length > 0 ? visibleCheques.length - 1 : 0}`, 20, finalY);
+  pdf.text(`Nombre d'effets: ${visibleEffets.length > 0 ? visibleEffets.length - 1 : 0}`, 20, finalY + 8);
+  pdf.text(`Nombre de paiements à venir: ${visiblePayavenirs.length > 0 ? visiblePayavenirs.length - 1 : 0}`, 20, finalY + 16);
+  pdf.text(`Généré le: ${new Date().toLocaleString('fr-FR')}`, 20, finalY + 24);
+
+  // Save the PDF
+  pdf.save(`situation-bancaire-complete-${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
-yPosition = addSectionTable(
-  pdf,
-  '2. Chèques en circulation',
-  ['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut', 'Observation'],
-  visibleCheques,
-  yPosition,
-  {
-    0: { halign: 'left', cellWidth: 25 },
-    1: { halign: 'right', cellWidth: 25 },
-    2: { halign: 'center', cellWidth: 25 },
-    3: { halign: 'left', cellWidth: 30 },
-    4: { halign: 'left', cellWidth: 30 },
-    5: { halign: 'center', cellWidth: 25 },
-    6: { halign: 'left', cellWidth: 30 },
+// Error handling function
+function handleError(error, loadingMsg) {
+  console.error('Error generating complete PDF:', error);
+  if (loadingMsg && document.body.contains(loadingMsg)) {
+    document.body.removeChild(loadingMsg);
   }
-);
-
-
-// --- Section : Effets en circulation ---
-const visibleEffets = [];
-let effetsTotalAmount = 0;
-
-document.querySelectorAll('.effet-row').forEach(row => {
-  if (row.style.display !== 'none') {
-    const cells = row.querySelectorAll('td');
-    if (cells.length >= 7) {
-      const montantValue = parseFrenchNumber(cells[4].textContent.trim()); // colonne Montant
-      effetsTotalAmount += montantValue;
-      visibleEffets.push([
-        cells[1].textContent.trim(), // Numéro
-        formatFrenchNumber(montantValue), // Montant
-        cells[5].textContent.trim(), // Date Échéance
-        cells[3].textContent.trim(), // Bénéficiaire
-        cells[2].textContent.trim(), // Banque
-        cells[6].textContent.trim(), // Statut
-        cells[7].querySelector('input')?.value || cells[7].textContent.trim(), // observation
-        
-      ]);
-    }
-  }
-});
-
-if (visibleEffets.length > 0) {
-  visibleEffets.push(['TOTAL', formatFrenchNumber(effetsTotalAmount), '', '', '', '']);
+  alert(`Erreur lors de la génération du PDF complet: ${error.message}`);
 }
-
-yPosition = addSectionTable(
-  pdf,
-  '3. Effets en circulation',
-  ['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut', 'Observation'],
-  visibleEffets,
-  yPosition,
-  {
-    0: { halign: 'left', cellWidth: 25 },
-    1: { halign: 'right', cellWidth: 25 },
-    2: { halign: 'center', cellWidth: 25 },
-    3: { halign: 'left', cellWidth: 30 },
-    4: { halign: 'left', cellWidth: 30 },
-    5: { halign: 'center', cellWidth: 25 },
-    6: { halign: 'left', cellWidth: 30 },
-  }
-);
-
-    // Section 4: Paiements à venir
-   // --- Section : Paiements à venir ---
-const visiblePayavenirs = [];
-let payavenirsTotalAmount = 0;
-
-document.querySelectorAll('.payavenir-row').forEach(row => {
-  if (row.style.display !== 'none') {
-    const cells = row.querySelectorAll('td');
-    if (cells.length >= 6) { 
-      const montantValue = parseFrenchNumber(cells[3].textContent.trim()); // colonne Montant
-      payavenirsTotalAmount += montantValue;
-      visiblePayavenirs.push([
-        cells[0].textContent.trim(),              // Désignation
-        formatFrenchNumber(montantValue),         // Montant
-        cells[4].textContent.trim(),              // Date Échéance
-        cells[2].textContent.trim(),              // Bénéficiaire
-        cells[1].textContent.trim(),              // Banque
-        cells[5].textContent.trim(),              // Statut
-      ]);
-    }
-  }
-});
-
-if (visiblePayavenirs.length > 0) {
-  visiblePayavenirs.push(['TOTAL', formatFrenchNumber(payavenirsTotalAmount), '', '', '', '']);
 }
-
-yPosition = addSectionTable(
-  pdf,
-  '4. Paiements à venir',
-  ['Désignation', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut'],
-  visiblePayavenirs,
-  yPosition,
-  {
-    0: { halign: 'left', cellWidth: 35 },   // Désignation
-    1: { halign: 'right', cellWidth: 25 },  // Montant
-    2: { halign: 'center', cellWidth: 25 }, // Date Échéance
-    3: { halign: 'left', cellWidth: 30 },   // Bénéficiaire
-    4: { halign: 'left', cellWidth: 25 },   // Banque
-    5: { halign: 'center', cellWidth: 20 }, // Statut
-  }
-);
-
-
-    // Section 5: Recap. Général
-    if (yPosition > 220) {
-      pdf.addPage();
-      yPosition = 20;
-    }
-
-    pdf.setFontSize(16);
-    pdf.text('5. Recap. Général', 20, yPosition);
-    yPosition += 15;
-
-    const generalTotal = chequesTotalAmount + effetsTotalAmount + payavenirsTotalAmount;
-    const summaryData = [
-      ['Total Chèques', formatFrenchNumber(chequesTotalAmount)],
-      ['Total Effets', formatFrenchNumber(effetsTotalAmount)],
-      ['Total Paiements à venir', formatFrenchNumber(payavenirsTotalAmount)],
-      ['TOTAL GÉNÉRAL', formatFrenchNumber(generalTotal)],
-    ];
-
-    pdf.autoTable({
-      head: [['Description', 'Montant']],
-      body: summaryData,
-      startY: yPosition,
-      theme: 'striped',
-      styles: {
-        fontSize: 12,
-        cellPadding: 4,
-        lineWidth: 0.2, // Border thickness
-        lineColor: [0, 0, 0], // Black border color
-      },
-      headStyles: {
-        fillColor: [52, 144, 220],
-        textColor: 255,
-        fontStyle: 'bold',
-        lineWidth: 0.2, // Border for header
-        lineColor: [0, 0, 0], // Black border color
-      },
-      columnStyles: {
-        0: { halign: 'left', cellWidth: 80 },
-        1: { halign: 'right', cellWidth: 50 },
-      },
-      didParseCell: (data) => {
-        if (data.row.index === 3) {
-          data.cell.styles.fontStyle = 'bold';
-          data.cell.styles.fillColor = [76, 175, 80];
-          data.cell.styles.textColor = 255;
-          data.cell.styles.fontSize = 14;
-          data.cell.styles.lineWidth = 0.2; // Ensure border for total row
-          data.cell.styles.lineColor = [0, 0, 0];
-        }
-      },
-    });
-
-    // Add footer statistics
-    const finalY = pdf.lastAutoTable.finalY + 15;
-    pdf.setFontSize(10);
-    pdf.text(`Nombre de chèques: ${visibleCheques.length > 0 ? visibleCheques.length - 1 : 0}`, 20, finalY);
-    pdf.text(`Nombre d'effets: ${visibleEffets.length > 0 ? visibleEffets.length - 1 : 0}`, 20, finalY + 8);
-    pdf.text(`Nombre de paiements à venir: ${visiblePayavenirs.length > 0 ? visiblePayavenirs.length - 1 : 0}`, 20, finalY + 16);
-    pdf.text(`Généré le: ${new Date().toLocaleString('fr-FR')}`, 20, finalY + 24);
-
-    // Save the PDF
-    pdf.save(`situation-bancaire-complete-${new Date().toISOString().split('T')[0]}.pdf`);
-  }
-
-  // Error handling function
-  function handleError(error, loadingMsg) {
-    console.error('Error generating complete PDF:', error);
-    if (loadingMsg && document.body.contains(loadingMsg)) {
-      document.body.removeChild(loadingMsg);
-    }
-    alert(`Erreur lors de la génération du PDF complet: ${error.message}`);
-  }
-}
-
 
 function downloadChequesPDF() {
-  // Show loading
-  const loadingMsg = document.createElement('div');
-  loadingMsg.innerHTML = '<div class="alert alert-info" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">Génération du PDF chèques...</div>';
-  document.body.appendChild(loadingMsg);
+// Show loading
+const loadingMsg = document.createElement('div');
+loadingMsg.innerHTML = '<div class="alert alert-info">Génération du PDF chèques...</div>';
+document.body.appendChild(loadingMsg);
 
-  // Load jsPDF and autoTable sequentially
-  loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
-    .then(() => loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js'))
-    .then(() => generatePDF())
-    .catch(error => {
-      console.error('Erreur PDF:', error);
-      alert('Erreur lors de la génération du PDF des chèques');
-    })
-    .finally(() => document.body.removeChild(loadingMsg));
-
-  function loadScript(src) {
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = src;
-      script.onload = resolve;
-      script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
-      document.head.appendChild(script);
-    });
-  }
-
-  function parseFrenchNumber(text) {
-    if (!text) return 0;
-    return parseFloat(text.replace(/\s/g, '').replace(',', '.')) || 0;
-  }
-
-  function formatFrenchNumber(value) {
-    if (isNaN(value)) return '0,00';
-    return value
-      .toFixed(2)
-      .replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
-      .replace('.', ',');
-  }
-
-  function generatePDF() {
+const script = document.createElement('script');
+script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+script.onload = function() {
+  try {
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('l', 'mm', 'a4'); // Landscape
+    const pdf = new jsPDF('l', 'mm', 'a4'); // Landscape for better table fit
 
-    // Title
-    pdf.setFontSize(20);
-    pdf.setTextColor(30, 30, 120);
+    // Add title
+    pdf.setFontSize(18);
+    pdf.setTextColor(0, 0, 128); // Dark blue
     pdf.text('Chèques à payer', 20, 20);
 
-    // Date + time of generation
-    const now = new Date();
-    const formattedDate = now.toLocaleDateString('fr-FR');
-    const formattedTime = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    pdf.setFontSize(11);
-    pdf.setTextColor(80, 80, 80);
-    pdf.text(`Généré le : ${formattedDate} à ${formattedTime}`, 20, 30);
+    // Add date
+    pdf.setFontSize(10);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text('Date: ' + new Date().toLocaleDateString('fr-FR'), 20, 30);
 
-    // Collect data from table
+    // Get visible cheques data
+    const visibleCheques = [];
     const chequeRows = document.querySelectorAll('.cheque-row');
-    const data = [];
     let totalAmount = 0;
 
     chequeRows.forEach(row => {
       if (row.style.display !== 'none') {
         const cells = row.querySelectorAll('td');
-        if (cells.length >= 8) {
-          const montantValue = parseFrenchNumber(cells[4].textContent);
+        if (cells.length >= 6) {
+          const montantText = cells[1].textContent.trim();
+          const montantValue = parseFrenchNumber(montantText.replace(/[\/]/g, ' '));
           totalAmount += montantValue;
 
-          data.push([
-            cells[1].textContent.trim(), // Numéro
-            formatFrenchNumber(montantValue), // Montant
-            cells[5].textContent.trim(), // Date Échéance
-            cells[3].textContent.trim(), // Bénéficiaire
-            cells[2].textContent.trim(), // Banque
-            cells[6].textContent.trim(), // Statut
-            cells[7].querySelector('input')?.value || cells[7].textContent.trim() // Observation
+          visibleCheques.push([
+            cells[0].textContent.trim().replace(/\//g, ' ').replace(/\s+/g, ' '),
+            formatFrenchNumber(montantValue).replace(/\//g, ' ').replace(/\s+/g, ' '),
+            cells[2].textContent.trim(),
+            cells[3].textContent.trim(),
+            cells[4].textContent.trim().replace(/\//g, ' ').replace(/\s+/g, ' '),
+            cells[5].textContent.trim().replace(/\//g, ' ').replace(/\s+/g, ' ')
           ]);
         }
       }
     });
 
-    // Add total row
-    if (data.length > 0) {
-      data.push(['TOTAL', formatFrenchNumber(totalAmount), '', '', '', '', '']);
-    }
+    // Table setup
+    let yPosition = 45;
+    const columnWidths = [35, 35, 35, 60, 50, 30];
+    const startX = 20;
+    const cellHeight = 8;
 
-    // Table
-    pdf.autoTable({
-      head: [['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut', 'Observation']],
-      body: data,
-      startY: 40,
-      theme: 'grid',
-      headStyles: { fillColor: [52, 152, 219], textColor: 255, fontStyle: 'bold', fontSize: 11 },
-      styles: { fontSize: 10, cellPadding: 3, lineColor: [230, 230, 230], lineWidth: 0.1 },
-      alternateRowStyles: { fillColor: [245, 245, 245] }, // striped effect
-      columnStyles: {
-        0: { halign: 'left', cellWidth: 25 },
-        1: { halign: 'right', cellWidth: 30 },
-        2: { halign: 'center', cellWidth: 30 },
-        3: { halign: 'left', cellWidth: 45 },
-        4: { halign: 'left', cellWidth: 35 },
-        5: { halign: 'center', cellWidth: 30 },
-        6: { halign: 'left', cellWidth: 55 },
-      },
-      didParseCell: (tableData) => {
-        // Bold + gray background for TOTAL
-        if (tableData.row.index === data.length - 1) {
-          tableData.cell.styles.fontStyle = 'bold';
-          tableData.cell.styles.fillColor = [230, 230, 230];
-        }
-      },
+    // Headers
+    pdf.setFontSize(9);
+    pdf.setFont(undefined, 'bold');
+    pdf.setTextColor(255, 255, 255); // White text
+    const headers = ['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut'];
+
+    // Draw header cells with blue background
+    let currentX = startX;
+    headers.forEach((header, index) => {
+      pdf.setFillColor(0, 102, 204); // Blue background
+      pdf.rect(currentX, yPosition - 6, columnWidths[index], cellHeight, 'F'); // Filled rectangle
+      pdf.text(header, currentX + 2, yPosition);
+      currentX += columnWidths[index];
+    });
+    yPosition += cellHeight;
+
+    // Data rows
+    pdf.setFont(undefined, 'normal');
+    pdf.setFontSize(8);
+    pdf.setTextColor(0, 0, 0);
+
+    visibleCheques.forEach((row, rowIndex) => {
+      if (yPosition > 180) { // Check if we need a new page
+        pdf.addPage();
+        yPosition = 20;
+
+        // Redraw headers on new page
+        currentX = startX;
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(255, 255, 255);
+        headers.forEach((header, index) => {
+          pdf.setFillColor(0, 102, 204);
+          pdf.rect(currentX, yPosition - 6, columnWidths[index], cellHeight, 'F');
+          pdf.text(header, currentX + 2, yPosition);
+          currentX += columnWidths[index];
+        });
+        yPosition += cellHeight;
+        pdf.setFont(undefined, 'normal');
+        pdf.setTextColor(0, 0, 0);
+      }
+
+      currentX = startX;
+      row.forEach((cell, cellIndex) => {
+        const text = cell.toString();
+        const maxLength = cellIndex === 3 ? 25 : 15;
+        const displayText = text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+        pdf.setDrawColor(0, 102, 204); // Blue borders
+        pdf.rect(currentX, yPosition - 6, columnWidths[cellIndex], cellHeight);
+        pdf.text(displayText, currentX + 2, yPosition);
+        currentX += columnWidths[cellIndex];
+      });
+      yPosition += cellHeight;
     });
 
-    pdf.save(`cheques-en-circulation-${now.toISOString().split('T')[0]}.pdf`);
+    // Add total
+    yPosition += 5;
+    pdf.setDrawColor(0, 102, 204);
+    pdf.line(startX, yPosition, startX + 70, yPosition);
+    yPosition += 8;
+    pdf.setFont(undefined, 'bold');
+    pdf.setFontSize(10);
+    pdf.text(`Total: ${formatFrenchNumber(totalAmount).replace(/\//g, ' ').replace(/\s+/g, ' ')}`, startX, yPosition);
+
+    // Add summary
+    yPosition += 15;
+    pdf.setFontSize(8);
+    pdf.setFont(undefined, 'normal');
+    pdf.text(`Nombre de chèques: ${visibleCheques.length}`, startX, yPosition);
+
+    pdf.save('cheques-en-circulation.pdf');
+    document.body.removeChild(loadingMsg);
+  } catch (error) {
+    console.error('Error:', error);
+    document.body.removeChild(loadingMsg);
+    alert('Erreur lors de la génération du PDF des chèques');
   }
+};
+document.head.appendChild(script);
 }
 
 function downloadEffetsPDF() {
-  // Show loading
-  const loadingMsg = document.createElement('div');
-  loadingMsg.innerHTML = '<div class="alert alert-info" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">Génération du PDF effets...</div>';
-  document.body.appendChild(loadingMsg);
+const loadingMsg = document.createElement('div');
+loadingMsg.innerHTML = '<div class="alert alert-info">Génération du PDF effets...</div>';
+document.body.appendChild(loadingMsg);
 
-  // Load jsPDF and autoTable sequentially
-  loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
-    .then(() => loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js'))
-    .then(() => generatePDF())
-    .catch(error => {
-      console.error('Erreur PDF Effets:', error);
-      alert('Erreur lors de la génération du PDF des effets');
-    })
-    .finally(() => document.body.removeChild(loadingMsg));
-
-  function loadScript(src) {
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = src;
-      script.onload = resolve;
-      script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
-      document.head.appendChild(script);
-    });
-  }
-
-  function parseFrenchNumber(text) {
-    if (!text) return 0;
-    return parseFloat(text.replace(/\s/g, '').replace(',', '.')) || 0;
-  }
-
-  function formatFrenchNumber(value) {
-    if (isNaN(value)) return '0,00';
-    return value
-      .toFixed(2)
-      .replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
-      .replace('.', ',');
-  }
-
-  function generatePDF() {
+const script = document.createElement('script');
+script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+script.onload = function() {
+  try {
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('l', 'mm', 'a4'); // Landscape like chèques
+    const pdf = new jsPDF('l', 'mm', 'a4');
 
-    // Title
-    pdf.setFontSize(20);
-    pdf.setTextColor(30, 30, 120);
-    pdf.text('Effets à payer', 20, 20);
+    pdf.setFontSize(18);
+    pdf.setTextColor(0, 0, 128);
+    pdf.text("Effets en circulation", 20, 20);
 
-    // Date + time of generation
-    const now = new Date();
-    const formattedDate = now.toLocaleDateString('fr-FR');
-    const formattedTime = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    pdf.setFontSize(11);
-    pdf.setTextColor(80, 80, 80);
-    pdf.text(`Généré le : ${formattedDate} à ${formattedTime}`, 20, 30);
+    pdf.setFontSize(10);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text("Date: " + new Date().toLocaleDateString('fr-FR'), 20, 30);
 
-    // Collect data from table
+    // Helper to format numbers with spaces
+    function formatNumberWithSpace(num) {
+      return num.toLocaleString('fr-FR').replace(/\./g, ' ');
+    }
+
+    const visibleEffets = [];
     const effetRows = document.querySelectorAll('.effet-row');
-    const data = [];
     let totalAmount = 0;
 
     effetRows.forEach(row => {
       if (row.style.display !== 'none') {
         const cells = row.querySelectorAll('td');
-        if (cells.length >= 8) {
-          const montantValue = parseFrenchNumber(cells[4].textContent);
+        if (cells.length >= 6) {
+          const montantValue = parseFrenchNumber(cells[1].textContent.trim().replace(/\s/g, ''));
           totalAmount += montantValue;
 
-          data.push([
-            cells[1].textContent.trim(), // Numéro
-            formatFrenchNumber(montantValue), // Montant
-            cells[5].textContent.trim(), // Date Échéance
-            cells[3].textContent.trim(), // Bénéficiaire
-            cells[2].textContent.trim(), // Banque
-            cells[6].textContent.trim(), // Statut
-            cells[7].querySelector('input')?.value || cells[7].textContent.trim() // Observation
+          visibleEffets.push([
+            cells[0].textContent.trim(),
+            formatFrenchNumber(montantValue).replace(/\//g, ' ').replace(/\s+/g, ' '),
+
+            cells[2].textContent.trim(),
+            cells[3].textContent.trim(),
+            cells[4].textContent.trim(),
+            cells[5].textContent.trim()
           ]);
         }
       }
     });
 
-    // Add total row
-    if (data.length > 0) {
-      data.push(['TOTAL', formatFrenchNumber(totalAmount), '', '', '', '', '']);
-    }
+    let yPosition = 45;
+    const columnWidths = [35, 35, 35, 60, 50, 30];
+    const startX = 20;
+    const cellHeight = 8;
 
-    // Table
-    pdf.autoTable({
-      head: [['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut', 'Observation']],
-      body: data,
-      startY: 40,
-      theme: 'grid',
-      headStyles: { fillColor: [52, 152, 219], textColor: 255, fontStyle: 'bold', fontSize: 11 },
-      styles: { fontSize: 10, cellPadding: 3, lineColor: [230, 230, 230], lineWidth: 0.1 },
-      alternateRowStyles: { fillColor: [245, 245, 245] },
-      columnStyles: {
-        0: { halign: 'left', cellWidth: 25 },
-        1: { halign: 'right', cellWidth: 30 },
-        2: { halign: 'center', cellWidth: 30 },
-        3: { halign: 'left', cellWidth: 45 },
-        4: { halign: 'left', cellWidth: 35 },
-        5: { halign: 'center', cellWidth: 30 },
-        6: { halign: 'left', cellWidth: 55 },
-      },
-      didParseCell: (tableData) => {
-        if (tableData.row.index === data.length - 1) {
-          tableData.cell.styles.fontStyle = 'bold';
-          tableData.cell.styles.fillColor = [230, 230, 230];
-        }
-      },
+    pdf.setFontSize(9);
+    pdf.setFont(undefined, 'bold');
+    pdf.setTextColor(255, 255, 255);
+    const headers = ['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut'];
+
+    let currentX = startX;
+    headers.forEach((header, index) => {
+      pdf.setFillColor(0, 102, 204);
+      pdf.rect(currentX, yPosition - 6, columnWidths[index], cellHeight, 'F');
+      pdf.text(header, currentX + 2, yPosition);
+      currentX += columnWidths[index];
     });
+    yPosition += cellHeight;
 
-    pdf.save(`effets-en-circulation-${now.toISOString().split('T')[0]}.pdf`);
-  }
-}
+    pdf.setFont(undefined, 'normal');
+    pdf.setFontSize(8);
+    pdf.setTextColor(0, 0, 0);
 
-
-
-function downloadPayavenirsPDF() {
-  const loadingMsg = document.createElement('div');
-  loadingMsg.innerHTML = '<div class="alert alert-info">Génération du PDF paiements à venir...</div>';
-  document.body.appendChild(loadingMsg);
-
-  const script = document.createElement('script');
-  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-  script.onload = function () {
-    try {
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF('p', 'mm', 'a4'); // A4 Portrait
-
-      // Title
-      pdf.setFontSize(16);
-      pdf.setTextColor(0, 102, 204);
-      pdf.text("Paiements à venir", 15, 20);
-
-      // Date
-      pdf.setFontSize(10);
-      pdf.setTextColor(0, 0, 0);
-      pdf.text("Date: " + new Date().toLocaleDateString('fr-FR'), 15, 28);
-
-      // Collect data
-      const visiblePayavenirs = [];
-      let totalAmount = 0;
-      document.querySelectorAll('.payavenir-row').forEach(row => {
-        if (row.style.display !== 'none') {
-          const cells = row.querySelectorAll('td');
-          if (cells.length >= 7) {
-            const montantValue = parseFrenchNumber(cells[1].textContent.trim().replace(/\s/g, ''));
-            totalAmount += montantValue;
-            visiblePayavenirs.push([
-              cells[0].textContent.trim(), // Désignation
-              formatFrenchNumber(montantValue), // Montant
-              cells[2].textContent.trim(), // Date Échéance
-              cells[3].textContent.trim(), // Statut
-              cells[4].textContent.trim(), // Date Paiement
-              cells[5].textContent.trim(), // Fournisseur
-              cells[6].textContent.trim(), // Banque
-            ]);
-          }
-        }
-      });
-
-      // Table headers + column setup
-      const headers = ['Désignation', 'Montant', 'Date Échéance', 'Statut', 'Date Paiement', 'Fournisseur', 'Banque'];
-      const columnWidths = [35, 25, 25, 25, 25, 40, 30];
-      const startX = 15;
-      const cellHeight = 8;
-      let yPosition = 40;
-
-      // Headers
-      pdf.setFontSize(8).setFont(undefined, 'bold').setTextColor(255, 255, 255);
-      let currentX = startX;
-      headers.forEach((header, i) => {
-        pdf.setFillColor(0, 102, 204);
-        pdf.rect(currentX, yPosition, columnWidths[i], cellHeight, 'F');
-        pdf.text(header, currentX + 1, yPosition + 5);
-        currentX += columnWidths[i];
-      });
-      yPosition += cellHeight;
-
-      // Rows
-      pdf.setFontSize(7).setFont(undefined, 'normal').setTextColor(0, 0, 0);
-      visiblePayavenirs.forEach(row => {
-        if (yPosition > 270) { // page break
-          pdf.addPage();
-          yPosition = 20;
-
-          // redraw headers
-          currentX = startX;
-          pdf.setFont(undefined, 'bold').setTextColor(255, 255, 255);
-          headers.forEach((header, i) => {
-            pdf.setFillColor(0, 102, 204);
-            pdf.rect(currentX, yPosition, columnWidths[i], cellHeight, 'F');
-            pdf.text(header, currentX + 1, yPosition + 5);
-            currentX += columnWidths[i];
-          });
-          yPosition += cellHeight;
-          pdf.setFont(undefined, 'normal').setTextColor(0, 0, 0);
-        }
+    visibleEffets.forEach(row => {
+      if (yPosition > 180) {
+        pdf.addPage();
+        yPosition = 20;
 
         currentX = startX;
-        row.forEach((cell, i) => {
-          const text = cell.toString();
-          const displayText = text.length > 20 ? text.substring(0, 20) + '...' : text;
-          pdf.rect(currentX, yPosition, columnWidths[i], cellHeight);
-          pdf.text(displayText, currentX + 1, yPosition + 5);
-          currentX += columnWidths[i];
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(255, 255, 255);
+        headers.forEach((header, index) => {
+          pdf.setFillColor(0, 102, 204);
+          pdf.rect(currentX, yPosition - 6, columnWidths[index], cellHeight, 'F');
+          pdf.text(header, currentX + 2, yPosition);
+          currentX += columnWidths[index];
         });
         yPosition += cellHeight;
+        pdf.setFont(undefined, 'normal');
+        pdf.setTextColor(0, 0, 0);
+      }
+
+      currentX = startX;
+      row.forEach((cell, cellIndex) => {
+        const text = cell.toString();
+        const maxLength = cellIndex === 3 ? 25 : 15;
+        const displayText = text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+        pdf.setDrawColor(0, 102, 204);
+        pdf.rect(currentX, yPosition - 6, columnWidths[cellIndex], cellHeight);
+        pdf.text(displayText, currentX + 2, yPosition);
+        currentX += columnWidths[cellIndex];
       });
+      yPosition += cellHeight;
+    });
 
-      // Total
-      yPosition += 10;
-      pdf.setFont(undefined, 'bold').setFontSize(10);
-      pdf.text(`Total: ${formatFrenchNumber(totalAmount)}`, startX, yPosition);
+    yPosition += 5;
+    pdf.setDrawColor(0, 102, 204);
+    pdf.line(startX, yPosition, startX + 70, yPosition);
+    yPosition += 8;
+    pdf.setFont(undefined, 'bold');
+    pdf.setFontSize(10);
+    pdf.text(`Total: ${formatFrenchNumber(totalAmount).replace(/\//g, ' ').replace(/\s+/g, ' ')}`, startX, yPosition);
 
-      // Summary
-      yPosition += 8;
-      pdf.setFont(undefined, 'normal').setFontSize(8);
-      pdf.text(`Nombre de paiements à venir: ${visiblePayavenirs.length}`, startX, yPosition);
+    yPosition += 15;
+    pdf.setFontSize(8);
+    pdf.setFont(undefined, 'normal');
+    pdf.text(`Nombre d'effets: ${visibleEffets.length}`, startX, yPosition);
 
-      pdf.save("paiements-a-venir.pdf");
-      document.body.removeChild(loadingMsg);
-    } catch (error) {
-      console.error("Erreur PDF:", error);
-      document.body.removeChild(loadingMsg);
-      alert("Erreur lors de la génération du PDF des paiements à venir");
-    }
-  };
-  document.head.appendChild(script);
+    pdf.save('effets-en-circulation.pdf');
+    document.body.removeChild(loadingMsg);
+  } catch (error) {
+    console.error('Error:', error);
+    document.body.removeChild(loadingMsg);
+    alert("Erreur lors de la génération du PDF des effets");
+  }
+};
+document.head.appendChild(script);
+}
+
+function downloadPayavenirsPDF() {
+// Show loading
+const loadingMsg = document.createElement('div');
+loadingMsg.innerHTML = '<div class="alert alert-info">Génération du PDF paiements à venir...</div>';
+document.body.appendChild(loadingMsg);
+
+const script = document.createElement('script');
+script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+script.onload = function() {
+  try {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('l', 'mm', 'a4'); // Landscape
+
+    // Add title
+    pdf.setFontSize(18);
+    pdf.setTextColor(0, 0, 128); // Dark blue
+    pdf.text("Paiements à venir", 20, 20);
+
+    // Add date
+    pdf.setFontSize(10);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text("Date: " + new Date().toLocaleDateString('fr-FR'), 20, 30);
+
+    // Get visible payavenirs data
+    const visiblePayavenirs = [];
+    const payavenirRows = document.querySelectorAll('.payavenir-row');
+    let totalAmount = 0;
+
+    payavenirRows.forEach(row => {
+      if (row.style.display !== 'none') {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 7) {
+          const montantText = cells[1].textContent.trim();
+          const montantValue = parseFrenchNumber(montantText.replace(/\s/g, ''));
+          totalAmount += montantValue;
+
+          visiblePayavenirs.push([
+            cells[0].textContent.trim(),
+            formatFrenchNumber(montantValue),
+            cells[2].textContent.trim(),
+            cells[3].textContent.trim(),
+            cells[4].textContent.trim(),
+            cells[5].textContent.trim(),
+            cells[6].textContent.trim()
+          ]);
+        }
+      }
+    });
+
+    // Table setup
+    let yPosition = 45;
+    const columnWidths = [40, 30, 30, 25, 30, 40, 30];
+    const startX = 15;
+    const cellHeight = 8;
+
+    // Headers
+    pdf.setFontSize(8);
+    pdf.setFont(undefined, 'bold');
+    pdf.setTextColor(255, 255, 255); // White text
+    const headers = ['Désignation', 'Montant', 'Date Échéance', 'Statut', 'Date Paiement', 'Fournisseur', 'Banque'];
+
+    // Draw header cells with blue background
+    let currentX = startX;
+    headers.forEach((header, index) => {
+      pdf.setFillColor(0, 102, 204); // Blue
+      pdf.rect(currentX, yPosition - 6, columnWidths[index], cellHeight, 'F');
+      pdf.text(header, currentX + 1, yPosition);
+      currentX += columnWidths[index];
+    });
+    yPosition += cellHeight;
+
+    // Data rows
+    pdf.setFont(undefined, 'normal');
+    pdf.setFontSize(7);
+    pdf.setTextColor(0, 0, 0);
+
+    visiblePayavenirs.forEach(row => {
+      if (yPosition > 180) {
+        pdf.addPage();
+        yPosition = 20;
+
+        // Redraw headers on new page
+        currentX = startX;
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(255, 255, 255);
+        headers.forEach((header, index) => {
+          pdf.setFillColor(0, 102, 204);
+          pdf.rect(currentX, yPosition - 6, columnWidths[index], cellHeight, 'F');
+          pdf.text(header, currentX + 1, yPosition);
+          currentX += columnWidths[index];
+        });
+        yPosition += cellHeight;
+        pdf.setFont(undefined, 'normal');
+        pdf.setTextColor(0, 0, 0);
+      }
+
+      currentX = startX;
+      row.forEach((cell, cellIndex) => {
+        const text = cell.toString();
+        let maxLength;
+        switch(cellIndex) {
+          case 0: maxLength = 20; break;
+          case 5: maxLength = 20; break;
+          default: maxLength = 15; break;
+        }
+        const displayText = text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+        pdf.setDrawColor(0, 102, 204); // Blue borders
+        pdf.rect(currentX, yPosition - 6, columnWidths[cellIndex], cellHeight);
+        pdf.text(displayText, currentX + 1, yPosition);
+        currentX += columnWidths[cellIndex];
+      });
+      yPosition += cellHeight;
+    });
+
+    // Add total
+    yPosition += 5;
+    pdf.setDrawColor(0, 102, 204);
+    pdf.line(startX, yPosition, startX + 70, yPosition);
+    yPosition += 8;
+    pdf.setFont(undefined, 'bold');
+    pdf.setFontSize(10);
+    pdf.text(`Total: ${formatFrenchNumber(totalAmount)}`, startX, yPosition);
+
+    // Add summary
+    yPosition += 15;
+    pdf.setFontSize(8);
+    pdf.setFont(undefined, 'normal');
+    pdf.text(`Nombre de paiements à venir: ${visiblePayavenirs.length}`, startX, yPosition);
+
+    pdf.save('paiements-a-venir.pdf');
+    document.body.removeChild(loadingMsg);
+  } catch (error) {
+    console.error('Error:', error);
+    document.body.removeChild(loadingMsg);
+    alert('Erreur lors de la génération du PDF des paiements à venir');
+  }
+};
+document.head.appendChild(script);
 }
 
 function downloadRecettesPDF() {
-  const loadingMsg = document.createElement('div');
-  loadingMsg.innerHTML = '<div class="alert alert-info">Génération du PDF recettes...</div>';
-  document.body.appendChild(loadingMsg);
+// Show loading
+const loadingMsg = document.createElement('div');
+loadingMsg.innerHTML = '<div class="alert alert-info">Génération du PDF recettes...</div>';
+document.body.appendChild(loadingMsg);
 
-  const script = document.createElement('script');
-  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-  script.onload = function () {
-    try {
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF('p', 'mm', 'a4'); // A4 Portrait
+const script = document.createElement('script');
+script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+script.onload = function() {
+  try {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('l', 'mm', 'a4'); // Landscape
 
-      // Title
-      pdf.setFontSize(16);
-      pdf.setTextColor(0, 102, 204);
-      pdf.text("Recettes à venir", 15, 20);
+    // Add title
+    pdf.setFontSize(18);
+    pdf.setTextColor(0, 0, 128); // Dark blue
+    pdf.text("Recettes à venir", 20, 20);
 
-      // Date
-      pdf.setFontSize(10);
-      pdf.setTextColor(0, 0, 0);
-      pdf.text("Date: " + new Date().toLocaleDateString('fr-FR'), 15, 28);
+    // Add date
+    pdf.setFontSize(10);
+    pdf.setTextColor(0, 0, 0);
+    pdf.text("Date: " + new Date().toLocaleDateString('fr-FR'), 20, 30);
 
-      // Collect data
-      const visibleRecettes = [];
-      let totalAmount = 0;
-      document.querySelectorAll('.recavenir-row').forEach(row => {
-        if (row.style.display !== 'none') {
-          const cells = row.querySelectorAll('td');
-          if (cells.length >= 7) {
-            const montantValue = parseFrenchNumber(cells[1].textContent.trim().replace(/\s/g, ''));
-            totalAmount += montantValue;
-            visibleRecettes.push([
-              cells[0].textContent.trim(),
-              formatFrenchNumber(montantValue),
-              cells[2].textContent.trim(),
-              cells[3].textContent.trim(),
-              cells[4].textContent.trim(),
-              cells[5].textContent.trim(),
-              cells[6].textContent.trim(),
-            ]);
-          }
+    // Get visible recettes data
+    const visibleRecettes = [];
+    const recetteRows = document.querySelectorAll('.recavenir-row');
+    let totalAmount = 0;
+
+    recetteRows.forEach(row => {
+      if (row.style.display !== 'none') {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 7) {
+          const montantText = cells[1].textContent.trim();
+          const montantValue = parseFrenchNumber(montantText.replace(/\s/g, ''));
+          totalAmount += montantValue;
+
+          visibleRecettes.push([
+            cells[0].textContent.trim(),
+            formatFrenchNumber(montantValue),
+            cells[2].textContent.trim(),
+            cells[3].textContent.trim(),
+            cells[4].textContent.trim(),
+            cells[5].textContent.trim(),
+            cells[6].textContent.trim()
+          ]);
         }
-      });
+      }
+    });
 
-      // Table headers + column setup
-      const headers = ['Désignation', 'Montant', 'Date Échéance', 'Statut', 'Date Paiement', 'Client', 'Banque'];
-      const columnWidths = [35, 25, 25, 25, 25, 40, 30];
-      const startX = 15;
-      const cellHeight = 8;
-      let yPosition = 40;
+    // Table setup
+    let yPosition = 45;
+    const columnWidths = [40, 30, 30, 25, 30, 40, 30];
+    const startX = 15;
+    const cellHeight = 8;
 
-      // Headers
-      pdf.setFontSize(8).setFont(undefined, 'bold').setTextColor(255, 255, 255);
-      let currentX = startX;
-      headers.forEach((header, i) => {
-        pdf.setFillColor(0, 102, 204);
-        pdf.rect(currentX, yPosition, columnWidths[i], cellHeight, 'F');
-        pdf.text(header, currentX + 1, yPosition + 5);
-        currentX += columnWidths[i];
-      });
-      yPosition += cellHeight;
+    // Headers
+    pdf.setFontSize(8);
+    pdf.setFont(undefined, 'bold');
+    pdf.setTextColor(255, 255, 255); // White text
+    const headers = ['Désignation', 'Montant', 'Date Échéance', 'Statut', 'Date Paiement', 'Client', 'Banque'];
 
-      // Rows
-      pdf.setFontSize(7).setFont(undefined, 'normal').setTextColor(0, 0, 0);
-      visibleRecettes.forEach(row => {
-        if (yPosition > 270) { // page break
-          pdf.addPage();
-          yPosition = 20;
+    // Draw header cells with blue background
+    let currentX = startX;
+    headers.forEach((header, index) => {
+      pdf.setFillColor(0, 102, 204); // Blue
+      pdf.rect(currentX, yPosition - 6, columnWidths[index], cellHeight, 'F');
+      pdf.text(header, currentX + 1, yPosition);
+      currentX += columnWidths[index];
+    });
+    yPosition += cellHeight;
 
-          // redraw headers
-          currentX = startX;
-          pdf.setFont(undefined, 'bold').setTextColor(255, 255, 255);
-          headers.forEach((header, i) => {
-            pdf.setFillColor(0, 102, 204);
-            pdf.rect(currentX, yPosition, columnWidths[i], cellHeight, 'F');
-            pdf.text(header, currentX + 1, yPosition + 5);
-            currentX += columnWidths[i];
-          });
-          yPosition += cellHeight;
-          pdf.setFont(undefined, 'normal').setTextColor(0, 0, 0);
-        }
+    // Data rows
+    pdf.setFont(undefined, 'normal');
+    pdf.setFontSize(7);
+    pdf.setTextColor(0, 0, 0);
 
+    visibleRecettes.forEach(row => {
+      if (yPosition > 180) {
+        pdf.addPage();
+        yPosition = 20;
+
+        // Redraw headers on new page
         currentX = startX;
-        row.forEach((cell, i) => {
-          const text = cell.toString();
-          const displayText = text.length > 20 ? text.substring(0, 20) + '...' : text;
-          pdf.rect(currentX, yPosition, columnWidths[i], cellHeight);
-          pdf.text(displayText, currentX + 1, yPosition + 5);
-          currentX += columnWidths[i];
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(255, 255, 255);
+        headers.forEach((header, index) => {
+          pdf.setFillColor(0, 102, 204);
+          pdf.rect(currentX, yPosition - 6, columnWidths[index], cellHeight, 'F');
+          pdf.text(header, currentX + 1, yPosition);
+          currentX += columnWidths[index];
         });
         yPosition += cellHeight;
+        pdf.setFont(undefined, 'normal');
+        pdf.setTextColor(0, 0, 0);
+      }
+
+      currentX = startX;
+      row.forEach((cell, cellIndex) => {
+        const text = cell.toString();
+        let maxLength;
+        switch(cellIndex) {
+          case 0: maxLength = 20; break; // Désignation
+          case 5: maxLength = 20; break; // Client
+          default: maxLength = 15; break;
+        }
+        const displayText = text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+        pdf.setDrawColor(0, 102, 204); // Blue borders
+        pdf.rect(currentX, yPosition - 6, columnWidths[cellIndex], cellHeight);
+        pdf.text(displayText, currentX + 1, yPosition);
+        currentX += columnWidths[cellIndex];
       });
+      yPosition += cellHeight;
+    });
 
-      // Total
-      yPosition += 10;
-      pdf.setFont(undefined, 'bold').setFontSize(10);
-      pdf.text(`Total: ${formatFrenchNumber(totalAmount)}`, startX, yPosition);
+    // Add total
+    yPosition += 5;
+    pdf.setDrawColor(0, 102, 204);
+    pdf.line(startX, yPosition, startX + 70, yPosition);
+    yPosition += 8;
+    pdf.setFont(undefined, 'bold');
+    pdf.setFontSize(10);
+    pdf.text(`Total: ${formatFrenchNumber(totalAmount)}`, startX, yPosition);
 
-      // Summary
-      yPosition += 8;
-      pdf.setFont(undefined, 'normal').setFontSize(8);
-      pdf.text(`Nombre de recettes à venir: ${visibleRecettes.length}`, startX, yPosition);
+    // Add summary
+    yPosition += 15;
+    pdf.setFontSize(8);
+    pdf.setFont(undefined, 'normal');
+    pdf.text(`Nombre de recettes à venir: ${visibleRecettes.length}`, startX, yPosition);
 
-      pdf.save("recettes-a-venir.pdf");
-      document.body.removeChild(loadingMsg);
-    } catch (error) {
-      console.error("Erreur PDF:", error);
-      document.body.removeChild(loadingMsg);
-      alert("Erreur lors de la génération du PDF des recettes à venir");
-    }
-  };
-  document.head.appendChild(script);
-}
-
-function deleteBanque(id) {
-  fetch(`/tresorerie/banques/delete/${id}`, {
-    method: 'DELETE',
-    body: JSON.stringify({ id }),
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  })
-  .then(response => {
-    if (response.ok) {
-      alert('Banque supprimée avec succès');
-      location.reload();
-    } else {
-      alert('Erreur lors de la suppression de la banque');
-    }
-  })
-  .catch(error => {
+    pdf.save('recettes-a-venir.pdf');
+    document.body.removeChild(loadingMsg);
+  } catch (error) {
     console.error('Error:', error);
-    alert('Erreur lors de la suppression de la banque');
-  });
+    document.body.removeChild(loadingMsg);
+    alert('Erreur lors de la génération du PDF des recettes à venir');
+  }
+};
+document.head.appendChild(script);
 }
 
+function downloadExcel() {
+    // Show loading
+    const loadingMsg = document.createElement('div');
+    loadingMsg.innerHTML = '<div class="alert alert-info">Génération du fichier Excel...</div>';
+    document.body.appendChild(loadingMsg);
+    
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    script.onload = function() {
+      try {
+        const wb = XLSX.utils.book_new();
+        
+        // Cheques sheet
+        const chequesData = [];
+        chequesData.push(['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut']);
+        let chequesTotalAmount = 0;
+        
+        document.querySelectorAll('.cheque-row').forEach(row => {
+          if (row.style.display !== 'none') {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 6) {
+              const montantText = cells[1].textContent.trim();
+              const montantValue = parseFrenchNumber(montantText.replace(/\//g, ''));
+              chequesTotalAmount += montantValue;
+              
+              chequesData.push([
+                cells[0].textContent.trim(),
+                formatFrenchNumber(montantValue),
+                cells[2].textContent.trim(),
+                cells[3].textContent.trim(),
+                cells[4].textContent.trim(),
+                cells[5].textContent.trim()
+              ]);
+            }
+          }
+        });
+        
+        chequesData.push(['TOTAL', formatFrenchNumber(chequesTotalAmount), '', '', '', '']);
+        
+        const chequesSheet = XLSX.utils.aoa_to_sheet(chequesData);
+        XLSX.utils.book_append_sheet(wb, chequesSheet, 'Chèques');
+        
+        // Effets sheet
+        const effetsData = [];
+        effetsData.push(['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut']);
+        let effetsTotalAmount = 0;
+        
+        document.querySelectorAll('.effet-row').forEach(row => {
+          if (row.style.display !== 'none') {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 6) {
+              const montantText = cells[1].textContent.trim();
+              const montantValue = parseFrenchNumber(montantText.replace(/\//g, ''));
+              effetsTotalAmount += montantValue;
+              
+              effetsData.push([
+                cells[0].textContent.trim(),
+                formatFrenchNumber(montantValue),
+                cells[2].textContent.trim(),
+                cells[3].textContent.trim(),
+                cells[4].textContent.trim(),
+                cells[5].textContent.trim()
+              ]);
+            }
+          }
+        });
+        
+        effetsData.push(['TOTAL', formatFrenchNumber(effetsTotalAmount), '', '', '', '']);
+        
+        const effetsSheet = XLSX.utils.aoa_to_sheet(effetsData);
+        XLSX.utils.book_append_sheet(wb, effetsSheet, 'Effets');
+        
+        // Payavenirs sheet
+        const payavenirsData = [];
+        payavenirsData.push(['Désignation', 'Montant', 'Date Échéance', 'Statut', 'Date Paiement', 'Fournisseur', 'Banque']);
+        let payavenirsTotalAmount = 0;
+        
+        document.querySelectorAll('.payavenir-row').forEach(row => {
+          if (row.style.display !== 'none') {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 7) {
+              const montantText = cells[1].textContent.trim();
+              const montantValue = parseFrenchNumber(montantText.replace(/\//g, ''));
+              payavenirsTotalAmount += montantValue;
+              
+              payavenirsData.push([
+                cells[0].textContent.trim(),
+                formatFrenchNumber(montantValue),
+                cells[2].textContent.trim(),
+                cells[3].textContent.trim(),
+                cells[4].textContent.trim(),
+                cells[5].textContent.trim(),
+                cells[6].textContent.trim()
+              ]);
+            }
+          }
+        });
+        
+        payavenirsData.push(['TOTAL', formatFrenchNumber(payavenirsTotalAmount), '', '', '', '', '']);
+        
+        const payavenirsSheet = XLSX.utils.aoa_to_sheet(payavenirsData);
+        XLSX.utils.book_append_sheet(wb, payavenirsSheet, 'Paiements à venir');
+        
+        // Summary sheet
+        const generalTotal = chequesTotalAmount + effetsTotalAmount + payavenirsTotalAmount;
+        const summaryData = [
+          ['Résumé Général - Situation Bancaire'],
+          ['Date:', new Date().toLocaleDateString('fr-FR')],
+          [''],
+          ['Type', 'Montant', 'Nombre d\'éléments'],
+          ['Total Chèques', formatFrenchNumber(chequesTotalAmount), (chequesData.length - 2).toString()],
+          ['Total Effets', formatFrenchNumber(effetsTotalAmount), (effetsData.length - 2).toString()],
+          ['Total Paiements à venir', formatFrenchNumber(payavenirsTotalAmount), (payavenirsData.length - 2).toString()],
+          [''],
+          ['Total Général', formatFrenchNumber(generalTotal), '']
+        ];
+        
+        const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+        XLSX.utils.book_append_sheet(wb, summarySheet, 'Résumé');
+        
+        // Save file
+        XLSX.writeFile(wb, 'situation-bancaire-' + new Date().toISOString().split('T')[0] + '.xlsx');
+        document.body.removeChild(loadingMsg);
+      } catch (error) {
+        console.error('Error:', error);
+        document.body.removeChild(loadingMsg);
+        alert('Erreur lors de la génération du fichier Excel');
+      }
+    };
+    document.head.appendChild(script);
+  }
 
+  
 
+  function deleteBanque(id) {
+    fetch(`/tresorerie/banques/delete/${id}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ id }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        alert('Banque supprimée avec succès');
+        location.reload();
+      } else {
+        alert('Erreur lors de la suppression de la banque');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Erreur lors de la suppression de la banque');
+    });
+  }
   </script>

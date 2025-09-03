@@ -6,7 +6,7 @@ import ExcelJS from 'exceljs';
 import path from 'path';
 import fs from 'fs';
 import prisma from '../db.js';
-import { createBanque, deleteBanque, displayBanques, displayBanquesForcheques, getSituationBancaire, showCreate, updateChequeInStituation, updateSituationBancaire } from '../controllers/banquesController.js';
+import { createBanque, deleteBanque, displayBanques, displayBanquesForcheques, getSituationBancaire, showCreate, updateChequeInStituation, updateEffetInStituation, updateSituationBancaire } from '../controllers/banquesController.js';
 import { awb, bmce, bmci, bp, cam, cdm, createCheque, deleteCheque, etablirCheque, importExelCheques, showCheques, showChequesForbanque, updateCheque, updateChequeStatut } from '../controllers/chequesController.js';
 import {createEffet, deleteEffet, Eawb, Ebmce, Ebmci, Ebp, Ecam, Ecdm, etablirEffet, importExelEffets, showEffets, showEffetsForbanque, updateEffet, updateEffetStatut} from '../controllers/effetsController.js';
 import { createPayavenir, deletePayavenir, showPayavenir, updatePayavenir, updatePayavenirStatut } from '../controllers/payavenirController.js';
@@ -78,7 +78,6 @@ dashboardRouter.get('/dashboard' , (req, res) => {
         dashboardRouter.delete('/tresorerie/cheques/:id', deleteCheque);
         dashboardRouter.patch('/tresorerie/cheques/:id', updateCheque);
         dashboardRouter.patch('/tresorerie/cheques/situation/:id', updateChequeInStituation);
-        
         dashboardRouter.put('/tresorerie/cheques/:id/update-statut', updateChequeStatut);
         
         
@@ -96,6 +95,10 @@ dashboardRouter.get('/dashboard' , (req, res) => {
         dashboardRouter.post('/tresorerie/effets/create', createEffet);
         dashboardRouter.patch('/tresorerie/effets/:id', updateEffet);
         dashboardRouter.put('/tresorerie/effets/:id/update-statut', updateEffetStatut);
+        dashboardRouter.patch('/tresorerie/effets/situation/:id', updateEffetInStituation);
+        
+
+
         dashboardRouter.delete('/tresorerie/effets/:id', deleteEffet);
         
         // < -----------Trésorerie :  Payavenir ----------------- >

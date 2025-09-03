@@ -80,6 +80,7 @@ export const getSituationBancaire = async (req, res) => {
         select: {
           id: true,
           numero: true,
+          dateEtablissement: true,
           montant: true,
           dateEcheance: true,
           beneficiaire: true,
@@ -105,9 +106,11 @@ export const getSituationBancaire = async (req, res) => {
         select: {
           id: true,
           numero: true,
+          dateEtablissement: true,
           montant: true,
           dateEcheance: true,
           beneficiaire: true,
+          obs : true,
           statut: true,
           banque: {
             select: { name: true },
@@ -295,6 +298,34 @@ export const updateChequeInStituation = async (req, res) => {
     res.status(500).json({ error: "Erreur lors de la mise à jour du chèque." });
   }
 };
+export const updateEffetInStituation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {obs} = req.body;
+    const data = {};
+    if (obs !== undefined) data.obs = obs;
+
+    // 🛠️ Update cheque
+    const effet = await prisma.effet.update({
+      where: { id: parseInt(id) },
+      data
+    });
+
+    console.log(`✅ Effet updated successfully: ${id}`);
+    res.redirect('/tresorerie/situation')
+
+  } catch (error) {
+    console.error('❌ Error updating effet:', {
+      message: error.message,
+      stack: error.stack
+    });
+    res.status(500).json({ error: "Erreur lors de la mise à jour du effet." });
+  }
+};
+
+
+
+
 // export const getSituationBancaire = async (req, res) => {
 //     const { id } = req.params; // banque id
   
