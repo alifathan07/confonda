@@ -83,6 +83,7 @@ export const getSituationBancaire = async (req, res) => {
           dateEtablissement: true,
           montant: true,
           dateEcheance: true,
+          validation: true, 
           beneficiaire: true,
           statut: true,
           obs : true,
@@ -109,6 +110,7 @@ export const getSituationBancaire = async (req, res) => {
           dateEtablissement: true,
           montant: true,
           dateEcheance: true,
+          validation: true, 
           beneficiaire: true,
           obs : true,
           statut: true,
@@ -134,6 +136,7 @@ export const getSituationBancaire = async (req, res) => {
           designation: true,
           montant: true,
           dateEcheance: true,
+          validation: true, 
           statut: true,
           dateReglement: true,
           fournisseur: {
@@ -298,6 +301,27 @@ export const updateChequeInStituation = async (req, res) => {
     res.status(500).json({ error: "Erreur lors de la mise à jour du chèque." });
   }
 };
+
+export const updateChequeValidation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { validation } = req.body; 
+
+    const cheque = await prisma.cheque.update({
+      where: { id: parseInt(id) },
+      data: { validation: Boolean(validation) }
+    });
+
+    console.log(`✅ Cheque ${id} updated successfully -> validation=${cheque.validation}`);
+    res.status(200).json({ success: true, validation: cheque.validation });
+
+  } catch (error) {
+    console.error('❌ Error updating cheque:', error);
+    res.status(500).json({ error: "Erreur lors de la mise à jour du chèque." });
+  }
+};
+
+
 export const updateEffetInStituation = async (req, res) => {
   try {
     const { id } = req.params;
@@ -319,6 +343,25 @@ export const updateEffetInStituation = async (req, res) => {
       message: error.message,
       stack: error.stack
     });
+    res.status(500).json({ error: "Erreur lors de la mise à jour du effet." });
+  }
+};
+
+export const updateEffetValidation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { validation } = req.body; // ⚡ déjà booléen
+
+    const effet = await prisma.effet.update({
+      where: { id: parseInt(id) },
+      data: { validation: Boolean(validation) }
+    });
+
+    console.log(`✅ Effet ${id} updated successfully -> validation=${effet.validation}`);
+    res.status(200).json({ success: true, validation: effet.validation });
+
+  } catch (error) {
+    console.error('❌ Error updating effet:', error);
     res.status(500).json({ error: "Erreur lors de la mise à jour du effet." });
   }
 };

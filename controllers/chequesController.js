@@ -563,6 +563,9 @@ export const updateCheque = async (req, res) => {
     if (dateEtablissement !== undefined) data.dateEtablissement = new Date(dateEtablissement);
     if (dateReglement !== undefined) data.dateReglement = dateReglement ? new Date(dateReglement) : null;
     if (statut !== undefined) data.statut = statut;
+    
+    if (statut === "payé") data.validation = false;
+
     if (obs !== undefined) data.obs = obs;
     if (fournisseur) data.fournisseur = { connect: { id: fournisseur.id } };
     if (findBanque) data.banque = { connect: { id: findBanque.id } };
@@ -714,7 +717,8 @@ export const updateChequeStatut = async (req, res) => {
     
     const cheque = await prisma.cheque.update({
       where: { id: parseInt(id) },
-      data: { statut },
+
+      data: { statut, validation: false },
     });
     console.log(`✅ Cheque statut updated successfully: ${id} -> ${statut}`);
     res.redirect(`/tresorerie/cheques/banque/${cheque.banqueId}`);

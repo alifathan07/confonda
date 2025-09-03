@@ -133,10 +133,12 @@ model Cheque {
   dateEtablissement   DateTime?
   dateEcheance        DateTime?
   statut              String   
+
   dateReglement       DateTime?
   fournisseur         Fournisseur @relation(fields: [fournisseurId], references: [id])
   fournisseurId       Int
   beneficiaire        String
+    validation           Boolean?  @default(false)
   banque              Banque   @relation("BanqueCheques", fields: [banqueId], references: [id])
   banqueId            Int
 
@@ -163,6 +165,7 @@ model Effet {
   fournisseur         Fournisseur @relation(fields: [fournisseurId], references: [id])
   fournisseurId       Int
   beneficiaire       String   // beneficiaire
+    validation           Boolean?  @default(false)
 
   banque              Banque   @relation("BanqueEffets", fields: [banqueId], references: [id])
   banqueId            Int
@@ -197,6 +200,8 @@ model Payavenir {
   statut String?
   dateReglement DateTime?
   obs String?  
+    validation           Boolean?  @default(false)
+
   fournisseur         Fournisseur @relation(fields: [fournisseurId], references: [id])
   fournisseurId       Int
 
