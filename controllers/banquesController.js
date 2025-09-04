@@ -23,7 +23,7 @@ export const createBanque = async (req, res) => {
       }
     });
 
-    res.redirect(req.header('Referer') || '/tresorerie');
+    res.redirect('/tresorerie/banques');
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Erreur lors de la création des banques.' });
@@ -40,6 +40,19 @@ export const displayBanques = async(req, res) => {
         console.error(error);
         res.status(500).json({ error: 'Erreur lors de la récupération des banques.' });
     }
+}
+
+export const listBanques = async (req, res) => {
+  try {
+    const banques = await prisma.banque.findMany({
+      orderBy: { name: 'asc' }
+    });
+    res.render('dashboard/tresorerie/banques/index', { banques });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erreur lors de la récupération des banques.' });
+  }
 }
 export const displayBanquesForcheques = async(req, res) => {
     try {
@@ -258,11 +271,12 @@ export const updateSituationBancaire = async (req, res) => {
 };
 
 export const deleteBanque = async(req,res) => {
-  const {id} = req.body;
+  const idParam = req.params.id || req.body.id;
   await prisma.banque.delete({
-    where: { id: parseInt(id) },
+    where: { id: parseInt(idParam) },
+    
   });
-  
+
   res.json('success')
 }
 
@@ -350,44 +364,73 @@ export const updateEffetInStituation = async (req, res) => {
 export const updateEffetValidation = async (req, res) => {
   try {
     const { id } = req.params;
-    const { validation } = req.body; // ⚡ déjà booléen
+    const { validationEffet } = req.body; // spécifique aux effets
 
     const effet = await prisma.effet.update({
       where: { id: parseInt(id) },
-      data: { validation: Boolean(validation) }
+      data: { validation: Boolean(validationEffet) } // map vers DB
     });
 
     console.log(`✅ Effet ${id} updated successfully -> validation=${effet.validation}`);
-    res.status(200).json({ success: true, validation: effet.validation });
+    res.status(200).json({ success: true, validationEffet: effet.validation });
 
   } catch (error) {
     console.error('❌ Error updating effet:', error);
-    res.status(500).json({ error: "Erreur lors de la mise à jour du effet." });
+    res.status(500).json({ error: "Erreur lors de la mise à jour de l'effet." });
   }
 };
 
 
+export const updatePayValidation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { validationPayavenir } = req.body; // correspond bien au fetch
+
+    const payavenir = await prisma.payavenir.update({
+      where: { id: parseInt(id) },
+      data: { validation: Boolean(validationPayavenir) } // mapping propre
+    });
+
+    console.log(`✅ Paiement à venir ${id} updated successfully -> validation=${payavenir.validation}`);
+    res.status(200).json({ success: true, validationPayavenir: payavenir.validation });
+
+  } catch (error) {
+    console.error('❌ Error updating paiement à venir:', error);
+    res.status(500).json({ error: "Erreur lors de la mise à jour du paiement à venir." });
+  }
+};
 
 
-// export const getSituationBancaire = async (req, res) => {
-//     const { id } = req.params; // banque id
-  
-//     const banque = await prisma.banque.findUnique({
-//       where: { id: parseInt(id) },
-//       include: {
-//         cheques: true
-//       }
-//     });
-//     console.log(banque);
-  
-//     if (!banque) return res.status(404).send('Banque not found');
-  
-//     const totalCheques = banque.cheques
-//       .filter(c => c.statut === 'en circulation')
-//       .reduce((sum, c) => sum + c.montant, 0);
-  
-//     const situation = banque.soldeInitial - totalCheques;
-  
-//     res.render("dashboard/tresorerie/situation/index");
-//   };
-  
+// ---- Banques CRUD (Edit/Update) ----
+export const showEditBanque = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const banque = await prisma.banque.findUnique({
+      where: { id: parseInt(id) }
+    });
+    if (!banque) return res.status(404).send('Banque introuvable');
+    res.render('dashboard/tresorerie/banques/edit', { banque });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Erreur serveur.');
+  }
+};
+
+export const updateBanque = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, rib, agence } = req.body;
+    const ribString = String(rib);
+
+    await prisma.banque.update({
+      where: { id: parseInt(id) },
+      data: { name, rib: ribString, agence }
+    });
+
+    res.redirect('/tresorerie/banques');
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erreur lors de la mise à jour de la banque.' });
+  }
+};
+

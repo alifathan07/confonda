@@ -6,7 +6,7 @@ import ExcelJS from 'exceljs';
 import path from 'path';
 import fs from 'fs';
 import prisma from '../db.js';
-import { createBanque, deleteBanque, displayBanques, displayBanquesForcheques, getSituationBancaire, showCreate, updateChequeInStituation, updateChequeValidation, updateEffetInStituation, updateEffetValidation, updateSituationBancaire } from '../controllers/banquesController.js';
+    import { createBanque, deleteBanque, displayBanques, displayBanquesForcheques, getSituationBancaire, showCreate, updateChequeInStituation, updateChequeValidation, updateEffetInStituation, updateEffetValidation, updatePayValidation, updateSituationBancaire, showEditBanque, updateBanque, listBanques } from '../controllers/banquesController.js';
 import { awb, bmce, bmci, bp, cam, cdm, createCheque, deleteCheque, etablirCheque, importExelCheques, showCheques, showChequesForbanque, updateCheque, updateChequeStatut } from '../controllers/chequesController.js';
 import {createEffet, deleteEffet, Eawb, Ebmce, Ebmci, Ebp, Ecam, Ecdm, etablirEffet, importExelEffets, showEffets, showEffetsForbanque, updateEffet, updateEffetStatut} from '../controllers/effetsController.js';
 import { createPayavenir, deletePayavenir, showPayavenir, updatePayavenir, updatePayavenirStatut } from '../controllers/payavenirController.js';
@@ -46,8 +46,11 @@ dashboardRouter.get('/dashboard' , (req, res) => {
         dashboardRouter.post('/achats/fournisseurs/:id/attestation', atess);
 // Trésorerie : 
         dashboardRouter.get('/tresorerie', displayBanques);
+        dashboardRouter.get('/tresorerie/banques', listBanques);
         dashboardRouter.get('/tresorerie/banques/create', showCreate);
         dashboardRouter.post('/tresorerie/banques/create', createBanque);
+        dashboardRouter.get('/tresorerie/banques/:id/edit', showEditBanque);
+        dashboardRouter.patch('/tresorerie/banques/:id', updateBanque);
         // -----------Trésorerie :  Cheques-----------------
         dashboardRouter.get('/tresorerie/cheques/create/format/bmce/:id', bmce);
         dashboardRouter.get('/tresorerie/cheques/create/format/bmci/:id', bmci);
@@ -109,6 +112,9 @@ dashboardRouter.get('/dashboard' , (req, res) => {
         dashboardRouter.delete('/tresorerie/payavenir/:id', deletePayavenir);
         dashboardRouter.patch('/tresorerie/payavenir/:id', updatePayavenir);
         dashboardRouter.put('/tresorerie/payavenir/:id/update-statut', updatePayavenirStatut);
+        dashboardRouter.patch('/tresorerie/payavenir/:id/validation', updatePayValidation);
+        
+
         // < -----------Trésorerie :  Recavenir ----------------- >
         dashboardRouter.get('/tresorerie/recettes_a_venir', showRecavenir);
         dashboardRouter.post('/tresorerie/recettes_a_venir/create', createRecavenir);
@@ -134,3 +140,4 @@ dashboardRouter.get('/dashboard' , (req, res) => {
         dashboardRouter.delete('/tresorerie/miseadis/banque/:banqueId/delete/:id', deleteMiseadis);
 
         dashboardRouter.get('/api/fournisseurs', suppliersList);
+      

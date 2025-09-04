@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Banques</title>
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+  <style>
+    .excel-table { width: 100%; border-collapse: collapse; }
+    .excel-table th, .excel-table td { border: 1px solid #dee2e6; padding: 8px; vertical-align: middle; }
+    .excel-table thead th { background-color: #6a5ae7; color: #fff; text-transform: uppercase; font-weight: 500; font-size: 0.8rem; }
+    .actions { display: flex; gap: 6px; justify-content: center; }
+  </style>
+</head>
+<body id="page-top">
+  <div id="wrapper">
+    <%- include('../../../layouts/sidebar') %>
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <%- include('../../../layouts/topbar') %>
+        <div class="container-fluid">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1 class="h4">Banques</h1>
+            <a class="btn btn-primary" href="/tresorerie/banques/create"><i class="fas fa-plus mr-1"></i> Ajouter</a>
+          </div>
+
+          <div class="card shadow mb-4">
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="excel-table table table-bordered">
+                  <thead>
+                    <tr>
+                      <th>Nom</th>
+                      <th>RIB</th>
+                      <th>Agence</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% if (banques && banques.length) { %>
+                      <% banques.forEach(b => { %>
+                        <tr>
+                          <td><%= b.name %></td>
+                          <td><%= b.rib %></td>
+                          <td><%= b.agence %></td>
+                          <td class="actions">
+                            <a class="btn btn-sm btn-info" href="/tresorerie/banques/<%= b.id %>/edit"><i class="fas fa-edit"></i></a>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="if(confirm('Supprimer cette banque ?')) deleteBanque(<%= b.id %>)"><i class="fas fa-trash"></i></button>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    <% } else { %>
+                      <tr><td colspan="4" class="text-center text-muted">Aucune banque.</td></tr>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+  <script src="/js/sb-admin-2.min.js"></script>
+  <script>
+    function deleteBanque(id) {
+  fetch(`/tresorerie/banques/delete/${id}`, {
+    method: 'DELETE',
+    body: JSON.stringify({ id }),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => {
+    if (response.ok) {
+      alert('Banque supprimée avec succès');
+      location.reload();
+    } else {
+      alert('Erreur lors de la suppression de la banque');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Erreur lors de la suppression de la banque');
+  });
+}
+
+
+  </script>
+</body>
+</html>
+
+

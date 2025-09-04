@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="Modifier une banque" />
+  <meta name="author" content="Confonda" />
+  <title>Modifier une banque</title>
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+  <style>
+    .form-container { max-width: 800px; margin: 0 auto; padding: 20px; }
+    .form-section { background: white; border-radius: 10px; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .form-title { color: #4e73df; font-weight: 700; margin-bottom: 30px; text-align: center; font-size: 24px; }
+    .form-group { margin-bottom: 20px; }
+    .form-label { font-weight: 600; color: #5a5c69; margin-bottom: 8px; display: block; }
+    .form-control { border-radius: 8px; border: 2px solid #e3e6f0; padding: 12px 15px; font-size: 14px; }
+    .btn-submit { background: linear-gradient(135deg, #4e73df 0%, #224abe 100%); border: none; color: white; padding: 12px 30px; border-radius: 8px; font-weight: 600; font-size: 16px; }
+    .btn-cancel { background: #6c757d; border: none; color: white; padding: 12px 30px; border-radius: 8px; font-weight: 600; font-size: 16px; margin-right: 15px; }
+  </style>
+</head>
+
+<body id="page-top">
+  <div id="wrapper">
+    <%- include('../../../layouts/sidebar') %>
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <%- include('../../../layouts/topbar') %>
+        <div class="container-fluid">
+          <div class="form-container">
+            <div class="form-section">
+              <h2 class="form-title">
+                <i class="fas fa-university mr-2"></i>
+                Modifier la banque
+              </h2>
+
+              <form action="/tresorerie/banques/<%= banque.id %>?_method=PATCH" method="POST" id="banqueForm">
+                <div class="form-group">
+                  <label for="name" class="form-label">Nom de la banque</label>
+                  <input type="text" class="form-control" id="name" name="name" required value="<%= banque.name %>">
+                </div>
+                <div class="form-group">
+                  <label for="rib" class="form-label">RIB</label>
+                  <input type="text" class="form-control" id="rib" name="rib" required value="<%= banque.rib %>">
+                </div>
+                <div class="form-group">
+                  <label for="agence" class="form-label">Agence</label>
+                  <input type="text" class="form-control" id="agence" name="agence" required value="<%= banque.agence %>">
+                </div>
+
+                <div class="text-center mt-4">
+                  <button type="button" class="btn-cancel" onclick="window.location.href='/tresorerie'">
+                    <i class="fas fa-times mr-2"></i>
+                    Annuler
+                  </button>
+                  <button type="submit" class="btn-submit">
+                    <i class="fas fa-save mr-2"></i>
+                    Mettre à jour
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+  <script src="/js/sb-admin-2.min.js"></script>
+</body>
+</html>
+
+
