@@ -238,6 +238,7 @@
                       <th draggable="true">Téléphone Contact</th>
                       <th draggable="true">ICE</th>
                       <th draggable="true">Identifiant Fiscal</th>
+                      <th draggable="true">RIB</th>
                       <th style="width:70px;">Actions</th> <!-- Delete column -->
                     </tr>
                   </thead>
@@ -253,6 +254,7 @@
                           <td contenteditable="true" data-name="contactphone"><%= supplier.telContact %></td>
                           <td contenteditable="true" data-name="ice"><%= supplier.ice %></td>
                           <td contenteditable="true" data-name="idF"><%= supplier.identifFiscal %></td>
+                          <td contenteditable="true" data-name="rib"><%= supplier.rib %></td>
                           <td><button class="delete-row excel-delete-btn" title="Supprimer" aria-label="Supprimer"><i class="fas fa-trash"></i></button></td>
                         </tr>
                       <% }) %>
@@ -327,6 +329,7 @@
         case 'Téléphone Contact': dataName = 'contactphone'; break;
         case 'ICE': dataName = 'ice'; break;
         case 'Identifiant Fiscal': dataName = 'idF'; break;
+        case 'RIB': dataName = 'rib'; break;
       }
       if (dataName) td.setAttribute('data-name', dataName);
     }

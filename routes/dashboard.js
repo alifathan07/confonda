@@ -13,6 +13,7 @@ import { createPayavenir, deletePayavenir, showPayavenir, updatePayavenir, updat
 import { createRecavenir, deleteRecavenir, showRecavenir, updateRecavenir, updateRecavenirStatut } from '../controllers/recavenirController.js';
 import { createVirement, deleteVirement, generateVirementPDF, index, postVirement, showUpdateVirement, suppliersList, updateVire } from '../controllers/virementController.js';
 import { createMiseadis, deleteMiseadis, generateMiseadisPDF, indexDis, postMiseadis, showUpdateMiseadis, updateMis } from '../controllers/misediscontrollrt.js';
+import { createFourniture, postFourniture } from '../controllers/FournitureController.js';
 export const dashboardRouter = express.Router();
 dashboardRouter.use(isAuthenticated)
 
@@ -140,4 +141,16 @@ dashboardRouter.get('/dashboard' , (req, res) => {
         dashboardRouter.delete('/tresorerie/miseadis/banque/:banqueId/delete/:id', deleteMiseadis);
 
         dashboardRouter.get('/api/fournisseurs', suppliersList);
-      
+    
+
+
+
+        // < -----------Achats :  Fourniture ----------------- >
+        // dashboardRouter.get('/achats/fourniture', showFourniture);
+        dashboardRouter.get('/achats/fourniture/create', createFourniture);
+        dashboardRouter.post('/achats/fourniture/create', postFourniture);
+        // dashboardRouter.delete('/achats/fourniture/:id', deleteFourniture);
+        // dashboardRouter.patch('/achats/fourniture/:id', updateFourniture);
+        // dashboardRouter.patch('/achats/fourniture/:id/validation', updateFournitureValidation);
+        
+        

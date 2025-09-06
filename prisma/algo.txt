@@ -14,7 +14,7 @@ Achats :
                 - creation Bc (importer ou nouveau )
                 -  N° Commande  (auto generate) 
                 - Date 
-                - Selection Fournisseur (ou ajouter Fr) 
+                - Selection Fournisseur (ou ajouter  Fr) 
                 - Designation articles
                 - mode de Reglements (type)
                 - delais de Reglements

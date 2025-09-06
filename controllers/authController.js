@@ -3,13 +3,16 @@ import bcrypt from 'bcryptjs';
 import prisma from '../db.js';
 import session from 'express-session';
 export const register = async(req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, chantierId  } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
         data: {
             name,
             email,
-            password: hashedPassword
+            password: hashedPassword,
+            chantier: {
+            connect: { id: parseInt(chantierId) } // connect to existing chantier
+            }
         }
     });
     if (!user) {

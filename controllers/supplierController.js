@@ -147,7 +147,7 @@ export const create = async (req, res) => {
 export const update = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, address, phone, contact, contactphone, ice, idF } = req.body;
+    const { name, email, address, phone, contact, contactphone, ice, idF, rib } = req.body;
     const supplier = await prisma.fournisseur.update({
       where: { id: Number(id) },
       data: {
@@ -159,6 +159,7 @@ export const update = async (req, res) => {
         telFournisseur: phone,
         contact,
         telContact: contactphone,
+        rib,
       },
     });
     res.status(200).json(supplier);

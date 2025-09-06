@@ -14,16 +14,21 @@ datasource db {
   
 }
 
+
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
+  id        Int              @id @default(autoincrement())
+  email     String           @unique
   password  String
   name      String?
+
+  demandesCreated   DemandeFourniture[] @relation("DemandeRequestedBy")
+  demandesValidated DemandeFourniture[] @relation("DemandeValidatedBy")
+
+  chantier    Chantier @relation(fields: [chantierId], references: [id])
+  chantierId  Int      // foreign key
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  // Add more fields as needed
 }
-  
    
 
 
@@ -298,3 +303,55 @@ model Client {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+
+// Demande Fourniture : 
+model DemandeFourniture {
+  id               Int       @id @default(autoincrement())
+  codeDemande      Int    @unique
+  nomChantier      Chantier  @relation(fields: [chantierId], references: [id])
+  chantierId       Int
+  dateEtablissement DateTime @default(now())
+  obsDemande       String?
+  osValidation     String?   // e.g., "pending", "accepted", "rejected"
+  requestedBy      User?     @relation("DemandeRequestedBy", fields: [requestedById], references: [id])
+  requestedById    Int?
+  validatedBy      User?     @relation("DemandeValidatedBy", fields: [validatedById], references: [id])
+  validatedById    Int?
+  produits         DemandeProduit[] // One demand can have multiple products
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model DemandeProduit {
+  id                  Int               @id @default(autoincrement())
+  designation         String
+  quantite            Int
+  unite               String?
+  dateTot             DateTime?
+  dateTard            DateTime?
+  qteDemandee         Int?
+  qteStockee          Int?
+  qtePrevue           Int?
+  qteRecue            Int?
+  lot                 String?
+  observation         String?
+  codeArticle         String?
+  demandeFourniture   DemandeFourniture @relation(fields: [demandeFournitureId], references: [id])
+  demandeFournitureId Int
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+}
+
+
+model Chantier {
+  id        Int     @id @default(autoincrement())
+  nom       String
+  users     User[]                 // one chantier → many users
+  demandes  DemandeFourniture[]    // one chantier → many demandes
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+
