@@ -13,7 +13,7 @@ import { createPayavenir, deletePayavenir, showPayavenir, updatePayavenir, updat
 import { createRecavenir, deleteRecavenir, showRecavenir, updateRecavenir, updateRecavenirStatut } from '../controllers/recavenirController.js';
 import { createVirement, deleteVirement, generateVirementPDF, index, postVirement, showUpdateVirement, suppliersList, updateVire } from '../controllers/virementController.js';
 import { createMiseadis, deleteMiseadis, generateMiseadisPDF, indexDis, postMiseadis, showUpdateMiseadis, updateMis } from '../controllers/misediscontrollrt.js';
-import { createFourniture, postFourniture } from '../controllers/FournitureController.js';
+import { createFourniture, postFourniture } from '../controllers/fournitureController.js';
 export const dashboardRouter = express.Router();
 dashboardRouter.use(isAuthenticated)
 
