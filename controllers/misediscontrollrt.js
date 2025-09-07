@@ -160,7 +160,7 @@ export const generateMiseadisPDF = async (req, res) => {
             .fontSize(60)
             .fillColor("#000000")
             .rotate(-45)
-            .text("Company XYZ", 150, 200, { align: "center" })
+            .text("", 150, 200, { align: "center" })
             .restore();
 
         // ===== HEADER =====
@@ -176,7 +176,7 @@ export const generateMiseadisPDF = async (req, res) => {
                 100,
                 { align: "right" }
             );
-                    const senetence = `A L'ATTENTION  DE MONSIEUR LE directeur de la ${miseadis.banque?.name || "N/A"} - \n\Agence ${miseadis.banque?.agence || "N/A"}`
+                    const senetence = `A L'ATTENTION  DE MONSIEUR LE directeur de la Banque ${miseadis.banque?.name || "N/A"} - \n\Agence ${miseadis.banque?.agence || "N/A"}`
 
         doc.font("Helvetica")
    .fontSize(10)
@@ -223,27 +223,29 @@ Veuillez agréer, Monsieur, l'expression de nos salutations distinguées.`,
         }
 
         // ===== FOOTER =====
-        let footerY = 700;
-        if (doc.y > footerY - 50) {
-            doc.addPage();
-            footerY = 50;
-        }
-        doc.rect(0, footerY, 595, 90).fill("#F2F2F2").stroke();
+         // ===== FOOTER =====
+const footerHeight = 90;
+const footerY = maxY - footerHeight; // fixed position at bottom
 
-        doc.font("Helvetica")
-            .fontSize(9)
-            .fillColor("#555555")
-            .text("Company XYZ - 123 Rue Fictive, Casablanca, Maroc", 50, footerY + 20, {
-                align: "center",
-                width: 495
-            })
-            .text(
-                "Tél: +212 5 22 33 44 55 | Email: info@companyxyz.com | www.companyxyz.com",
-                50,
-                footerY + 35,
-                { align: "center", width: 495 }
-            );
+doc.rect(0, footerY, 595, footerHeight) // A4 width = 595
+   .fill('#AB3029')
+   .stroke();
 
+doc.font('Helvetica')
+   .fontSize(9)
+   .fillColor('#FFFFFF')
+   .text(
+       '82, angle Bd abdelmoumen et rue Soumaya Imm.Shahrazad III 2ème étage Casablanca Tél : 0522-23-39-70',
+       50,
+       footerY + 20,
+       { align: 'center', width: 495 }
+   )
+   .text(
+       'Fax : 0522-23-42-60  Capital : 18 500 000.00 DH  CNSS : 7167788 - R.C. : 145619 – I.F. : 1602714 – Patente : 37900708- I.C.E : 001526422000063',
+       50,
+       footerY + 35,
+       { align: 'center', width: 495 }
+   );
         doc.end();
     } catch (error) {
         console.error(error);

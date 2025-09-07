@@ -249,7 +249,7 @@ export const generateVirementPDF = async (req, res) => {
            .fontSize(60)
            .fillColor('#000000')
            .rotate(-45)
-           .text('Company XYZ', 150, 200, { align: 'center' }) // Moved up from 400 to 200
+           .text('', 150, 200, { align: 'center' }) // Moved up from 400 to 200
            .restore();
 
         // ===== HEADER =====
@@ -367,31 +367,30 @@ export const generateVirementPDF = async (req, res) => {
         
 
         // ===== FOOTER =====
-        let footerY = 745; // Lowered from 750 to ensure fit
-        if (doc.y > footerY - 50) { // Ensure footer doesn't overlap content
-            doc.addPage();
-            footerY = 50;
-        }
-        doc.rect(0, footerY, 690, 90)
-           .fill('#AB3029')
-           .stroke();
+     // ===== FOOTER =====
+const footerHeight = 90;
+const footerY = maxY - footerHeight; // fixed position at bottom
 
-        doc.font('Helvetica')
-           .fontSize(9)
-           .fillColor('#FFFFFF')
-           .text(
-               'Company XYZ - 123 Rue Fictive, Casablanca, Maroc',
-               50,
-               footerY + 20,
-               { align: 'center', width: 495 }
-           )
-           .text(
-               'Tél: +212 5 22 33 44 55 | Email: info@companyxyz.com | www.companyxyz.com',
-               50,
-               footerY + 35,
-               { align: 'center', width: 495 }
-           );
+doc.rect(0, footerY, 595, footerHeight) // A4 width = 595
+   .fill('#AB3029')
+   .stroke();
 
+doc.font('Helvetica')
+   .fontSize(9)
+   .fillColor('#FFFFFF')
+   .text(
+       '82, angle Bd abdelmoumen et rue Soumaya Imm.Shahrazad III 2ème étage Casablanca Tél : 0522-23-39-70',
+       50,
+       footerY + 20,
+       { align: 'center', width: 495 }
+   )
+   .text(
+       'Fax : 0522-23-42-60  Capital : 18 500 000.00 DH  CNSS : 7167788 - R.C. : 145619 – I.F. : 1602714 – Patente : 37900708- I.C.E : 001526422000063',
+       50,
+       footerY + 35,
+       { align: 'center', width: 495 }
+        
+   );
         doc.end();
 
     } catch (error) {
