@@ -24,7 +24,7 @@ export const createVirement = async(req , res) => {
 }
 export const postVirement = async (req, res) => {
     try {
-        const { beneficiaire, date, dateReglement, montant, obs, rib, montantLettre, objet, cause } = req.body;
+        const { beneficiaire, date, dateReglement, montant, obs, rib, montantLettre, objet, cause, agence, banque } = req.body;
         const banqueId = parseInt(req.params.id);
 
         if (isNaN(banqueId)) {
@@ -57,7 +57,8 @@ export const postVirement = async (req, res) => {
         if (fournisseur && !fournisseur.ice) {
             await prisma.fournisseur.update({
                 where: { id: fournisseur.id },
-                data: { rib: rib }
+                data: { rib: rib, agence: agence, banque: banque  },
+
             });
         }
 
@@ -70,7 +71,9 @@ export const postVirement = async (req, res) => {
                     telFournisseur: 'Default',
                     contact: 'Default',
                     telContact: 'Default',
-                    rib: rib
+                    rib: rib,
+                    agence: agence,
+                    banque: banque
                 }
             });
         }
@@ -322,9 +325,9 @@ export const generateVirementPDF = async (req, res) => {
             },
           
             { title: 'Montant en lettres', value: virement.montantLettres ? virement.montantLettres + ' dirhams' : 'N/A' },
-            { title: 'Banque', value: virement.banque?.name || 'N/A' },
+            { title: 'Banque', value: virement.fournisseur?.banque || 'N/A' },
             { title: 'RIB', value: virement.fournisseur?.rib || 'N/A' },
-            { title: 'Agence', value: virement.banque?.agence || 'N/A' },
+            { title: 'Agence', value: virement.fournisseur?.agence || 'N/A' },
           ];
           
         // Check if table fits on page

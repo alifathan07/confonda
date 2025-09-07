@@ -111,7 +111,8 @@ model Fournisseur {
   email     String?
   ice       String @unique
   rib        String
-  
+  agence    String?
+  banque    String?
   objet String?
   identifFiscal String
   telFournisseur String
