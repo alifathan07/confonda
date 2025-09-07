@@ -881,7 +881,7 @@
           </div>
   <div class="card mb-4 fade-in">
               <div class="card-header bg-success">
-                <h2>Cheques Validés </h2>
+                <h2>Chèques Validés </h2>
               </div>
               <div class="card-body">
                 <div class="table-responsive">
@@ -1818,7 +1818,7 @@ if (visibleCheques.length > 0) {
 
 yPosition = addSectionTable(
   pdf,
-  '2. Chèques en circulation',
+  '3. Chèques en circulation',
   ['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut', 'Observation'],
   visibleCheques,
   yPosition,
@@ -1864,7 +1864,7 @@ if (visibleEffets.length > 0) {
 
 yPosition = addSectionTable(
   pdf,
-  '3. Effets en circulation',
+  '4. Effets en circulation',
   ['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut', 'Observation'],
   visibleEffets,
   yPosition,
@@ -1908,7 +1908,7 @@ if (visiblePayavenirs.length > 0) {
 
 yPosition = addSectionTable(
   pdf,
-  '4. Paiements à venir',
+  '5. Paiements à venir',
   ['Désignation', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut'],
   visiblePayavenirs,
   yPosition,
@@ -1930,7 +1930,7 @@ yPosition = addSectionTable(
     }
 
     pdf.setFontSize(16);
-    pdf.text('5. Recap. Général', 20, yPosition);
+    pdf.text('Recap. Général', 20, yPosition);
     yPosition += 15;
 
     const generalTotal = chequesTotalAmount + effetsTotalAmount + payavenirsTotalAmount;
@@ -2235,7 +2235,7 @@ function downloadEffetsPDF() {
 
 function downloadPayavenirsPDF() {
   const loadingMsg = document.createElement('div');
-  loadingMsg.innerHTML = '<div class="alert alert-info">Génération du PDF paiements à venir...</div>';
+  loadingMsg.innerHTML = '<div class="alert alert-info" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">Génération du PDF paiements à venir...</div>';
   document.body.appendChild(loadingMsg);
 
   const script = document.createElement('script');
@@ -2243,7 +2243,20 @@ function downloadPayavenirsPDF() {
   script.onload = function () {
     try {
       const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF('p', 'mm', 'a4'); // A4 Portrait
+      const pdf = new jsPDF('p', 'mm', 'a4'); // Portrait
+
+      // Helpers
+      function parseFrenchNumber(text) {
+        if (!text) return 0;
+        return parseFloat(text.replace(/\s/g, '').replace(',', '.')) || 0;
+      }
+      function formatFrenchNumber(value) {
+        if (isNaN(value)) return '0,00';
+        return value
+          .toFixed(2)
+          .replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+          .replace('.', ',');
+      }
 
       // Title
       pdf.setFontSize(16);
@@ -2253,7 +2266,8 @@ function downloadPayavenirsPDF() {
       // Date
       pdf.setFontSize(10);
       pdf.setTextColor(0, 0, 0);
-      pdf.text("Date: " + new Date().toLocaleDateString('fr-FR'), 15, 28);
+      const now = new Date();
+      pdf.text("Date: " + now.toLocaleDateString('fr-FR'), 15, 28);
 
       // Collect data
       const visiblePayavenirs = [];
@@ -2262,24 +2276,24 @@ function downloadPayavenirsPDF() {
         if (row.style.display !== 'none') {
           const cells = row.querySelectorAll('td');
           if (cells.length >= 7) {
-            const montantValue = parseFrenchNumber(cells[1].textContent.trim().replace(/\s/g, ''));
+            const montantValue = parseFrenchNumber(cells[3].textContent.trim());
             totalAmount += montantValue;
             visiblePayavenirs.push([
               cells[0].textContent.trim(), // Désignation
+              cells[1].textContent.trim(), // Banque
+              cells[2].textContent.trim(), // Bénéficiaire
               formatFrenchNumber(montantValue), // Montant
-              cells[2].textContent.trim(), // Date Échéance
-              cells[3].textContent.trim(), // Statut
-              cells[4].textContent.trim(), // Date Paiement
-              cells[5].textContent.trim(), // Fournisseur
-              cells[6].textContent.trim(), // Banque
+              cells[4].textContent.trim(), // Date Échéance
+              cells[5].textContent.trim()  // Statut
+              // Validation is ignored (checkbox)
             ]);
           }
         }
       });
 
-      // Table headers + column setup
-      const headers = ['Désignation', 'Montant', 'Date Échéance', 'Statut', 'Date Paiement', 'Fournisseur', 'Banque'];
-      const columnWidths = [35, 25, 25, 25, 25, 40, 30];
+      // Table headers
+      const headers = ['Désignation', 'Banque', 'Bénéficiaire', 'Montant', 'Date Échéance', 'Statut'];
+      const columnWidths = [35, 30, 40, 25, 30, 25];
       const startX = 15;
       const cellHeight = 8;
       let yPosition = 40;
@@ -2336,7 +2350,7 @@ function downloadPayavenirsPDF() {
       pdf.setFont(undefined, 'normal').setFontSize(8);
       pdf.text(`Nombre de paiements à venir: ${visiblePayavenirs.length}`, startX, yPosition);
 
-      pdf.save("paiements-a-venir.pdf");
+      pdf.save(`paiements-a-venir-${now.toISOString().split('T')[0]}.pdf`);
       document.body.removeChild(loadingMsg);
     } catch (error) {
       console.error("Erreur PDF:", error);
@@ -2349,7 +2363,7 @@ function downloadPayavenirsPDF() {
 
 function downloadRecettesPDF() {
   const loadingMsg = document.createElement('div');
-  loadingMsg.innerHTML = '<div class="alert alert-info">Génération du PDF recettes...</div>';
+  loadingMsg.innerHTML = '<div class="alert alert-info" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">Génération du PDF recettes...</div>';
   document.body.appendChild(loadingMsg);
 
   const script = document.createElement('script');
@@ -2357,7 +2371,20 @@ function downloadRecettesPDF() {
   script.onload = function () {
     try {
       const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF('p', 'mm', 'a4'); // A4 Portrait
+      const pdf = new jsPDF('p', 'mm', 'a4'); // Portrait A4
+
+      // Helpers (same as in payavenir)
+      function parseFrenchNumber(text) {
+        if (!text) return 0;
+        return parseFloat(text.replace(/\s/g, '').replace(',', '.')) || 0;
+      }
+      function formatFrenchNumber(value) {
+        if (isNaN(value)) return '0,00';
+        return value
+          .toFixed(2)
+          .replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+          .replace('.', ',');
+      }
 
       // Title
       pdf.setFontSize(16);
@@ -2367,7 +2394,8 @@ function downloadRecettesPDF() {
       // Date
       pdf.setFontSize(10);
       pdf.setTextColor(0, 0, 0);
-      pdf.text("Date: " + new Date().toLocaleDateString('fr-FR'), 15, 28);
+      const now = new Date();
+      pdf.text("Date: " + now.toLocaleDateString('fr-FR'), 15, 28);
 
       // Collect data
       const visibleRecettes = [];
@@ -2375,25 +2403,24 @@ function downloadRecettesPDF() {
       document.querySelectorAll('.recavenir-row').forEach(row => {
         if (row.style.display !== 'none') {
           const cells = row.querySelectorAll('td');
-          if (cells.length >= 7) {
-            const montantValue = parseFrenchNumber(cells[1].textContent.trim().replace(/\s/g, ''));
+          if (cells.length >= 6) {
+            const montantValue = parseFrenchNumber(cells[2].textContent.trim());
             totalAmount += montantValue;
             visibleRecettes.push([
-              cells[0].textContent.trim(),
-              formatFrenchNumber(montantValue),
-              cells[2].textContent.trim(),
-              cells[3].textContent.trim(),
-              cells[4].textContent.trim(),
-              cells[5].textContent.trim(),
-              cells[6].textContent.trim(),
+              cells[0].textContent.trim(), // Client
+              cells[1].textContent.trim(), // Désignation
+              formatFrenchNumber(montantValue), // Montant
+              cells[3].textContent.trim(), // Date Échéance
+              cells[4].textContent.trim(), // Statut
+              cells[5].textContent.trim(), // Banque
             ]);
           }
         }
       });
 
-      // Table headers + column setup
-      const headers = ['Désignation', 'Montant', 'Date Échéance', 'Statut', 'Date Paiement', 'Client', 'Banque'];
-      const columnWidths = [35, 25, 25, 25, 25, 40, 30];
+      // Table headers
+      const headers = ['Client', 'Désignation', 'Montant', 'Date Échéance', 'Statut', 'Banque'];
+      const columnWidths = [35, 40, 25, 25, 25, 35];
       const startX = 15;
       const cellHeight = 8;
       let yPosition = 40;
@@ -2412,7 +2439,7 @@ function downloadRecettesPDF() {
       // Rows
       pdf.setFontSize(7).setFont(undefined, 'normal').setTextColor(0, 0, 0);
       visibleRecettes.forEach(row => {
-        if (yPosition > 270) { // page break
+        if (yPosition > 270) { // Page break
           pdf.addPage();
           yPosition = 20;
 
@@ -2432,7 +2459,7 @@ function downloadRecettesPDF() {
         currentX = startX;
         row.forEach((cell, i) => {
           const text = cell.toString();
-          const displayText = text.length > 20 ? text.substring(0, 20) + '...' : text;
+          const displayText = text.length > 25 ? text.substring(0, 25) + '...' : text;
           pdf.rect(currentX, yPosition, columnWidths[i], cellHeight);
           pdf.text(displayText, currentX + 1, yPosition + 5);
           currentX += columnWidths[i];
@@ -2450,7 +2477,7 @@ function downloadRecettesPDF() {
       pdf.setFont(undefined, 'normal').setFontSize(8);
       pdf.text(`Nombre de recettes à venir: ${visibleRecettes.length}`, startX, yPosition);
 
-      pdf.save("recettes-a-venir.pdf");
+      pdf.save(`recettes-a-venir-${now.toISOString().split('T')[0]}.pdf`);
       document.body.removeChild(loadingMsg);
     } catch (error) {
       console.error("Erreur PDF:", error);

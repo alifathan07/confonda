@@ -471,68 +471,78 @@
           <!-- Enhanced Action Cards Grid -->
           <div class="section-spacing">
             <div class="action-grid" id="cards">
-              <a id="card-banques" href="/tresorerie/banques" class="achat-card">
-                <div class="card-icon-wrapper">
-                  <i class="fas fa-university"></i>
-                </div>
-                <span class="card-title">Banques</span>
-                <span class="card-subtitle">Gérer vos comptes</span>
-              </a>
              
-              <a id="card-cheques" href="/tresorerie/cheques" class="achat-card">
+              
+                <a id="card-cheques-etablir" href="#" class="achat-card">
                 <div class="card-icon-wrapper">
                   <i class="fas fa-money-check"></i>
                 </div>
-                <span class="card-title">Chèques</span>
-                <span class="card-subtitle">Gérer les chèques</span>
+                <span class="card-title">Etablir un chèque</span>
               </a>
+                <a id="card-effets-etablir" href="#" class="achat-card">
+                <div class="card-icon-wrapper">
+                  <i class="fas fa-money-check"></i>
+                </div>
+                <span class="card-title">Etablir un effet</span>
+              </a>
+              <a id="card-virement" href="#" class="achat-card">
+                <div class="card-icon-wrapper">
+                  <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <span class="card-title">Etablir un Virement</span>
+               </a>
+                   <a id="card-mise" href="#" class="achat-card">
+                <div class="card-icon-wrapper">
+                  <i class="fas fa-file-signature"></i>
+                </div>
+                <span class="card-title">Mise à Disposition</span>
+               </a>
 
-              <a id="card-effets" href="/tresorerie/effets" class="achat-card">
+              <a id="card-cheques" href="#" class="achat-card">
+                <div class="card-icon-wrapper">
+                  <i class="fas fa-money-check"></i>
+                </div>
+                <span class="card-title">Liste Des Chèques</span>
+               </a>
+
+              <a id="card-effets" href="#" class="achat-card">
                 <div class="card-icon-wrapper">
                   <i class="fas fa-hand-holding-usd"></i>
                 </div>
-                <span class="card-title">Effets</span>
-                <span class="card-subtitle">Gérer les effets</span>
-              </a>
+                <span class="card-title">Liste Des Effets</span>
+               </a>
 
               <a id="card-autres" href="/tresorerie/payavenir" class="achat-card">
                 <div class="card-icon-wrapper">
                   <i class="fas fa-file-invoice-dollar"></i>
                 </div>
                 <span class="card-title">Paiements à venir</span>
-                <span class="card-subtitle">Planifier les paiements</span>
-              </a>
+               </a>
 
               <a id="card-recetes" href="/tresorerie/recettes_a_venir" class="achat-card">
                 <div class="card-icon-wrapper">
                   <i class="fas fa-arrow-up"></i>
                 </div>
                 <span class="card-title">Recettes à venir</span>
-                <span class="card-subtitle">Suivre les recettes</span>
-              </a>
+               </a>
 
-              <a id="card-releves" href="#" class="achat-card">
+              <!-- <a id="card-releves" href="#" class="achat-card">
                 <div class="card-icon-wrapper">
                   <i class="fas fa-file-alt"></i>
                 </div>
                 <span class="card-title">Relevés bancaires</span>
                 <span class="card-subtitle">Consulter les relevés</span>
-              </a>
+              </a> -->
 
-              <a id="card-virement" href="/tresorerie/virements" class="achat-card">
-                <div class="card-icon-wrapper">
-                  <i class="fas fa-money-bill-wave"></i>
-                </div>
-                <span class="card-title">Virements</span>
-                <span class="card-subtitle">Effectuer des virements</span>
-              </a>
+              
 
-              <a id="card-mise" href="/tresorerie/miseadis" class="achat-card">
+         
+
+               <a id="card-banques" href="/tresorerie/banques" class="achat-card">
                 <div class="card-icon-wrapper">
-                  <i class="fas fa-file-signature"></i>
+                  <i class="fas fa-university"></i>
                 </div>
-                <span class="card-title">Mise à Disposition</span>
-                <span class="card-subtitle">Gérer les MAD</span>
+                <span class="card-title">Banques</span>
               </a>
             </div>
           </div>
@@ -555,55 +565,70 @@
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
   <script src="/js/sb-admin-2.min.js"></script>
+<script>
+  // Create dynamic mapping: bank ID -> route (from bank name)
+  const bankRoutes = {
+    <% banques.forEach(banque => { %>
+      "<%= banque.id %>": "<%= banque.name.replace(/\s+/g, '_').toLowerCase() %>",
+    <% }) %>
+  };
 
-  <script>
-    function updateLinks(bankId) {
-      if (!bankId) {
-        alert("Veuillez sélectionner une banque");
-        return;
-      }
-      $('#card-cheques').attr('href', `/tresorerie/cheques/banque/${bankId}`);
-      $('#card-effets').attr('href', `/tresorerie/effets/banque/${bankId}`);
-      $('#card-releves').attr('href', `/tresorerie/releves/banque/${bankId}`);
-      $('#card-virement').attr('href', `/tresorerie/virements/banque/${bankId}`);
-      $('#card-mise').attr('href', `/tresorerie/miseadis/banque/${bankId}`);
+  function updateLinks(bankId) {
+    if (!bankId) {
+      $('#card-cheques-etablir, #card-cheques, #card-effets, #card-releves, #card-virement, #card-mise')
+        .attr('href', '#');
+      return;
     }
 
-    $(document).ready(function () {
-      $('#bank').on('change', function () {
-        const selectedBankId = $(this).val();
-        updateLinks(selectedBankId);
-      });
+    const route = bankRoutes[bankId];
+    if (!route) return;
 
-      $('.achat-card').on('click', function () {
-        const $icon = $(this).find('.card-icon-wrapper i');
-        $icon.addClass('fa-spin');
-        setTimeout(() => $icon.removeClass('fa-spin'), 800);
-      });
+    $('#card-cheques-etablir').attr('href', `/tresorerie/cheques/create/format/${route}/${bankId}`);
+    $('#card-effets-etablir').attr('href', `/tresorerie/effets/create/format/${route}/${bankId}`);
+    $('#card-cheques').attr('href', `/tresorerie/cheques/banque/${bankId}`);
+    $('#card-effets').attr('href', `/tresorerie/effets/banque/${bankId}`);
+    $('#card-releves').attr('href', `/tresorerie/releves/banque/${bankId}`);
+    $('#card-virement').attr('href', `/tresorerie/virements/banque/${bankId}`);
+    $('#card-mise').attr('href', `/tresorerie/miseadis/banque/${bankId}`);
+  }
 
-      $('#formAjouterBanque').on('submit', function (e) {
-        e.preventDefault();
-        const banqueData = {
-          name: $('#bankName').val(),
-          rib: $('#bankRib').val(),
-          agence: $('#bankAgence').val()
-        };
-        $.ajax({
-          type: 'POST',
-          url: '/tresorerie/banques/create',
-          data: banqueData,
-          success: function (response) {
-            alert('Banque ajoutée avec succès');
-            $('#ajouterBanqueModal').modal('hide');
-            location.reload();
-          },
-          error: function (err) {
-            console.error(err);
-            alert("Erreur lors de l'ajout de la banque");
-          }
-        });
-      });
+  $(document).ready(function () {
+    // reset links on page load
+    updateLinks('');
+
+    // update links when bank changes
+    $('#bank').on('change', function () {
+      updateLinks($(this).val());
     });
-  </script>
+
+    // prevent click if no bank selected
+    const bankRequiredCards = [
+      '#card-cheques-etablir',
+      '#card-effets-etablir',
+      '#card-cheques',
+      '#card-effets',
+      '#card-releves',
+      '#card-virement',
+      '#card-mise'
+    ];
+
+    $(bankRequiredCards.join(', ')).on('click', function (e) {
+      if (!$('#bank').val()) {
+        e.preventDefault();
+        alert("Veuillez sélectionner une banque");
+      }
+    });
+
+    // simple icon animation
+    $('.achat-card').on('click', function () {
+      const $icon = $(this).find('.card-icon-wrapper i');
+      $icon.addClass('fa-spin');
+      setTimeout(() => $icon.removeClass('fa-spin'), 800);
+    });
+  });
+</script>
+
+
+
 </body>
 </html>
