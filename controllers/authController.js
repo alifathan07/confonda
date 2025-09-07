@@ -60,3 +60,6 @@ export const logout = (req, res) => {
         res.redirect('/');
     });
 }
+
+
+// FJ46q/:EbJhYqLQj
