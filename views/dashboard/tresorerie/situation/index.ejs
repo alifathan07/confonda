@@ -879,210 +879,204 @@
               <% } %>
             </div>
           </div>
-  <div class="card mb-4 fade-in">
-              <div class="card-header bg-success">
-                <h2>Chèques Validés </h2>
-              </div>
-              <div class="card-body">
-                <div class="table-responsive">
-                  <table id="chequesTable" class="excel-table table table-bordered">
-                    <thead>
-                      <tr>
-                        <th>Date Établissement</th>
-                        <th>Numéro</th>
-                        <th>Banque</th>
-                        <th>Bénéficiaire</th>
-                        <th>Montant</th>
-                        <th>Date Échéance</th>
-                        <th>Statut</th>
-                        <th>Observation</th>
-                        <th>Validation</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <% cheques.filter(c => c.validation).forEach(c => { %>
-                        <tr class="cheque-row" data-fournisseur="<%= c.beneficiaire %>"
-                            data-banque="<%= c.banque.name %>" data-statut="<%= c.statut %>"
-                            data-date="<%= new Date(c.dateEcheance).toISOString().split('T')[0] %>">
-                          <td><%= new Date(c.dateEtablissement).toLocaleDateString('fr-FR') %></td>
-                          <td><%= c.numero %></td>
-                          <td><%= c.banque.name %></td>
-                          <td><%= c.beneficiaire %></td>
-                          <td class="text-right montant" style="width: 10%;">
-                            <%= c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
-                          </td>
-                          <td><%= new Date(c.dateEcheance).toLocaleDateString('fr-FR') %></td>
-                          <td>
-                            <span class="badge badge-<%= c.statut.toLowerCase() === 'en circulation' ? 'info' : c.statut.toLowerCase() === 'impayé' ? 'danger' : 'success' %>">
-                              <%= c.statut %>
-                            </span>
-                          </td>
-                          <td>
-                            <form action="/tresorerie/cheques/situation/<%= c.id %>?_method=PATCH" method="POST">
-                              <input id="obs-<%= c.id %>" type="text" value="<%= c.obs || '' %>" class="form-control" name="obs">
-                            </form>
-                          </td>
-                          <td>
-                            <div class="form-check form-check-inline">
-                              <input type="checkbox" class="form-check-input" id="validation-<%= c.id %>"
-                                     name="validation" data-id="<%= c.id %>" data-validation="<%= c.validation %>"
-                                     <%= c.validation ? 'checked' : '' %>>
-                              <label class="form-check-label" for="validation-<%= c.id %>"></label>
-                            </div>
-                          </td>
-                        </tr>
-                      <% }) %>
-                    </tbody>
-                    <tfoot>
-                      <tr>
-                        <td>Total</td>
-                        <td class="text-right" id="displayTotalCheques">
-                          <%= cheques.filter(c => c.validation).reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
-                        </td>
-                        <td colspan="7"></td>
-                      </tr>
-                    </tfoot>
-                  </table>
+<!-- <<<<< validation Cheques >>>>>>>>>>>>>>> --> 
+<div class="card mb-4 fade-in">
+  <div class="card-header bg-success text-white">
+    <h2>Chèques Validés</h2>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="chequesTable" class="table table-bordered">
+        <thead>
+          <tr style="background-color: #16a34a; color: white;">
+            <th>Date Établissement</th>
+            <th>Numéro</th>
+            <th>Banque</th>
+            <th>Bénéficiaire</th>
+            <th>Montant</th>
+            <th>Date Échéance</th>
+            <th>Statut</th>
+            <th>Observation</th>
+            <th>Validation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% cheques.filter(c => c.validation).forEach((c, i) => { %>
+            <tr >
+              <td><%= new Date(c.dateEtablissement).toLocaleDateString('fr-FR') %></td>
+              <td><%= c.numero %></td>
+              <td><%= c.banque.name %></td>
+              <td><%= c.beneficiaire %></td>
+              <td class="text-right montant" style="width: 10%;">
+                <%= c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
+              </td>
+              <td><%= new Date(c.dateEcheance).toLocaleDateString('fr-FR') %></td>
+              <td>
+                <span class="badge badge-<%= c.statut.toLowerCase() === 'en circulation' ? 'info' : c.statut.toLowerCase() === 'impayé' ? 'danger' : 'success' %>">
+                  <%= c.statut %>
+                </span>
+              </td>
+              <td>
+                <form action="/tresorerie/cheques/situation/<%= c.id %>?_method=PATCH" method="POST">
+                  <input id="obs-<%= c.id %>" type="text" value="<%= c.obs || '' %>" class="form-control" name="obs" >
+                </form>
+              </td>
+              <td>
+                <div class="form-check form-check-inline">
+                  <input type="checkbox" class="form-check-input" id="validation-<%= c.id %>"
+                         name="validation" data-id="<%= c.id %>" data-validation="<%= c.validation %>"
+                         <%= c.validation ? 'checked' : '' %>>
+                  <label class="form-check-label" for="validation-<%= c.id %>"></label>
                 </div>
-              </div>
-            </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+       <tfoot>
+  <tr style="background-color: #ffffff; color: rgb(0, 0, 0); font-weight: bold;">
+    <td colspan="4">Total</td>
+    <td class="text-right" id="displayTotalCheques">
+      <%= cheques.filter(c => c.validation).reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
+    </td>
+    <td colspan="4"></td>
+  </tr>
+</tfoot>
+
+      </table>
+    </div>
+  </div>
+</div>
 
 
-             <!-- <<<<< validation Effets >>>>>>>>>>>>>>> -->
-             <div class="card mb-4 fade-in">
-              <div class="card-header bg-success">
-                <h2>Effets Validés</h2>
-              </div>
-              <div class="card-body">
-                <div class="table-responsive">
-                  <table id="effetsTable" class="excel-table table table-bordered">
-                    <thead>
-                      <tr>
-                        <th>Date Établissement</th>
-                        <th>Numéro</th>
-                        <th>Banque</th>
-                        <th>Bénéficiaire</th>
-                        <th>Montant</th>
-                        <th>Date Échéance</th>
-                        <th>Statut</th>
-                        <th>Observation</th>
-                        <th>Validation</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <% effets.filter(e => e.validation).forEach(e => { %>
-                        <tr class="cheque-row" data-fournisseur="<%= e.beneficiaire %>"
-                            data-banque="<%= e.banque.name %>" data-statut="<%= e.statut %>"
-                            data-date="<%= new Date(e.dateEcheance).toISOString().split('T')[0] %>">
-                          <td><%= new Date(e.dateEtablissement).toLocaleDateString('fr-FR') %></td>
-                          <td><%= e.numero %></td>
-                          <td><%= e.banque.name %></td>
-                          <td><%= e.beneficiaire %></td>
-                          <td class="text-right montant" style="width: 10%;">
-                            <%= e.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
-                          </td>
-                          <td><%= new Date(e.dateEcheance).toLocaleDateString('fr-FR') %></td>
-                          <td>
-                            <span class="badge badge-<%= e.statut.toLowerCase() === 'en circulation' ? 'info' : e.statut.toLowerCase() === 'impayé' ? 'danger' : 'success' %>">
-                              <%= e.statut %>
-                            </span>
-                          </td>
-                          <td>
-                            <form action="/tresorerie/cheques/situation/<%= e.id %>?_method=PATCH" method="POST">
-                              <input id="obs-<%= e.id %>" type="text" value="<%= e.obs || '' %>" class="form-control" name="obs">
-                            </form>
-                          </td>
-                          <td>
-                            <div class="form-check form-check-inline">
-                            <input 
-                            type="checkbox" 
-                            class="form-check-input" 
-                            id="validationEffet-<%= e.id %>" 
-                            name="validationEffet" 
-                            data-id="<%= e.id %>" 
-                            data-effetvalidation="<%= e.validation %>" 
-                            <%= e.validation ? 'checked' : '' %>>
-                            <label class="form-check-label" for="validation-<%= e.id %>"></label>
-                          </div>
-                          </td>
-                        </tr>
-                      <% }) %>
-                    </tbody>
-                    <tfoot>
-                      <tr>
-                        <td>Total</td>
-                        <td class="text-right" id="displayTotalCheques">
-                          <%= effets.filter(c => c.validation).reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
-                        </td>
-                        <td colspan="7"></td>
-                      </tr>
-                    </tfoot>
-                  </table>
+
+           <!-- <<<<< validation Effets >>>>>>>>>>>>>>> -->
+<div class="card mb-4 fade-in">
+  <div class="card-header bg-success text-white">
+    <h2>Effets Validés</h2>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="effetsTable" class="table table-bordered">
+        <thead>
+          <tr style="background-color: #16a34a; color: white;">
+            <th>Date Établissement</th>
+            <th>Numéro</th>
+            <th>Banque</th>
+            <th>Bénéficiaire</th>
+            <th>Montant</th>
+            <th>Date Échéance</th>
+            <th>Statut</th>
+            <th>Observation</th>
+            <th>Validation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% effets.filter(e => e.validation).forEach((e, i) => { %>
+            <tr>
+              <td><%= new Date(e.dateEtablissement).toLocaleDateString('fr-FR') %></td>
+              <td><%= e.numero %></td>
+              <td><%= e.banque.name %></td>
+              <td><%= e.beneficiaire %></td>
+              <td class="text-right montant">
+                <%= e.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
+              </td>
+              <td><%= new Date(e.dateEcheance).toLocaleDateString('fr-FR') %></td>
+              <td>
+                <span class="badge badge-<%= e.statut.toLowerCase() === 'en circulation' ? 'info' : e.statut.toLowerCase() === 'impayé' ? 'danger' : 'success' %>">
+                  <%= e.statut %>
+                </span>
+              </td>
+              <td>
+                <form action="/tresorerie/cheques/situation/<%= e.id %>?_method=PATCH" method="POST">
+                  <input id="obs-<%= e.id %>" type="text" value="<%= e.obs || '' %>" class="form-control" name="obs" >
+                </form>
+              </td>
+              <td>
+                <div class="form-check form-check-inline">
+                  <input type="checkbox" class="form-check-input" id="validationEffet-<%= e.id %>" 
+                         name="validationEffet" data-id="<%= e.id %>" data-effetvalidation="<%= e.validation %>"
+                         <%= e.validation ? 'checked' : '' %>>
+                  <label class="form-check-label" for="validationEffet-<%= e.id %>"></label>
                 </div>
-              </div>
-            </div>
-        
-            <!-- <<<<< validation Paiements à venir >>>>>>>>>>>>>>> -->
-              <div class="card mb-4 fade-in">
-                <div class="card-header bg-success">
-                  <h2>Paiements à venir Validés</h2>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+        <tfoot>
+          <tr >
+            <td>Total</td>
+            <td class="text-right" id="displayTotalEffets">
+              <%= effets.filter(c => c.validation).reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
+            </td>
+            <td colspan="7"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+           <!-- <<<<< validation Paiements à venir >>>>>>>>>>>>>>> -->
+<div class="card mb-4 fade-in">
+  <div class="card-header bg-success text-white">
+    <h2>Paiements à venir Validés</h2>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="payavenirsValidesTable" class="table table-bordered" >
+        <thead>
+          <tr style="background-color: #16a34a; color: white;">
+            <th>Désignation</th>
+            <th>Banque</th>
+            <th>Bénéficiaire</th>
+            <th>Montant</th>
+            <th>Date Échéance</th>
+            <th>Statut</th>
+            <th>Validation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% payavenirs.filter(p => p.validation).forEach((p, i) => { %>
+            <tr>
+              <td><%= p.designation %></td>
+              <td><%= p.banque.name %></td>
+              <td><%= p.fournisseur.name %></td>
+              <td class="text-right montant">
+                <%= p.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
+              </td>
+              <td><%= new Date(p.dateEcheance).toLocaleDateString('fr-FR') %></td>
+              <td>
+                <span class="badge badge-<%= p.statut === 'échu' ? 'warning' : p.statut === 'impayé' ? 'danger' : 'success' %>">
+                  <%= p.statut %>
+                </span>
+              </td>
+              <td>
+                <div class="form-check form-check-inline">
+                  <input type="checkbox" class="form-check-input" 
+                         id="validationPayavenir-<%= p.id %>" 
+                         name="validationPayavenir" data-id="<%= p.id %>" 
+                         data-payavenirvalidation="<%= p.validation %>" 
+                         <%= p.validation ? 'checked' : '' %>>
+                  <label class="form-check-label" for="validationPayavenir-<%= p.id %>"></label>
                 </div>
-                <div class="card-body">
-                  <div class="table-responsive">
-                    <table id="payavenirsValidesTable" class="excel-table table table-bordered">
-                      <thead>
-                        <tr>
-                          <th>Désignation</th>
-                          <th>Banque</th>
-                          <th>Bénéficiaire</th>
-                          <th>Montant</th>
-                          <th>Date Échéance</th>
-                          <th>Statut</th>
-                          <th>Validation</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <% payavenirs.filter(p => p.validation).forEach(p => { %>
-                          <tr class="payavenir-row" data-fournisseur="<%= p.fournisseur.name %>" data-banque="<%= p.banque.name %>" data-statut="<%= p.statut %>" data-date="<%= new Date(p.dateEcheance).toISOString().split('T')[0] %>">
-                            <td><%= p.designation %></td>
-                            <td><%= p.banque.name %></td>
-                            <td><%= p.fournisseur.name %></td>
-                            <td class="text-right montant"><%= p.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %></td>
-                            <td><%= new Date(p.dateEcheance).toLocaleDateString('fr-FR') %></td>
-                            <td>
-                              <span class="badge badge-<%= p.statut === 'échu' ? 'warning' : p.statut === 'impayé' ? 'danger' : 'success' %>">
-                                <%= p.statut %>
-                              </span>
-                            </td>
-                            <td>
-                              <div class="form-check form-check-inline">
-                                <input 
-                                  type="checkbox" 
-                                  class="form-check-input" 
-                                  id="validationPayavenir-<%= p.id %>" 
-                                  name="validationPayavenir" 
-                                  data-id="<%= p.id %>" 
-                                  data-payavenirvalidation="<%= p.validation %>" 
-                                  <%= p.validation ? 'checked' : '' %>>
-                                <label class="form-check-label" for="validationPayavenir-<%= p.id %>"></label>
-                              </div>
-                            </td>
-                          </tr>
-                        <% }) %>
-                      </tbody>
-                      <tfoot>
-                        <tr>
-                          <td>Total</td>
-                          <td class="text-right" id="displayTotalPayavenirsValides">
-                            <%= payavenirs.filter(p => p.validation).reduce((acc, p) => acc + p.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
-                          </td>
-                          <td colspan="5"></td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                </div>
-              </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>Total</td>
+            <td class="text-right" id="displayTotalPayavenirsValides">
+              <%= payavenirs.filter(p => p.validation).reduce((acc, p) => acc + p.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
+            </td>
+            <td colspan="5"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
          
 
           <!-- Total Général -->

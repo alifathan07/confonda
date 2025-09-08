@@ -11,7 +11,27 @@
   <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
    <!-- Enhanced Status Styles -->
-      
+      <style>
+/* Dropdown styling */
+#beneficiaire-list {
+    position: absolute;
+    background: #fff;
+    border: 1px solid #ccc;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 1000;
+    width: 100%;
+}
+
+#beneficiaire-list div {
+    padding: 8px;
+    cursor: pointer;
+}
+
+#beneficiaire-list div:hover {
+    background-color: #f0f0f0;
+}
+</style>
       <body>
         
      <body id="page-top">
@@ -61,6 +81,7 @@
                                     <div class="form-group col-12 col-md-6">
                                         <label for="beneficiaire">Bénéficiaire</label>
                                         <input type="text" class="form-control" id="beneficiaire" name="beneficiaire" required placeholder="Nom du bénéficiaire">
+                                    
                                     </div>
                                     <div class="form-group col-12 col-md-6">
                                         <label for="beneficiaire">CIN</label>
@@ -88,82 +109,117 @@
                                         <textarea class="form-control" id="obs" name="obs" rows="2" placeholder="Notes ou remarques"></textarea>
                                     </div>
                                 </div>
-                                <div class="form-group col-12 col-md-6">
-                                    <label for="montantLettre">Montant en lettres</label>
-                                    <input type="text" class="form-control" id="montantLettre" name="montantLettre" readonly placeholder="Montant en lettres">
-                                </div>
-                                <script>
-                                // Cache for conversion results to improve efficiency
-                                const montantWordsCache = new Map();
+                              <div class="form-group col-12 col-md-6">
+    <label for="montantLettre">Montant en lettres</label>
+    <input type="text" class="form-control" id="montantLettre" name="montantLettre" readonly placeholder="Montant en lettres">
+</div>
 
-                                function numberToFrenchWords(n) {
-                                    // Only handle up to 999999 for performance
-                                    const ones = ["zéro","un","deux","trois","quatre","cinq","six","sept","huit","neuf"];
-                                    const tens = ["","dix","vingt","trente","quarante","cinquante","soixante","soixante-dix","quatre-vingt","quatre-vingt-dix"];
-                                    if (montantWordsCache.has(n)) return montantWordsCache.get(n);
-                                    let result = "";
-                                    if (n < 10) result = ones[n];
-                                    else if (n < 20) {
-                                        if (n === 10) result = "dix";
-                                        else if (n === 11) result = "onze";
-                                        else if (n === 12) result = "douze";
-                                        else if (n === 13) result = "treize";
-                                        else if (n === 14) result = "quatorze";
-                                        else if (n === 15) result = "quinze";
-                                        else if (n === 16) result = "seize";
-                                        else result = "dix-" + ones[n-10];
-                                    }
-                                    else if (n < 100) {
-                                        let t = Math.floor(n/10), o = n%10;
-                                        let sep = o === 1 && t !== 8 ? " et " : (o > 0 ? "-" : "");
-                                        result = tens[t] + (o > 0 ? sep + ones[o] : "");
-                                    }
-                                    else if (n < 1000) {
-                                        let h = Math.floor(n/100), r = n%100;
-                                        let hundred = h === 1 ? "cent" : ones[h] + " cent";
-                                        if (r === 0) result = hundred;
-                                        else result = hundred + " " + numberToFrenchWords(r);
-                                    }
-                                    else if (n < 1000000) {
-                                        let th = Math.floor(n/1000), r = n%1000;
-                                        let thousand = th === 1 ? "mille" : numberToFrenchWords(th) + " mille";
-                                        if (r === 0) result = thousand;
-                                        else result = thousand + " " + numberToFrenchWords(r);
-                                    }
-                                    else result = n; // fallback
-                                    montantWordsCache.set(n, result);
-                                    return result;
-                                }
+<script>
+// Cache for efficiency
+const montantWordsCache = new Map();
 
-                                // Debounce function to limit conversion calls
-                                function debounce(fn, delay) {
-                                    let timer = null;
-                                    return function(...args) {
-                                        clearTimeout(timer);
-                                        timer = setTimeout(() => fn.apply(this, args), delay);
-                                    };
-                                }
+function numberToFrenchWords(n) {
+    if (montantWordsCache.has(n)) return montantWordsCache.get(n);
+    if (typeof n === "string") n = n.replace(/\s/g,''); // remove spaces
+    n = BigInt(n); // handle very large numbers
 
-                                document.getElementById('montant').addEventListener('input', debounce(function() {
-                                    const val = this.value;
-                                    if (!val) {
-                                        document.getElementById('montantLettre').value = "";
-                                        return;
-                                    }
-                                    const num = parseInt(val, 10);
-                                    let text = "";
-                                    if (!isNaN(num) && num >= 0) {
-                                        text = numberToFrenchWords(num);
-                                        if (val.includes('.')) {
-                                            const decimals = val.split('.')[1];
-                                            if (decimals && parseInt(decimals, 10) > 0) {
-                                                text += " virgule " + numberToFrenchWords(parseInt(decimals, 10));
-                                            }
-                                        }
-                                    }
-                                    document.getElementById('montantLettre').value = text;
-                                }, 150));
-                                </script>
+    if (n === 0n) return "zéro";
+
+    const ones = ["","un","deux","trois","quatre","cinq","six","sept","huit","neuf"];
+    const teens = ["dix","onze","douze","treize","quatorze","quinze","seize","dix-sept","dix-huit","dix-neuf"];
+    const tens = ["","dix","vingt","trente","quarante","cinquante","soixante","soixante","quatre-vingt","quatre-vingt"];
+    const scales = ["","mille","million","milliard","billion","billiard","trillion"];
+
+    function chunkNumber(num) {
+        let chunks = [];
+        while (num > 0) {
+            chunks.push(num % 1000n);
+            num = num / 1000n;
+        }
+        return chunks;
+    }
+
+    function chunkToWords(chunk) {
+        let h = chunk / 100n;
+        let t = (chunk % 100n) / 10n;
+        let o = chunk % 10n;
+        let str = "";
+
+        // Hundreds
+        if (h > 0n) {
+            if (h === 1n) str += "cent";
+            else str += ones[Number(h)] + " cent";
+            if (t === 0n && o === 0n) str = str; // exact hundreds
+            else str += " ";
+        }
+
+        // Tens & ones
+        let num2 = Number(t * 10n + o);
+        if (num2 > 0) {
+            if (num2 < 10) str += ones[num2];
+            else if (num2 < 20) str += teens[num2 - 10];
+            else {
+                let tenVal = Number(t);
+                let oneVal = Number(o);
+                let sep = "";
+                if ((tenVal === 7 || tenVal === 9) && oneVal > 0) sep = "-";
+                else if (oneVal === 1 && tenVal !== 8) sep = " et ";
+                str += tens[tenVal] + (oneVal > 0 ? sep + (tenVal === 7 || tenVal === 9 ? teens[oneVal] : ones[oneVal]) : "");
+            }
+        }
+
+        return str.trim();
+    }
+
+    let chunks = chunkNumber(n);
+    let words = [];
+
+    for (let i = chunks.length - 1; i >= 0; i--) {
+        let chunk = chunks[i];
+        if (chunk === 0n) continue;
+        let chunkWord = chunkToWords(chunk);
+        if (i > 0) {
+            chunkWord += " " + scales[i];
+            if (chunk > 1n && i > 1) chunkWord += "s"; // plural for million/milliard etc
+        }
+        words.push(chunkWord);
+    }
+
+    let result = words.join(" ").replace(/\s+/g,' ').trim();
+    montantWordsCache.set(n, result);
+    return result;
+}
+
+// Debounce function
+function debounce(fn, delay) {
+    let timer = null;
+    return function(...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+    };
+}
+
+// Listen to input
+document.getElementById('montant').addEventListener('input', debounce(function() {
+    const val = this.value;
+    if (!val) {
+        document.getElementById('montantLettre').value = "";
+        return;
+    }
+
+    let parts = val.split(".");
+    let integerPart = parts[0];
+    let decimalPart = parts[1] || "";
+
+    let text = numberToFrenchWords(integerPart);
+    if (decimalPart && parseInt(decimalPart, 10) > 0) {
+        text += " virgule " + numberToFrenchWords(decimalPart);
+    }
+
+    document.getElementById('montantLettre').value = text;
+}, 150));
+</script>
+
                                 <script src="/vendor/jquery/jquery.min.js"></script>
 
 
