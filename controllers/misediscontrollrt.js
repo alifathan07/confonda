@@ -223,30 +223,37 @@ Veuillez agréer, Monsieur, l'expression de nos salutations distinguées.`,
         }
 
         // ===== FOOTER =====
-         // ===== FOOTER =====
-const footerHeight = 90;
-const footerY = maxY - footerHeight; // fixed position at bottom
+         // ===== FOOTER =====     const pageHeight = 842;
+        const footerHeight = 70;
+        const footerY = 735; // 772
+        const maxContentY = footerY - 30; // safe margin above footer
 
-doc.rect(0, footerY, 595, footerHeight) // A4 width = 595
-   .fill('#AB3029')
-   .stroke();
+// === FOOTER ===
 
-doc.font('Helvetica')
-   .fontSize(9)
-   .fillColor('#FFFFFF')
-   .text(
-       '82, angle Bd abdelmoumen et rue Soumaya Imm.Shahrazad III 2ème étage Casablanca Tél : 0522-23-39-70',
-       50,
-       footerY + 20,
-       { align: 'center', width: 495 }
-   )
-   .text(
-       'Fax : 0522-23-42-60  Capital : 18 500 000.00 DH  CNSS : 7167788 - R.C. : 145619 – I.F. : 1602714 – Patente : 37900708- I.C.E : 001526422000063',
-       50,
-       footerY + 35,
-       { align: 'center', width: 495 }
-   );
-        doc.end();
+
+// Draw footer background
+doc.rect(0, footerY, 595, footerHeight).fill('#AB3029').stroke();
+
+// Text margin from top of footer
+const textMargin = 15;
+
+// Add footer text
+doc.font('Helvetica').fontSize(9).fillColor('#FFFFFF')
+doc.text(
+    '82, angle Bd abdelmoumen et rue Soumaya Imm.Shahrazad III 2ème étage Casablanca Tél : 0522-23-39-70',
+    50,
+    footerY + textMargin,
+    { width: 495, align: 'center' }
+);
+doc.text(
+    'Fax : 0522-23-42-60  Capital : 18 500 000.00 DH  CNSS : 7167788 - R.C. : 145619 – I.F. : 1602714 – Patente : 37900708- I.C.E : 001526422000063',
+    50,
+    footerY + textMargin + 15,
+    { width: 495, align: 'center' }
+);
+
+doc.end();
+
     } catch (error) {
         console.error(error);
         res.status(500).send("Erreur lors de la génération du PDF");

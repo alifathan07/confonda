@@ -229,7 +229,6 @@ export const generateVirementPDF = async (req, res) => {
     if (isNaN(virementId)) return res.status(400).send("ID de virement invalide");
 
     try {
-
         const virement = await prisma.virement.findUnique({
             where: { id: virementId },
             include: { fournisseur: true, banque: true }
@@ -243,45 +242,38 @@ export const generateVirementPDF = async (req, res) => {
         const doc = new PDFDocument({ margin: 50, size: 'A4' });
         doc.pipe(res);
 
-        // Page dimensions: A4 = 595pt width, 842pt height; usable area after 50pt margins = 495pt width, 742pt height
-        const maxY = 742; // Usable height
-        const sentence = `A L'ATTENTION de monsieur le directeur de la banque \n` + virement.banque.name + ` Agence ` + virement.banque.agence
-        // ===== WATERMARK =====
-        doc.save()
-           .opacity(0.05)
-           .fontSize(60)
-           .fillColor('#000000')
-           .rotate(-45)
-           .text('', 150, 200, { align: 'center' }) // Moved up from 400 to 200
-           .restore();
+        const pageHeight = 842;
+        const footerHeight = 70;
+        const footerY = 735; // 772
+        const maxContentY = footerY - 30; // safe margin above footer
 
-        // ===== HEADER =====
+        // === HEADER ===
         const logoPath = path.join(__dirname, '../public/img/logo-4.png');
-        doc.image(logoPath, 50, 20, { width: 100 }); // Adjusted y from 30 to 20
+        doc.image(logoPath, 50, 20, { width: 100 });
 
-       
         doc.font('Helvetica')
            .fontSize(10)
            .fillColor('#555555')
-           .text(`CASABLANCA, ${new Date().toLocaleDateString('fr-FR')}`, 400, 100, { align: 'right' }) // Moved up from 30 to 20
-        
+           .text(`CASABLANCA, ${new Date().toLocaleDateString('fr-FR')}`, 400, 100, { align: 'right' });
+
+        const sentence = `A L'ATTENTION de monsieur le directeur de la banque \n${virement.banque.name} Agence ${virement.banque.agence}`;
         doc.font('Helvetica')
            .fontSize(10)
            .fillColor('#555555')
-           .text(sentence.toUpperCase(), 350, 150, { align: 'left' }) // Moved up from 30 to 20
-        
-       
-        // Modernized "Objet" and Intro Section
+           .text(sentence.toUpperCase(), 350, 150, { align: 'left' });
+
+        // === Objet + Intro ===
         doc.moveDown(4)
            .font('Helvetica-Bold')
            .fontSize(14)
            .fillColor('#1A4D99')
            .text(`Objet : ${virement.objet || 'N/A'} ${virement.rtgs ? 'RTGS' : ''}`, 50, doc.y, { width: 495, align: 'left' });
+
         doc.moveDown(1)
-            .font('Helvetica')
-            .fontSize(12)
-            .fillColor('#333333')
-            .text(virement.cause)
+           .font('Helvetica')
+           .fontSize(12)
+           .fillColor('#333333')
+           .text(virement.cause || '', { width: 495, align: 'justify' });
 
         doc.moveDown(1)
            .font('Helvetica')
@@ -289,118 +281,73 @@ export const generateVirementPDF = async (req, res) => {
            .fillColor('#333333')
            .text(
                `Monsieur,\n\nNous vous prions de bien vouloir débiter notre compte numéro ${virement.banque.rib || 'N/A'}, ouvert à votre agence au nom de notre société CONFONDA, pour effectuer le virement détaillé ci-après.`,
-               50,
-               doc.y,
                { width: 495, align: 'justify', lineGap: 4 }
            );
 
-        // ===== VIREMENT DETAILS TABLE =====
-        doc.moveDown(3); // Increased from 2
-        let startY = doc.y;
-        const boxX = 50;
-        const boxWidth = 495; // Adjusted to fit within margins (595 - 50 - 50)
-        const rowHeight = 30;
-        const headerHeight = 35;
-        function parseFrenchNumber(value) {
-            if (!value) return 0;
-          
-            // Remove spaces and replace comma with dot
-            const cleanValue = value.toString().replace(/\s/g, '').replace(',', '.');
-            const numValue = parseFloat(cleanValue);
-            return isNaN(numValue) ? 0 : numValue;
-          }
-          
-          const details = [
+        // === TABLE ===
+        const details = [
             { title: 'Bénéficiaire', value: virement.beneficiaire || 'N/A' },
-          
-            {
-              title: 'Montant',
-              value: virement.montant
-                ? parseFrenchNumber(virement.montant) // 👈 ensure parsing works even if string
-                    .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                    .replace(/\u202F/g, ' ') // replace thin non-breaking space
-                    .replace(/\u00A0/g, ' ') // replace non-breaking space
-                    + " dirhams"
-                : 'N/A'
-            },
-          
+            { title: 'Montant', value: virement.montant ? parseFloat(virement.montant.toString().replace(',', '.')).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' dirhams' : 'N/A' },
             { title: 'Montant en lettres', value: virement.montantLettres ? virement.montantLettres + ' dirhams' : 'N/A' },
             { title: 'Banque', value: virement.fournisseur?.banque || 'N/A' },
             { title: 'RIB', value: virement.fournisseur?.rib || 'N/A' },
             { title: 'Agence', value: virement.fournisseur?.agence || 'N/A' },
-          ];
-          
-        // Check if table fits on page
-        if (startY + headerHeight + details.length * rowHeight > maxY - 100) {
-            doc.addPage();
-            startY = 50;
-        }
+        ];
 
-        // Table Header
-        let currentY = startY;
+        doc.moveDown(2);
+        let currentY = doc.y;
+        const boxX = 50;
+        const boxWidth = 495;
+        const rowHeight = 30;
 
-        // Table Rows
         details.forEach((item, i) => {
+            if (currentY + rowHeight > maxContentY) return; // stop drawing table before footer
+
             const bgColor = i % 2 === 0 ? '#F2F2F2' : '#FFFFFF';
+            doc.rect(boxX, currentY, boxWidth, rowHeight).fill(bgColor).stroke();
 
-            doc.rect(boxX, currentY, boxWidth, rowHeight)
-               .fill(bgColor)
-               .stroke();
-
-            doc.font('Helvetica-Bold')
-               .fontSize(11)
-               .fillColor('#1A4D99')
-               .text(item.title, boxX + 15, currentY + 8, { width: 180 });
-
-            doc.font('Helvetica')
-               .fontSize(11)
-               .fillColor('#333333')
-               .text(item.value, boxX + 220, currentY + 8, { width: boxWidth - 240 });
+            doc.font('Helvetica-Bold').fontSize(11).fillColor('#1A4D99').text(item.title, boxX + 15, currentY + 8, { width: 180 });
+            doc.font('Helvetica').fontSize(11).fillColor('#333333').text(item.value, boxX + 220, currentY + 8, { width: boxWidth - 240 });
 
             currentY += rowHeight;
         });
 
-        // Border around table
-        doc.rect(boxX, startY, boxWidth, details.length * rowHeight)
-           .strokeColor('#CCCCCC')
-           .lineWidth(1)
-           .stroke();
+        // Table border
+        doc.rect(boxX, doc.y - details.length * rowHeight, boxWidth, Math.min(details.length * rowHeight, maxContentY - doc.y + details.length * rowHeight))
+           .strokeColor('#CCCCCC').lineWidth(1).stroke();
 
-        // ===== OBSERVATIONS =====
-        
+        // === FOOTER ===
 
-        // ===== FOOTER =====
-     // ===== FOOTER =====
-const footerHeight = 90;
-const footerY = maxY - footerHeight; // fixed position at bottom
 
-doc.rect(0, footerY, 595, footerHeight) // A4 width = 595
-   .fill('#AB3029')
-   .stroke();
+// Draw footer background
+doc.rect(0, footerY, 595, footerHeight).fill('#AB3029').stroke();
 
-doc.font('Helvetica')
-   .fontSize(9)
-   .fillColor('#FFFFFF')
-   .text(
-       '82, angle Bd abdelmoumen et rue Soumaya Imm.Shahrazad III 2ème étage Casablanca Tél : 0522-23-39-70',
-       50,
-       footerY + 20,
-       { align: 'center', width: 495 }
-   )
-   .text(
-       'Fax : 0522-23-42-60  Capital : 18 500 000.00 DH  CNSS : 7167788 - R.C. : 145619 – I.F. : 1602714 – Patente : 37900708- I.C.E : 001526422000063',
-       50,
-       footerY + 35,
-       { align: 'center', width: 495 }
-        
-   );
-        doc.end();
+// Text margin from top of footer
+const textMargin = 15;
+
+// Add footer text
+doc.font('Helvetica').fontSize(9).fillColor('#FFFFFF')
+doc.text(
+    '82, angle Bd abdelmoumen et rue Soumaya Imm.Shahrazad III 2ème étage Casablanca Tél : 0522-23-39-70',
+    50,
+    footerY + textMargin,
+    { width: 495, align: 'center' }
+);
+doc.text(
+    'Fax : 0522-23-42-60  Capital : 18 500 000.00 DH  CNSS : 7167788 - R.C. : 145619 – I.F. : 1602714 – Patente : 37900708- I.C.E : 001526422000063',
+    50,
+    footerY + textMargin + 15,
+    { width: 495, align: 'center' }
+);
+
+doc.end();
 
     } catch (error) {
         console.error(error);
         res.status(500).send("Erreur lors de la génération du PDF");
     }
 };
+
 export const suppliersList = async (req, res) => {
     const fournisseurs = await prisma.fournisseur.findMany();
     res.json(fournisseurs);

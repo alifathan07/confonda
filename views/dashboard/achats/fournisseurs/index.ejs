@@ -239,6 +239,9 @@
                       <th draggable="true">ICE</th>
                       <th draggable="true">Identifiant Fiscal</th>
                       <th draggable="true">RIB</th>
+                      <th draggable="true">Banque</th>
+                      <th draggable="true">Agence</th>
+
                       <th style="width:70px;">Actions</th> <!-- Delete column -->
                     </tr>
                   </thead>
@@ -255,6 +258,8 @@
                           <td contenteditable="true" data-name="ice"><%= supplier.ice %></td>
                           <td contenteditable="true" data-name="idF"><%= supplier.identifFiscal %></td>
                           <td contenteditable="true" data-name="rib"><%= supplier.rib %></td>
+                          <td contenteditable="true" data-name="banque"><%= supplier.banque %></td>
+                          <td contenteditable="true" data-name="agence"><%= supplier.agence %></td>
                           <td><button class="delete-row excel-delete-btn" title="Supprimer" aria-label="Supprimer"><i class="fas fa-trash"></i></button></td>
                         </tr>
                       <% }) %>
@@ -330,6 +335,8 @@
         case 'ICE': dataName = 'ice'; break;
         case 'Identifiant Fiscal': dataName = 'idF'; break;
         case 'RIB': dataName = 'rib'; break;
+        case 'Banque': dataName = 'banque'; break;
+        case 'Agence': dataName = 'agence'; break;
       }
       if (dataName) td.setAttribute('data-name', dataName);
     }

@@ -32,7 +32,7 @@ export const importExel = async(req, res) => {
   
         const [
           nameRaw, emailRaw, addressRaw, phoneRaw,
-          contactRaw, contactphoneRaw, iceRaw, idFRaw
+          contactRaw, contactphoneRaw, iceRaw, idFRaw, ribRaw, banqueRaw, agenceRaw
         ] = Array.from({ length: 8 }, (_, i) => row.getCell(i + 1).text.trim());
   
         // Normalize missing values to null
@@ -44,6 +44,9 @@ export const importExel = async(req, res) => {
         const contactphone = contactphoneRaw || null;
         const ice = iceRaw || null;
         const idF = idFRaw || null;
+        const rib = ribRaw || null;
+        const banque = banqueRaw || null;
+        const agence = agenceRaw || null;
   
         // Validate required fields
         if (!name) validationIssues.push({ row: rowNumber, field: 'name', issue: 'Missing name' });
@@ -56,8 +59,11 @@ export const importExel = async(req, res) => {
         }
   
         if (!idF) validationIssues.push({ row: rowNumber, field: 'identifFiscal', issue: 'Missing identifFiscal' });
+        if (!rib) validationIssues.push({ row: rowNumber, field: 'rib', issue: 'Missing RIB' });
+        if (!banque) validationIssues.push({ row: rowNumber, field: 'banque', issue: 'Missing banque' });
+        if (!agence) validationIssues.push({ row: rowNumber, field: 'agence', issue: 'Missing agence' });
   
-        suppliers.push({ name, email, address, phone, contact, contactphone, ice, idF, rowNumber });
+        suppliers.push({ name, email, address, phone, contact, contactphone, ice, idF, rib, banque, agence , rowNumber });
       });
   
       // Filter suppliers with valid ICE for DB upsert (required for uniqueness)
@@ -77,6 +83,10 @@ export const importExel = async(req, res) => {
               email: supplier.email,
               address: supplier.address,
               identifFiscal: supplier.idF,
+              rib: supplier.rib,
+              banque: supplier.banque,
+              agence: supplier.agence,
+
               telFournisseur: supplier.phone,
               contact: supplier.contact,
               telContact: supplier.contactphone,
@@ -86,6 +96,9 @@ export const importExel = async(req, res) => {
               email: supplier.email,
               address: supplier.address,
               ice: supplier.ice,
+              rib: supplier.rib,
+              banque: supplier.banque,
+              agence: supplier.agence,
               identifFiscal: supplier.idF,
               telFournisseur: supplier.phone,
               contact: supplier.contact,
@@ -121,7 +134,7 @@ export const importExel = async(req, res) => {
   }
 export const create = async (req, res) => {
   try {
-    const { name, email, address,  phone, contact, contactphone, ice, idF, rib } = req.body;
+    const { name, email, address,  phone, contact, contactphone, ice, idF, rib, banque, agence } = req.body;
     const supplier = await prisma.fournisseur.create({
       data: {
         name : name,
@@ -132,7 +145,9 @@ export const create = async (req, res) => {
         telFournisseur: phone,
         contact,
         telContact: contactphone,
-        rib : rib
+        rib : rib,
+        banque,
+        agence
       },
     });
    
@@ -147,7 +162,7 @@ export const create = async (req, res) => {
 export const update = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, address, phone, contact, contactphone, ice, idF, rib } = req.body;
+    const { name, email, address, phone, contact, contactphone, ice, idF, rib, banque , agence} = req.body;
     const supplier = await prisma.fournisseur.update({
       where: { id: Number(id) },
       data: {
@@ -155,6 +170,8 @@ export const update = async (req, res) => {
         email,
         address,
         ice,
+        banque,
+        agence,
         identifFiscal: idF,
         telFournisseur: phone,
         contact,

@@ -302,12 +302,14 @@ export const importExelCheques = async (req, res) => {
             fournisseur = await prisma.fournisseur.create({
                 data: {
                     name: cheque.beneficiaire,
-                    ice: `ICE_${Date.now()}`,
-                    rib: `RIB_${Date.now()}`,
-                    identifFiscal: `FISCAL_${Date.now()}`,
-                    telFournisseur: 'Default',
-                    contact: 'Default',
-                    telContact: 'Default'
+                    ice: ` `,
+                    rib: ` `,
+                    banque : '',
+                    agence : '',
+                    identifFiscal: ` `,
+                    telFournisseur: ' ',
+                    contact: ' ',
+                    telContact: ' '
                 }
             });
         }
@@ -523,11 +525,11 @@ export const updateCheque = async (req, res) => {
       fournisseur = await prisma.fournisseur.create({
         data: {
           name: beneficiaire,
-          ice: `ICE_${Date.now()}`,
-          identifFiscal: `FISCAL_${Date.now()}`,
-          telFournisseur: 'Default',
-          contact: 'Default',
-          telContact: 'Default'
+          ice: ` `,
+          identifFiscal: ` `,
+          telFournisseur: ' ',
+          contact: ' ',
+          telContact: ' '
         }
       });
     }
@@ -540,7 +542,7 @@ export const updateCheque = async (req, res) => {
         data: {
           name: banque,
           rib: 0,
-          agence: 'Default Agence',
+          agence: ' ',
           solde: 0,
           dateSolde: new Date(),
           positive: 0,
@@ -627,11 +629,14 @@ export const etablirCheque = async (req, res) => {
       fournisseur = await prisma.fournisseur.create({
         data: {
           name: beneficiaire,
-          ice: `ICE_${Date.now()}`,
-          identifFiscal: `FISCAL_${Date.now()}`,
-          telFournisseur: 'Default',
-          contact: 'Default',
-          telContact: 'Default',
+          ice: ` `,
+          rib : "",
+          banque : "",
+          agence : "",
+          identifFiscal: ` `,
+          telFournisseur: ' ',
+          contact: ' ',
+          telContact: ' ',
         },
       });
     }
@@ -758,11 +763,14 @@ export const createCheque = async (req, res) => {
       fournisseur = await prisma.fournisseur.create({
         data: {
           name: beneficiaire,
-          ice: `ICE_${Date.now()}`,
-          identifFiscal: `FISCAL_${Date.now()}`,
-          telFournisseur: 'Default',
-          contact: 'Default',
-          telContact: 'Default',
+          ice: ` `,
+          rib: ` `,
+          banque : '',
+          agence : '',
+          identifFiscal: ``,
+          telFournisseur: ' ',
+          contact: ' ',
+          telContact: '',
         },
       });
     }
@@ -777,7 +785,7 @@ export const createCheque = async (req, res) => {
         data: {
           name: banque,
           rib: 0,
-          agence: 'Default Agence',
+          agence: '',
           solde: 0,
           dateSolde: new Date(),
           positive: 0,

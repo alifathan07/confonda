@@ -253,12 +253,14 @@ const parseExcelDate = (value) => {
             fournisseur = await prisma.fournisseur.create({
               data: {
                 name: effet.beneficiaire,
-                ice: `ICE_${Date.now()}`,
-                rib: `RIB_${Date.now()}`,
-                identifFiscal: `FISCAL_${Date.now()}`,
-                telFournisseur: 'Default',
-                contact: 'Default',
-                telContact: 'Default'
+                ice: ` `,
+                rib: ` `,
+                banque : '',
+                agence : '',
+                identifFiscal: ` `,
+                telFournisseur: ' ',
+                contact: ' ',
+                telContact: ' '
               }
             });
           }
@@ -274,8 +276,8 @@ const parseExcelDate = (value) => {
             banque = await prisma.banque.create({
               data: {
                 name: effet.banqueName,
-                rib: 123456789,
-                agence: 'Default Agence',
+                rib: "",
+                agence: ' ',
                 solde: 0,
                 dateSolde: new Date(),
                 positive: 0,
@@ -497,11 +499,13 @@ export const createEffet = async (req, res) => {
       fournisseur = await prisma.fournisseur.create({
         data: {
           name: beneficiaire,
-          ice: `ICE_${Date.now()}`,
-          identifFiscal: `FISCAL_${Date.now()}`,
-          telFournisseur: 'Default',
-          contact: 'Default',
-          telContact: 'Default',
+          ice: ` `,
+          rib: ` `,
+          banque : '',
+          identifFiscal: ` `,
+          telFournisseur: ' ',
+          contact: ' ',
+          telContact: ' ',
         },
       });
     }
@@ -516,7 +520,7 @@ export const createEffet = async (req, res) => {
         data: {
           name: banque,
           rib: 0,
-          agence: 'Default Agence',
+          agence: ' ',
           solde: 0,
           dateSolde: new Date(),
           positive: 0,
@@ -569,11 +573,13 @@ export const etablirEffet = async (req, res) => {
       fournisseur = await prisma.fournisseur.create({
         data: {
           name: beneficiaire,
-          ice: `ICE_${Date.now()}`,
-          identifFiscal: `FISCAL_${Date.now()}`,
-          telFournisseur: 'Default',
-          contact: 'Default',
-          telContact: 'Default',
+          ice: ` `,
+          rib: ` `,
+          banque : '',
+          identifFiscal: ` `,
+          telFournisseur: ' ',
+          contact: ' ',
+          telContact: ' ',
         },
       });
     }
@@ -585,9 +591,9 @@ export const etablirEffet = async (req, res) => {
     if (!findBanque) {
       findBanque = await prisma.banque.create({
         data: {
-          name: 'Default',
+          name: ' ',
           rib: 0,
-          agence: 'Default Agence',
+          agence: ' ',
           solde: 0,
           dateSolde: new Date(),
           positive: 0,
@@ -678,11 +684,13 @@ export const updateEffet = async (req, res) => {
       fournisseur = await prisma.fournisseur.create({
         data: {
           name: beneficiaire,
-          ice: `ICE_${Date.now()}`,
-          identifFiscal: `FISCAL_${Date.now()}`,
-          telFournisseur: 'Default',
-          contact: 'Default',
-          telContact: 'Default'
+          ice: ` `,
+          rib: ` `,
+          banque : '',
+          identifFiscal: ` `,
+          telFournisseur: ' ',
+          contact: ' ',
+          telContact: ' '
         }
       });
     }
@@ -695,7 +703,7 @@ export const updateEffet = async (req, res) => {
         data: {
           name: banque,
           rib: 0,
-          agence: 'Default Agence',
+          agence: '',
           solde: 0,
           dateSolde: new Date(),
           positive: 0,
