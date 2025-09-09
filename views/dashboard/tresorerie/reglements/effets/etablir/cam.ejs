@@ -541,32 +541,34 @@ function updatePrintFields() {
 
         // Handle amount input and convert to words
         document.getElementById("amount").addEventListener("input", function () {
-            let input = this.value.replace(/[^0-9,.]/g, "").replace(",", ".");
-            let amountWordsInput = document.getElementById("amount-words");
-            
-            if (!input || isNaN(parseFloat(input))) {
-                amountWordsInput.value = "Zéro dirhams et zéro centimes";
-                updatePrintFields();
-                return;
-            }
+    let input = this.value.replace(/[^0-9,.]/g, "").replace(",", ".");
+    let amountWordsInput = document.getElementById("amount-words");
+    
+    if (!input || isNaN(parseFloat(input))) {
+        amountWordsInput.value = "ZÉRO DIRHAMS ET ZÉRO CENTIMES";
+        updatePrintFields();
+        return;
+    }
 
-            let [dirhams, centimes = "0"] = input.split(".");
-            dirhams = parseInt(dirhams) || 0;
-            centimes = parseInt(centimes.padEnd(2, "0").substring(0, 2)) || 0;
+    let [dirhams, centimes = "0"] = input.split(".");
+    dirhams = parseInt(dirhams) || 0;
+    centimes = parseInt(centimes.padEnd(2, "0").substring(0, 2)) || 0;
 
-            let dirhamsText = numberToFrenchWords(dirhams);
-            let centimesText = numberToFrenchWords(centimes);
+    let dirhamsText = numberToFrenchWords(dirhams).toUpperCase();
+    let centimesText = numberToFrenchWords(centimes).toUpperCase();
 
-            dirhamsText = dirhamsText.charAt(0).toUpperCase() + dirhamsText.slice(1);
-            let result = `${dirhamsText} dirham${dirhams !== 1 ? "s" : ""}`;
-            if (centimes > 0) {
-                result += ` et ${centimesText} centime${centimes !== 1 ? "s" : ""}`;
-            } else {
-                result += " et zéro centimes";
-            }
-            amountWordsInput.value = result;
-            updatePrintFields();
-        });
+    let result = `${dirhamsText} DIRHAM${dirhams !== 1 ? "S" : ""}`;
+    if (centimes > 0) {
+        result += ` ET ${centimesText} CENTIME${centimes !== 1 ? "S" : ""}`;
+    } else {
+        result += " ET ZÉRO CENTIMES";
+    }
+
+    amountWordsInput.value = result;
+    updatePrintFields();
+});
+       
+
 
         // Update print fields on any input change
         document.querySelectorAll('input, textarea').forEach(input => {

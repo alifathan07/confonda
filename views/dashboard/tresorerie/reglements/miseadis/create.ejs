@@ -187,7 +187,7 @@
                                         if (chunk === 0n) continue;
                                         let chunkWord = chunkToWords(chunk);
                                         if (i > 0) {
-                                            if (i === 1 && chunk === 1n) chunkWord = scales[i]; // "mille" singular
+                                            if (i === 1 && chunk === 1n) chunkWord = scales[i]; 
                                             else chunkWord += " " + scales[i];
                                             if (chunk > 1n && i > 1) chunkWord += "S"; 
                                         }
@@ -199,7 +199,7 @@
                                     return result;
                                 }
                                 
-                                // Debounce input
+                                // Debounce function
                                 function debounce(fn, delay) {
                                     let timer = null;
                                     return function(...args) {
@@ -219,14 +219,21 @@
                                     let integerPart = parts[0];
                                     let decimalPart = parts[1] || "";
                                 
-                                    let text = numberToFrenchWords(integerPart);
+                                    let text = "";
+                                    if (parseInt(integerPart, 10) > 0) {
+                                        text = numberToFrenchWords(integerPart) + " DIRHAMS";
+                                    }
+                                
                                     if (decimalPart && parseInt(decimalPart, 10) > 0) {
-                                        text += " VIRGULE " + numberToFrenchWords(decimalPart);
+                                        decimalPart = decimalPart.padEnd(2, "0").slice(0,2);
+                                        if (text) text += " ";
+                                        text += numberToFrenchWords(decimalPart) + " CENTIMES";
                                     }
                                 
                                     document.getElementById('montantLettre').value = text;
                                 }, 150));
                                 </script>
+                                
                                 
 
                                 <script src="/vendor/jquery/jquery.min.js"></script>

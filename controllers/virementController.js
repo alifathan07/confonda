@@ -287,12 +287,18 @@ export const generateVirementPDF = async (req, res) => {
         // === TABLE ===
         const details = [
             { title: 'Bénéficiaire', value: virement.beneficiaire || 'N/A' },
-            { title: 'Montant', value: virement.montant ? parseFloat(virement.montant.toString().replace(',', '.')).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' dirhams' : 'N/A' },
-            { title: 'Montant en lettres', value: virement.montantLettres ? virement.montantLettres + ' dirhams' : 'N/A' },
+            { 
+                title: 'Montant', 
+                value: Number(virement.montant).toLocaleString('fr-FR', { 
+                  minimumFractionDigits: 2, 
+                  maximumFractionDigits: 2 
+                }).replace(/[\u00A0\u202F]/g, ' ') + ' dirhams' 
+              },            { title: 'Montant en lettres', value: virement.montantLettres ? virement.montantLettres + ' dirhams' : 'N/A' },
             { title: 'Banque', value: virement.fournisseur?.banque || 'N/A' },
             { title: 'RIB', value: virement.fournisseur?.rib || 'N/A' },
             { title: 'Agence', value: virement.fournisseur?.agence || 'N/A' },
         ];
+       
 
         doc.moveDown(2);
         let currentY = doc.y;

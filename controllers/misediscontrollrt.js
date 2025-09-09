@@ -201,7 +201,10 @@ export const generateMiseadisPDF = async (req, res) => {
    .text(
        `Monsieur,
 
-Nous avons l'honneur de vous demander de bien vouloir mettre à la disposition de Monsieur ${miseadis.beneficiaire || "N/A"}, CIN N° ${miseadis.cin || "N/A"}, la somme de ${miseadis.montant ? miseadis.montant.toFixed(2) + " MAD" : "N/A"} (${miseadis.montantLettres || "N/A"}), en débitant notre compte N° ${miseadis.banque?.rib || "N/A"} ouvert à votre agence au nom de notre société.
+Nous avons l'honneur de vous demander de bien vouloir mettre à la disposition de Monsieur ${miseadis.beneficiaire || "N/A"}, CIN N° ${miseadis.cin || "N/A"}, la somme de ${miseadis.montant ?miseadis.montant.toLocaleString('fr-FR', { 
+    minimumFractionDigits: 2, 
+    maximumFractionDigits: 2 
+  }).replace(/[\u00A0\u202F]/g, ' ') + " MAD" : "N/A"} (${miseadis.montantLettres || "N/A"}), en débitant notre compte N° ${miseadis.banque?.rib || "N/A"} ouvert à votre agence au nom de notre société.
 
 Veuillez agréer, Monsieur, l'expression de nos salutations distinguées.`,
        50,
