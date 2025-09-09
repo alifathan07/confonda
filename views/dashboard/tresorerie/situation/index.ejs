@@ -429,7 +429,7 @@
   </style>
 </head>
 <body id="page-top">
-  <div id="wrapper">
+  <div id="wrapper" class="d-flex">
     <%- include('../../../layouts/sidebar') %>
     <div id="content-wrapper" class="d-flex flex-column">
       <div id="content">
@@ -933,7 +933,7 @@
           <% }) %>
         </tbody>
        <tfoot>
-  <tr style="background-color: #ffffff; color: rgb(0, 0, 0); font-weight: bold;">
+  <tr style="background-color: #2fb415; color: white; font-weight: bold;">
     <td colspan="4">Total</td>
     <td class="text-right" id="displayTotalCheques">
       <%= cheques.filter(c => c.validation).reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
@@ -1003,9 +1003,9 @@
           <% }) %>
         </tbody>
         <tfoot>
-          <tr >
-            <td>Total</td>
-            <td class="text-right" id="displayTotalEffets">
+          <tr style="background-color: #2fb415; color: white; font-weight: bold;">
+            <td >Total</td>
+            <td class="text-right" id="displayTotalEffets" >
               <%= effets.filter(c => c.validation).reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
             </td>
             <td colspan="7"></td>
@@ -1064,7 +1064,7 @@
           <% }) %>
         </tbody>
         <tfoot>
-          <tr>
+          <tr style="background-color: #2fb415; color: white; font-weight: bold;">
             <td>Total</td>
             <td class="text-right" id="displayTotalPayavenirsValides">
               <%= payavenirs.filter(p => p.validation).reduce((acc, p) => acc + p.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>

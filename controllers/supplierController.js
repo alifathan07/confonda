@@ -132,32 +132,33 @@ export const importExel = async(req, res) => {
       });
     }
   }
-export const create = async (req, res) => {
-  try {
-    const { name, email, address,  phone, contact, contactphone, ice, idF, rib, banque, agence } = req.body;
-    const supplier = await prisma.fournisseur.create({
-      data: {
-        name : name,
-        email : email,
-        address : address,
-        ice : ice,
-        identifFiscal: idF,
-        telFournisseur: phone,
-        contact,
-        telContact: contactphone,
-        rib : rib,
-        banque,
-        agence
-      },
-    });
-   
-
-    res.status(201).json(supplier);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Erreur lors de la création du fournisseur.' });
-  }
-};
+  export const create = async (req, res) => {
+    try {
+      const { name, email, address,  phone, contact, contactphone, ice, idF, rib, banque, agence } = req.body;
+      const number = 1
+      const supplier = await prisma.fournisseur.create({
+        data: {
+          name : name,
+          email : email,
+          address : address,
+          ice : ice ? ice : "" ,
+          identifFiscal: idF ? idF : "",
+          telFournisseur: phone ? phone : "",
+          contact : contact ? contact : "",
+          telContact: contactphone ? contactphone : "",
+          rib : rib ? rib : "",
+          banque : banque ? banque : "",
+          agence : agence ? agence : ""
+        },
+      });
+  
+  
+      res.status(201).json(supplier);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Erreur lors de la création du fournisseur.' });
+    }
+  };
 
 export const update = async (req, res) => {
   try {

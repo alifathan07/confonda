@@ -450,27 +450,39 @@ export const showEffetsForbanque = async (req, res) => {
 
 export const Ebmce = async (req, res) => {
   const {id} = req.params     
-  res.render('dashboard/tresorerie/reglements/effets/etablir/bmce', {id})
+  const fournisseurs = await prisma.fournisseur.findMany()
+  const banques = await prisma.banque.findMany()
+  res.render('dashboard/tresorerie/reglements/effets/etablir/bmce', {id , fournisseurs , banques})
 };
 export const Ebmci = async (req, res) => {
   const {id} = req.params     
-  res.render('dashboard/tresorerie/reglements/effets/etablir/bmci', {id})
+  const fournisseurs = await prisma.fournisseur.findMany()
+  const banques = await prisma.banque.findMany()
+  res.render('dashboard/tresorerie/reglements/effets/etablir/bmci', {id , fournisseurs , banques})
 };
 export const Eawb = async (req, res) => {
   const {id} = req.params     
-  res.render('dashboard/tresorerie/reglements/effets/etablir/awb', {id})
+  const fournisseurs = await prisma.fournisseur.findMany()
+  const banques = await prisma.banque.findMany()
+  res.render('dashboard/tresorerie/reglements/effets/etablir/awb', {id , fournisseurs , banques})
 };
 export const Ecam = async (req, res) => {
   const {id} = req.params     
-  res.render('dashboard/tresorerie/reglements/effets/etablir/cam', {id})
+  const fournisseurs = await prisma.fournisseur.findMany()
+  const banques = await prisma.banque.findMany()
+  res.render('dashboard/tresorerie/reglements/effets/etablir/cam', {id , fournisseurs , banques})
 };
 export const Ebp = async (req, res) => {
   const {id} = req.params     
-  res.render('dashboard/tresorerie/reglements/effets/etablir/bp', {id})
+  const fournisseurs = await prisma.fournisseur.findMany()
+  const banques = await prisma.banque.findMany()
+  res.render('dashboard/tresorerie/reglements/effets/etablir/bp', {id , fournisseurs , banques})
 };
 export const Ecdm = async (req, res) => {
   const {id} = req.params     
-  res.render('dashboard/tresorerie/reglements/effets/etablir/cdm', {id})
+  const fournisseurs = await prisma.fournisseur.findMany()
+  const banques = await prisma.banque.findMany()
+  res.render('dashboard/tresorerie/reglements/effets/etablir/cdm', {id , fournisseurs , banques})
 };
 
 export const createEffet = async (req, res) => {
@@ -561,70 +573,42 @@ export const createEffet = async (req, res) => {
 
 export const etablirEffet = async (req, res) => {
   try {
-    const { numero, montant, beneficiaire, dateEcheance, ville, obs } = req.body
-    const { id } = req.params  // banque id
+    const { numero, montant, beneficiaire, dateEcheance, ville, obs } = req.body;
+    const { id } = req.params; // banque id
 
-    // --- Check if fournisseur exists ---
-    let fournisseur = await prisma.fournisseur.findFirst({
-      where: { name: beneficiaire },
-    });
-
+    // --- Check or create fournisseur ---
+    let fournisseur = await prisma.fournisseur.findFirst({ where: { name: beneficiaire } });
     if (!fournisseur) {
       fournisseur = await prisma.fournisseur.create({
-        data: {
-          name: beneficiaire,
-          ice: ` `,
-          rib: ` `,
-          banque : '',
-          identifFiscal: ` `,
-          telFournisseur: ' ',
-          contact: ' ',
-          telContact: ' ',
-        },
+        data: { name: beneficiaire, ice: ' ', rib: ' ', banque: '', identifFiscal: ' ', telFournisseur: ' ', contact: ' ', telContact: ' ' },
       });
     }
 
-    // --- Check banque ---
-    let findBanque = await prisma.banque.findFirst({
-      where: { id: parseInt(id) },
-    });
+    // --- Check or create banque ---
+    let findBanque = await prisma.banque.findFirst({ where: { id: parseInt(id) } });
     if (!findBanque) {
       findBanque = await prisma.banque.create({
-        data: {
-          name: ' ',
-          rib: 0,
-          agence: ' ',
-          solde: 0,
-          dateSolde: new Date(),
-          positive: 0,
-          negative: 0,
-          dmlt: 0,
-        },
+        data: { name: ' ', rib: 0, agence: ' ', solde: 0, dateSolde: new Date(), positive: 0, negative: 0, dmlt: 0 },
       });
     }
 
-    // --- Get last cheque number for this banque ---
+    // --- Get last cheque for this banque ---
     const lastEffet = await prisma.effet.findFirst({
       where: { banqueId: findBanque.id },
       orderBy: { id: 'desc' },
     });
 
     let nextNumero;
-
-    if (numero && !lastEffet) {
-      // User provided a starting numero & no cheques yet → use it
-      nextNumero = numero;
-    } else if (numero && lastEffet) {
-      // If user provides something while cheques already exist → ignore & increment
+    if (numero) {
+      // Use user-provided number
+      nextNumero = String(numero);
+    } else if (lastEffet) {
+      // Auto increment from last number
       const lastNumero = parseInt(lastEffet.numero, 10);
-      nextNumero = isNaN(lastNumero) ? numero : String(lastNumero + 1);
-    } else if (!numero && !lastEffet) {
-      // No user input & no cheques yet → default start 1
-      nextNumero = "1";
+      nextNumero = isNaN(lastNumero) ? '1' : String(lastNumero + 1);
     } else {
-      // Auto increment based on last cheque
-      const lastNumero = parseInt(lastEffet.numero, 10);
-      nextNumero = isNaN(lastNumero) ? "1" : String(lastNumero + 1);
+      // First record, default to 1
+      nextNumero = '1';
     }
 
     // --- Create cheque ---
@@ -640,12 +624,11 @@ export const etablirEffet = async (req, res) => {
         obs,
         fournisseur: { connect: { id: fournisseur.id } },
         banque: { connect: { id: findBanque.id } },
-      }
+      },
     });
 
     console.log(`✅ Effet created successfully: ${effet.id}`);
     res.redirect(`/tresorerie/effets/banque/${id}`);
-
   } catch (error) {
     console.error('❌ Error creating cheque:', {
       error: error.message,
@@ -655,6 +638,7 @@ export const etablirEffet = async (req, res) => {
     res.status(500).json({ error: "Erreur lors de la création du chèque." });
   }
 };
+
 
 export const updateEffet = async (req, res) => {
   try {

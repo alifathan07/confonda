@@ -273,7 +273,48 @@
             <div class="cheque-row">
                 <div class="form-group textarea-wrapper">
                     <label for="payee">À l'ordre de:</label>
-                    <textarea id="payee" rows="2" placeholder="Nom du bénéficiaire" name="beneficiaire"></textarea>
+                    <ul id="suggestions" class="autocomplete-list"></ul>
+
+                    <script>
+                    const fournisseurs = <%- JSON.stringify(fournisseurs) %>;
+                    const payeeInput = document.getElementById('payee');
+                    const suggestions = document.getElementById('suggestions');
+
+                    payeeInput.addEventListener('input', () => {
+                    const value = payeeInput.value.toLowerCase();
+                    suggestions.innerHTML = '';
+                    if (!value) return;
+
+                    const matches = fournisseurs.filter(f => f.name.toLowerCase().includes(value));
+                    matches.forEach(match => {
+                        const li = document.createElement('li');
+                        li.textContent = match.name;
+                        li.addEventListener('click', () => {
+                        payeeInput.value = match.name;
+                        suggestions.innerHTML = '';
+                        });
+                        suggestions.appendChild(li);
+                    });
+                    });
+                    </script>
+
+                    <style>
+                    .autocomplete-list {
+                    border: 1px solid #ccc;
+                    max-height: 150px;
+                    overflow-y: auto;
+                    padding: 0;
+                    margin: 0;
+                    list-style: none;
+                    }
+                    .autocomplete-list li {
+                    padding: 5px 10px;
+                    cursor: pointer;
+                    }
+                    .autocomplete-list li:hover {
+                    background-color: #eee;
+                    }
+                    </style>
                 </div>
                 <div class="form-group amount-numbers">
                     <label for="amount">Montant:</label>

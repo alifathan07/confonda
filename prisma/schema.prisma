@@ -109,7 +109,7 @@ model Fournisseur {
   id        Int      @id @default(autoincrement())
   name      String
   email     String?
-  ice       String @unique
+  ice       String 
   rib        String
   agence    String?
   banque    String?
@@ -176,6 +176,7 @@ model Effet {
   banqueId            Int
   numero           String      // ✅ Add this line if it's not already
   obs String?
+  dateaujou DateTime?
   montantLettres      String?
   ville               String?
   // facture             Facture? @relation(fields: [factureId], references: [id])

@@ -23,10 +23,93 @@ dashboardRouter.use((req, res, next) => {
     
     next();
 });
-
-dashboardRouter.get('/dashboard' , (req, res) => {
-    res.render('dashboard/index', { user: req.session.user });
-});
+dashboardRouter.get('/dashboard', async (req, res) => {
+    try {
+      // Fetch all banks
+      const banques = await prisma.banque.findMany({
+        select: {
+          id: true,
+          name: true,
+          positive: true,
+          negative: true,
+          dmlt: true,
+        },
+      });
+  
+      // Fetch cheques in circulation or unpaid
+      const cheques = await prisma.cheque.findMany({
+        where: { statut: { in: ['En Circulation', 'Impayé'] } },
+        select: { montant: true, dateEcheance: true },
+      });
+  
+      // Fetch effets in circulation or unpaid
+      const effets = await prisma.effet.findMany({
+        where: { statut: { in: ['En Circulation', 'Impayé'] } },
+        select: { montant: true, dateEcheance: true },
+      });
+  
+      // Fetch payements à effectuer
+      const payavenirs = await prisma.payavenir.findMany({
+        where: { statut: { in: ['échu', 'impayé', 'non échu'] } },
+        select: { montant: true, dateEcheance: true },
+      });
+  
+      // Fetch recettes à venir
+      const recavenirs = await prisma.recavenir.findMany({
+        where: { statut: { in: ['échu', 'impayé', 'non échu'] } },
+        select: { montant: true, dateEcheance : true },
+      });
+  
+      // Compute totals
+      const soldePositif = banques.reduce((sum, b) => sum + (b.positive || 0), 0);
+  
+      const totalPayementsAEffectuer = cheques.reduce((sum, c) => sum + (c.montant || 0), 0) +
+                                       effets.reduce((sum, e) => sum + (e.montant || 0), 0) +
+                                       payavenirs.reduce((sum, p) => sum + (p.montant || 0), 0);
+  
+      const totalRecettesAVenir = recavenirs.reduce((sum, r) => sum + (r.montant || 0), 0);
+  
+      // Optional: echeances this week
+      const now = new Date();
+      const endOfWeek = new Date();
+      endOfWeek.setDate(now.getDate() + (7 - now.getDay()));
+  
+      const echeancesThisWeek = cheques
+        .concat(effets)
+        .filter(item => {
+          if (!item.dateEcheance) return false;
+          const date = new Date(item.dateEcheance);
+          return date >= now && date <= endOfWeek;
+        });
+  
+      // Prepare data for graphs
+      const recettesChartData = recavenirs.map(r => ({
+        date: r.dateEcheance.toISOString().split('T')[0], // YYYY-MM-DD
+        amount: r.montant,
+      }));
+  
+      const payementsChartData = payavenirs.map(p => ({
+        date: p.dateEcheance ? p.dateEcheance.toISOString().split('T')[0] : null,
+        amount: p.montant,
+      })).filter(p => p.date !== null);
+  
+      res.render('dashboard/index', {
+        user: req.session.user,
+        banques,
+        soldePositif,
+        totalPayementsAEffectuer,
+        totalRecettesAVenir,
+        echeancesThisWeek,
+        recettesChartData,
+        payementsChartData,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Erreur serveur.');
+    }
+  });
+  
+  
 
 // Achats : 
         dashboardRouter.get('/achats', (req, res) => {

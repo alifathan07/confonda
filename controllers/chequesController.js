@@ -463,12 +463,16 @@ export const showChequesForbanque = async (req, res) => {
     where: {
       banqueId: Number(req.params.id)
     },
+    orderBy: {
+      numero: 'asc'
+
+    },
     include: {
       banque: {
         select: { name: true },
       },
       fournisseur: {
-        select: { name: true },
+        select: { name: true, agence: true },
       },
     },
   });
@@ -592,48 +596,51 @@ export const updateCheque = async (req, res) => {
 
 export const bmce = async (req, res) => {
   const {id} = req.params     
-  res.render('dashboard/tresorerie/reglements/cheques/etablir/bmce', {id})
+  const fournisseurs = await prisma.fournisseur.findMany()
+  res.render('dashboard/tresorerie/reglements/cheques/etablir/bmce', {id , fournisseurs})
 };
 export const bmci = async (req, res) => {
   const {id} = req.params     
-  res.render('dashboard/tresorerie/reglements/cheques/etablir/bmci', {id})
+  const fournisseurs = await prisma.fournisseur.findMany()
+  res.render('dashboard/tresorerie/reglements/cheques/etablir/bmci', {id , fournisseurs})
 };
 export const awb = async (req, res) => {
   const {id} = req.params     
-  res.render('dashboard/tresorerie/reglements/cheques/etablir/awb', {id})
+  const fournisseurs = await prisma.fournisseur.findMany()
+  res.render('dashboard/tresorerie/reglements/cheques/etablir/awb', {id , fournisseurs})
 };
 export const cam = async (req, res) => {
   const {id} = req.params     
-  res.render('dashboard/tresorerie/reglements/cheques/etablir/cam', {id})
+  const fournisseurs = await prisma.fournisseur.findMany()
+  res.render('dashboard/tresorerie/reglements/cheques/etablir/cam', {id , fournisseurs})
 };
 export const bp = async (req, res) => {
   const {id} = req.params     
-  res.render('dashboard/tresorerie/reglements/cheques/etablir/bp', {id})
+  const fournisseurs = await prisma.fournisseur.findMany()
+  res.render('dashboard/tresorerie/reglements/cheques/etablir/bp', {id , fournisseurs})
 };
 export const cdm = async (req, res) => {
   const {id} = req.params     
-  res.render('dashboard/tresorerie/reglements/cheques/etablir/cdm', {id})
+  const fournisseurs = await prisma.fournisseur.findMany()
+  res.render('dashboard/tresorerie/reglements/cheques/etablir/cdm', {id , fournisseurs})
 };
 
 export const etablirCheque = async (req, res) => {
   try {
-    const { numero, montant, beneficiaire, dateEcheance, ville } = req.body
-    const { id } = req.params  // banque id
+    const { numero, montant, beneficiaire, dateEcheance, ville } = req.body;
+    const { id } = req.params; // banque id
 
-    // --- Check if fournisseur exists ---
-    let fournisseur = await prisma.fournisseur.findFirst({
-      where: { name: beneficiaire },
-    });
-
+    // --- Check or create fournisseur ---
+    let fournisseur = await prisma.fournisseur.findFirst({ where: { name: beneficiaire } });
     if (!fournisseur) {
       fournisseur = await prisma.fournisseur.create({
         data: {
           name: beneficiaire,
-          ice: ` `,
-          rib : "",
-          banque : "",
-          agence : "",
-          identifFiscal: ` `,
+          ice: ' ',
+          rib: '',
+          banque: '',
+          agence: '',
+          identifFiscal: ' ',
           telFournisseur: ' ',
           contact: ' ',
           telContact: ' ',
@@ -641,10 +648,8 @@ export const etablirCheque = async (req, res) => {
       });
     }
 
-    // --- Check banque ---
-    let findBanque = await prisma.banque.findFirst({
-      where: { id: parseInt(id) },
-    });
+    // --- Check or create banque ---
+    let findBanque = await prisma.banque.findFirst({ where: { id: parseInt(id) } });
     if (!findBanque) {
       findBanque = await prisma.banque.create({
         data: {
@@ -660,28 +665,24 @@ export const etablirCheque = async (req, res) => {
       });
     }
 
-    // --- Get last cheque number for this banque ---
+    // --- Get last cheque for this banque ---
     const lastCheque = await prisma.cheque.findFirst({
       where: { banqueId: findBanque.id },
       orderBy: { id: 'desc' },
     });
 
+    // --- Determine next cheque number ---
     let nextNumero;
-
-    if (numero && !lastCheque) {
-      // User provided a starting numero & no cheques yet → use it
-      nextNumero = numero;
-    } else if (numero && lastCheque) {
-      // If user provides something while cheques already exist → ignore & increment
+    if (numero) {
+      // Use user-provided number, always
+      nextNumero = String(numero);
+    } else if (lastCheque) {
+      // Auto increment from last number
       const lastNumero = parseInt(lastCheque.numero, 10);
-      nextNumero = isNaN(lastNumero) ? numero : String(lastNumero + 1);
-    } else if (!numero && !lastCheque) {
-      // No user input & no cheques yet → default start 1
-      nextNumero = "1";
+      nextNumero = isNaN(lastNumero) ? '1' : String(lastNumero + 1);
     } else {
-      // Auto increment based on last cheque
-      const lastNumero = parseInt(lastCheque.numero, 10);
-      nextNumero = isNaN(lastNumero) ? "1" : String(lastNumero + 1);
+      // First record, default to 1
+      nextNumero = '1';
     }
 
     // --- Create cheque ---
@@ -696,12 +697,11 @@ export const etablirCheque = async (req, res) => {
         ville,
         fournisseur: { connect: { id: fournisseur.id } },
         banque: { connect: { id: findBanque.id } },
-      }
+      },
     });
 
     console.log(`✅ Cheque created successfully: ${cheque.id}`);
     res.redirect(`/tresorerie/cheques/banque/${id}`);
-
   } catch (error) {
     console.error('❌ Error creating cheque:', {
       error: error.message,
@@ -711,6 +711,7 @@ export const etablirCheque = async (req, res) => {
     res.status(500).json({ error: "Erreur lors de la création du chèque." });
   }
 };
+
 
 
 

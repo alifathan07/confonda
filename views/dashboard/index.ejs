@@ -1,100 +1,276 @@
-<title>Dashboard</title>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Modern financial dashboard">
+  <title>Dashboard</title>
+  <!-- Tailwind CSS CDN (v2.2.19 for stability) -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- Font Awesome 6.4 for icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <!-- Google Fonts (Poppins) for modern typography -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Custom CSS for refined styling and button visibility -->
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+    .logo { transition: transform 0.2s; }
+    .logo:hover { transform: scale(1.05); }
+    .card { transition: transform 0.2s, box-shadow 0.2s; }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1); }
+    .action-btn { 
+      display: inline-flex; 
+      align-items: center; 
+      opacity: 1 !important; 
+      transition: background-color 0.2s, opacity 0.2s; 
+    }
+    .action-btn:hover { opacity: 0.9; }
+    .chart-container { position: relative; height: 280px; }
+    .table { border-collapse: separate; border-spacing: 0; }
+    .table th, .table td { border-bottom: 1px solid #e5e7eb; }
+    .table thead th { background: #e5e7eb; }
+    /* Ensure text contrast meets WCAG 2.1 */
+    .text-green-700, .text-red-700, .text-blue-700, .text-yellow-700 { font-weight: 600; }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <div id="wrapper" class="flex min-h-screen">
+    <!-- Sidebar (unchanged to preserve your base layout) -->
+    <%- include('../layouts/sidebar') %>
 
-<div id="wrapper">
-  <%- include('../layouts/sidebar') %>
+    <div id="content-wrapper" class="flex-1 flex flex-col bg-gray-50">
+      <div id="content">
+        <!-- Topbar (unchanged to preserve your base layout) -->
+        <%- include('../layouts/topbar') %>
 
-  <div id="content-wrapper" class="d-flex flex-column bg-light min-vh-100">
-    <div id="content">
-      <%- include('../layouts/topbar') %>
+        <div class="container mx-auto px-4 py-6">
+          <!-- Header -->
+          <div class="flex justify-between items-center mb-6 flex-wrap">
+            <div>
+              <h1 class="text-2xl font-bold text-gray-900">
+                Bonjour, <%= user?.name || 'Utilisateur' %> !
+              </h1>
+              <p class="text-gray-500 text-sm" id="currentDate"></p>
+            </div>
+            <div>
+              <img src="./img/logo-4.png" alt="Confonda Logo" class="logo h-10" style="width: 150px; height: 120px;"> 
+            </div>
+          </div>
 
-      <div class="container-fluid py-4">
+          <!-- Stats Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" >
+            <div class="card bg-green-50 rounded-xl shadow-md p-4 flex items-center">
+              <div>
+                <h5 class="text-gray-600 text-sm font-medium">Solde Positif</h5>
+                <h3 class="text-lg font-semibold text-green-700">
+                  <%= (typeof soldePositif !== 'undefined' ? soldePositif : 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD
+                </h3>
+              </div>
+              <div class="ml-auto bg-green-100 text-green-700 rounded-full p-2">
+                <i class="fas fa-wallet text-base"></i>
+              </div>
+            </div>
+            <div class="card bg-red-50 rounded-xl shadow-md p-4 flex items-center">
+              <div>
+                <h5 class="text-gray-600 text-sm font-medium">Paiements à faire</h5>
+                <h3 class="text-lg font-semibold text-red-700">
+                  <%= (typeof totalPayementsAEffectuer !== 'undefined' ? totalPayementsAEffectuer : 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD
+                </h3>
+              </div>
+              <div class="ml-auto bg-red-100 text-red-700 rounded-full p-2">
+                <i class="fas fa-money-check-alt text-base"></i>
+              </div>
+            </div>
+            <div class="card bg-blue-50 rounded-xl shadow-md p-4 flex items-center">
+              <div>
+                <h5 class="text-gray-600 text-sm font-medium">Recettes à venir</h5>
+                <h3 class="text-lg font-semibold text-blue-700">
+                  <%= (typeof totalRecettesAVenir !== 'undefined' ? totalRecettesAVenir : 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD
+                </h3>
+              </div>
+              <div class="ml-auto bg-blue-100 text-blue-700 rounded-full p-2">
+                <i class="fas fa-arrow-up text-base"></i>
+              </div>
+            </div>
+          
+          </div>
 
-        <div class="container-fluid py-4 d-flex flex-column justify-content-center align-items-center text-center" style="min-height: 70vh;">
-  
-  <!-- Logo -->
-  <img src="img/logo-4.png" alt="Confonda Logo" class="dashboard-logo mb-4">
+          <!-- Quick Actions (Updated to Treasury Actions) -->
+          <div class="card bg-white rounded-xl shadow-md p-6 mb-6">
+            <h5 class="text-lg font-semibold text-gray-900 mb-4">Actions Rapides</h5>
+            <div class="flex flex-wrap gap-3">
+              <a href="/tresorerie" class="action-btn bg-green-600 text-white px-4 py-2 rounded-lg">
+                <i class="fas fa-wallet mr-2"></i> Trésorerie
+              </a>
+              <a href="/tresorerie/payavenir" class="action-btn bg-blue-600 text-white px-4 py-2 rounded-lg">
+                <i class="fas fa-money-check mr-2"></i> paiment a venir
+              </a>
+              <a href="/tresorerie/banques/create" class="action-btn bg-indigo-600 text-white px-4 py-2 rounded-lg">
+                <i class="fas fa-file-invoice mr-2"></i> Ajouter Banque
+              </a>
+              <a href="/tresorerie/situation" class="action-btn bg-yellow-600 text-white px-4 py-2 rounded-lg">
+                <i class="fas fa-exchange-alt mr-2"></i> Situation Banquaire
+              </a>
+            </div>
+          </div>
 
-  <!-- Welcome text -->
-  <h2 class="fw-bold text-dark">Bienvenue</h2>
-  <p class="text-muted">Votre solution de gestion intégrée.</p>
+          <!-- Banks Table -->
+          <div class="card bg-white rounded-xl shadow-md p-6 mb-6">
+            <h5 class="text-lg font-semibold text-gray-900 mb-4">Banques</h5>
+            <div class="overflow-x-auto">
+              <table class="table w-full text-sm" aria-label="Tableau des informations bancaires">
+                <thead>
+                  <tr>
+                    <th scope="col" class="px-4 py-2 text-left font-medium text-gray-700">Nom</th>
+                    <th scope="col" class="px-4 py-2 text-left font-medium text-gray-700">Solde Positif</th>
+                    <th scope="col" class="px-4 py-2 text-left font-medium text-gray-700">Solde Négatif</th>
+                    <th scope="col" class="px-4 py-2 text-left font-medium text-gray-700">DMLT</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (Array.isArray(banques) && banques.length > 0) { %>
+                    <% banques.forEach(banque => { %>
+                      <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-2"><%= banque?.name || 'N/A' %></td>
+                        <td class="px-4 py-2">
+                          <%= (banque?.positive || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD
+                        </td>
+                        <td class="px-4 py-2">
+                          <%= (banque?.negative || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD
+                        </td>
+                        <td class="px-4 py-2">
+                          <%= (banque?.dmlt || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> MAD
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } else { %>
+                    <tr>
+                      <td colspan="4" class="px-4 py-2 text-center text-gray-500">Aucune banque disponible</td>
+                    </tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-  <!-- Optional quick links -->
-  <div class="d-flex gap-3 mt-4">
-    <!-- <a href="/achats" class="btn btn-primary px-4">Gestion Achats</a> -->
-    <a href="/tresorerie" class="btn btn-success px-4">Gestion Trésorerie</a>
-  </div>
-
-</div>
-
-    </div>
-
-    <footer class="sticky-footer bg-white mt-auto">
-      <div class="container my-auto">
-        <div class="copyright text-center my-auto">
-          <span>Copyright &copy; Confonda 2025</span>
+          <!-- Charts -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div class="card bg-white rounded-xl shadow-md p-6">
+              <h5 class="text-lg font-semibold text-gray-900 mb-4">Paiements à faire</h5>
+              <div class="chart-container">
+                <canvas id="paymentsChart" aria-label="Graphique des paiements à effectuer"></canvas>
+              </div>
+            </div>
+            <div class="card bg-white rounded-xl shadow-md p-6">
+              <h5 class="text-lg font-semibold text-gray-900 mb-4">Recettes à venir</h5>
+              <div class="chart-container">
+                <canvas id="recettesChart" aria-label="Graphique des recettes à venir"></canvas>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </footer>
+    </div>
   </div>
-</div>
 
-<a class="scroll-to-top rounded" href="#page-top">
-  <i class="fas fa-angle-up"></i>
-</a>
+  <!-- Chart.js 4.4.0 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Set current date
+      const dateElement = document.getElementById('currentDate');
+      if (dateElement) {
+        dateElement.textContent = new Date().toLocaleDateString('fr-FR', {
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+      }
 
-<!-- ================== CSS ================== -->
-<style>
-  .dashboard-logo {
-  max-width: 300px; /* adjust size */
-  width: 100%;
-  height: auto;
-  opacity: 0.95;
-  transition: transform 0.3s ease;
-}
+      // Fallback chart data
+      const defaultChartData = { labels: ['Aucune donnée'], data: [0] };
 
-.dashboard-logo:hover {
-  transform: scale(1.05);
-  opacity: 1;
-}
+      // Payments Chart
+      const paymentsCtx = document.getElementById('paymentsChart')?.getContext('2d');
+      if (paymentsCtx) {
+        const paymentsData = <%- JSON.stringify(payementsChartData || []) %>;
+        const data = Array.isArray(paymentsData) && paymentsData.length > 0 ? paymentsData : defaultChartData;
+        new Chart(paymentsCtx, {
+          type: 'line',
+          data: {
+            labels: data.labels || data.map(item => item.date),
+            datasets: [{
+              label: 'Paiements',
+              data: data.data || data.map(item => item.amount),
+              backgroundColor: 'rgba(220, 38, 38, 0.2)',
+              borderColor: 'rgba(220, 38, 38, 1)',
+              borderWidth: 2,
+              tension: 0.3,
+              fill: true,
+              pointRadius: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'top', labels: { font: { size: 12 } } } },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { callback: value => value + ' MAD', font: { size: 12 } }
+              },
+              x: {
+                ticks: {
+                  callback: (value, index) => {
+                    const label = data.labels ? data.labels[index] : data[index].date;
+                    return label === 'Aucune donnée' ? label : new Date(label).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+                  },
+                  font: { size: 12 }
+                }
+              }
+            }
+          }
+        });
+      }
 
-  .bg-gradient-primary {
-    background: linear-gradient(135deg, #4e73df, #224abe);
-  }
-
-  .bg-gradient-success {
-    background: linear-gradient(135deg, #1cc88a, #17a673);
-  }
-
-  .dashboard-card {
-    border-radius: 1.5rem !important;
-    transition: all 0.2s ease-in-out;
-    min-height: 130px;
-  }
-
-  .dashboard-card:hover {
-    transform: translateY(-6px) scale(1.02);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-  }
-
-  .icon-box {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .bg-opacity-10 {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-</style>
-
-<!-- ================== JS ================== -->
-<script src="vendor/jquery/jquery.min.js"></script>
-<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="vendor/jquery-easing/jquery.easing.min.js"></script>
-<script src="js/sb-admin-2.min.js"></script>
-<script src="vendor/chart.js/Chart.min.js"></script>
-<script src="js/demo/chart-area-demo.js"></script>
-<script src="js/demo/chart-pie-demo.js"></script>
+      // Recettes Chart
+      const recettesCtx = document.getElementById('recettesChart')?.getContext('2d');
+      if (recettesCtx) {
+        const recettesData = <%- JSON.stringify(recettesChartData || []) %>;
+        const data = Array.isArray(recettesData) && recettesData.length > 0 ? recettesData : defaultChartData;
+        new Chart(recettesCtx, {
+          type: 'bar',
+          data: {
+            labels: data.labels || data.map(item => item.date),
+            datasets: [{
+              label: 'Recettes',
+              data: data.data || data.map(item => item.amount),
+              backgroundColor: 'rgba(59, 130, 246, 0.7)',
+              borderColor: 'rgba(59, 130, 246, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'top', labels: { font: { size: 12 } } } },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { callback: value => value + ' MAD', font: { size: 12 } }
+              },
+              x: {
+                ticks: {
+                  callback: (value, index) => {
+                    const label = data.labels ? data.labels[index] : data[index].date;
+                    return label === 'Aucune donnée' ? label : new Date(label).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+                  },
+                  font: { size: 12 }
+                }
+              }
+            }
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
