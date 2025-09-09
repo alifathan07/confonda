@@ -163,7 +163,7 @@ export const importExel = async(req, res) => {
 export const update = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, address, phone, contact, contactphone, ice, idF, rib, banque , agence} = req.body;
+    const { name, email, address, phone, contact, contactphone, ice, idF, rib, banque, agence, } = req.body;
     const supplier = await prisma.fournisseur.update({
       where: { id: Number(id) },
       data: {
