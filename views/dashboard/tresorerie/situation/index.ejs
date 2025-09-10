@@ -813,12 +813,13 @@
           </div>
         </div>
         <style>
-            .custom-card { background: #f8f9fa; margin-bottom: 1.5rem; }
-          .custom-card-header h2 { font-size: 1.5rem; }
-          .custom-card-body { transition: all 0.3s ease; }
-          .table-hover tbody tr:hover { background-color: rgba(0, 123, 255, 0.1); }
-          .card { border-radius: 0.5rem; }
-          .card-header h3 { font-size: 1.25rem; }
+           .card {
+  display: block !important;
+  width: 100% !important;
+  margin-bottom: 1.5rem !important;
+  clear: both; /* force next card below */
+}
+
         </style>
           <!-- Paiements à venir -->
           <div class="card mb-4 fade-in">
