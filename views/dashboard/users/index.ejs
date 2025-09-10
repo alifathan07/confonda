@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Users</title>
+  <!-- Enhanced Styling -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* Enhanced Global Styles */
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f4f6f9;
+    }
+    .stats-card {
+      background: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-left: 0.3rem solid;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .stats-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+    .stats-card.primary { border-left-color: #4e73df; }
+    .stats-card.success { border-left-color: #1cc88a; }
+    .stats-card.warning { border-left-color: #f6c23e; }
+    .stats-card.danger { border-left-color: #e74a3b; }
+
+    .user-table-container {
+      background: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+    .table-header {
+      background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+      color: white;
+      padding: 1.5rem;
+    }
+    .table tbody tr {
+      transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+    .table tbody tr:hover {
+      background-color: #f8f9fc;
+      transform: scale(1.005);
+    }
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid #e3e6f0;
+      object-fit: cover;
+    }
+    .status-badge {
+      padding: 0.4rem 0.8rem;
+      border-radius: 1rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-active { background-color: #d4edda; color: #155724; }
+    .status-inactive { background-color: #f8d7da; color: #721c24; }
+    .status-pending { background-color: #fff3cd; color: #856404; }
+    .role-badge {
+      padding: 0.3rem 0.6rem;
+      border-radius: 0.4rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .role-admin { background-color: #e74a3b; color: white; }
+    .role-manager { background-color: #f6c23e; color: white; }
+    .role-user { background-color: #36b9cc; color: white; }
+    .action-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      margin: 0 3px;
+      transition: transform 0.2s ease;
+    }
+    .action-btn:hover { transform: scale(1.1); }
+    .btn-view { background-color: #36b9cc; color: white; }
+    .btn-edit { background-color: #f6c23e; color: white; }
+    .btn-delete { background-color: #e74a3b; color: white; }
+
+    /* Enhanced Modal Styles */
+    .modal-content {
+      border-radius: 0.5rem;
+      border: none;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    .modal-header {
+      border-bottom: none;
+      padding: 1.5rem;
+    }
+    .modal-body {
+      padding: 1.5rem;
+    }
+    .modal-footer {
+      border-top: none;
+      padding: 1rem 1.5rem;
+    }
+    .form-label {
+      font-weight: 500;
+      color: #344767;
+    }
+    .form-control, .form-select {
+      border-radius: 0.375rem;
+      border: 1px solid #d2d6da;
+      transition: border-color 0.2s ease;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: #4e73df;
+      box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+    .form-control.is-invalid {
+      border-color: #e74a3b;
+    }
+    .avatar-upload-preview {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 2px solid #e3e6f0;
+      object-fit: cover;
+      margin-bottom: 1rem;
+    }
+    .avatar-upload-label {
+      cursor: pointer;
+      color: #4e73df;
+      text-decoration: underline;
+    }
+    .avatar-upload-label:hover {
+      color: #224abe;
+    }
+    .view-user-details p {
+      margin: 0.5rem 0;
+    }
+    .view-user-details strong {
+      color: #344767;
+    }
+  </style>
+</head>
+<body>
+    <div id="wrapper" class="d-flex">
+      <%- include('../../layouts/sidebar') %>
+      <div id="content-wrapper" class="d-flex flex-column bg-light min-vh-100 w-100">
+        <div id="content">
+          <%- include('../../layouts/topbar') %>
+          <div class="container-fluid py-4">
+  
+            <!-- Stats Cards -->
+            <div class="row g-4 mb-4">
+              <div class="col-md-3">
+                <div class="card shadow-sm border-0 rounded-3 h-100">
+                  <div class="card-body text-center">
+                    <h6 class="text-muted mb-2">Total Users</h6>
+                    <h3 class="fw-bold text-primary"><%= users.length %></h3>
+                  </div>
+                </div>
+              </div>
+            </div>
+          
+            <!-- User Table -->
+            <div class="card shadow-sm border-0 rounded-3">
+              <div class="card-header bg-white d-flex justify-content-between align-items-center border-0 pb-0">
+                <h5 class="mb-0 fw-semibold"><i class="fas fa-users me-2 text-primary"></i> User Management</h5>
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                  <i class="fas fa-user-plus me-2"></i> Add User
+                </button>
+              </div>
+              <div class="card-body pt-3">
+                <div class="table-responsive">
+                  <table class="table align-middle table-hover">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Nom</th>
+                        <th>Email</th>
+                        <th>Chantier</th>
+                        <th class="text-center">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                        <% users.forEach(user => { %>
+                          <% if (currentUser.id !== user.id) { %>
+                            <tr>
+                              <td><%= user.name %></td>
+                              <td><%= user.email %></td>
+                              <td><%= user.chantier.nom %></td>
+                              <td class="text-center">
+                                <button 
+                                  class="btn btn-sm btn-outline-info me-1 btn-view" 
+                                  data-id="<%= user.id %>" 
+                                  data-name="<%= user.name %>" 
+                                  data-email="<%= user.email %>" 
+                                  data-chantier="<%= user.chantier.nom %>"
+                                  data-bs-toggle="modal" 
+                                  data-bs-target="#viewUserModal">
+                                  <i class="fas fa-eye"></i>
+                                </button>
+                                <button 
+                                  class="btn btn-sm btn-outline-warning me-1 btn-edit" 
+                                  data-id="<%= user.id %>" 
+                                  data-name="<%= user.name %>" 
+                                  data-email="<%= user.email %>" 
+                                  data-chantier="<%= user.chantier.nom %>"
+                                  data-bs-toggle="modal" 
+                                  data-bs-target="#editUserModal">
+                                  <i class="fas fa-edit"></i>
+                                </button>
+                                <button 
+                                  class="btn btn-sm btn-outline-danger btn-delete" 
+                                  data-id="<%= user.id %>" 
+                                  data-name="<%= user.name %>" 
+                                  data-bs-toggle="modal" 
+                                  data-bs-target="#deleteUserModal">
+                                  <i class="fas fa-trash"></i>
+                                </button>
+                              </td>
+                            </tr>
+                          <% } %>
+                        <% }) %>
+                      </tbody>
+                      
+                  </table>
+                </div>
+              </div>
+            </div>
+          
+          </div>
+          
+          <!-- Footer -->
+          <footer class="sticky-footer mt-auto">
+            <div class="container">
+              <div class="copyright text-center">
+                <span class="text-muted">Confonda &copy; 2025</span>
+              </div>
+            </div>
+          </footer>
+        </div>
+      </div>
+  
+      <!-- Add User Modal -->
+      <div class="modal fade" id="addUserModal" tabindex="-1">
+        <div class="modal-dialog">
+          <form action="/users/add" method="POST" class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Add User</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label class="form-label">Nom </label>
+                <input type="text" name="name" class="form-control" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Mot de passe</label>
+                <input type="password" name="password" class="form-control" required>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Chantier</label>
+                <select name="chantierId" class="form-control" required>
+                  <% chantiers.forEach(chantier => { %>
+                    <option value="<%= chantier.id %>"><%= chantier.nom %></option>
+                  <% }) %>
+                </select>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+          </form>
+        </div>
+      </div>
+  
+      <!-- View User Modal -->
+      <div class="modal fade" id="viewUserModal" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+              <h5 class="modal-title">User Details</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <p><strong>Name:</strong> <span id="viewName"></span></p>
+              <p><strong>Email:</strong> <span id="viewEmail"></span></p>
+              <p><strong>Chantier:</strong> <span id="viewChantier"></span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Edit User Modal -->
+      <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog">
+          <form action="/users/edit" method="POST" class="modal-content">
+            <input type="hidden" name="id" id="editId">
+            <div class="modal-header bg-warning text-white">
+              <h5 class="modal-title">Edit User</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label class="form-label">Name</label>
+                <input type="text" name="name" id="editName" class="form-control" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" id="editEmail" class="form-control" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Chantier</label>
+                <input type="text" name="chantier" id="editChantier" class="form-control" required>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-warning">Update</button>
+            </div>
+          </form>
+        </div>
+      </div>
+  
+      <!-- Delete User Modal -->
+      <div class="modal fade" id="deleteUserModal" tabindex="-1">
+        <div class="modal-dialog">
+          <form action="/users/delete" method="POST" class="modal-content">
+            <input type="hidden" name="id" id="deleteId">
+            <div class="modal-header bg-danger text-white">
+              <h5 class="modal-title">Confirm Delete</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <p>Are you sure you want to delete <strong id="deleteName"></strong>?</p>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-danger">Delete</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+  
+    </div>
+  
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // View user
+      $('.btn-view').on('click', function () {
+        $('#viewName').text($(this).data('name'));
+        $('#viewEmail').text($(this).data('email'));
+        $('#viewChantier').text($(this).data('chantier'));
+      });
+  
+      // Edit user
+      $('.btn-edit').on('click', function () {
+        $('#editId').val($(this).data('id'));
+        $('#editName').val($(this).data('name'));
+        $('#editEmail').val($(this).data('email'));
+        $('#editChantier').val($(this).data('chantier'));
+      });
+  
+      // Delete user
+      $('.btn-delete').on('click', function () {
+        $('#deleteId').val($(this).data('id'));
+        $('#deleteName').text($(this).data('name'));
+      });
+    </script>
+  </body>
+  
+</html>

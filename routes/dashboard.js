@@ -6,7 +6,7 @@ import ExcelJS from 'exceljs';
 import path from 'path';
 import fs from 'fs';
 import prisma from '../db.js';
-    import { createBanque, deleteBanque, displayBanques, displayBanquesForcheques, getSituationBancaire, showCreate, updateChequeInStituation, updateChequeValidation, updateEffetInStituation, updateEffetValidation, updatePayValidation, updateSituationBancaire, showEditBanque, updateBanque, listBanques } from '../controllers/banquesController.js';
+import { createBanque, deleteBanque, displayBanques, displayBanquesForcheques, getSituationBancaire, showCreate, updateChequeInStituation, updateChequeValidation, updateEffetInStituation, updateEffetValidation, updatePayValidation, updateSituationBancaire, showEditBanque, updateBanque, listBanques } from '../controllers/banquesController.js';
 import { awb, bmce, bmci, bp, cam, cdm, createCheque, deleteCheque, etablirCheque, importExelCheques, showCheques, showChequesForbanque, updateCheque, updateChequeStatut } from '../controllers/chequesController.js';
 import {createEffet, deleteEffet, Eawb, Ebmce, Ebmci, Ebp, Ecam, Ecdm, etablirEffet, importExelEffets, showEffets, showEffetsForbanque, updateEffet, updateEffetStatut} from '../controllers/effetsController.js';
 import { createPayavenir, deletePayavenir, showPayavenir, updatePayavenir, updatePayavenirStatut } from '../controllers/payavenirController.js';
@@ -14,6 +14,8 @@ import { createRecavenir, deleteRecavenir, showRecavenir, updateRecavenir, updat
 import { createVirement, deleteVirement, generateVirementPDF, index, postVirement, showUpdateVirement, suppliersList, updateVire } from '../controllers/virementController.js';
 import { createMiseadis, deleteMiseadis, generateMiseadisPDF, indexDis, postMiseadis, showUpdateMiseadis, updateMis } from '../controllers/misediscontrollrt.js';
 import { createFourniture, postFourniture } from '../controllers/fournitureController.js';
+import { addUser, listUsers } from '../controllers/usersController.js';
+
 export const dashboardRouter = express.Router();
 dashboardRouter.use(isAuthenticated)
 
@@ -236,4 +238,11 @@ dashboardRouter.get('/dashboard', async (req, res) => {
         // dashboardRouter.patch('/achats/fourniture/:id', updateFourniture);
         // dashboardRouter.patch('/achats/fourniture/:id/validation', updateFournitureValidation);
         
+
+
+
+         // < -----------Users  ----------------- >
+         dashboardRouter.get("/users", listUsers); // List all users
+       
+        dashboardRouter.post('/users/add', addUser);
         
