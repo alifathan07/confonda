@@ -426,6 +426,7 @@
         box-shadow: none;
       }
     }
+  
   </style>
 </head>
 <body id="page-top">
@@ -811,6 +812,15 @@
             <% } %>
           </div>
         </div>
+        <style>
+           .card {
+  display: block !important;
+  width: 100% !important;
+  margin-bottom: 1.5rem !important;
+  clear: both; /* force next card below */
+}
+
+        </style>
           <!-- Paiements à venir -->
           <div class="card mb-4 fade-in">
             <div class="card-header d-flex justify-content-between">
@@ -1077,7 +1087,7 @@
        <tfoot>
   <tr style="background-color: #2fb415; color: white; font-weight: bold;">
     <td colspan="4">Total</td>
-    <td class="text-right" id="displayTotalCheques">
+    <td class="chequetotal text-right" id="displayTotalCheques">
       <%= cheques.filter(c => c.validation).reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
     </td>
     <td colspan="4"></td>
@@ -1147,7 +1157,7 @@
         <tfoot>
           <tr style="background-color: #2fb415; color: white; font-weight: bold;">
             <td >Total</td>
-            <td class="text-right" id="displayTotalEffets" >
+            <td class="effettotal text-right" id="displayTotalEffets" >
               <%= effets.filter(c => c.validation).reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
             </td>
             <td colspan="7"></td>
@@ -1158,13 +1168,14 @@
   </div>
 </div>
               <!-- Paiements à venir Validés -->
+              <!-- Paiements à venir Validés -->
               <div class="card mb-4 fade-in">
                 <div class="card-header bg-success text-white">
                   <h2>Paiements à venir Validés</h2>
                 </div>
                 <div class="card-body">
                   <div class="table-responsive">
-                    <table id="payavenirsValidesTable" class="table table-bordered" >
+                    <table id="payavenirsValidesTable" class="table table-bordered">
                       <thead>
                         <tr style="background-color: #16a34a; color: white;">
                           <th>Désignation</th>
@@ -1173,6 +1184,7 @@
                           <th>Montant</th>
                           <th>Date Échéance</th>
                           <th>Statut</th>
+                          <th>Observation</th>
                           <th>Validation</th>
                         </tr>
                       </thead>
@@ -1187,9 +1199,14 @@
                             </td>
                             <td><%= new Date(p.dateEcheance).toLocaleDateString('fr-FR') %></td>
                             <td>
-                              <span class="badge badge-<%= p.statut === 'échu' ? 'warning' : p.statut === 'impayé' ? 'danger' : 'success' %>">
+                              <span class="badge badge-<%= p.statut.toLowerCase() === 'échu' ? 'warning' : p.statut.toLowerCase() === 'impayé' ? 'danger' : 'success' %>">
                                 <%= p.statut %>
                               </span>
+                            </td>
+                            <td>
+                              <form action="/tresorerie/payavenirs/situation/<%= p.id %>?_method=PATCH" method="POST">
+                                <input id="obs-<%= p.id %>" type="text" value="<%= p.obs || '' %>" class="form-control" name="obs">
+                              </form>
                             </td>
                             <td>
                               <div class="form-check form-check-inline">
@@ -1207,10 +1224,11 @@
                       <tfoot>
                         <tr style="background-color: #2fb415; color: white; font-weight: bold;">
                           <td>Total</td>
-                          <td class="text-right" id="displayTotalPayavenirsValides">
+                          <td colspan="3"></td>
+                          <td class="paytotal text-right" id="displayTotalPayavenirsValides">
                             <%= payavenirs.filter(p => p.validation).reduce((acc, p) => acc + p.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
                           </td>
-                          <td colspan="5"></td>
+                          <td colspan="3"></td>
                         </tr>
                       </tfoot>
                     </table>
@@ -1224,48 +1242,16 @@
                   <h3>Total Général des Paiements Validés</h3>
                 </div>
                 <div class="card-body d-flex justify-content-center">
-                  <h4 id="grandTotal" class="fw-bold text-dark">0,00</h4>
+                  <h4 id="grandTotalValide" class="fw-bold text-dark">
+                    0,00
+                  </h4>
                 </div>
               </div>
           
             </div>
           </div>
           
-          <script>
-            const toggleBtn = document.getElementById("toggleTablesBtn");
-            const toggleIcon = document.getElementById("toggleIcon");
-            const toggleText = document.getElementById("toggleText");
-            const tablesContainer = document.getElementById("tables-container");
-          
-            toggleBtn.addEventListener("click", () => {
-              const isHidden = tablesContainer.classList.contains("hidden");
-          
-              if (isHidden) {
-                tablesContainer.classList.remove("hidden");
-                toggleIcon.classList.remove("fa-eye");
-                toggleIcon.classList.add("fa-eye-slash");
-                toggleText.textContent = "Masquer";
-              } else {
-                tablesContainer.classList.add("hidden");
-                toggleIcon.classList.remove("fa-eye-slash");
-                toggleIcon.classList.add("fa-eye");
-                toggleText.textContent = "Afficher";
-              }
-            });
-            document.addEventListener('DOMContentLoaded', () => {
-            const getNumber = id => parseFloat(document.getElementById(id)?.textContent.replace(/\s/g, '').replace(',', '.') || 0);
-            const grandTotal = getNumber('displayTotalCheques') + getNumber('displayTotalEffets') + getNumber('displayTotalPayavenirsValides');
-            document.getElementById('grandTotal').textContent = grandTotal.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') + ' dirhams';
-          });
-          </script>
-          <style>
-          .custom-card { background: #f8f9fa; margin-bottom: 1.5rem; }
-          .custom-card-header h2 { font-size: 1.5rem; }
-          .custom-card-body { transition: all 0.3s ease; }
-          .table-hover tbody tr:hover { background-color: rgba(0, 123, 255, 0.1); }
-          .card { border-radius: 0.5rem; }
-          .card-header h3 { font-size: 1.25rem; }
-          </style>
+      
           
          
         </div>
@@ -1293,14 +1279,34 @@
 <script>
 
 // show / hide tables of validation 
-function toggleTables() {
-              const tables = document.getElementById('tables-container');
-              const tablesChildren = tables.children;
-              for (let i = 0; i < tablesChildren.length; i++) {
-                const table = tablesChildren[i];
-                table.style.display = table.style.display === 'none' ? 'table' : 'none';
-              }
-            }
+const toggleBtn = document.getElementById("toggleTablesBtn");
+  const toggleIcon = document.getElementById("toggleIcon");
+  const toggleText = document.getElementById("toggleText");
+  const tablesContainer = document.getElementById("tables-container");
+
+  toggleBtn.addEventListener("click", () => {
+    const isHidden = tablesContainer.classList.contains("hidden");
+
+    if (isHidden) {
+      tablesContainer.classList.remove("hidden");
+      toggleIcon.classList.remove("fa-eye");
+      toggleIcon.classList.add("fa-eye-slash");
+      toggleText.textContent = "Masquer";
+    } else {
+      tablesContainer.classList.add("hidden");
+      toggleIcon.classList.remove("fa-eye-slash");
+      toggleIcon.classList.add("fa-eye");
+      toggleText.textContent = "Afficher";
+    }
+  });
+  document.addEventListener('DOMContentLoaded', () => {
+  const getNumber = id => parseFloat(document.getElementById(id)?.textContent.replace(/\s/g, '').replace(',', '.') || 0);
+  const chequetotal = document.querySelector('.chequetotal')
+  const effettotal = document.querySelector('.effettotal')
+  const paytotal = document.querySelector('.paytotal')
+  const grandTotal = parseFloat(chequetotal.textContent.replace(/\s/g, '').replace(',', '.')) + parseFloat(effettotal.textContent.replace(/\s/g, '').replace(',', '.')) + parseFloat(paytotal.textContent.replace(/\s/g, '').replace(',', '.'));
+  document.getElementById('grandTotalValide').textContent = grandTotal.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') + ' dirhams';
+});
 
 document.addEventListener('DOMContentLoaded', function() {
   // Get filter elements

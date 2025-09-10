@@ -1287,17 +1287,10 @@ const toggleBtn = document.getElementById("toggleTablesBtn");
   toggleBtn.addEventListener("click", () => {
     const isHidden = tablesContainer.classList.contains("hidden");
 
-    if (isHidden) {
-      tablesContainer.classList.remove("hidden");
-      toggleIcon.classList.remove("fa-eye");
-      toggleIcon.classList.add("fa-eye-slash");
-      toggleText.textContent = "Masquer";
-    } else {
-      tablesContainer.classList.add("hidden");
-      toggleIcon.classList.remove("fa-eye-slash");
-      toggleIcon.classList.add("fa-eye");
-      toggleText.textContent = "Afficher";
-    }
+    tablesContainer.classList.toggle("hidden");
+    toggleIcon.classList.toggle("fa-eye-slash", !isHidden);
+    toggleIcon.classList.toggle("fa-eye", isHidden);
+    toggleText.textContent = isHidden ? "Afficher" : "Masquer";
   });
   document.addEventListener('DOMContentLoaded', () => {
   const getNumber = id => parseFloat(document.getElementById(id)?.textContent.replace(/\s/g, '').replace(',', '.') || 0);
