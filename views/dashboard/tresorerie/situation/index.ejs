@@ -821,74 +821,70 @@
 }
 
         </style>
-          <!-- Paiements à venir -->
-          <div class="card mb-4 fade-in">
-            <div class="card-header d-flex justify-content-between">
-              <h2>Paiements à venir</h2>
-              <form class="form-inline" >
-                <a href="/tresorerie/payavenir" class="btn" aria-label="Ajouter un paiement" style="background-color: #6A5AE7; color: white;">Ajouter un paiement</a>
-              </form>
-            </div>
-           
-            <div class="card-body">
-              <% if (!payavenirs.length) { %>
-                <p class="text-center text-muted">Aucun paiement à venir.</p>
-              <% } else { %>
-                <div class="table-responsive">
-                  <table id="payavenirsTable" class="excel-table table table-bordered">
-                    <thead>
-                      <tr>
-                        <th>Désignation</th>
-                        <th>Banque</th>
-                        <th>Bénéficiaire</th>
-                        <th>Montant</th>
-                        <th>Date Échéance</th>
-                        <th>Statut</th>
-                        <th>Validation</th>
-                        
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <% payavenirs.forEach(c => { %>
-                        <tr class="payavenir-row" data-fournisseur="<%= c.fournisseur.name %>" data-banque="<%= c.banque.name %>" data-statut="<%= c.statut %>" data-date="<%= new Date(c.dateEcheance).toISOString().split('T')[0] %>">
-                          <td><%= c.designation %></td>
-                          <td><%= c.banque.name %></td>
-                          <td><%= c.fournisseur.name %></td>
-                          <td class="text-right montant"><%= c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %> </td>
-                          <td><%= new Date(c.dateEcheance).toLocaleDateString('fr-FR') %></td>
-                          <td>
-                            <span class="badge badge-<%= c.statut === 'échu' ? 'warning' : c.statut === 'impayé' ? 'danger' : 'success' %>">
-                              <%= c.statut %>
-                            </span>
-                          </td>
-                          <td>
-                          <div class="form-check form-check-inline">
-                            <input 
-                            type="checkbox" 
-                            class="form-check-input" 
-                            id="validationPayavenir-<%= c.id %>" 
-                            name="validationPayavenir" 
-                            data-id="<%= c.id %>" 
-                            data-payavenirvalidation="<%= c.validation %>" 
-                            <%= c.validation ? 'checked' : '' %>>
-                            <label class="form-check-label" for="validationPayavenir-<%= c.id %>"></label>
-                          </div>
-                           </td>
-                          </tr>
-                      <% }) %>
-                    </tbody>
-                    <tfoot>
-                      <tr>
-                        <td>Total</td>  
-                        <td class="text-right montant"><%= payavenirs.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %> </td>
-                        <td colspan="5"></td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-              <% } %>
-            </div>
+       <div class="card-body">
+        <% console.log('Payavenirs in EJS:', JSON.stringify(payavenirs)); %>
+        <% if (!payavenirs.length) { %>
+          <p class="text-center text-muted">Aucun paiement à venir.</p>
+        <% } else { %>
+          <div class="table-responsive">
+            <table id="payavenirsTable" class="excel-table table table-bordered">
+              <thead>
+                <tr>
+                  <th>Désignation</th>
+                  <th>Banque</th>
+                  <th>Bénéficiaire</th>
+                  <th>Montant</th>
+                  <th>Date Échéance</th>
+                  <th>Statut</th>
+                  <th>Validation</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% payavenirs.forEach(c => { %>
+                  <% console.log('Rendering payavenir:', JSON.stringify(c)); %>
+                  <tr class="payavenir-row" 
+                      data-fournisseur="<%= c.fournisseur?.name || 'N/A' %>" 
+                      data-banque="<%= c.banque?.name || 'N/A' %>" 
+                      data-statut="<%= c.statut || 'N/A' %>" 
+                      data-date="<%= c.dateEcheance ? new Date(c.dateEcheance).toISOString().split('T')[0] : 'N/A' %>">
+                    <td><%= c.designation || 'N/A' %></td>
+                    <td><%= c.banque?.name || 'N/A' %></td>
+                    <td><%= c.fournisseur?.name || 'N/A' %></td>
+                    <td class="text-right montant"><%= c.montant ? c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') : '0,00' %></td>
+                    <td><%= c.dateEcheance ? new Date(c.dateEcheance).toLocaleDateString('fr-FR') : 'N/A' %></td>
+                    <td>
+                      <span class="badge badge-<%= c.statut === 'échu' ? 'warning' : c.statut === 'impayé' ? 'danger' : 'success' %>">
+                        <%= c.statut || 'N/A' %>
+                      </span>
+                    </td>
+                    <td>
+                      <div class="form-check form-check-inline">
+                        <input 
+                          type="checkbox" 
+                          class="form-check-input" 
+                          id="validationPayavenir-<%= c.id || 'missing' %>" 
+                          name="validationPayavenir" 
+                          data-id="<%= c.id || 'missing' %>" 
+                          data-payavenirvalidation="<%= c.validation || false %>" 
+                          <%= c.validation ? 'checked' : '' %>>
+                        <label class="form-check-label" for="validationPayavenir-<%= c.id || 'missing' %>"></label>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td>Total</td>
+                  <td colspan="2"></td>
+                  <td class="text-right montant"><%= payavenirs.reduce((acc, c) => acc + (c.montant || 0), 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %></td>
+                  <td colspan="3"></td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
+        <% } %>
+      </div>
         
           <!-- Total Général -->
           <div class="card mb-4 fade-in">
