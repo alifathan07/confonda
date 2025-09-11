@@ -89,10 +89,7 @@ export const createRecavenir = async (req, res) => {
       });
       res.status(500).json({ error: "Erreur lors de la création du payavenir." });
     }
-  };
-
-
-
+};
 export const deleteRecavenir = async (req, res) => {
     try {
       const { id } = req.params;
@@ -111,7 +108,7 @@ export const deleteRecavenir = async (req, res) => {
       });
       res.status(500).json({ error: "Erreur lors de la suppression du recavenir." });
     }
-  };
+};
 export const updateRecavenir = async (req, res) => {
 try {
     const { id } = req.params;
@@ -201,5 +198,5 @@ export const updateRecavenirStatut = async (req, res) => {
       });
       res.status(500).json({ error: "Erreur lors de la mise à jour du statut." });
     }
-  };
+};
 

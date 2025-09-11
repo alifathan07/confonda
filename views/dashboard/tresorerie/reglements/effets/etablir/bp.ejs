@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chèque Banque Populaire</title>
+    <title>Effets BP</title>
     <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
     <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
@@ -178,14 +178,38 @@
                 transform-origin: center center; /* Pivot around the center */
             }
 
-            /* Position each field exactly on the BMCE cheque - FROM TOP */
+            /* Position each field exactly on the Atijari Wafa Bank cheque - FROM TOP */
             .print-payee {
                 position: absolute;
-                top: 40mm !important; /* From very top of page */
-                left: 50mm !important;
+                top: -45px !important; /* No space from top */
+                left: 180mm !important;
                 width: 85mm;
                 font-size: 15pt;
                 font-weight: bold;
+                line-height: 1.1;
+                margin: 0 !important;
+                padding: 0 !important;
+            } 
+            .print-tireur {
+                position: absolute;
+                top: -30px !important; /* From very top of page */
+                left: 30mm !important;
+                width: 85mm;
+                font-size: 17pt;
+                font-weight: bold;
+                line-height: 1.1;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            
+            .print-cause {
+                position: absolute;
+                top: 12mm !important; /* From very top of page */
+                left: 140mm !important;
+                width: 85mm;
+                font-size: 12pt;
+                font-weight: bold;
+                max-width: 95mm;
                 line-height: 1.1;
                 margin: 0 !important;
                 padding: 0 !important;
@@ -193,9 +217,9 @@
 
             .print-amount {
                 position: absolute;
-                top: 11mm !important; /* From very top of page */
-                left: 155mm !important;
-                font-size: 11pt;
+                top: -115px !important; /* From very top of page */
+                left: 260mm !important;
+                font-size: 11pt;    
                 font-weight: bold;
                 font-size: 15pt;
                 text-align: left;
@@ -206,12 +230,12 @@
 
             .print-amount-words {
                 position: absolute;
-                top: 22mm !important; /* From very top of page */
-                left: 63mm !important;
+                top: 6mm !important; /* From very top of page */
+                left: 240mm !important;
                 font-weight: bold;
                 width: 170mm;
-                font-size: 17px;
-                max-width: 128mm;
+                font-size: 16px;
+                max-width: 80mm;
                     white-space: normal;      /* allow wrapping */
                 word-wrap: break-word;    /* break long words if needed */
                 
@@ -223,26 +247,37 @@
 
             .print-date {
                 position: absolute;
-                top: 51mm !important; /* From very top of page */
-                left: 170mm !important;
-                font-size: 9pt;
-                font-weight: bold;
+                top: -164px !important; /* No space from top */
+                left: 265mm !important;
+                width: 85mm;
                 font-size: 15pt;
+                font-weight: bold;
+                line-height: 1.1;
                 margin: 0 !important;
                 padding: 0 !important;
             }
 
             .print-city {
                 position: absolute;
-                top: 51mm !important; /* From very top of page */
-                left: 90mm !important;
+               top: 12px !important; /* From very top of page */
+                left: 140mm !important;
+                font-size: 5px;
+                font-weight: bold;
+                font-size: 15pt;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .print-dateaujou {
+                position: absolute;
+                 top: 12px !important; /* From very top of page */
+                left: 185mm !important;
+                
                 font-size: 9pt;
                 font-weight: bold;
                 font-size: 15pt;
                 margin: 0 !important;
                 padding: 0 !important;
             }
-
             .print-cheque-number {
                 position: absolute;
                 top: 80mm !important; /* From very top of page */
@@ -263,61 +298,69 @@
     </style>
 </head>
 <body>
+
+    
     <a href="/tresorerie" class="btn btn-primary">Retour</a>
 
     <div class="cheque-container">
 
-        <div class="bank-logo">BP   </div>
+        <div class="bank-logo">BP  </div>
 
-        <form id="chequeForm" action="/tresorerie/cheques/create/format/<%=id %>" method="POST">
+        <form id="chequeForm" action="/tresorerie/effets/create/format/<%=id %>" method="POST">
             <div class="cheque-row">
                 <div class="form-group textarea-wrapper">
-                    <label for="payee">À l'ordre de:</label>
+                    <label for="payee">Beneficiaire : </label>
                     <input type="text" id="payee" name="beneficiaire" placeholder="Nom du bénéficiaire" autocomplete="off" class="form-control">
+                                <ul id="suggestions" class="autocomplete-list"></ul>
 
-                    <ul id="suggestions" class="autocomplete-list"></ul>
+                                <script>
+                                const fournisseurs = <%- JSON.stringify(fournisseurs) %>;
+                                const payeeInput = document.getElementById('payee');
+                                const suggestions = document.getElementById('suggestions');
 
-                    <script>
-                    const fournisseurs = <%- JSON.stringify(fournisseurs) %>;
-                    const payeeInput = document.getElementById('payee');
-                    const suggestions = document.getElementById('suggestions');
+                                payeeInput.addEventListener('input', () => {
+                                const value = payeeInput.value.toLowerCase();
+                                suggestions.innerHTML = '';
+                                if (!value) return;
 
-                    payeeInput.addEventListener('input', () => {
-                    const value = payeeInput.value.toLowerCase();
-                    suggestions.innerHTML = '';
-                    if (!value) return;
+                                const matches = fournisseurs.filter(f => f.name.toLowerCase().includes(value));
+                                matches.forEach(match => {
+                                    const li = document.createElement('li');
+                                    li.textContent = match.name;
+                                    li.addEventListener('click', () => {
+                                    payeeInput.value = match.name;
+                                    suggestions.innerHTML = '';
+                                    });
+                                    suggestions.appendChild(li);
+                                });
+                                });
+                                </script>
 
-                    const matches = fournisseurs.filter(f => f.name.toLowerCase().includes(value));
-                    matches.forEach(match => {
-                        const li = document.createElement('li');
-                        li.textContent = match.name;
-                        li.addEventListener('click', () => {
-                        payeeInput.value = match.name;
-                        suggestions.innerHTML = '';
-                        });
-                        suggestions.appendChild(li);
-                    });
-                    });
-                    </script>
+                                <style>
+                                .autocomplete-list {
+                                border: 1px solid #ccc;
+                                max-height: 150px;
+                                overflow-y: auto;
+                                padding: 0;
+                                margin: 0;
+                                list-style: none;
+                                }
+                                .autocomplete-list li {
+                                padding: 5px 10px;
+                                cursor: pointer;
+                                }
+                                .autocomplete-list li:hover {
+                                background-color: #eee;
+                                }
+                                </style>
 
-                    <style>
-                    .autocomplete-list {
-                    border: 1px solid #ccc;
-                    max-height: 150px;
-                    overflow-y: auto;
-                    padding: 0;
-                    margin: 0;
-                    list-style: none;
-                    }
-                    .autocomplete-list li {
-                    padding: 5px 10px;
-                    cursor: pointer;
-                    }
-                    .autocomplete-list li:hover {
-                    background-color: #eee;
-                    }
-                    </style>
                 </div>
+                 <div class="form-group textarea-wrapper">
+                    <label for="date">Date Echeance : </label>
+                    <input type="date" id="date" rows="2" placeholder="Date Echeance" name="dateEcheance">
+                </div>
+
+                
                 <div class="form-group amount-numbers">
                     <label for="amount">Montant:</label>
                     <input id="amount" type="text" placeholder="0,00 MAD" name="montant">
@@ -330,16 +373,22 @@
             </div>
 
             <div class="cheque-row">
-                <div class="form-group">
-                    <label for="date">Date:</label>
-                    <input id="date" type="date" name="dateEcheance">
+                
+                 <div class="form-group">
+                    <label for="date">La cause :</label>
+                    <input id="cause" type="text" name="obs">
                 </div>
+                 
                 <div class="form-group">
                     <label for="city">À (Ville):</label>
                     <input id="city" type="text" placeholder="Casablanca" name="ville">
                 </div>
                 <div class="form-group">
-                    <label for="account">N° Chèque:</label>
+                    <label for="dateaujou">Date Ajourdhui :</label>
+                    <input id="dateaujou" type="text" value="<%= new Date().toLocaleDateString('fr-FR') %>" name="dateaujou" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="account">N° Effet:</label>
                     <input id="account" type="text" placeholder="Numéro du chèque" name="numero">
                 </div>
             </div>
@@ -350,6 +399,7 @@
                 <button type="button" class="btn btn-primary" id="printBtn">Imprimer effet</button>
                 <!-- <button type="submit" class="btn btn-secondary">Enregistrer</button>* -->
                 <button type="submit" class="btn btn-secondary" >Enregistrer</button>
+                <!-- <button type="button" class="btn btn-secondary" id="testBtn">Test Alignement</button> -->
             </div>
         </form>
     </div>
@@ -357,6 +407,9 @@
     <!-- This is what gets printed - positioned exactly for the cheque -->
     <div class="print-overlay">
         <div class="print-payee" id="print-payee"></div>
+         <div class="print-tireur" id="print-tireur"></div>
+        <div class="print-cause" id="print-cause"></div>
+        <div class="print-dateaujou" id="print-dateaujou"></div>
         <div class="print-amount" id="print-amount"></div>
         <div class="print-amount-words" id="print-amount-words"></div>
         <div class="print-date" id="print-date"></div>
@@ -467,9 +520,10 @@
 
 function updatePrintFields() {
             document.getElementById('print-payee').textContent = document.getElementById('payee').value;
+            document.getElementById('print-tireur').textContent = document.getElementById('payee').value;
             
             const amount = document.getElementById('amount').value;
-            document.getElementById('print-amount').textContent = amount ? amount + ' DH' : '';
+            document.getElementById('print-amount').textContent = amount ? amount + ' ' : '';
             
             document.getElementById('print-amount-words').textContent = document.getElementById('amount-words').value;
             
@@ -481,10 +535,13 @@ function updatePrintFields() {
             
             document.getElementById('print-city').textContent = document.getElementById('city').value;
             document.getElementById('print-cheque-number').textContent = document.getElementById('account').value;
+            document.getElementById('print-cause').textContent = document.getElementById('cause').value;
+            document.getElementById('print-dateaujou').textContent = document.getElementById('dateaujou').value;
         }
 
         // Handle amount input and convert to words
-        document.getElementById("amount").addEventListener("input", function () {
+      // Handle amount input and convert to words
+document.getElementById("amount").addEventListener("input", function () {
     let input = this.value.replace(/[^0-9,.]/g, "").replace(",", ".");
     let amountWordsInput = document.getElementById("amount-words");
     
@@ -514,7 +571,7 @@ function updatePrintFields() {
        
 
 
-        // Update print fields on any input change
+// Update print fields on any input change
         document.querySelectorAll('input, textarea').forEach(input => {
             input.addEventListener('input', updatePrintFields);
             input.addEventListener('change', updatePrintFields);
