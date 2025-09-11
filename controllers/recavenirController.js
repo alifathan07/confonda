@@ -15,7 +15,7 @@ export const showRecavenir = async (req, res) => {
 
 export const createRecavenir = async (req, res) => {
     try {
-      console.log('🆕 Creating new effet...', req.body);
+      console.log('🆕 Creating recette a venir...', req.body);
       const {
             designation , 
             banque, 
@@ -70,7 +70,7 @@ export const createRecavenir = async (req, res) => {
         data: {
           designation,
           montant: parseFloat(montant),
-          dateEcheance: new Date(dateEcheance),
+          dateEcheance: dateEcheance ?  new Date(dateEcheance) : null,
           dateReglement: dateReglement ? new Date(dateReglement) : null,
           statut,
           obs,
