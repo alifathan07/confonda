@@ -204,7 +204,7 @@ export const getSituationBancaire = async (req, res) => {
           name: 'asc',
         }
       });
-     
+     console.log(payavenirs)
       res.render('dashboard/tresorerie/situation/index', {
         banques,
         cheques,
