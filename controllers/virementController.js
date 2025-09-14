@@ -20,7 +20,7 @@ export const createVirement = async(req , res) => {
     const fournisseurs = await prisma.fournisseur.findMany()
     const banqueId = Number(req.params.id)
     
-    res.render('dashboard/tresorerie/reglements/virements/create' , { fournisseurs , banqueId, rtgs: false } )
+    res.render('dashboard/tresorerie/reglements/virements/create' , { fournisseurs , banqueId, rtgs: false, srbm: false, instantane: false } )
 }
 export const postVirement = async (req, res) => {
     try {
@@ -38,31 +38,55 @@ export const postVirement = async (req, res) => {
             return res.status(404).json({ error: "Banque non trouvée." });
         }
 
-        // ✅ normalize rtgs value here
+        // Normalize rtgs value
         let rtgsValue = req.body.rtgs;
         let rtgs = false;
-
         if (Array.isArray(rtgsValue)) {
             rtgs = rtgsValue.includes("1");
         } else {
             rtgs = rtgsValue === "1";
         }
 
-        // fournisseur logic
+        // Normalize srbm value
+        let srbmValue = req.body.srbm;
+        let srbm = false;
+        if (Array.isArray(srbmValue)) {
+            srbm = srbmValue.includes("1");
+        } else {
+            srbm = srbmValue === "1";
+        }
+
+        // Normalize instantane value
+        let instantaneValue = req.body.instantane;
+        let instantane = false;
+        if (Array.isArray(instantaneValue)) {
+            instantane = instantaneValue.includes("1");
+        } else {
+            instantane = instantaneValue === "1";
+        }
+
+        // Fournisseur logic
         const fournisseurName = beneficiaire;
         let fournisseur = await prisma.fournisseur.findFirst({
             where: { name: fournisseurName }
         });
 
-        if (fournisseur && !fournisseur.ice) {
-            await prisma.fournisseur.update({
-                where: { id: fournisseur.id },
-                data: { rib: rib, agence: agence, banque: banque  },
+        // Prepare update data for fournisseur
+        const updateData = {};
+        if (rib !== undefined && rib !== null && rib !== '') updateData.rib = rib;
+        if (agence !== undefined && agence !== null && agence !== '') updateData.agence = agence;
+        if (banque !== undefined && banque !== null && banque !== '') updateData.banque = banque;
 
-            });
-        }
-
-        if (!fournisseur) {
+        if (fournisseur) {
+            // Update fournisseur if any of rib, agence, or banque are provided
+            if (Object.keys(updateData).length > 0) {
+                fournisseur = await prisma.fournisseur.update({
+                    where: { id: fournisseur.id },
+                    data: updateData,
+                });
+            }
+        } else {
+            // Create new fournisseur if it doesn't exist
             fournisseur = await prisma.fournisseur.create({
                 data: {
                     name: beneficiaire,
@@ -71,14 +95,14 @@ export const postVirement = async (req, res) => {
                     telFournisseur: 'Default',
                     contact: 'Default',
                     telContact: 'Default',
-                    rib: rib,
-                    agence: agence,
-                    banque: banque
+                    rib: rib || null,
+                    agence: agence || null,
+                    banque: banque || null
                 }
             });
         }
 
-        // create virement
+        // Create virement
         const virement = await prisma.virement.create({
             data: {
                 beneficiaire,
@@ -87,7 +111,9 @@ export const postVirement = async (req, res) => {
                 montant: parseFloat(montant),
                 obs,
                 montantLettres: montantLettre,
-                rtgs, // ✅ boolean here
+                rtgs,
+                srbm,
+                instantane,
                 objet,
                 cause,
                 fournisseur: { connect: { id: fournisseur.id } },
@@ -111,7 +137,9 @@ export const showUpdateVirement = async (req, res) => {
 
     // 1. Get the virement first
     const virement = await prisma.virement.findUnique({
-        where: { id }
+        where: { id },
+        include: { fournisseur: true, banque: true }
+
     });
 
     if (!virement) {
@@ -130,12 +158,11 @@ export const showUpdateVirement = async (req, res) => {
         fournisseur
     });
 };
-
 export const updateVire = async (req, res) => {
     try {
         const id = Number(req.params.id);
         const banqueId = Number(req.params.banqueId);
-        const { beneficiaire, date, dateReglement, montant, obs, rib, montantLettre, objet, cause, rtgs } = req.body;
+        const { beneficiaire, date, dateReglement, montant, obs, rib, montantLettre, objet, cause, rtgs, srbm, instantane } = req.body;
 
         // Validate IDs
         if (isNaN(banqueId) || isNaN(id)) {
@@ -150,29 +177,62 @@ export const updateVire = async (req, res) => {
             return res.status(404).json({ error: "Banque non trouvée." });
         }
 
-        // Normalize rtgs value
-        let rtgsValue = rtgs;
-        let rtgsBoolean = false;
-
-        if (Array.isArray(rtgsValue)) {
-            rtgsBoolean = rtgsValue.includes("1") || rtgsValue.includes("RTGS") || rtgsValue.includes(true);
-        } else {
-            rtgsBoolean = rtgsValue === "1" || rtgsValue === "RTGS" || rtgsValue === true;
+        // Fetch existing virement to preserve unchanged fields
+        const existingVirement = await prisma.virement.findUnique({
+            where: { id }
+        });
+        if (!existingVirement) {
+            return res.status(404).json({ error: "Virement non trouvé." });
         }
+
+        // Validate and convert date
+        let formattedDate = existingVirement.date; // Preserve existing date if not provided
+        if (date) {
+            const parsedDate = new Date(date);
+            if (isNaN(parsedDate)) {
+                return res.status(400).json({ error: "Format de date invalide pour dateSaisie." });
+            }
+            formattedDate = parsedDate;
+        }
+
+        // Validate and convert dateReglement
+        let formattedDateReglement = existingVirement.dateReglement; // Preserve existing dateReglement
+        if (dateReglement) {
+            const parsedDateReglement = new Date(dateReglement);
+            if (isNaN(parsedDateReglement)) {
+                return res.status(400).json({ error: "Format de date invalide pour dateReglement." });
+            }
+            formattedDateReglement = parsedDateReglement;
+        } else if (dateReglement === null) {
+            formattedDateReglement = null; // Allow explicit nulling of dateReglement
+        }
+
+        // Normalize boolean values, preserve existing if not provided
+        const rtgsBoolean = rtgs !== undefined
+            ? (Array.isArray(rtgs) ? rtgs.includes("1") || rtgs.includes("RTGS") || rtgs.includes(true) : rtgs === "1" || rtgs === "RTGS" || rtgs === true)
+            : existingVirement.rtgs;
+
+        const srbmBoolean = srbm !== undefined
+            ? (Array.isArray(srbm) ? srbm.includes("1") || srbm.includes("SRBM") || srbm.includes(true) : srbm === "1" || srbm === "SRBM" || srbm === true)
+            : existingVirement.srbm;
+
+        const instantaneBoolean = instantane !== undefined
+            ? (Array.isArray(instantane) ? instantane.includes("1") || instantane.includes("INSTANTANE") || instantane.includes(true) : instantane === "1" || instantane === "INSTANTANE" || instantane === true)
+            : existingVirement.instantane;
 
         // Fournisseur logic
         let fournisseur = await prisma.fournisseur.findFirst({
             where: { name: beneficiaire }
         });
 
-        if (fournisseur && !fournisseur.ice) {
+        if (fournisseur && rib && !fournisseur.rib) {
             await prisma.fournisseur.update({
                 where: { id: fournisseur.id },
                 data: { rib }
             });
         }
 
-        if (!fournisseur) {
+        if (!fournisseur && beneficiaire) {
             fournisseur = await prisma.fournisseur.create({
                 data: {
                     name: beneficiaire,
@@ -181,36 +241,48 @@ export const updateVire = async (req, res) => {
                     telFournisseur: "Default",
                     contact: "Default",
                     telContact: "Default",
-                    rib
+                    rib: rib || null
                 }
             });
+        }
+
+        // Prepare update data
+        const updateData = {
+            beneficiaire: beneficiaire || existingVirement.beneficiaire,
+            date: formattedDate,
+            dateReglement: formattedDateReglement,
+            montant: montant ? parseFloat(montant) : existingVirement.montant,
+            obs: obs !== undefined ? obs : existingVirement.obs,
+            montantLettres: montantLettre !== undefined ? montantLettre : existingVirement.montantLettres,
+            rtgs: rtgsBoolean,
+            srbm: srbmBoolean,
+            instantane: instantaneBoolean,
+            objet: objet !== undefined ? objet : existingVirement.objet,
+            cause: cause !== undefined ? cause : existingVirement.cause,
+            banque: { connect: { id: banqueId } }
+        };
+
+        // Only connect fournisseur if it exists
+        if (fournisseur) {
+            updateData.fournisseur = { connect: { id: fournisseur.id } };
         }
 
         // Update virement
         const updatedVirement = await prisma.virement.update({
             where: { id },
-            data: {
-                beneficiaire,
-                date: new Date(date),
-                dateReglement: dateReglement ? new Date(dateReglement) : null,
-                montant: parseFloat(montant),
-                obs,
-                montantLettres: montantLettre, // Use montantLettre from form
-                rtgs: rtgsBoolean,
-                objet,
-                cause,
-                fournisseur: { connect: { id: fournisseur.id } },
-                banque: { connect: { id: banqueId } }
-            }
+            data: updateData
         });
 
-        res.status(200).json({ message: "Virement mis à jour avec succès." });
+        res.status(200).json({ 
+            message: "Virement mis à jour avec succès.",
+            virement: updatedVirement // Return updated data for frontend
+        });
+        console.log("Virement mis à jour avec succès.");
     } catch (error) {
         console.error("Erreur lors de la mise à jour du virement :", error);
-        res.status(500).json({ error: "Erreur lors de la mise à jour du virement." });
+        res.status(500).json({ error: `Erreur lors de la mise à jour du virement : ${error.message}` });
     }
 };
-
 
 export const showVirement = async(req , res) => {
     const banqueId = Number(req.params.id)
@@ -267,7 +339,7 @@ export const generateVirementPDF = async (req, res) => {
            .font('Helvetica-Bold')
            .fontSize(14)
            .fillColor('#1A4D99')
-           .text(`Objet : ${virement.objet || 'N/A'} ${virement.rtgs ? 'RTGS' : ''}`, 50, doc.y, { width: 495, align: 'left' });
+           .text(`Objet : ${virement.objet || 'N/A'} ${virement.rtgs ? 'RTGS' : ''} ${virement.srbm ? 'SRBM' : ''} ${virement.instantane ? 'Instantané' : ''}`, 50, doc.y, { width: 495, align: 'left' });
 
         doc.moveDown(1)
            .font('Helvetica')
@@ -293,7 +365,7 @@ export const generateVirementPDF = async (req, res) => {
                   minimumFractionDigits: 2, 
                   maximumFractionDigits: 2 
                 }).replace(/[\u00A0\u202F]/g, ' ') + ' dirhams' 
-              },            { title: 'Montant en lettres', value: virement.montantLettres ? virement.montantLettres + ' dirhams' : 'N/A' },
+              },            { title: 'Montant en lettres', value: virement.montantLettres ? virement.montantLettres  : 'N/A' },
             { title: 'Banque', value: virement.fournisseur?.banque || 'N/A' },
             { title: 'RIB', value: virement.fournisseur?.rib || 'N/A' },
             { title: 'Agence', value: virement.fournisseur?.agence || 'N/A' },

@@ -70,7 +70,7 @@ export const createPayavenir = async (req, res) => {
         data: {
           designation,
           montant: parseFloat(montant),
-          dateEcheance: new Date(dateEcheance),
+          dateEcheance: dateEcheance ? new Date(dateEcheance) : null,
           dateReglement: dateReglement ? new Date(dateReglement) : null,
           statut,
           obs,
@@ -121,36 +121,42 @@ try {
     return res.status(404).json({ error: "Payavenir non trouvé." });
     }
 
-    let fournisseur = await prisma.fournisseur.findFirst({ where: { name: beneficiaire } });
+    let fournisseur = await prisma.fournisseur.findFirst({
+      where: { name: beneficiaire },
+    });
 
     if (!fournisseur) {
-    fournisseur = await prisma.fournisseur.create({
+      fournisseur = await prisma.fournisseur.create({
         data: {
-        name: beneficiaire,
-        ice: `ICE_${Date.now()}`,
-        identifFiscal: `FISCAL_${Date.now()}`,
-        telFournisseur: 'Default',
-        contact: 'Default',
-        telContact: 'Default'
-        }
-    });
+          name: beneficiaire,
+          ice: `ICE_${Date.now()}`,
+          rib : `RIB_${Date.now()}`,
+          identifFiscal: `FISCAL_${Date.now()}`,
+          telFournisseur: 'Default',
+          contact: 'Default',
+          telContact: 'Default',
+        },
+      });
     }
 
-    let findBanque = await prisma.banque.findFirst({ where: { name: banque } });
+    // Find or create banque
+    let findBanque = await prisma.banque.findFirst({
+      where: { name: banque },
+    });
 
     if (!findBanque) {
-    findBanque = await prisma.banque.create({
+      findBanque = await prisma.banque.create({
         data: {
-        name: banque,
-        rib: 0,
-        agence: 'Default Agence',
-        solde: 0,
-        dateSolde: new Date(),
-        positive: 0,
-        negative: 0,
-        dmlt: 0,
+          name: banque,
+          rib: 0,
+          agence: 'Default Agence',
+          solde: 0,
+          dateSolde: new Date(),
+          positive: 0,
+          negative: 0,
+          dmlt: 0,
         },
-    });
+      });
     }
 
     const payavenir = await prisma.payavenir.update({

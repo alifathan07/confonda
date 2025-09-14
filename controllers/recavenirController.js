@@ -4,12 +4,14 @@ export const showRecavenir = async (req, res) => {
     const recavenirs = await prisma.recavenir.findMany({
         include: {
           banque: true,
-          client: true
+          client: true,
+          chantier: true
         },
       });
     const banques = await prisma.banque.findMany();
     const clients = await prisma.client.findMany();
-    res.render('dashboard/tresorerie/reglements/recavenir/index', { recavenirs : recavenirs , banques , clients });
+    const chantiers = await prisma.chantier.findMany();
+    res.render('dashboard/tresorerie/reglements/recavenir/index', { recavenirs : recavenirs , banques , clients , chantiers});
 }
 
 
@@ -24,24 +26,27 @@ export const createRecavenir = async (req, res) => {
             dateEcheance,
             statut, 
             dateReglement,
+            chantier,
             obs
             
       } = req.body;
-  
+
+
+      // Find Chantier 
+     
       // Find or create client
       let client = await prisma.client.findFirst({
-        where: { name: beneficiaire },
+        where: { id: beneficiaire },
+      });
+      let findChantier = await prisma.chantier.findFirst({
+        where: { id: chantier },
       });
   
-      if (!client) {
-        client = await prisma.client.create({
+      if (!findChantier) {
+        findChantier = await prisma.chantier.create({
           data: {
-            name: beneficiaire,
-            ice: `ICE_${Date.now()}`,
-            identifFiscal: `FISCAL_${Date.now()}`,
-            telClient: 'Default',
-            contact: 'Default',
-            telContact: 'Default',
+            nom: chantier,
+            client: { connect: { id: client.id } },
           },
         });
       }
@@ -75,6 +80,7 @@ export const createRecavenir = async (req, res) => {
           statut,
           obs,
           client: { connect: { id: client.id } },
+          chantier: { connect: { id: findChantier.id } },
           banque: { connect: { id: findBanque.id } },
         },
       });
@@ -87,6 +93,7 @@ export const createRecavenir = async (req, res) => {
         stack: error.stack,
         body: req.body,
       });
+      console.log(error);
       res.status(500).json({ error: "Erreur lors de la création du payavenir." });
     }
 };
@@ -112,27 +119,21 @@ export const deleteRecavenir = async (req, res) => {
 export const updateRecavenir = async (req, res) => {
 try {
     const { id } = req.params;
-    const { designation, banque, beneficiaire, montant, dateEcheance, statut, dateReglement, obs } = req.body;
+    const { designation, banque, beneficiaire, montant, dateEcheance, statut, dateReglement, obs , chantier} = req.body;
     console.log(`🔄 Updating recavenir ${id}...`);
     const updatedRecavenir = await prisma.recavenir.findUnique({ where: { id: parseInt(id) } });
     if (!updatedRecavenir) {
     return res.status(404).json({ error: "Recavenir non trouvé." });
     }
+    
+    let findChantier = await prisma.chantier.findFirst({ where: { id: chantier } });
 
-    let client = await prisma.client.findFirst({ where: { name: beneficiaire } });
+    
+    
 
-    if (!client) {
-    client = await prisma.client.create({
-        data: {
-        name: beneficiaire,
-        ice: `ICE_${Date.now()}`,
-        identifFiscal: `FISCAL_${Date.now()}`,
-        telFournisseur: 'Default',
-        contact: 'Default',
-        telContact: 'Default'
-        }
-    });
-    }
+    let client = await prisma.client.findFirst({ where: { id: beneficiaire } });
+
+    
 
     let findBanque = await prisma.banque.findFirst({ where: { name: banque } });
 
@@ -155,12 +156,13 @@ try {
     where: { id: parseInt(id) },
     data: { 
         designation,
-        montant: parseFloat(montant),
-        dateEcheance: new Date(dateEcheance),
-        dateReglement: dateReglement ? new Date(dateReglement) : new Date("2025-10-02"),
+        montant: isNaN(parseFloat(montant)) ? montant : parseFloat(montant),
+        dateEcheance: dateEcheance ? new Date(dateEcheance) : null,
+        dateReglement: dateReglement ? new Date(dateReglement) : null,
         statut,
         obs,
         client: { connect: { id: client.id } },
+        chantier: { connect: { id: findChantier.id } },
         banque: { connect: { id: findBanque.id } },
     },
     });
@@ -173,6 +175,7 @@ try {
     recavenirId: req.params.id,
     newStatut: req.body.statut
     });
+    console.log(error);
     res.status(500).json({ error: "Erreur lors de la mise à jour du recavenir." });
 }
 };

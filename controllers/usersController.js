@@ -37,4 +37,3 @@ export const addUser = async (req, res) => {
         res.redirect('/users');
     }
 }
-

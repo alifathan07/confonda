@@ -227,7 +227,8 @@ model Recavenir {
   obs String?  
   client         Client @relation(fields: [clientId], references: [id])
   clientId       Int
-
+  chantier         Chantier @relation(fields: [chantierId], references: [id])
+  chantierId       Int
   banque              Banque   @relation("BanqueRecavenir", fields: [banqueId], references: [id])
   banqueId            Int
   createdAt     DateTime @default(now())
@@ -244,6 +245,8 @@ model Virement {
   objet String?
   cause String?
   rtgs Boolean @default(false)
+  srbm Boolean @default(false)
+  instantane Boolean @default(false)
   rib Int?
   montantLettres String?
   fournisseur         Fournisseur? @relation(fields: [fournisseurId], references: [id])
@@ -290,6 +293,8 @@ model Banque {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 }
+
+
 model Client {
   id        Int      @id @default(autoincrement())
   name      String
@@ -300,10 +305,27 @@ model Client {
   contact   String
   telContact String
   address   String?
-  recavenir Recavenir[]
+  recavenir Recavenir[]  
+  chantier Chantier[] @relation("ClientChantier") 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+model Chantier {
+  id        Int     @id @default(autoincrement())
+  nom       String
+  users     User[]                 // one chantier → many users
+  demandes  DemandeFourniture[]    // one chantier → many demandes
+  clientId   Int
+
+  client     Client    @relation("ClientChantier", fields: [clientId], references: [id])
+  recavenir Recavenir[]  
+
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 
 
 // Demande Fourniture : 
@@ -342,16 +364,6 @@ model DemandeProduit {
   demandeFournitureId Int
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
-}
-
-
-model Chantier {
-  id        Int     @id @default(autoincrement())
-  nom       String
-  users     User[]                 // one chantier → many users
-  demandes  DemandeFourniture[]    // one chantier → many demandes
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 

@@ -263,14 +263,37 @@
                   <% if (typeof recavenirs !== 'undefined' && recavenirs.length) { %>
                     <% recavenirs.forEach(recave => { %>
                       <tr data-id="<%= recave.id %>">
-                        <td data-name="beneficiaire" class="client-cell">
-                          <select class="client-select" style="font-size: 15px;">
+                        <td data-name="beneficiaire" class="client-cell" style="position: relative;">
+                          <span class="client-display" style="display: inline-block; width: 100%; cursor: pointer;">
+                            <%= recave.client.name %>
+                          </span>
+                          <select class="client-select" style="font-size: 15px; display: none; width: 100%;">
                             <option value="">-- Sélectionner un client --</option>
                             <% clients.forEach(client => { %>
                               <option value="<%= client.name %>" data-client-id="<%= client.id %>" <%= recave.client.name === client.name ? 'selected' : '' %>><%= client.name %></option>
                             <% }); %>
                           </select>
                         </td>
+                        
+                        <script>
+                          document.querySelectorAll('.client-cell').forEach(cell => {
+                            const span = cell.querySelector('.client-display');
+                            const select = cell.querySelector('.client-select');
+                        
+                            span.addEventListener('click', () => {
+                              span.style.display = 'none';
+                              select.style.display = 'inline-block';
+                              select.focus();
+                            });
+                        
+                            select.addEventListener('blur', () => {
+                              select.style.display = 'none';
+                              span.textContent = select.value || '-- Sélectionner un client --';
+                              span.style.display = 'inline-block';
+                            });
+                          });
+                        </script>
+                        
                         <td contenteditable="true" data-name="designation"><%= recave.designation %></td>
                         <td contenteditable="true" data-name="montant"><%= Number(recave.montant).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
                         <td contenteditable="true" data-name="dateEcheance"><%= formatDateToDDMMYYYY(recave.dateEcheance) %></td>
@@ -293,14 +316,39 @@
                         </td>
                         
                         <td contenteditable="true" data-name="banque"><%= recave.banque.name %></td>
-                        <td data-name="chantier" class="chantier-cell">
-                          <select class="chantier-select" style="font-size: 15px;">
+                        <td data-name="chantier" class="chantier-cell" style="position: relative;">
+                          <span class="chantier-display" style="display: inline-block; width: 100%; cursor: pointer;">
+                            <%= recave.chantier.nom %>
+                          </span>
+                          <select class="chantier-select" style="font-size: 15px; display: none; width: 100%;">
                             <option value="">-- Sélectionner un chantier --</option>
-                            <% chantiers.filter(chantier => chantier.clientId === recave.client.id).forEach(chantier => { %>
+                            <% chantiers
+                                 .filter(chantier => chantier.clientId === recave.client.id)
+                                 .forEach(chantier => { %>
                               <option value="<%= chantier.nom %>" data-chantier-id="<%= chantier.id %>" <%= recave.chantier.nom === chantier.nom ? 'selected' : '' %>><%= chantier.nom %></option>
                             <% }); %>
                           </select>
                         </td>
+                        
+                        <script>
+                          document.querySelectorAll('.chantier-cell').forEach(cell => {
+                            const span = cell.querySelector('.chantier-display');
+                            const select = cell.querySelector('.chantier-select');
+                        
+                            span.addEventListener('click', () => {
+                              span.style.display = 'none';
+                              select.style.display = 'inline-block';
+                              select.focus();
+                            });
+                        
+                            select.addEventListener('blur', () => {
+                              select.style.display = 'none';
+                              span.textContent = select.value || '-- Sélectionner un chantier --';
+                              span.style.display = 'inline-block';
+                            });
+                          });
+                        </script>
+                        
                         <td contenteditable="true" data-name="dateReglement"><%= formatDateToDDMMYYYY(recave.dateReglement) %></td>
                         <td contenteditable="true" data-name="obs"><%= recave.obs %></td>
                         <td>
@@ -370,32 +418,40 @@
   };
 
   const updateChantierDropdown = (clientSelect, chantierSelect) => {
-    const selectedClientName = clientSelect.value;
-    const selectedClient = clients.find(client => client.name === selectedClientName);
-    const clientId = selectedClient ? selectedClient.id : null;
-    const currentChantier = chantierSelect.value;
+  const selectedClientName = clientSelect.value;
+  const selectedClient = clients.find(client => client.name === selectedClientName);
+  const clientId = selectedClient ? selectedClient.id : null;
+  const currentChantier = chantierSelect.value;
 
-    chantierSelect.innerHTML = '<option value="">-- Sélectionner un chantier --</option>';
-    if (clientId) {
-      const filteredChantiers = chantiers.filter(chantier => chantier.clientId === clientId);
-      filteredChantiers.forEach(chantier => {
-        const option = document.createElement('option');
-        option.value = chantier.nom;
-        option.setAttribute('data-chantier-id', chantier.id);
-        option.textContent = chantier.nom;
-        if (chantier.nom === currentChantier) option.selected = true;
-        chantierSelect.appendChild(option);
-      });
-      if (!filteredChantiers.length) {
-        const option = document.createElement('option');
-        option.value = '';
-        option.textContent = 'Aucun chantier disponible';
-        option.disabled = true;
-        chantierSelect.appendChild(option);
+  // Clear the chantier dropdown
+  chantierSelect.innerHTML = '<option value="">-- Sélectionner un chantier --</option>';
+
+  if (clientId) {
+    const filteredChantiers = chantiers.filter(chantier => chantier.clientId === clientId);
+    filteredChantiers.forEach(chantier => {
+      const option = document.createElement('option');
+      option.value = chantier.nom;
+      option.setAttribute('data-chantier-id', chantier.id);
+      option.textContent = chantier.nom;
+      // Retain the current chantier if it matches and is valid
+      if (chantier.nom === currentChantier && chantier.clientId === clientId) {
+        option.selected = true;
       }
-    }
-  };
+      chantierSelect.appendChild(option);
+    });
 
+    if (!filteredChantiers.length) {
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = 'Aucun chantier disponible';
+      option.disabled = true;
+      chantierSelect.appendChild(option);
+    }
+  } else {
+    // If no client is selected, clear the chantier selection
+    chantierSelect.value = '';
+  }
+};
   const getStatusClass = (statut) => {
     const normalized = statut.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').trim();
     return ['en-circulation', 'paye', 'impaye', 'annule'].includes(normalized) ? normalized : 'en-circulation';
@@ -454,29 +510,50 @@
   // Row Data Handler
   const getRowData = (row) => {
   const data = {};
+  let selectedClientId = null;
+
   row.querySelectorAll("td[data-name]").forEach(cell => {
     const key = cell.getAttribute("data-name");
     let value = cell.querySelector("select") ? cell.querySelector("select").value : cell.innerText.trim();
-    
+
     if (key === 'beneficiaire') {
       const selectedClient = clients.find(client => client.name === value);
-      if (selectedClient) data[key] = selectedClient.id;
+      if (selectedClient) {
+        data[key] = selectedClient.id;
+        selectedClientId = selectedClient.id; // Store client ID for chantier validation
+      } else if (value) {
+        throw new Error(`Client "${value}" not found.`);
+      }
     } else if (key === 'chantier') {
       const selectedChantier = chantiers.find(chantier => chantier.nom === value);
-      if (selectedChantier) data[key] = selectedChantier.id;
+      if (selectedChantier && selectedClientId) {
+        // Validate that the chantier belongs to the selected client
+        if (selectedChantier.clientId === selectedClientId) {
+          data[key] = selectedChantier.id;
+        } else {
+          throw new Error(`Chantier "${value}" is not associated with the selected client.`);
+        }
+      } else if (value && selectedClientId) {
+        throw new Error(`Chantier "${value}" not found.`);
+      }
     } else if (['dateEcheance', 'dateReglement'].includes(key)) {
       value = convertDateToISO(value);
       if (value) data[key] = value;
-    } else if (key === 'montant') {
+    } else if (key === 'montant' && cell.getAttribute("data-edited") === "true") {
       value = parseFloat(value.replace(/,/g, '.').replace(/[^\d.-]/g, '')) || 0;
       data[key] = value;
     } else if (value && key !== 'statut') {
       data[key] = value;
     }
   });
+
+  if (!data.beneficiaire && data.chantier) {
+    throw new Error('Cannot select a chantier without a client.');
+  }
+
   return Object.keys(data).length ? data : null;
 };
-  // Event Handlers
+// Event Handlers
   const handleRowUpdate = async (row) => {
     if (!row.getAttribute("data-dirty")) return;
     const id = row.getAttribute("data-id");
@@ -501,45 +578,27 @@
   };
 
   const handleAddRow = () => {
-  // Validate prerequisites
-  if (!table || !table.querySelector('tbody')) {
-    console.error('Table or tbody not found');
-    return;
-  }
-  if (!Array.isArray(clients) || !Array.isArray(chantiers)) {
-    console.error('Clients or chantiers data is missing or invalid');
-    return;
-  }
+    
+  const tbody = table.querySelector("tbody");
+  const colCount = table.querySelectorAll("thead th").length;
+  const tr = document.createElement("tr");
+  let clientSelect, chantierSelect;
 
-  const tbody = table.querySelector('tbody');
-  const headers = Array.from(table.querySelectorAll('thead th'));
-  const colCount = headers.length;
-  const tr = document.createElement('tr');
-  let clientSelect = null;
-  let chantierSelect = null;
-
-  // Cache headers to avoid repeated DOM queries
-  headers.slice(0, -1).forEach((header, i) => {
-    const td = document.createElement('td');
-    const headerText = header.innerText.trim();
+  for (let i = 0; i < colCount - 1; i++) {
+    const td = document.createElement("td");
+    const header = table.querySelectorAll("thead th")[i]?.innerText.trim();
     let dataName = '';
 
-    switch (headerText) {
+    switch (header) {
       case 'Client':
         dataName = 'beneficiaire';
         td.classList.add('client-cell');
         clientSelect = document.createElement('select');
         clientSelect.className = 'client-select';
         clientSelect.style.fontSize = '15px';
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.textContent = '-- Sélectionner un client --';
-        clientSelect.appendChild(defaultOption);
+        clientSelect.innerHTML = '<option value="">-- Sélectionner un client --</option>';
         clients.forEach(client => {
-          const option = document.createElement('option');
-          option.value = client.id;
-          option.textContent = client.name;
-          clientSelect.appendChild(option);
+          clientSelect.innerHTML += `<option value="${client.name}" data-client-id="${client.id}">${client.name}</option>`;
         });
         td.appendChild(clientSelect);
         break;
@@ -550,28 +609,25 @@
         chantierSelect = document.createElement('select');
         chantierSelect.className = 'chantier-select';
         chantierSelect.style.fontSize = '15px';
-        const chantierDefault = document.createElement('option');
-        chantierDefault.value = '';
-        chantierDefault.textContent = '-- Sélectionner un chantier --';
-        chantierSelect.appendChild(chantierDefault);
+        // initially empty, will be populated when client changes
+        chantierSelect.innerHTML = '<option value="">-- Sélectionner un chantier --</option>';
         td.appendChild(chantierSelect);
         break;
 
       case 'Designation':
         dataName = 'designation';
-        td.contentEditable = true;
+        td.contentEditable = "true";
         break;
 
       case 'Montant':
         dataName = 'montant';
-        td.contentEditable = true;
-        td.textContent = '0,00'; // Use textContent for safety
+        td.contentEditable = "true";
+        td.innerText = '0,00';
         break;
 
       case "Date d'échéance":
         dataName = 'dateEcheance';
-        td.contentEditable = true;
-        td.textContent = new Date().toLocaleDateString('fr-FR'); // Default to current date
+        td.contentEditable = "true";
         break;
 
       case 'Statut':
@@ -579,86 +635,52 @@
         td.classList.add('statut-cell');
         const statutSelect = document.createElement('select');
         statutSelect.className = 'statut-select';
-        ['non échu', 'impayé', 'échu', 'payé'].forEach(status => {
-          const option = document.createElement('option');
-          option.value = status;
-          option.textContent = status;
-          statutSelect.appendChild(option);
+        ['non échu', 'impayé', 'échu', 'payé'].forEach(option => {
+          statutSelect.innerHTML += `<option value="${option}">${option}</option>`;
         });
         td.appendChild(statutSelect);
         break;
 
       case 'Banque':
         dataName = 'banque';
-        td.contentEditable = true;
+        td.contentEditable = "true";
         break;
 
       case 'Date de règlement':
         dataName = 'dateReglement';
-        td.contentEditable = true;
+        td.contentEditable = "true";
         break;
 
       case 'Observation':
         dataName = 'obs';
-        td.contentEditable = true;
-        break;
-
-      default:
-        console.warn(`Unhandled column header: ${headerText}`);
+        td.contentEditable = "true";
         break;
     }
 
-    if (dataName) {
-      td.setAttribute('data-name', dataName);
-    }
+    if (dataName) td.setAttribute('data-name', dataName);
     tr.appendChild(td);
-  });
+  }
 
   // Add action buttons
-  const actionTd = document.createElement('td');
-  const deleteBtn = document.createElement('button');
-  deleteBtn.className = 'delete-row excel-delete-btn';
-  deleteBtn.title = 'Supprimer';
-  deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-  const updateBtn = document.createElement('button');
-  updateBtn.className = 'update-row excel-save-btn btn btn-sm btn-warning';
-  updateBtn.title = 'Mettre à jour';
-  updateBtn.style.marginLeft = '5px';
-  updateBtn.innerHTML = '<i class="fas fa-edit"></i>';
-  actionTd.appendChild(deleteBtn);
-  actionTd.appendChild(updateBtn);
-  tr.appendChild(actionTd);
+  tr.innerHTML += '<td><button class="delete-row excel-delete-btn" title="Supprimer"><i class="fas fa-trash"></i></button><button class="update-row excel-save-btn btn btn-sm btn-warning" title="Mettre à jour" style="margin-left:5px;"><i class="fas fa-edit"></i></button></td>';
 
-  tr.setAttribute('data-dirty', 'true');
-  tr.classList.add('excel-dirty-row');
+  tr.setAttribute("data-dirty", "true");
+  tr.classList.add("excel-dirty-row");
   tbody.insertBefore(tr, tbody.firstChild);
 
-  // Client -> Chantier connection
+  // Link client -> chantier dynamically
   if (clientSelect && chantierSelect) {
     const populateChantiers = () => {
-      const clientId = parseInt(clientSelect.value) || 0;
-      chantierSelect.innerHTML = ''; // Clear existing options
-      const defaultOption = document.createElement('option');
-      defaultOption.value = '';
-      defaultOption.textContent = '-- Sélectionner un chantier --';
-      chantierSelect.appendChild(defaultOption);
-
-      if (clientId) {
-        const filteredChantiers = chantiers.filter(ch => ch.clientId === clientId);
-        if (filteredChantiers.length > 0) {
-          filteredChantiers.forEach(ch => {
-            const option = document.createElement('option');
-            option.value = ch.id;
-            option.textContent = ch.nom;
-            chantierSelect.appendChild(option);
-          });
-        } else {
-          const noOption = document.createElement('option');
-          noOption.value = '';
-          noOption.textContent = 'Aucun chantier disponible';
-          noOption.disabled = true;
-          chantierSelect.appendChild(noOption);
-        }
+      const selectedClient = clients.find(c => c.name === clientSelect.value);
+      chantierSelect.innerHTML = '<option value="">-- Sélectionner un chantier --</option>';
+      if (selectedClient) {
+        const filteredChantiers = chantiers.filter(ch => ch.clientId === selectedClient.id);
+        filteredChantiers.forEach(ch => {
+          const option = document.createElement('option');
+          option.value = ch.nom;
+          option.textContent = ch.nom;
+          chantierSelect.appendChild(option);
+        });
       }
     };
 
@@ -668,18 +690,13 @@
       tr.classList.add('excel-dirty-row');
     });
 
-    // Only populate initially if a client is pre-selected
-    if (clientSelect.value) {
-      populateChantiers();
-    }
+    // populate initial (in case client is pre-selected)
+    populateChantiers();
   }
 
-  // Add event listeners for action buttons (assuming external handlers)
-  deleteBtn.addEventListener('click', () => handleDeleteRow(tr));
-  updateBtn.addEventListener('click', () => handleUpdateRow(tr));
-
-  updateTotal(); // Assuming this is defined elsewhere
+  updateTotal();
 };
+
   // Event Listeners
   table.querySelectorAll('.statut-select').forEach(select => {
     select.addEventListener('change', async function() {
@@ -751,23 +768,38 @@
   });
 
   table.addEventListener("blur", async (e) => {
-    const cell = e.target.closest("td[data-name]");
-    if (cell && cell.isContentEditable) {
-      const row = cell.parentElement;
-      if (cell.getAttribute("data-name") === "montant") {
-        let value = cell.innerText.trim().replace(/,/g, '.').replace(/[^\d.-]/g, '');
-        value = parseFloat(value);
-        cell.innerText = isNaN(value) ? '0,00' : value.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        cell.setAttribute("data-edited", "true");
-        updateTotal();
-      }
-      row.setAttribute("data-dirty", "true");
-      row.classList.add("excel-dirty-row");
-      if (row.getAttribute("data-id")) {
-        await handleRowUpdate(row);
-      }
+  const cell = e.target.closest("td[data-name='montant']");
+  if (cell && cell.isContentEditable) {
+    const row = cell.parentElement;
+
+    let value = cell.innerText.trim();
+
+    // Remove spaces (normal and non-breaking) but keep commas
+    value = value.replace(/[\s\u202F]/g, '');
+
+    // Replace comma with dot only if it exists
+    if (value.includes(',')) value = value.replace(',', '.');
+
+    // Convert to number safely
+    const numValue = Number(value);
+
+    // Keep exact number if valid, otherwise 0
+    const displayValue = isNaN(numValue) ? '0,00' : numValue.toLocaleString('fr-FR', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    });
+
+    cell.innerText = displayValue;
+    cell.setAttribute("data-edited", "true");
+    updateTotal();
+
+    row.setAttribute("data-dirty", "true");
+    row.classList.add("excel-dirty-row");
+    if (row.getAttribute("data-id")) {
+      await handleRowUpdate(row);
     }
-  }, true);
+  }
+}, true);
 
   table.addEventListener("change", async (e) => {
     const select = e.target.closest("td[data-name='beneficiaire'] select, td[data-name='chantier'] select");
@@ -922,7 +954,7 @@
   padding: 5px;
 }
 </style>
-```
+
   
 <script src="/vendor/jquery/jquery.min.js"></script>
 <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>

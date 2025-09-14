@@ -222,7 +222,7 @@
   <div class="container-fluid">
     <div class="card shadow mb-4">
     <div class="card-header py-3">
-      <h6 class="m-0 font-weight-bold text-primary">Liste des payements à venir</h6>
+      <h6 class="m-0 font-weight-bold text-primary">Liste des chantier</h6>
     </div>
     <div class="card-body">
       <div class="mb-4" style="display: flex; align-items: center; gap: 20px;">
@@ -267,7 +267,7 @@ return `${day}/${month}/${year}`;
 %>
 <div class="mb-3 d-flex align-items-center" style="max-width: 350px;">
 <select id="banqueFilter" class="form-control mr-2" style="font-size: 15px; width: 300px;">
-<option value="">-- Filtrer par banque --</option>
+<option value="">-- Filtrer par Client--</option>
 <% banques.forEach(banque => { %><option value="<%= banque.name %>">
   <%= banque.name %></option><% }); %></select>
   <select id="supplierFilter" class="form-control" style="font-size: 15px; width: 250px;">
@@ -281,12 +281,7 @@ return `${day}/${month}/${year}`;
         <thead>
         <tr style="position: sticky; top: 0; background-color: white; z-index: 1;">
           <th draggable="true">Designation</th>
-          <th draggable="true">Banque</th>
-          <th draggable="true">Bénéficiaire</th>
-          <th draggable="true">Montant</th>
-          <th draggable="true">Date d'échéance</th>
-          <th draggable="true">Statut</th>
-          <th draggable="true">Observation</th>
+          <th draggable="true">Client</th>
           <th style="width:70px;">Actions</th> <!-- Delete column -->
         </tr>
         </thead>
@@ -296,9 +291,7 @@ return `${day}/${month}/${year}`;
           <tr data-id="<%= payement.id %>">
             <td contenteditable="true" data-name="designation"><%= payement.designation %></td>
             <td contenteditable="true" data-name="banque" ><%= payement.banque.name %></td>
-            <td contenteditable="true" data-name="beneficiaire"><%= payement.fournisseur.name%></td>
-            <td contenteditable="true" data-name="montant"><%= Number(payement.montant).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
-            <td contenteditable="true" data-name="dateEcheance"><%= formatDateToDDMMYYYY(payement.dateEcheance) %></td>
+           
             <td data-name="statut" class="statut-cell">
             <span 
               class="statut-badge <%= payement.statut.toLowerCase().replace(/[éè]/g, 'e').replace(/\s+/g, '-') %>"

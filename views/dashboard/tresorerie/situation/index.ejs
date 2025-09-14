@@ -576,17 +576,36 @@
 
           <!-- Recettes à venir -->
           <div class="card mb-4 fade-in">
-            <div class="card-header d-flex justify-content-between">
+            <div class="card-header d-flex justify-content-between align-items-center">
               <h2>Recettes à venir</h2>
               <form class="form-inline">
+                <!-- Client Filter Dropdown -->
+                <div class="form-group mr-3">
+                  <label for="clientFilter" class="mr-2" style="color: white;">Client:</label>
+                  <select id="clientFilter" class="form-control">
+                    <option value="">Tous les clients</option>
+                    <% clients.forEach(client => { %>
+                      <option value="<%= client.name %>"><%= client.name %></option>
+                    <% }) %>
+                  </select>
+                </div>
+                <!-- Chantier Filter Dropdown -->
+                <div class="form-group mr-3">
+                  <label for="chantierFilter" class="mr-2" style="color: white;">Chantier:</label>
+                  <select id="chantierFilter" class="form-control">
+                    <option value="">Tous les chantiers</option>
+                   <% chantiers.forEach(chantier => { %>
+                      <option value="<%= chantier.nom %>"><%= chantier.nom %></option>
+                   <% }) %>
+                  </select>
+                </div>
                 <a href="/tresorerie/recettes_a_venir" class="btn" aria-label="Ajouter une recette" style="background-color: #6A5AE7; color: white;">Ajouter une recette</a>
               </form>
             </div>
-            
+          
             <div class="card-body">
               <% if (!recavenirs.length) { %>
                 <p class="text-center text-muted">Aucune recette à venir.</p>
-              
               <% } else { %>
                 <div class="table-responsive">
                   <table id="recavenirsTable" class="excel-table table table-bordered">
@@ -596,17 +615,19 @@
                         <th>Désignation</th>
                         <th>Montant</th>
                         <th>Date Échéance</th>
+                        <th>Chantier</th>
                         <th>Statut</th>
                         <th>Banque</th>
                       </tr>
                     </thead>
                     <tbody>
                       <% recavenirs.forEach(c => { %>
-                        <tr class="recavenir-row" data-client="<%= c.client.name %>" data-banque="<%= c.banque.name %>" data-statut="<%= c.statut %>">
+                        <tr class="recavenir-row" data-client="<%= c.client.name %>" data-chantier="<%= c.chantier.nom %>" data-banque="<%= c.banque.name %>" data-statut="<%= c.statut %>">
                           <td><%= c.client.name %></td>
                           <td><%= c.designation %></td>
                           <td class="text-right"><%= c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %> </td>
                           <td><%= new Date(c.dateEcheance).toLocaleDateString('fr-FR') %></td>
+                          <td><%= c.chantier.nom %></td>
                           <td>
                             <span class="badge badge-<%= c.statut === 'échu' ? 'warning' : c.statut === 'impayé' ? 'danger' : 'success' %>">
                               <%= c.statut %>
@@ -619,16 +640,62 @@
                     <tfoot>
                       <tr>
                         <td colspan="2">Total</td>
-                        <td class="text-right"><%= recavenirs.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %> </td>
+                        <td class="text-right" id="totalMontant">
+                          <%= recavenirs.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
+                        </td>
                         <td colspan="3"></td>
                       </tr>
                     </tfoot>
                   </table>
-                 
                 </div>
               <% } %>
             </div>
           </div>
+          <!-- <------ Filter Recettes a venir -------------> 
+          <script>
+            document.addEventListener('DOMContentLoaded', function () {
+              const clientFilter = document.getElementById('clientFilter');
+              const chantierFilter = document.getElementById('chantierFilter');
+              const tableRows = document.querySelectorAll('.recavenir-row');
+              const totalMontant = document.getElementById('totalMontant');
+          
+              function updateTable() {
+                let total = 0;
+                const selectedClient = clientFilter.value;
+                const selectedChantier = chantierFilter.value;
+          
+                tableRows.forEach(row => {
+                  const client = row.getAttribute('data-client');
+                  const chantier = row.getAttribute('data-chantier');
+                  const montantText = row.querySelector('td:nth-child(3)').textContent.replace(/\s/g, '').replace(',', '.');
+                  const montant = parseFloat(montantText) || 0;
+          
+                  // Check if row matches the selected filters
+                  const clientMatch = !selectedClient || client === selectedClient;
+                  const chantierMatch = !selectedChantier || chantier === selectedChantier;
+          
+                  if (clientMatch && chantierMatch) {
+                    row.style.display = '';
+                    total += montant;
+                  } else {
+                    row.style.display = 'none';
+                  }
+                });
+          
+                // Update total
+                totalMontant.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
+              }
+          
+              // Add event listeners to filters
+              clientFilter.addEventListener('change', updateTable);
+              chantierFilter.addEventListener('change', updateTable);
+          
+              // Initial table update
+              updateTable();
+            });
+          </script>
+       <!-- <------ End Filter Recettes a venir -------------> 
+
 
           <!-- Banque Modal -->
           <div class="modal fade" id="banqueModal" tabindex="-1" role="dialog" aria-labelledby="banqueModalLabel" aria-hidden="true">
@@ -821,70 +888,74 @@
 }
 
         </style>
-       <div class="card-body">
-        <% console.log('Payavenirs in EJS:', JSON.stringify(payavenirs)); %>
-        <% if (!payavenirs.length) { %>
-          <p class="text-center text-muted">Aucun paiement à venir.</p>
-        <% } else { %>
-          <div class="table-responsive">
-            <table id="payavenirsTable" class="excel-table table table-bordered">
-              <thead>
-                <tr>
-                  <th>Désignation</th>
-                  <th>Banque</th>
-                  <th>Bénéficiaire</th>
-                  <th>Montant</th>
-                  <th>Date Échéance</th>
-                  <th>Statut</th>
-                  <th>Validation</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% payavenirs.forEach(c => { %>
-                  <% console.log('Rendering payavenir:', JSON.stringify(c)); %>
-                  <tr class="payavenir-row" 
-                      data-fournisseur="<%= c.fournisseur?.name || 'N/A' %>" 
-                      data-banque="<%= c.banque?.name || 'N/A' %>" 
-                      data-statut="<%= c.statut || 'N/A' %>" 
-                      data-date="<%= c.dateEcheance ? new Date(c.dateEcheance).toISOString().split('T')[0] : 'N/A' %>">
-                    <td><%= c.designation || 'N/A' %></td>
-                    <td><%= c.banque?.name || 'N/A' %></td>
-                    <td><%= c.fournisseur?.name || 'N/A' %></td>
-                    <td class="text-right montant"><%= c.montant ? c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') : '0,00' %></td>
-                    <td><%= c.dateEcheance ? new Date(c.dateEcheance).toLocaleDateString('fr-FR') : 'N/A' %></td>
-                    <td>
-                      <span class="badge badge-<%= c.statut === 'échu' ? 'warning' : c.statut === 'impayé' ? 'danger' : 'success' %>">
-                        <%= c.statut || 'N/A' %>
-                      </span>
-                    </td>
-                    <td>
-                      <div class="form-check form-check-inline">
-                        <input 
-                          type="checkbox" 
-                          class="form-check-input" 
-                          id="validationPayavenir-<%= c.id || 'missing' %>" 
-                          name="validationPayavenir" 
-                          data-id="<%= c.id || 'missing' %>" 
-                          data-payavenirvalidation="<%= c.validation || false %>" 
-                          <%= c.validation ? 'checked' : '' %>>
-                        <label class="form-check-label" for="validationPayavenir-<%= c.id || 'missing' %>"></label>
-                      </div>
-                    </td>
-                  </tr>
-                <% }) %>
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td>Total</td>
-                  <td colspan="2"></td>
-                  <td class="text-right montant"><%= payavenirs.reduce((acc, c) => acc + (c.montant || 0), 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %></td>
-                  <td colspan="3"></td>
-                </tr>
-              </tfoot>
-            </table>
+          <!-- Paiements à venir -->
+          <div class="card mb-4 fade-in">
+            <div class="card-header d-flex justify-content-between">
+              <h2>Paiements à venir</h2>
+              <form class="form-inline" >
+                <a href="/tresorerie/payavenir" class="btn" aria-label="Ajouter un paiement" style="background-color: #6A5AE7; color: white;">Ajouter un paiement</a>
+              </form>
+            </div>
+           
+            <div class="card-body">
+              <% if (!payavenirs.length) { %>
+                <p class="text-center text-muted">Aucun paiement à venir.</p>
+              <% } else { %>
+                <div class="table-responsive">
+                  <table id="payavenirsTable" class="excel-table table table-bordered">
+                    <thead>
+                      <tr>
+                        <th>Désignation</th>
+                        <th>Banque</th>
+                        <th>Bénéficiaire</th>
+                        <th>Montant</th>
+                        <th>Date Échéance</th>
+                        <th>Statut</th>
+                        <th>Validation</th>
+                        
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% payavenirs.forEach(c => { %>
+                        <tr class="payavenir-row" data-fournisseur="<%= c.fournisseur.name %>" data-banque="<%= c.banque.name %>" data-statut="<%= c.statut %>" data-date="<%= new Date(c.dateEcheance).toISOString().split('T')[0] %>">
+                          <td><%= c.designation %></td>
+                          <td><%= c.banque.name %></td>
+                          <td><%= c.fournisseur.name %></td>
+                          <td class="text-right montant"><%= c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %> </td>
+                          <td><%= new Date(c.dateEcheance).toLocaleDateString('fr-FR') %></td>
+                          <td>
+                            <span class="badge badge-<%= c.statut === 'échu' ? 'warning' : c.statut === 'impayé' ? 'danger' : 'success' %>">
+                              <%= c.statut %>
+                            </span>
+                          </td>
+                          <td>
+                          <div class="form-check form-check-inline">
+                            <input 
+                            type="checkbox" 
+                            class="form-check-input" 
+                            id="validationPayavenir-<%= c.id %>" 
+                            name="validationPayavenir" 
+                            data-id="<%= c.id %>" 
+                            data-payavenirvalidation="<%= c.validation %>" 
+                            <%= c.validation ? 'checked' : '' %>>
+                            <label class="form-check-label" for="validationPayavenir-<%= c.id %>"></label>
+                          </div>
+                           </td>
+                          </tr>
+                      <% }) %>
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td>Total</td>  
+                        <td class="text-right montant"><%= payavenirs.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %> </td>
+                        <td colspan="5"></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              <% } %>
+            </div>
           </div>
-        <% } %>
-      </div>
         
           <!-- Total Général -->
           <div class="card mb-4 fade-in">

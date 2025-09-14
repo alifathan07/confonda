@@ -185,6 +185,9 @@ export const getSituationBancaire = async (req, res) => {
           banque: {
             select: { name: true },
           },
+          chantier: {
+            select : { nom : true},
+          }
         },
         orderBy: {
           dateEcheance: 'asc',
@@ -204,6 +207,13 @@ export const getSituationBancaire = async (req, res) => {
           name: 'asc',
         }
       });
+      const chantiers = await prisma.chantier.findMany({
+        select: { id: true, nom: true },
+        
+        orderBy: {
+          nom: 'asc',
+        }
+      })
      console.log(payavenirs)
       res.render('dashboard/tresorerie/situation/index', {
         banques,
@@ -215,6 +225,7 @@ export const getSituationBancaire = async (req, res) => {
         to,
         fournisseurs,
         clients,
+        chantiers,
       });
     } catch (error) {
       console.error(error);
