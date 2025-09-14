@@ -146,6 +146,8 @@ model Cheque {
     validation           Boolean?  @default(false)
   banque              Banque   @relation("BanqueCheques", fields: [banqueId], references: [id])
   banqueId            Int
+  chantier         Chantier? @relation("ChequesChantier", fields: [chantierId], references: [id])
+  chantierId       Int?
 
   numero              String   // remove the @unique here ❌
 
@@ -174,6 +176,8 @@ model Effet {
 
   banque              Banque   @relation("BanqueEffets", fields: [banqueId], references: [id])
   banqueId            Int
+  chantier         Chantier? @relation("EffetsChantier", fields: [chantierId], references: [id])
+  chantierId       Int?
   numero           String      // ✅ Add this line if it's not already
   obs String?
   dateaujou DateTime?
@@ -213,6 +217,8 @@ model Payavenir {
 
   banque              Banque   @relation("BanquePayavenir", fields: [banqueId], references: [id])
   banqueId            Int
+   chantier         Chantier? @relation("PayavenirChantier", fields: [chantierId], references: [id])
+  chantierId       Int?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -227,8 +233,8 @@ model Recavenir {
   obs String?  
   client         Client @relation(fields: [clientId], references: [id])
   clientId       Int
-  chantier         Chantier @relation(fields: [chantierId], references: [id])
-  chantierId       Int
+  chantier         Chantier? @relation(fields: [chantierId], references: [id])
+  chantierId       Int?
   banque              Banque   @relation("BanqueRecavenir", fields: [banqueId], references: [id])
   banqueId            Int
   createdAt     DateTime @default(now())
@@ -253,6 +259,8 @@ model Virement {
   fournisseurId       Int?
   banque              Banque   @relation("BanqueVirements", fields: [banqueId], references: [id])
   banqueId            Int
+  chantier         Chantier? @relation("VirementsChantier", fields: [chantierId], references: [id])
+  chantierId       Int?
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -270,7 +278,8 @@ model Miseadis {
   montantLettres String?
   banque              Banque   @relation("BanqueMiseadis", fields: [banqueId], references: [id])
   banqueId            Int
-
+  chantier         Chantier? @relation("MiseadisChantier", fields: [chantierId], references: [id])
+  chantierId        Int?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -320,7 +329,11 @@ model Chantier {
 
   client     Client    @relation("ClientChantier", fields: [clientId], references: [id])
   recavenir Recavenir[]  
-
+  cheques    Cheque[]  @relation("ChequesChantier")
+  effets     Effet[]   @relation("EffetsChantier")
+  payavenir Payavenir[] @relation("PayavenirChantier")
+  virements  Virement[] @relation("VirementsChantier")
+  miseadis  Miseadis[] @relation("MiseadisChantier")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

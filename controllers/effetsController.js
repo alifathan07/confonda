@@ -96,7 +96,7 @@ const parseExcelDate = (value) => {
             if (headerText.includes('date') && !headerText.includes('echeance') && !headerText.includes('reg')) {
               columnMap.dateEtablissement = col;
               console.log(`  ✅ Mapped to dateEtablissement`);
-            } else if (headerText.includes('n°') || headerText.includes('numero') || headerText.includes('num') || headerText.includes('cheque')) {
+            } else if (headerText.includes('n°') || headerText.includes('numero') || headerText.includes('num') || headerText.includes('effet')) {
               columnMap.numero = col;
               console.log(`  ✅ Mapped to numero`);
             } else if (headerText.includes('banque') || headerText.includes('bank')) {
@@ -368,11 +368,14 @@ const parseExcelDate = (value) => {
 
 export const showEffets = async (req, res) => {
   try {
-    console.log('📋 Fetching cheques list...');
+    console.log('📋 Fetching effets list...');
     const effets = await prisma.effet.findMany({
+      orderBy: { id: 'desc' },
       include: {
+        
         fournisseur: true,
         banque: true,
+        chantier: true
       },
     });
     console.log(`✅ Found ${effets.length} effets`);
@@ -383,10 +386,13 @@ export const showEffets = async (req, res) => {
     const banques = await prisma.banque.findMany();
     console.log(`✅ Found ${banques.length} banques`);
     const {id} = req.params 
+    const chantiers = await prisma.chantier.findMany();
+    console.log(`✅ Found ${chantiers.length} chantiers`);
     res.render("dashboard/tresorerie/reglements/effets/index", {
       effets,
       fournisseurs,
       banques,
+      chantiers,
       id
     });
   } catch (error) {
@@ -452,37 +458,43 @@ export const Ebmce = async (req, res) => {
   const {id} = req.params     
   const fournisseurs = await prisma.fournisseur.findMany()
   const banques = await prisma.banque.findMany()
-  res.render('dashboard/tresorerie/reglements/effets/etablir/bmce', {id , fournisseurs , banques})
+  const chantiers = await prisma.chantier.findMany()
+  res.render('dashboard/tresorerie/reglements/effets/etablir/bmce', {id , fournisseurs , banques, chantiers})
 };
 export const Ebmci = async (req, res) => {
   const {id} = req.params     
   const fournisseurs = await prisma.fournisseur.findMany()
   const banques = await prisma.banque.findMany()
-  res.render('dashboard/tresorerie/reglements/effets/etablir/bmci', {id , fournisseurs , banques})
+  const chantiers = await prisma.chantier.findMany()
+  res.render('dashboard/tresorerie/reglements/effets/etablir/bmci', {id , fournisseurs , banques, chantiers})
 };
 export const Eawb = async (req, res) => {
   const {id} = req.params     
   const fournisseurs = await prisma.fournisseur.findMany()
   const banques = await prisma.banque.findMany()
-  res.render('dashboard/tresorerie/reglements/effets/etablir/awb', {id , fournisseurs , banques})
+  const chantiers = await prisma.chantier.findMany()
+  res.render('dashboard/tresorerie/reglements/effets/etablir/awb', {id , fournisseurs , banques, chantiers})
 };
 export const Ecam = async (req, res) => {
   const {id} = req.params     
   const fournisseurs = await prisma.fournisseur.findMany()
   const banques = await prisma.banque.findMany()
-  res.render('dashboard/tresorerie/reglements/effets/etablir/cam', {id , fournisseurs , banques})
+  const chantiers = await prisma.chantier.findMany()
+  res.render('dashboard/tresorerie/reglements/effets/etablir/cam', {id , fournisseurs , banques, chantiers})
 };
 export const Ebp = async (req, res) => {
   const {id} = req.params     
   const fournisseurs = await prisma.fournisseur.findMany()
   const banques = await prisma.banque.findMany()
-  res.render('dashboard/tresorerie/reglements/effets/etablir/bp', {id , fournisseurs , banques})
+  const chantiers = await prisma.chantier.findMany()
+  res.render('dashboard/tresorerie/reglements/effets/etablir/bp', {id , fournisseurs , banques, chantiers})
 };
 export const Ecdm = async (req, res) => {
   const {id} = req.params     
   const fournisseurs = await prisma.fournisseur.findMany()
   const banques = await prisma.banque.findMany()
-  res.render('dashboard/tresorerie/reglements/effets/etablir/cdm', {id , fournisseurs , banques})
+  const chantiers = await prisma.chantier.findMany()
+  res.render('dashboard/tresorerie/reglements/effets/etablir/cdm', {id , fournisseurs , banques, chantiers})
 };
 
 export const createEffet = async (req, res) => {
@@ -499,7 +511,8 @@ export const createEffet = async (req, res) => {
       obs,
       montantPaye,
       reste,
-      banque
+      banque,
+      chantier
     } = req.body;
 
     // Find or create fournisseur
@@ -542,57 +555,7 @@ export const createEffet = async (req, res) => {
       });
     }
 
-    const effet = await prisma.effet.create({
-      data: {
-        numero,
-        montant: parseFloat(montant),
-        beneficiaire,
-        dateEcheance: new Date(dateEcheance),
-        dateEtablissement: new Date(dateEtablissement),
-        dateReglement: dateReglement ? new Date(dateReglement) : new Date("2025-10-02"),
-        statut,
-        obs,
-        montantPaye: parseFloat(montantPaye), // ✅ Convert to Float
-        reste: parseFloat(reste), // ✅ Convert to Float
-        fournisseur: { connect: { id: fournisseur.id } },
-        banque: { connect: { id: findBanque.id } },
-      },
-    });
-
-    console.log(`✅ Effet created successfully: ${effet.id}`);
-    res.json(effet);
-  } catch (error) {
-    console.error('❌ Error creating effet:', {
-      error: error.message,
-      stack: error.stack,
-      body: req.body,
-    });
-    res.status(500).json({ error: "Erreur lors de la création du chèque." });
-  }
-};
-
-export const etablirEffet = async (req, res) => {
-  try {
-    const { numero, montant, beneficiaire, dateEcheance, ville, obs } = req.body;
-    const { id } = req.params; // banque id
-
-    // --- Check or create fournisseur ---
-    let fournisseur = await prisma.fournisseur.findFirst({ where: { name: beneficiaire } });
-    if (!fournisseur) {
-      fournisseur = await prisma.fournisseur.create({
-        data: { name: beneficiaire, ice: ' ', rib: ' ', banque: '', identifFiscal: ' ', telFournisseur: ' ', contact: ' ', telContact: ' ' },
-      });
-    }
-
-    // --- Check or create banque ---
-    let findBanque = await prisma.banque.findFirst({ where: { id: parseInt(id) } });
-    if (!findBanque) {
-      findBanque = await prisma.banque.create({
-        data: { name: ' ', rib: 0, agence: ' ', solde: 0, dateSolde: new Date(), positive: 0, negative: 0, dmlt: 0 },
-      });
-    }
-
-    // --- Get last cheque for this banque ---
+    // --- Get last effet for this banque ---
     const lastEffet = await prisma.effet.findFirst({
       where: { banqueId: findBanque.id },
       orderBy: { id: 'desc' },
@@ -611,7 +574,79 @@ export const etablirEffet = async (req, res) => {
       nextNumero = '1';
     }
 
-    // --- Create cheque ---
+    // --- Create effet ---
+    const chantierData = await prisma.chantier.findFirst({
+      where : {nom : chantier}
+    })
+    const effet = await prisma.effet.create({
+      data: {
+        numero: nextNumero,
+        montant: parseFloat(montant),
+        beneficiaire,
+        dateEcheance: new Date(dateEcheance),
+        dateEtablissement: new Date(),
+        statut: 'En circulation',
+        ville : "",
+        obs,
+        chantier : { connect: { id: parseInt(chantierData.id) } },
+        fournisseur: { connect: { id: fournisseur.id } },
+        banque: { connect: { id: findBanque.id } },
+
+      },
+    });
+    console.log(`✅ Effet created successfully: ${effet.id}`);
+    res.json(effet);
+  } catch (error) {
+    console.error('❌ Error creating effet:', {
+      error: error.message,
+      stack: error.stack,
+      body: req.body,
+    });
+    res.status(500).json({ error: "Erreur lors de la création du chèque." });
+  }
+};
+
+export const etablirEffet = async (req, res) => {
+  try {
+    const { numero, montant, beneficiaire, dateEcheance, ville, obs, chantier } = req.body;
+    const { id } = req.params; // banque id
+    
+    // --- Check or create fournisseur ---
+    let fournisseur = await prisma.fournisseur.findFirst({ where: { name: beneficiaire } });
+    if (!fournisseur) {
+      fournisseur = await prisma.fournisseur.create({
+        data: { name: beneficiaire, ice: ' ', rib: ' ', banque: '', identifFiscal: ' ', telFournisseur: ' ', contact: ' ', telContact: ' ' },
+      });
+    }
+
+    // --- Check or create banque ---
+    let findBanque = await prisma.banque.findFirst({ where: { id: parseInt(id) } });
+    if (!findBanque) {
+      findBanque = await prisma.banque.create({
+        data: { name: ' ', rib: 0, agence: ' ', solde: 0, dateSolde: new Date(), positive: 0, negative: 0, dmlt: 0 },
+      });
+    }
+
+    // --- Get last effet for this banque ---
+    const lastEffet = await prisma.effet.findFirst({
+      where: { banqueId: findBanque.id },
+      orderBy: { id: 'desc' },
+    });
+
+    let nextNumero;
+    if (numero) {
+      // Use user-provided number
+      nextNumero = String(numero);
+    } else if (lastEffet) {
+      // Auto increment from last number
+      const lastNumero = parseInt(lastEffet.numero, 10);
+      nextNumero = isNaN(lastNumero) ? '1' : String(lastNumero + 1);
+    } else {
+      // First record, default to 1
+      nextNumero = '1';
+    }
+
+    // --- Create effet ---
     const effet = await prisma.effet.create({
       data: {
         numero: nextNumero,
@@ -622,15 +657,17 @@ export const etablirEffet = async (req, res) => {
         statut: 'En circulation',
         ville,
         obs,
+        chantier : { connect: { id: parseInt(chantier) } },
         fournisseur: { connect: { id: fournisseur.id } },
         banque: { connect: { id: findBanque.id } },
+
       },
     });
 
     console.log(`✅ Effet created successfully: ${effet.id}`);
     res.redirect(`/tresorerie/effets/banque/${id}`);
   } catch (error) {
-    console.error('❌ Error creating cheque:', {
+    console.error('❌ Error creating effet:', {
       error: error.message,
       stack: error.stack,
       body: req.body,
@@ -652,9 +689,8 @@ export const updateEffet = async (req, res) => {
       dateReglement,
       statut,
       obs,
-      montantPaye,
-      reste,
-      banque
+      banque,
+      chantier
     } = req.body;
 
     if (!beneficiaire || !banque) {
@@ -668,10 +704,8 @@ export const updateEffet = async (req, res) => {
       fournisseur = await prisma.fournisseur.create({
         data: {
           name: beneficiaire,
-          ice: ` `,
-          rib: ` `,
-          banque : '',
-          identifFiscal: ` `,
+          ice: ' ',
+          identifFiscal: ' ',
           telFournisseur: ' ',
           contact: ' ',
           telContact: ' '
@@ -687,7 +721,7 @@ export const updateEffet = async (req, res) => {
         data: {
           name: banque,
           rib: 0,
-          agence: '',
+          agence: ' ',
           solde: 0,
           dateSolde: new Date(),
           positive: 0,
@@ -697,39 +731,37 @@ export const updateEffet = async (req, res) => {
       });
     }
 
-    // 🛠️ Build the data object dynamically
+    // 📌 Check if chantier exists by name
+    let findChantier = null;
+    if (chantier) {
+      findChantier = await prisma.chantier.findFirst({ where: { nom: chantier } });
+      if (!findChantier) {
+        findChantier = await prisma.chantier.create({
+          data: {
+            nom: chantier,
+            // Add other required fields for chantier if necessary
+          }
+        });
+      }
+    }
+
+    // 🛠️ Build the data object dynamically, only including fields that are provided
     const data = {};
 
     if (numero !== undefined) data.numero = numero;
     if (montant !== undefined) {
-      const cleanedMontant = montant.replace(/[^0-9,.]/g, '').replace(',', '.');
-      if (isNaN(parseFloat(cleanedMontant))) {
-        return res.status(400).json({ error: "Montant must be a valid number." });
-      }
-      data.montant = parseFloat(cleanedMontant);
+      data.montant = parseFloat(montant.replace(/[^0-9,.]/g, '').replace(',', '.'));
     }
     if (beneficiaire !== undefined) data.beneficiaire = beneficiaire;
     if (dateEcheance !== undefined) data.dateEcheance = new Date(dateEcheance);
     if (dateEtablissement !== undefined) data.dateEtablissement = new Date(dateEtablissement);
     if (dateReglement !== undefined) data.dateReglement = dateReglement ? new Date(dateReglement) : null;
     if (statut !== undefined) data.statut = statut;
+    if (statut === "payé") data.validation = false;
     if (obs !== undefined) data.obs = obs;
-    if (montantPaye !== undefined) {
-      const cleanedMontantPaye = montantPaye.replace(/[^0-9,.]/g, '').replace(',', '.');
-      if (isNaN(parseFloat(cleanedMontantPaye))) {
-        return res.status(400).json({ error: "MontantPaye must be a valid number." });
-      }
-      data.montantPaye = parseFloat(cleanedMontantPaye);
-    }
-    if (reste !== undefined) {
-      const cleanedReste = reste.replace(/[^0-9,.]/g, '').replace(',', '.');
-      if (isNaN(parseFloat(cleanedReste))) {
-        return res.status(400).json({ error: "Reste must be a valid number." });
-      }
-      data.reste = parseFloat(cleanedReste);
-    }
     if (fournisseur) data.fournisseur = { connect: { id: fournisseur.id } };
     if (findBanque) data.banque = { connect: { id: findBanque.id } };
+    if (findChantier) data.chantier = { connect: { id: findChantier.id } };
 
     // 🛠️ Update effet
     const effet = await prisma.effet.update({
@@ -737,7 +769,7 @@ export const updateEffet = async (req, res) => {
       data
     });
 
-    console.log(`✅ Effet updated successfully: ${id}`);
+    console.log(`✅ effet updated successfully: ${id}`);
     res.json(effet);
 
   } catch (error) {
@@ -745,9 +777,12 @@ export const updateEffet = async (req, res) => {
       message: error.message,
       stack: error.stack
     });
-    res.status(500).json({ error: "Erreur lors de la mise à jour du effet." });
+    res.status(500).json({ error: "Erreur lors de la mise à jour du chèque." });
   }
 };
+
+
+
 export const updateEffetStatut = async (req, res) => {
   try {
     const { id } = req.params;

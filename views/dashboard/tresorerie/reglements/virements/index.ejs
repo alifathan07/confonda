@@ -182,6 +182,7 @@
                       <th draggable="true">Date Saisie</th>
                       <th draggable="true">Observation</th>
                       <th draggable="true">Date Reglement</th>
+                      <th draggable="true">Chantier</th>
                       <th style="width: 120px;">Actions</th>
                     </tr>
                   </thead>
@@ -195,6 +196,20 @@
                           <td contenteditable="true" data-name="dateSaisie"><%= formatDateToDDMMYYYY(virement.date) %></td>
                           <td contenteditable="true" data-name="obs"><%= virement.obs || '' %></td>
                           <td contenteditable="true" data-name="dateReglement"><%= formatDateToDDMMYYYY(virement.dateReglement) || '' %></td>
+                          <td data-name="chantier">
+                            <select data-name="chantier" class="form-control">
+                              <% if (virement.chantier) { %>
+                                <option value="<%= virement.chantier.id %>"><%= virement.chantier.nom %></option>
+                              <% } else { %>
+                                <option value="">Choisir un chantier</option>
+                              <% } %>
+                              <% chantiers.forEach(chantier => { %>
+                                <% if (!virement.chantier || virement.chantier.id !== chantier.id) { %>
+                                  <option value="<%= chantier.id %>"><%= chantier.nom %></option>
+                                <% } %>
+                              <% }) %>
+                            </select>
+                          </td>
                           <td>
                             <div class="btn-group" role="group">
                               <button class="btn btn-danger btn-sm" title="Supprimer" onclick="supprimerVirement(<%= virement.id %>)">
@@ -210,13 +225,14 @@
                     <% } %>
                   </tbody>
                 </table>
+                
+              
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    
     <script>
       async function supprimerVirement(id) {
         try {
@@ -482,9 +498,10 @@
           });
         });
     
-        // Mark row as dirty on cell edit
+        // Mark row as dirty on cell edit or select change
         table.addEventListener("input", function (e) {
-          const cell = e.target.closest("td[data-name]");
+          const target = e.target;
+          const cell = target.closest("td[data-name]");
           if (cell) {
             const row = cell.parentElement;
             row.setAttribute("data-dirty", "true");
@@ -492,6 +509,14 @@
             if (cell.getAttribute("data-name") === "montant") {
               updateTotal();
             }
+          }
+        });
+    
+        table.addEventListener("change", function (e) {
+          if (e.target.tagName === "SELECT" && e.target.getAttribute("data-name") === "chantier") {
+            const row = e.target.closest("tr");
+            row.setAttribute("data-dirty", "true");
+            row.classList.add("excel-dirty-row");
           }
         });
     
@@ -506,25 +531,35 @@
     
           cells.forEach(cell => {
             const key = cell.getAttribute("data-name");
-            let value = cell.innerText.trim();
-            if (key === "montant") {
-              value = parseFloat(value.replace(/\s/g, '').replace(',', '.'));
-              if (isNaN(value)) return; // Skip invalid montant
-              data[key] = value;
-              data.montantLettre = convertMontantToLettre(value); // Auto-generate montantLettre
-            } else if (['dateSaisie', 'dateReglement'].includes(key)) {
-              value = convertDateToISO(value);
-              if (key === 'dateSaisie' && !value) {
-                hasInvalidDate = true; // Flag invalid dateSaisie
-                return;
-              }
+            if (key === "chantier") {
+              const select = cell.querySelector("select[data-name='chantier']");
+              const value = select.value;
               if (value) {
-                data[key] = value; // Only include valid dates
-              } else if (key === 'dateReglement') {
-                data[key] = null; // Allow null for dateReglement
+                data[key] = value; // Send chantier ID
+              } else {
+                data[key] = null; // Allow null for chantier
               }
-            } else if (value !== '') {
-              data[key] = value; // Include non-empty text fields
+            } else {
+              let value = cell.innerText.trim();
+              if (key === "montant") {
+                value = parseFloat(value.replace(/\s/g, '').replace(',', '.'));
+                if (isNaN(value)) return; // Skip invalid montant
+                data[key] = value;
+                data.montantLettre = convertMontantToLettre(value); // Auto-generate montantLettre
+              } else if (['dateSaisie', 'dateReglement'].includes(key)) {
+                value = convertDateToISO(value);
+                if (key === 'dateSaisie' && !value) {
+                  hasInvalidDate = true; // Flag invalid dateSaisie
+                  return;
+                }
+                if (value) {
+                  data[key] = value; // Only include valid dates
+                } else if (key === 'dateReglement') {
+                  data[key] = null; // Allow null for dateReglement
+                }
+              } else if (value !== '') {
+                data[key] = value; // Include non-empty text fields
+              }
             }
           });
     
@@ -555,7 +590,10 @@
               if (updatedVirement) {
                 cells.forEach(cell => {
                   const key = cell.getAttribute("data-name");
-                  if (key === "montant") {
+                  if (key === "chantier") {
+                    const select = cell.querySelector("select[data-name='chantier']");
+                    select.value = updatedVirement[key]?.id || '';
+                  } else if (key === "montant") {
                     cell.innerText = Number(updatedVirement[key]).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                   } else if (['dateSaisie', 'dateReglement'].includes(key)) {
                     cell.innerText = updatedVirement[key] ? formatDateToDDMMYYYY(updatedVirement[key]) : '';
@@ -566,7 +604,7 @@
               }
               return true;
             } else {
-              alert(`Erreur lors de la mise à jour de la ligne ${id} : ${result.error}`);
+              window.location.reload();
               return false;
             }
           } catch (err) {
@@ -618,6 +656,7 @@
         updateTotal();
       });
     </script>
+   
   </div>
 
  

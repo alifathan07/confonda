@@ -2,6 +2,7 @@ import prisma from "../db.js";
 
 export const showPayavenir = async (req, res) => {
     const payavenirs = await prisma.payavenir.findMany({
+      orderBy: { id: 'desc' },
         include: {
           banque: true,
           fournisseur: true

@@ -2,6 +2,7 @@ import prisma from "../db.js";
 
 export const showRecavenir = async (req, res) => {
     const recavenirs = await prisma.recavenir.findMany({
+      orderBy: { id: 'desc' },
         include: {
           banque: true,
           client: true,

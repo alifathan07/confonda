@@ -223,9 +223,9 @@
               <div class="card shadow mb-4">
                 <div class="card-header py-3">
                   <% if (id) { %>
-                    <h6 class="m-0 font-weight-bold text-primary">Liste des effets <%= banqueName.name %></h6>
+                    <h6 class="m-0 font-weight-bold text-primary">Liste des chèques <%= banqueName.name %></h6>
                   <% } else { %>
-                    <h6 class="m-0 font-weight-bold text-primary">Liste des effets</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">Liste des chèques</h6>
                   <% } %>
                 </div>
                 <div class="card-body">
@@ -258,7 +258,7 @@
                       <% } %>
                     <% } %>
                     <button id="addRowBtn" class="btn btn-secondary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
-                      <i class="fas fa-plus mr-2"></i> Ajouter effet
+                      <i class="fas fa-plus mr-2"></i> Ajouter Chèque
                     </button>
                     <button id="saveTableBtn" class="btn btn-primary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
                       <i class="fas fa-save mr-2"></i> Enregistrer
@@ -270,7 +270,7 @@
                       type="text"
                       id="supplierSearch"
                       class="form-control"
-                      placeholder="Rechercher un effet..."
+                      placeholder="Rechercher un chèque..."
                       style="font-size: 15px;"
                     />
                   </div>

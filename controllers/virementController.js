@@ -9,22 +9,23 @@ const __dirname = path.dirname(__filename);
 export const index = async(req , res) => {
     const banqueId = req.params.banqueId;
     const virements  = await prisma.virement.findMany({
-        include: { fournisseur: true, banque: true },
+        include: { fournisseur: true, banque: true,  chantier : true },
         where: { banqueId: Number(banqueId) }
     });
-
-    res.render('dashboard/tresorerie/reglements/virements/index' , { virements, banqueId  } )
+    const chantiers = await prisma.chantier.findMany();
+    res.render('dashboard/tresorerie/reglements/virements/index' , { virements, banqueId, chantiers } )
 }
 
 export const createVirement = async(req , res) => {
     const fournisseurs = await prisma.fournisseur.findMany()
     const banqueId = Number(req.params.id)
+    const chantiers = await prisma.chantier.findMany()
     
-    res.render('dashboard/tresorerie/reglements/virements/create' , { fournisseurs , banqueId, rtgs: false, srbm: false, instantane: false } )
+    res.render('dashboard/tresorerie/reglements/virements/create' , { fournisseurs , banqueId, rtgs: false, srbm: false, instantane: false, chantiers } )
 }
 export const postVirement = async (req, res) => {
     try {
-        const { beneficiaire, date, dateReglement, montant, obs, rib, montantLettre, objet, cause, agence, banque } = req.body;
+        const { beneficiaire, date, dateReglement, montant, obs, rib, montantLettre, objet, cause, agence, banque, chantier } = req.body;
         const banqueId = parseInt(req.params.id);
 
         if (isNaN(banqueId)) {
@@ -117,7 +118,8 @@ export const postVirement = async (req, res) => {
                 objet,
                 cause,
                 fournisseur: { connect: { id: fournisseur.id } },
-                banque: { connect: { id: banqueId } }
+                banque: { connect: { id: banqueId } },
+                chantier: { connect: { id: parseInt(chantier) } },
             }
         });
 
@@ -162,7 +164,7 @@ export const updateVire = async (req, res) => {
     try {
         const id = Number(req.params.id);
         const banqueId = Number(req.params.banqueId);
-        const { beneficiaire, date, dateReglement, montant, obs, rib, montantLettre, objet, cause, rtgs, srbm, instantane } = req.body;
+        const { beneficiaire, date, dateReglement, montant, obs, rib, montantLettre, objet, cause, rtgs, srbm, instantane, chantier } = req.body;
 
         // Validate IDs
         if (isNaN(banqueId) || isNaN(id)) {
@@ -259,7 +261,8 @@ export const updateVire = async (req, res) => {
             instantane: instantaneBoolean,
             objet: objet !== undefined ? objet : existingVirement.objet,
             cause: cause !== undefined ? cause : existingVirement.cause,
-            banque: { connect: { id: banqueId } }
+            banque: { connect: { id: banqueId } },
+            chantier : { connect: { id: parseInt(chantier) } },
         };
 
         // Only connect fournisseur if it exists
@@ -288,9 +291,10 @@ export const showVirement = async(req , res) => {
     const banqueId = Number(req.params.id)
     const virements = await prisma.virement.findMany({
         where: { banqueId },
-        include: { fournisseur: true, banque: true }
+        include: { fournisseur: true, banque: true, chantier: true }
     })
-    res.render('dashboard/tresorerie/reglements/virements/index' , { virements , banqueId } )
+    const chantiers = await prisma.chantier.findMany();
+    res.render('dashboard/tresorerie/reglements/virements/index' , { virements , banqueId , chantiers } )
 }
 
 

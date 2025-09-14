@@ -79,7 +79,65 @@
                                     <div class="form-group col-12 col-md-6">
                                         <label for="beneficiaire">Bénéficiaire</label>
                                         <input type="text" class="form-control" id="beneficiaire" name="beneficiaire" required placeholder="Nom du bénéficiaire">
+                                        <div id="beneficiaire-list"></div>
+                                    </div>
+                                    <script src="/vendor/jquery/jquery.min.js"></script>
+                                    <script>
+                                    $(document).ready(function () {
+                                        let fournisseurs = [];
                                     
+                                        // Charger la liste des fournisseurs depuis l'API
+                                        $.ajax({
+                                            url: '/api/fournisseurs',
+                                            method: 'GET',
+                                            success: function (data) {
+                                                fournisseurs = data;
+                                                console.log("Fournisseurs chargés :", fournisseurs);
+                                            },
+                                            error: function (xhr, status, error) {
+                                                console.error('Erreur lors de la récupération des fournisseurs:', error);
+                                            }
+                                        });
+                                    
+                                        const $input = $('#beneficiaire');
+                                        const $list = $('#beneficiaire-list');
+                                    
+                                        $input.on('input', function () {
+                                            const val = $(this).val().trim().toLowerCase();
+                                            $list.empty();
+                                    
+                                            if (val.length > 0) {
+                                                const matches = fournisseurs.filter(f => f.name.toLowerCase().includes(val));
+                                                matches.forEach(f => {
+                                                    const $item = $('<div>').text(f.name);
+                                                    $item.on('click', function () {
+                                                        $input.val(f.name);
+                                                        $('#rib').val(f.rib || "");
+                                                        $('#banque').val(f.banque || "");
+                                                        $('#agence').val(f.agence || "");
+                                                        $list.empty();
+                                                    });
+                                                    $list.append($item);
+                                                });
+                                            }
+                                        });
+                                    
+                                        // Hide list if click outside
+                                        $(document).on('click', function(e) {
+                                            if (!$(e.target).closest('#beneficiaire').length) {
+                                                $list.empty();
+                                            }
+                                        });
+                                    });
+                                    </script>
+                                    <div class="form-group col-12 col-md-6">
+                                        <label for="chantier">Chantier</label>
+                                        <select class="form-control" id="beneficiaire" name="chantier" required placeholder="">
+                                            <option selected disabled>Choisissez un chantier</option>
+                                            <% chantiers.forEach(chantier => { %>
+                                                <option value="<%= chantier.id %>"><%= chantier.nom %></option>
+                                            <% }); %>
+                                        </select>
                                     </div>
                                     <div class="form-group col-12 col-md-6">
                                         <label for="beneficiaire">CIN</label>

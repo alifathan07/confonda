@@ -275,6 +275,7 @@ function formatDateToDDMMYYYY(dateInput) {
             <th draggable="true">Montant</th>
             <th draggable="true">Date Saisie</th>
             <th draggable="true">Observation</th>
+            <th draggable="true">Chantier</th>
             <th style="width: 180px;">Actions</th>
         </tr>
     </thead>
@@ -287,6 +288,20 @@ function formatDateToDDMMYYYY(dateInput) {
                 <td contenteditable="true" data-name="montant"><%= Number(miseadispo.montant).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
                 <td contenteditable="true" data-name="dateEcheance"><%= formatDateToDDMMYYYY(miseadispo.date) %></td>
                 <td contenteditable="true" data-name="obs"><%= miseadispo.obs || '' %></td>
+                <td data-name="chantier">
+                  <select data-name="chantier" class="form-control">
+                    <% if (miseadispo.chantier) { %>
+                      <option value="<%= miseadispo.chantier.id %>"><%= miseadispo.chantier.nom %></option>
+                    <% } else { %>
+                      <option value="">Choisir un chantier</option>
+                    <% } %>
+                    <% chantiers.forEach(chantier => { %>
+                      <% if (!miseadispo.chantier || miseadispo.chantier.id !== chantier.id) { %>
+                        <option value="<%= chantier.id %>"><%= chantier.nom %></option>
+                      <% } %>
+                    <% }) %>
+                  </select>
+                </td>
                 <td>
                     <div class="btn-group" role="group">
                         <a href="/tresorerie/miseadis/banque/<%= banqueId %>/update/<%= miseadispo.id %>" class="btn btn-primary btn-sm" title="Modifier">

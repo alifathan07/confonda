@@ -378,7 +378,15 @@
                     <label for="date">La cause :</label>
                     <input id="cause" type="text" name="obs">
                 </div>
-                 
+                <div class="form-group">
+                    <label for="chantier">Chantier:</label>
+                    <select id="chantier" name="chantier" class="form-control">
+                        <option value="">Sélectionnez un chantier</option>
+                        <% chantiers.forEach(chant => { %>
+                            <option value="<%= chant.id %>"><%= chant.nom %></option>
+                        <% }) %>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label for="city">À (Ville):</label>
                     <input id="city" type="text" placeholder="Casablanca" name="ville">

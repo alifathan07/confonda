@@ -9,22 +9,24 @@ const __dirname = path.dirname(__filename);
 export const indexDis = async(req , res) => {
     const banqueId = req.params.banqueId;
     const miseadis  = await prisma.miseadis.findMany({
-        include: {  banque: true },
+        orderBy: { id: 'desc' },
+        include: {  banque: true, chantier : true },
         where: { banqueId: Number(banqueId) }
     });
-
-    res.render('dashboard/tresorerie/reglements/miseadis/index' , { miseadis, banqueId  } )
+    const chantiers = await prisma.chantier.findMany()
+    res.render('dashboard/tresorerie/reglements/miseadis/index' , { miseadis, banqueId, chantiers } )
 }
 
 export const createMiseadis = async(req , res) => {
     const fournisseurs = await prisma.fournisseur.findMany()
     const banqueId = Number(req.params.id)
+    const chantiers = await prisma.chantier.findMany()
     
-    res.render('dashboard/tresorerie/reglements/miseadis/create' , { fournisseurs , banqueId, rtgs: false } )
+    res.render('dashboard/tresorerie/reglements/miseadis/create' , { fournisseurs , banqueId, rtgs: false, chantiers } )
 }
 export const postMiseadis = async (req, res) => {
     try {
-        const { beneficiaire, date, dateReglement, montant, obs, montantLettre, cin, objet} = req.body;
+        const { beneficiaire, date, dateReglement, montant, obs, montantLettre, cin, objet, chantier} = req.body;
         const banqueId = parseInt(req.params.id);
 
         if (isNaN(banqueId)) {
@@ -48,7 +50,9 @@ export const postMiseadis = async (req, res) => {
                 objet : objet,
                 montantLettres: montantLettre,
                 cin : cin,
+                chantier : {connect : {id : parseInt(chantier)}},
                 banque: { connect: { id: banqueId } }
+
             }
         });
 
@@ -95,7 +99,7 @@ export const updateMis = async (req, res) => {
     }
 
     // Extract form fields
-    const { beneficiaire, date, dateReglement, montant, obs, rib, objet, cin } = req.body;
+    const { beneficiaire, date, dateReglement, montant, obs, rib, objet, cin, chantier } = req.body;
 
     // ✅ Update fournisseur (if exists or create new)
    
@@ -112,6 +116,7 @@ export const updateMis = async (req, res) => {
             obs,
             cin,
             objet,
+            chantier : {connect : {id : parseInt(chantier)}},
             banque: { connect: { id: banqueId } }
         }
     });
@@ -126,7 +131,8 @@ export const showMiseadis = async(req , res) => {
         where: { banqueId },
         include: { banque: true }
     })
-    res.render('dashboard/tresorerie/reglements/miseadis/index' , { miseadis , banqueId } )
+    const chantiers = await prisma.chantier.findMany()
+    res.render('dashboard/tresorerie/reglements/miseadis/index' , { miseadis , banqueId, chantiers } )
 }
 
 

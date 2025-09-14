@@ -422,11 +422,13 @@ export const showCheques = async (req, res) => {
   try {
     console.log('📋 Fetching cheques list...');
     const cheques = await prisma.cheque.findMany({
+      orderBy: { id: 'desc' },
       include: {
         fournisseur: true,
         banque: true,
-      
+        chantier: true
       },
+      
     });
     const {id} = req.params
     console.log(`✅ Found ${cheques.length} cheques`);
@@ -436,12 +438,14 @@ export const showCheques = async (req, res) => {
 
     const banques = await prisma.banque.findMany();
     console.log(`✅ Found ${banques.length} banques`);
-
+    const chantiers = await prisma.chantier.findMany();
+    console.log(`✅ Found ${chantiers.length} chantiers`);
     res.render("dashboard/tresorerie/reglements/cheques/index", {
       cheques,
       fournisseurs,
       banques,
-      id
+      id,
+      chantiers
     });
   } catch (error) {
     console.error('❌ Error fetching cheques:', {
@@ -515,22 +519,23 @@ export const updateCheque = async (req, res) => {
       dateReglement,
       statut,
       obs,
-      banque
+      banque,
+      chantier
     } = req.body;
 
     if (!beneficiaire || !banque) {
       return res.status(400).json({ error: "Fournisseur (bénéficiaire) et banque sont requis." });
     }
 
-    // 📌 Check if fournisseur exists by name (if name is not unique)
+    // 📌 Check if fournisseur exists by name
     let fournisseur = await prisma.fournisseur.findFirst({ where: { name: beneficiaire } });
 
     if (!fournisseur) {
       fournisseur = await prisma.fournisseur.create({
         data: {
           name: beneficiaire,
-          ice: ` `,
-          identifFiscal: ` `,
+          ice: ' ',
+          identifFiscal: ' ',
           telFournisseur: ' ',
           contact: ' ',
           telContact: ' '
@@ -556,12 +561,25 @@ export const updateCheque = async (req, res) => {
       });
     }
 
+    // 📌 Check if chantier exists by name
+    let findChantier = null;
+    if (chantier) {
+      findChantier = await prisma.chantier.findFirst({ where: { nom: chantier } });
+      if (!findChantier) {
+        findChantier = await prisma.chantier.create({
+          data: {
+            nom: chantier,
+            // Add other required fields for chantier if necessary
+          }
+        });
+      }
+    }
+
     // 🛠️ Build the data object dynamically, only including fields that are provided
     const data = {};
 
     if (numero !== undefined) data.numero = numero;
     if (montant !== undefined) {
-      // Convert montant to float only if provided
       data.montant = parseFloat(montant.replace(/[^0-9,.]/g, '').replace(',', '.'));
     }
     if (beneficiaire !== undefined) data.beneficiaire = beneficiaire;
@@ -569,12 +587,11 @@ export const updateCheque = async (req, res) => {
     if (dateEtablissement !== undefined) data.dateEtablissement = new Date(dateEtablissement);
     if (dateReglement !== undefined) data.dateReglement = dateReglement ? new Date(dateReglement) : null;
     if (statut !== undefined) data.statut = statut;
-    
     if (statut === "payé") data.validation = false;
-
     if (obs !== undefined) data.obs = obs;
     if (fournisseur) data.fournisseur = { connect: { id: fournisseur.id } };
     if (findBanque) data.banque = { connect: { id: findBanque.id } };
+    if (findChantier) data.chantier = { connect: { id: findChantier.id } };
 
     // 🛠️ Update cheque
     const cheque = await prisma.cheque.update({
@@ -597,37 +614,43 @@ export const updateCheque = async (req, res) => {
 export const bmce = async (req, res) => {
   const {id} = req.params     
   const fournisseurs = await prisma.fournisseur.findMany()
-  res.render('dashboard/tresorerie/reglements/cheques/etablir/bmce', {id , fournisseurs})
+  const chantiers = await prisma.chantier.findMany()
+  res.render('dashboard/tresorerie/reglements/cheques/etablir/bmce', {id , fournisseurs, chantiers})
 };
 export const bmci = async (req, res) => {
   const {id} = req.params     
   const fournisseurs = await prisma.fournisseur.findMany()
-  res.render('dashboard/tresorerie/reglements/cheques/etablir/bmci', {id , fournisseurs})
+  const chantiers = await prisma.chantier.findMany()
+  res.render('dashboard/tresorerie/reglements/cheques/etablir/bmci', {id , fournisseurs, chantiers})
 };
 export const awb = async (req, res) => {
   const {id} = req.params     
   const fournisseurs = await prisma.fournisseur.findMany()
-  res.render('dashboard/tresorerie/reglements/cheques/etablir/awb', {id , fournisseurs})
+  const chantiers = await prisma.chantier.findMany()
+  res.render('dashboard/tresorerie/reglements/cheques/etablir/awb', {id , fournisseurs, chantiers})
 };
 export const cam = async (req, res) => {
   const {id} = req.params     
   const fournisseurs = await prisma.fournisseur.findMany()
-  res.render('dashboard/tresorerie/reglements/cheques/etablir/cam', {id , fournisseurs})
+  const chantiers = await prisma.chantier.findMany()
+  res.render('dashboard/tresorerie/reglements/cheques/etablir/cam', {id , fournisseurs, chantiers})
 };
 export const bp = async (req, res) => {
   const {id} = req.params     
   const fournisseurs = await prisma.fournisseur.findMany()
-  res.render('dashboard/tresorerie/reglements/cheques/etablir/bp', {id , fournisseurs})
+  const chantiers = await prisma.chantier.findMany()
+  res.render('dashboard/tresorerie/reglements/cheques/etablir/bp', {id , fournisseurs, chantiers})
 };
 export const cdm = async (req, res) => {
   const {id} = req.params     
   const fournisseurs = await prisma.fournisseur.findMany()
-  res.render('dashboard/tresorerie/reglements/cheques/etablir/cdm', {id , fournisseurs})
+  const chantiers = await prisma.chantier.findMany()
+  res.render('dashboard/tresorerie/reglements/cheques/etablir/cdm', {id , fournisseurs, chantiers})
 };
 
 export const etablirCheque = async (req, res) => {
   try {
-    const { numero, montant, beneficiaire, dateEcheance, ville } = req.body;
+    const { numero, montant, beneficiaire, dateEcheance, ville, chantier } = req.body;
     const { id } = req.params; // banque id
 
     // --- Check or create fournisseur ---
@@ -697,11 +720,12 @@ export const etablirCheque = async (req, res) => {
         ville,
         fournisseur: { connect: { id: fournisseur.id } },
         banque: { connect: { id: findBanque.id } },
+        chantier: { connect: { id: parseInt(chantier) } },
       },
     });
 
     console.log(`✅ Cheque created successfully: ${cheque.id}`);
-    res.redirect(`/tresorerie/cheques/banque/${id}`);
+    res.redirect(`/tresorerie/cheques`);
   } catch (error) {
     console.error('❌ Error creating cheque:', {
       error: error.message,
@@ -752,7 +776,8 @@ export const createCheque = async (req, res) => {
       dateEtablissement,
       dateReglement,
       statut,
-      banque
+      banque,
+      chantier
     } = req.body;
 
     // Find or create fournisseur
@@ -807,6 +832,7 @@ export const createCheque = async (req, res) => {
         statut,
         fournisseur: { connect: { id: fournisseur.id } },
         banque: { connect: { id: findBanque.id } },
+        chantier: { connect: { id: parseInt(chantier) } },
       },
     });
 
