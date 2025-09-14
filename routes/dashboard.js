@@ -7,12 +7,12 @@ import path from 'path';
 import fs from 'fs';
 import prisma from '../db.js';
 import { createBanque, deleteBanque, displayBanques, displayBanquesForcheques, getSituationBancaire, showCreate, updateChequeInStituation, updateChequeValidation, updateEffetInStituation, updateEffetValidation, updatePayValidation, updateSituationBancaire, showEditBanque, updateBanque, listBanques } from '../controllers/banquesController.js';
-import { awb, bmce, bmci, bp, cam, cdm, createCheque, deleteCheque, etablirCheque, importExelCheques, showCheques, showChequesForbanque, updateCheque, updateChequeStatut } from '../controllers/chequesController.js';
-import {createEffet, deleteEffet, Eawb, Ebmce, Ebmci, Ebp, Ecam, Ecdm, etablirEffet, importExelEffets, showEffets, showEffetsForbanque, updateEffet, updateEffetStatut} from '../controllers/effetsController.js';
+import { awb, bmce, bmci, bp, cam, cdm, createCheque, deleteCheque, etablirCheque, importExelCheques, listBanquesCheques, showCheques, showChequesForbanque, updateCheque, updateChequeStatut } from '../controllers/chequesController.js';
+import {createEffet, deleteEffet, Eawb, Ebmce, Ebmci, Ebp, Ecam, Ecdm, etablirEffet, importExelEffets, listBanquesEffets, showEffets, showEffetsForbanque, updateEffet, updateEffetStatut} from '../controllers/effetsController.js';
 import { createPayavenir, deletePayavenir, showPayavenir, updatePayavenir, updatePayavenirStatut } from '../controllers/payavenirController.js';
 import { createRecavenir, deleteRecavenir, showRecavenir, updateRecavenir, updateRecavenirStatut } from '../controllers/recavenirController.js';
-import { createVirement, deleteVirement, generateVirementPDF, index, postVirement, showUpdateVirement, suppliersList, updateVire } from '../controllers/virementController.js';
-import { createMiseadis, deleteMiseadis, generateMiseadisPDF, indexDis, postMiseadis, showUpdateMiseadis, updateMis } from '../controllers/misediscontrollrt.js';
+import { createVirement, deleteVirement, generateVirementPDF, index, listBanquesVirements, postVirement, showUpdateVirement, suppliersList, updateVire } from '../controllers/virementController.js';
+import { createMiseadis, deleteMiseadis, generateMiseadisPDF, indexDis, listBanquesMiseadis, postMiseadis, showUpdateMiseadis, updateMis } from '../controllers/misediscontrollrt.js';
 import { createFourniture, postFourniture } from '../controllers/fournitureController.js';
 import { addUser, listUsers } from '../controllers/usersController.js';
 
@@ -138,6 +138,7 @@ dashboardRouter.get('/dashboard', async (req, res) => {
         dashboardRouter.get('/tresorerie/banques/:id/edit', showEditBanque);
         dashboardRouter.patch('/tresorerie/banques/:id', updateBanque);
         // -----------Trésorerie :  Cheques-----------------
+        dashboardRouter.get('/tresorerie/cheques/banques', listBanquesCheques);
         dashboardRouter.get('/tresorerie/cheques/create/format/bmce/:id', bmce);
         dashboardRouter.get('/tresorerie/cheques/create/format/bmci/:id', bmci);
         dashboardRouter.get('/tresorerie/cheques/create/format/awb/:id', awb);
@@ -155,6 +156,7 @@ dashboardRouter.get('/dashboard', async (req, res) => {
         dashboardRouter.get('/tresorerie/effets/create/format/credit_agricole/:id', Ecam);
         dashboardRouter.get('/tresorerie/effets/create/format/cdm/:id', Ecdm);
         dashboardRouter.get('/tresorerie/effets/create/format/bp/:id', Ebp);
+        dashboardRouter.get('/tresorerie/effets/banques', listBanquesEffets);
 
 
         dashboardRouter.post('/tresorerie/cheques/create/format/:id', etablirCheque);
@@ -216,6 +218,7 @@ dashboardRouter.get('/dashboard', async (req, res) => {
         dashboardRouter.get('/tresorerie/virements/banque/:id/pdf', generateVirementPDF);
         dashboardRouter.post('/tresorerie/virements/banque/:id/create', postVirement);
         dashboardRouter.delete('/tresorerie/virements/banque/:banqueId/delete/:id', deleteVirement);
+        dashboardRouter.get('/tresorerie/virements/banques', listBanquesVirements);
         // < -----------Trésorerie :  Mise a Disposition ----------------- >
         dashboardRouter.get('/tresorerie/miseadis/banque/:id/create', createMiseadis);
         dashboardRouter.get('/tresorerie/miseadis/banque/:banqueId', indexDis);
@@ -224,6 +227,7 @@ dashboardRouter.get('/dashboard', async (req, res) => {
         dashboardRouter.get('/tresorerie/miseadis/banque/:id/pdf', generateMiseadisPDF);
         dashboardRouter.post('/tresorerie/miseadis/banque/:id/create', postMiseadis);
         dashboardRouter.delete('/tresorerie/miseadis/banque/:banqueId/delete/:id', deleteMiseadis);
+        dashboardRouter.get('/tresorerie/miseadis/banques', listBanquesMiseadis);
 
         dashboardRouter.get('/api/fournisseurs', suppliersList);
     

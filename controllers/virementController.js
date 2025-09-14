@@ -364,7 +364,7 @@ export const generateVirementPDF = async (req, res) => {
                 value: Number(virement.montant).toLocaleString('fr-FR', { 
                   minimumFractionDigits: 2, 
                   maximumFractionDigits: 2 
-                }).replace(/[\u00A0\u202F]/g, ' ') + ' dirhams' 
+                }).replace(/[\u00A0\u202F]/g, ' ') + ' DIRHAMS' 
               },            { title: 'Montant en lettres', value: virement.montantLettres ? virement.montantLettres  : 'N/A' },
             { title: 'Banque', value: virement.fournisseur?.banque || 'N/A' },
             { title: 'RIB', value: virement.fournisseur?.rib || 'N/A' },
@@ -440,3 +440,8 @@ export const deleteVirement = async (req, res) => {
 }
 
 
+export const listBanquesVirements = async (req, res) => {
+    const banques = await prisma.banque.findMany();
+
+    res.render('dashboard/tresorerie/reglements/virements/banques', {banques});
+}

@@ -822,3 +822,7 @@ export const createCheque = async (req, res) => {
   }
 };
 
+export const listBanquesCheques = async (req, res) => {
+  const banques = await prisma.banque.findMany();
+  res.render('dashboard/tresorerie/reglements/cheques/banques', {banques});
+};

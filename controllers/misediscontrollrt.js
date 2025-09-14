@@ -273,3 +273,9 @@ export const deleteMiseadis = async (req, res) => {
 }
 
 
+
+export const listBanquesMiseadis = async (req, res) => {
+    const banques = await prisma.banque.findMany();
+
+    res.render('dashboard/tresorerie/reglements/miseadis/banques', {banques});
+}

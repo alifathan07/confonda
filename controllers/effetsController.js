@@ -789,3 +789,9 @@ export const deleteEffet = async (req, res) => {
     res.status(500).json({ error: "Erreur lors de la suppression de l'effet." });
   }
 };
+
+
+export const listBanquesEffets = async (req, res) => {
+  const banques = await prisma.banque.findMany();
+  res.render('dashboard/tresorerie/reglements/effets/banques', {banques});
+};
