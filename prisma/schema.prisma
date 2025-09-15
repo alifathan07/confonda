@@ -325,9 +325,9 @@ model Chantier {
   nom       String
   users     User[]                 // one chantier → many users
   demandes  DemandeFourniture[]    // one chantier → many demandes
-  clientId   Int
+  clientId   Int?
 
-  client     Client    @relation("ClientChantier", fields: [clientId], references: [id])
+  client     Client?   @relation("ClientChantier", fields: [clientId], references: [id])
   recavenir Recavenir[]  
   cheques    Cheque[]  @relation("ChequesChantier")
   effets     Effet[]   @relation("EffetsChantier")
