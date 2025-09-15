@@ -15,6 +15,7 @@ import { createVirement, deleteVirement, generateVirementPDF, index, listBanques
 import { createMiseadis, deleteMiseadis, generateMiseadisPDF, indexDis, listBanquesMiseadis, postMiseadis, showUpdateMiseadis, updateMis } from '../controllers/misediscontrollrt.js';
 import { createFourniture, postFourniture } from '../controllers/fournitureController.js';
 import { addUser, listUsers } from '../controllers/usersController.js';
+import { createClient, deleteClient, indexClient, updateClient } from '../controllers/clientController.js';
 
 export const dashboardRouter = express.Router();
 dashboardRouter.use(isAuthenticated)
@@ -250,3 +251,24 @@ dashboardRouter.get('/dashboard', async (req, res) => {
        
         dashboardRouter.post('/users/add', addUser);
         
+        // < -----------Ventes  ----------------- >
+        dashboardRouter.get('/ventes', (req, res) => {
+            res.render('dashboard/ventes/index');
+        })
+        // In your routes file
+        dashboardRouter.get('/clients', indexClient);
+
+        // POST /dashboard/ventes/clients - Create new client
+        dashboardRouter.post('/clients', createClient);
+        
+        // PUT /dashboard/ventes/clients/:id - Update client
+        dashboardRouter.put('/clients/:id', updateClient);
+        
+        // PATCH /dashboard/ventes/clients/:id - Update client (alternative)
+        dashboardRouter.patch('/clients/:id', updateClient);
+        
+        // DELETE /dashboard/ventes/clients/:id - Delete client
+        dashboardRouter.delete('/clients/:id', deleteClient);
+      
+      
+        // dashboardRouter.get("/ventes/chantiers", listChantiers); // List all chantiers

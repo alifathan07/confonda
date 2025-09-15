@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestion des Clients</title>
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <style>
+    .table-container { margin-top: 20px; }
+    .client-table { width: 100%; border-collapse: collapse; }
+    .client-table th, .client-table td { 
+      border: 1px solid #dee2e6; 
+      padding: 8px; 
+      text-align: left; 
+      vertical-align: middle;
+    }
+    .client-table th { 
+      background-color: #4e73df; 
+      color: white; 
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+    }
+    .client-table tbody tr:hover { background-color: #f8f9fc; }
+    .actions { display: flex; gap: 5px; justify-content: center; }
+    .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
+    .editable { cursor: text; }
+    .editable:focus { background-color: #fff3cd; outline: 2px solid #ffc107; }
+    .select2-container { width: 100% !important; }
+    .toast { z-index: 9999; }
+    .loading { opacity: 0.6; pointer-events: none; }
+    @media (max-width: 768px) {
+      .client-table { font-size: 0.75rem; }
+      .client-table th, .client-table td { padding: 4px; }
+      .btn-sm { padding: 0.125rem 0.25rem; font-size: 0.7rem; }
+    }
+  </style>
+</head>
+<body id="page-top">
+  <div id="wrapper">
+    <%- include('../../../layouts/sidebar') %>
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <%- include('../../../layouts/topbar') %>
+        <div class="container-fluid">
+
+          <!-- Page Header -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">
+              <i class="fas fa-users"></i> Gestion des Clients
+            </h1>
+            <button id="addClientBtn" class="btn btn-primary btn-sm">
+              <i class="fas fa-plus"></i> Nouveau Client
+            </button>
+          </div>
+
+          <!-- Alert Messages -->
+          <div id="alertContainer"></div>
+
+          <!-- Clients Table -->
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">Liste des Clients</h6>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="client-table" id="clientTable">
+                  <thead>
+                    <tr>
+                      <th>Nom</th>
+                      <th>Email</th>
+                      <th>ICE</th>
+                      <th>Identif. Fiscal</th>
+                      <th>Tél. Client</th>
+                      <th>Contact</th>
+                      <th>Tél. Contact</th>
+                      <th>Adresse</th>
+                      <th>Chantier</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% clients.forEach(function(client) { %>
+                    <tr data-client-id="<%= client.id %>">
+                      <td class="editable" data-field="name"><%= client.name %></td>
+                      <td class="editable" data-field="email"><%= client.email || '' %></td>
+                      <td class="editable" data-field="ice"><%= client.ice %></td>
+                      <td class="editable" data-field="identifFiscal"><%= client.identifFiscal %></td>
+                      <td class="editable" data-field="telClient"><%= client.telClient %></td>
+                      <td class="editable" data-field="contact"><%= client.contact %></td>
+                      <td class="editable" data-field="telContact"><%= client.telContact %></td>
+                      <td class="editable" data-field="address"><%= client.address || '' %></td>
+                      <td>
+                        <select class="chantier-select form-control form-control-sm" data-field="chantierId">
+                          <option value="">-- Aucun --</option>
+                          <% chantiers.forEach(function(chantier) { %>
+                            <option value="<%= chantier.id %>" 
+                              <%= client.chantier.length > 0 && client.chantier[0].id === chantier.id ? 'selected' : '' %>>
+                              <%= chantier.nom %>
+                            </option>
+                          <% }) %>
+                        </select>
+                      </td>
+                      <td class="actions">
+                        <button class="btn btn-success btn-sm save-btn" title="Sauvegarder">
+                          <i class="fas fa-save"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm delete-btn" title="Supprimer">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+  <script src="/js/sb-admin-2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      
+      // Initialize Select2
+      $('.chantier-select').select2({
+        placeholder: "-- Choisir un chantier --",
+        allowClear: true,
+        width: '100%'
+      });
+
+      // Show alert message
+      function showAlert(message, type = 'success') {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const alertHtml = `
+          <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="close" data-dismiss="alert">
+              <span>&times;</span>
+            </button>
+          </div>
+        `;
+        $('#alertContainer').html(alertHtml);
+        
+        // Auto-dismiss after 3 seconds
+        setTimeout(() => {
+          $('.alert').fadeOut();
+        }, 3000);
+      }
+
+      // Make table cells editable
+      $(document).on('click', '.editable', function() {
+        if ($(this).find('input').length > 0) return;
+        
+        const currentValue = $(this).text();
+        const input = $('<input type="text" class="form-control form-control-sm">');
+        input.val(currentValue);
+        $(this).html(input);
+        input.focus().select();
+        
+        // Save on Enter or blur
+        input.on('blur keypress', function(e) {
+          if (e.type === 'blur' || e.which === 13) {
+            const newValue = $(this).val();
+            $(this).parent().text(newValue);
+          }
+        });
+      });
+
+      // Add new client row
+      $('#addClientBtn').on('click', function() {
+        const chantierOptions = $('#clientTable tbody tr:first .chantier-select').html();
+        const newRow = `
+          <tr data-client-id="">
+            <td class="editable" data-field="name"></td>
+            <td class="editable" data-field="email"></td>
+            <td class="editable" data-field="ice"></td>
+            <td class="editable" data-field="identifFiscal"></td>
+            <td class="editable" data-field="telClient"></td>
+            <td class="editable" data-field="contact"></td>
+            <td class="editable" data-field="telContact"></td>
+            <td class="editable" data-field="address"></td>
+            <td>
+              <select class="chantier-select form-control form-control-sm" data-field="chantierId">
+                ${chantierOptions || '<option value="">-- Aucun --</option>'}
+              </select>
+            </td>
+            <td class="actions">
+              <button class="btn btn-success btn-sm save-btn" title="Sauvegarder">
+                <i class="fas fa-save"></i>
+              </button>
+              <button class="btn btn-danger btn-sm delete-btn" title="Supprimer">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+        
+        $('#clientTable tbody').prepend(newRow);
+        
+        // Initialize Select2 for new row
+        $('#clientTable tbody tr:first .chantier-select').select2({
+          placeholder: "-- Choisir un chantier --",
+          allowClear: true,
+          width: '100%'
+        });
+        
+        // Focus on first field
+        $('#clientTable tbody tr:first .editable:first').click();
+      });
+
+      // Save client (create or update)
+      $(document).on('click', '.save-btn', function() {
+        const row = $(this).closest('tr');
+        const clientId = row.data('client-id');
+        const isUpdate = clientId && clientId !== '';
+        
+        // Disable button and show loading
+        const btn = $(this);
+        btn.prop('disabled', true);
+        row.addClass('loading');
+        
+        // Collect data
+        const data = {};
+        row.find('[data-field]').each(function() {
+          const field = $(this).data('field');
+          let value;
+          
+          if ($(this).hasClass('chantier-select')) {
+            value = $(this).val();
+          } else {
+            value = $(this).text().trim();
+          }
+          
+          if (field === 'chantierId') {
+            data[field] = value;
+          } else {
+            data[field] = value;
+          }
+        });
+
+        // API call
+        const url = isUpdate ? `/dashboard/ventes/clients/${clientId}` : '/dashboard/ventes/clients';
+        const method = isUpdate ? 'PATCH' : 'POST';
+
+        $.ajax({
+          url: url,
+          method: method,
+          data: JSON.stringify(data),
+          contentType: 'application/json',
+          headers: {
+            'Accept': 'application/json'
+          },
+          success: function(response) {
+            if (response.success) {
+              showAlert(response.message, 'success');
+              
+              if (!isUpdate && response.client) {
+                row.data('client-id', response.client.id);
+              }
+            } else {
+              showAlert(response.error || 'Erreur inconnue', 'error');
+            }
+          },
+          error: function(xhr) {
+            let errorMsg = 'Erreur lors de la sauvegarde';
+            if (xhr.responseJSON && xhr.responseJSON.error) {
+              errorMsg = xhr.responseJSON.error;
+            }
+            showAlert(errorMsg, 'error');
+          },
+          complete: function() {
+            btn.prop('disabled', false);
+            row.removeClass('loading');
+          }
+        });
+      });
+
+      // Delete client
+      $(document).on('click', '.delete-btn', function() {
+        const row = $(this).closest('tr');
+        const clientId = row.data('client-id');
+        
+        if (!confirm('Êtes-vous sûr de vouloir supprimer ce client ?')) {
+          return;
+        }
+        
+        if (!clientId || clientId === '') {
+          // Just remove the row if not saved
+          row.fadeOut(300, function() {
+            $(this).remove();
+          });
+          return;
+        }
+        
+        // Disable button and show loading
+        const btn = $(this);
+        btn.prop('disabled', true);
+        row.addClass('loading');
+
+        $.ajax({
+          url: `/dashboard/ventes/clients/${clientId}`,
+          method: 'DELETE',
+          headers: {
+            'Accept': 'application/json'
+          },
+          success: function(response) {
+            if (response.success) {
+              showAlert(response.message, 'success');
+              row.fadeOut(300, function() {
+                $(this).remove();
+              });
+            } else {
+              showAlert(response.error || 'Erreur lors de la suppression', 'error');
+            }
+          },
+          error: function(xhr) {
+            let errorMsg = 'Erreur lors de la suppression';
+            if (xhr.responseJSON && xhr.responseJSON.error) {
+              errorMsg = xhr.responseJSON.error;
+            }
+            showAlert(errorMsg, 'error');
+          },
+          complete: function() {
+            if (!row.hasClass('fadeOut')) {
+              btn.prop('disabled', false);
+              row.removeClass('loading');
+            }
+          }
+        });
+      });
+
+    });
+  </script>
+</body>
+</html>
