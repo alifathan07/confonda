@@ -212,3 +212,15 @@ Tasks :
         - ajouter un tableau pur l
 
                        
+
+
+Tasks : 
+        - telecharger Exelc for all 
+        - telecharger PDF for all 
+        - Filter by statut and Echeance and chantier for all
+        - list client 
+        - list chantier
+        - list Virement
+        - list miseadisposition
+        - consolidation 
+        - achat prevusionel 
