@@ -9,6 +9,9 @@ const __dirname = path.dirname(__filename);
 export const index = async(req , res) => {
     const virements  = await prisma.virement.findMany({
         include: { fournisseur: true, banque: true,  chantier : true },
+        orderBy : {
+            id: 'desc'
+        }
     }); 
     const chantiers = await prisma.chantier.findMany();
     res.render('dashboard/tresorerie/reglements/virements/index' , { virements, chantiers } )
@@ -121,7 +124,7 @@ export const postVirement = async (req, res) => {
             }
         });
 
-        res.redirect('/tresorerie/virements/banque/' + banqueId);
+        res.redirect('/tresorerie/virements');
 
     } catch (error) {
         console.error("Erreur lors de la création du virement :", error);

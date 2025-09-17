@@ -145,14 +145,15 @@
                   </button> -->
                 </form>
                 <button id="saveAllChanges" class="btn btn-primary custom-btn" title="Enregistrer toutes les modifications">
-                  <i class="fas fa-save mr-2"></i> Enregistrer tout
+                  <i class="fas fa-save mr-2"></i> Enregistrer 
                 </button>
-                <button id="downloadExcelBtn" class="btn btn-outline-success d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
-                  <i class="fas fa-file-download mr-2"></i> Télécharger Excel
-                </button>
-                <button id="downloadPdfBtn" class="btn btn-info d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
+                <button id="downloadPdfBtn" class="btn btn-success d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
                   <i class="fas fa-file-pdf mr-2"></i> Télécharger PDF
                 </button>
+                <button id="downloadExcelBtn" class="btn btn-success d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
+                  <i class="fas fa-file-download mr-2"></i> Télécharger Excel
+                </button>
+              
                 <span id="excelUploadMsg" style="font-size:15px; margin-left:10px;"></span>
               </div>
              
@@ -868,7 +869,7 @@
               doc.setTextColor(22, 160, 133);
               doc.text(`Total: ${total} MAD`, 10, finalY + 15);
       
-              doc.save("liste_payements_a_venir.pdf");
+              doc.save("liste_virement.pdf");
             } catch (err) {
               console.error("PDF generation error:", err);
               alert("Erreur lors de la génération du PDF. Veuillez vérifier la console.");
@@ -997,7 +998,7 @@
               });
       
               XLSX.utils.book_append_sheet(wb, ws, "Virements");
-              XLSX.writeFile(wb, "liste_payements_a_venir.xlsx");
+              XLSX.writeFile(wb, "liste_virement.xlsx");
             } catch (err) {
               console.error("Excel generation error:", err);
               alert(`Erreur lors de la génération du fichier Excel : ${err.message}`);

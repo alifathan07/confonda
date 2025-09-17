@@ -193,7 +193,7 @@
 
             .print-amount {
                 position: absolute;
-                top: 8mm !important; /* From very top of page */
+                top: 6mm !important; /* From very top of page */
                 left: 170mm !important;
                 font-size: 11pt;
                 font-weight: bold;
@@ -206,7 +206,7 @@
 
             .print-amount-words {
                 position: absolute;
-                top: 22mm !important; /* From very top of page */
+                top: 20mm !important; /* From very top of page */
                 left: 63mm !important;
                 font-weight: bold;
                 width: 170mm;
@@ -223,7 +223,7 @@
 
             .print-date {
                 position: absolute;
-                top: 40mm !important; /* From very top of page */
+                top: 38mm !important; /* From very top of page */
                 left: 172mm !important;
                 font-size: 9pt;
                 font-weight: bold;
@@ -234,7 +234,7 @@
 
             .print-city {
                 position: absolute;
-                top: 40mm !important; /* From very top of page */
+                top: 38mm !important; /* From very top of page */
                 left: 125mm !important;
                 font-size: 9pt;
                 font-weight: bold;
@@ -475,22 +475,35 @@
 }
 
 function updatePrintFields() {
-            document.getElementById('print-payee').textContent = document.getElementById('payee').value;
-            
-            const amount = document.getElementById('amount').value;
-            document.getElementById('print-amount').textContent = amount ? amount + ' DH' : '';
-            
-            document.getElementById('print-amount-words').textContent = document.getElementById('amount-words').value;
-            
-            const date = document.getElementById('date').value;
-            if (date) {
-                const formattedDate = new Date(date).toLocaleDateString('fr-FR');
-                document.getElementById('print-date').textContent = formattedDate;
-            }
-            
-            document.getElementById('print-city').textContent = document.getElementById('city').value;
-            document.getElementById('print-cheque-number').textContent = document.getElementById('account').value;
+    document.getElementById('print-payee').textContent = document.getElementById('payee').value;
+    
+    const amountInput = document.getElementById('amount').value;
+    if (amountInput) {
+        const amountNumber = parseFloat(amountInput.replace(',', '.')); // ensure decimals are parsed
+        if (!isNaN(amountNumber)) {
+            const formattedAmount = new Intl.NumberFormat('fr-FR', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+            }).format(amountNumber);
+            document.getElementById('print-amount').textContent = formattedAmount + ' DH';
+        } else {
+            document.getElementById('print-amount').textContent = amountInput + ' DH'; // fallback
         }
+    } else {
+        document.getElementById('print-amount').textContent = '';
+    }
+
+    document.getElementById('print-amount-words').textContent = document.getElementById('amount-words').value;
+    
+    const date = document.getElementById('date').value;
+    if (date) {
+        const formattedDate = new Date(date).toLocaleDateString('fr-FR');
+        document.getElementById('print-date').textContent = formattedDate;
+    }
+    
+    document.getElementById('print-city').textContent = document.getElementById('city').value;
+    document.getElementById('print-cheque-number').textContent = document.getElementById('account').value;
+}
 
         // Handle amount input and convert to words
         document.getElementById("amount").addEventListener("input", function () {
