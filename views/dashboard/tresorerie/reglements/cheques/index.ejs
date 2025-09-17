@@ -230,10 +230,7 @@
                     <div class="card-body">
                       <div class="mb-4" style="display: flex; align-items: center; gap: 20px;">
                         <form id="excelUploadForm" enctype="multipart/form-data" method="POST" action="/" style="margin: 0;">
-                          <label for="excelFile" class="btn btn-success d-flex align-items-center" style="font-weight:600; font-size:15px; margin-bottom: 0; height: 42px;">
-                            <i class="fas fa-file-excel mr-2"></i> Importer Excel
-                            <input type="file" id="excelFile" name="excelFile" accept=".xlsx,.xls" style="display:none;">
-                          </label>
+                            <input type="file" id="excelFile" name="excelFile" accept=".xlsx,.xls" style="display:none;" hidden>
                         </form>
                         <% if (id) { %>
                           <%
@@ -256,13 +253,13 @@
                             </a>
                           <% } %>
                         <% } %>
-                        <button id="addRowBtn" class="btn btn-secondary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
+                        <button id="addRowBtn" class="btn btn-primary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
                           <i class="fas fa-plus mr-2"></i> Ajouter Chèque
                         </button>
                         <button id="saveTableBtn" class="btn btn-primary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
                           <i class="fas fa-save mr-2"></i> Enregistrer
                         </button>
-                        <button id="downloadPdfBtn" class="btn btn-info d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
+                        <button id="downloadPdfBtn" class="btn btn-success d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
                           <i class="fas fa-file-pdf mr-2"></i> Télécharger PDF
                         </button>
                         <button id="downloadExcelBtn" class="btn btn-success d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
