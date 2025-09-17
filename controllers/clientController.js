@@ -1,122 +1,78 @@
 import prisma from "../db.js";
 
-// Utility function for logging errors
-const logError = (action, error) => {
-  console.error(`💥 Error during ${action}:`, error);
-};
-
-// GET /dashboard/ventes/clients - Display all clients
-export const indexClient = async (req, res) => {
-  try {
+export const indexClients = async (req, res) => {
     const clients = await prisma.client.findMany({
-      include: { chantier: true },
-      orderBy: { createdAt: 'desc' }
+      include : {
+          chantier : true
+      }
     });
-
-    const chantiers = await prisma.chantier.findMany({
-      orderBy: { nom: 'asc' }
-    });
-
-    res.render("dashboard/ventes/client/index", { clients, chantiers });
-  } catch (error) {
-    logError('fetching clients', error);
-    res.status(500).render('error', { error: 'Erreur lors du chargement des clients' });
-  }
-};
-
-// POST /dashboard/ventes/clients - Create new client
-export const createClient = async (req, res) => {
-  try {
-    const { name, email, ice, identifFiscal, telClient, contact, telContact, address, chantierId } = req.body;
-
-    const clientData = {
-      name,
-      email: email || null,
-      ice,
-      identifFiscal,
-      telClient,
-      contact,
-      telContact,
-      address: address || null,
-      chantier: chantierId ? { connect: { id: parseInt(chantierId) } } : undefined
-    };
-
-    const client = await prisma.client.create({
-      data: clientData,
-      include: { chantier: true }
-    });
-
-    if (req.xhr || req.headers.accept?.includes('json')) {
-      return res.json({ success: true, message: 'Client créé avec succès', client });
-    }
-
-    res.redirect('/dashboard/ventes/clients');
-  } catch (error) {
-    logError('creating client', error);
-    if (req.xhr || req.headers.accept?.includes('json')) {
-      return res.status(500).json({ success: false, error: 'Erreur lors de la création du client' });
-    }
-    res.status(500).render('error', { error: 'Erreur lors de la création du client' });
-  }
-};
-
-// PUT/PATCH /dashboard/ventes/clients/:id - Update client
+    const chantiers = await prisma.chantier.findMany();
+    res.render('dashboard/ventes/client/index', { clients , chantiers });
+}
+export const postClient = async (req , res) => {
+      const { name , ice , identifFiscal , telClient , contact , telContact } = req.body;
+      const client = await prisma.client.create({
+          data : {
+              name : name , ice : ice , identifFiscal : identifFiscal , telClient : telClient , contact : contact , telContact : telContact 
+          }
+      })
+      res.status(201).json(client);
+}
 export const updateClient = async (req, res) => {
   try {
+    const { name, ice, identifFiscal, telClient, contact, telContact, chantier } = req.body;
     const { id } = req.params;
-    const { name, email, ice, identifFiscal, telClient, contact, telContact, address, chantierId } = req.body;
 
-    const clientData = {
+    if (!id) return res.status(400).json({ error: "Client ID is required" });
+    if (!name || !ice || !identifFiscal) {
+      return res.status(400).json({ error: "Name, ICE, and Identifiant Fiscal are required" });
+    }
+
+    let chantierConnect = undefined;
+
+    // If chantier is sent as a name (string not a number)
+    if (chantier && isNaN(chantier)) {
+      const chantierRecord = await prisma.chantier.findFirst({
+        where: { nom: chantier },
+      });
+      if (!chantierRecord) {
+        return res.status(400).json({ error: "Chantier not found" });
+      }
+      chantierConnect = { connect: { id: chantierRecord.id } };
+    }
+    // If chantier is sent as an ID
+    else if (chantier) {
+      chantierConnect = { connect: { id: parseInt(chantier) } };
+    }
+
+    const updateData = {
       name,
-      email: email || null,
       ice,
       identifFiscal,
       telClient,
       contact,
       telContact,
-      address: address || null,
-      chantier: chantierId
-        ? { set: [{ id: parseInt(chantierId) }] }
-        : { set: [] }
+      chantier: chantierConnect,
     };
 
+    // Update the client
     const client = await prisma.client.update({
       where: { id: parseInt(id) },
-      data: clientData,
-      include: { chantier: true }
+      data: updateData,
+      include: { chantier: true },
     });
 
-    if (req.xhr || req.headers.accept?.includes('json')) {
-      return res.json({ success: true, message: 'Client mis à jour avec succès', client });
-    }
-
-    res.redirect('/dashboard/ventes/clients');
+    res.status(200).json(client);
   } catch (error) {
-    logError('updating client', error);
-    if (req.xhr || req.headers.accept?.includes('json')) {
-      return res.status(500).json({ success: false, error: 'Erreur lors de la mise à jour du client' });
+    console.error("Error updating client:", error);
+    if (error.code === "P2025") {
+      return res.status(404).json({ error: "Client not found" });
     }
-    res.status(500).render('error', { error: 'Erreur lors de la mise à jour du client' });
+    res.status(500).json({ error: "Internal server error" });
   }
 };
-
-// DELETE /dashboard/ventes/clients/:id - Delete client
-export const deleteClient = async (req, res) => {
-  try {
+export const deleteClient = async (req , res) => {
     const { id } = req.params;
-
-    await prisma.client.delete({ where: { id: parseInt(id) } });
-
-    if (req.xhr || req.headers.accept?.includes('json')) {
-      return res.json({ success: true, message: 'Client supprimé avec succès' });
-    }
-
-    res.redirect('/dashboard/ventes/clients');
-  } catch (error) {
-    logError('deleting client', error);
-    if (req.xhr || req.headers.accept?.includes('json')) {
-      return res.status(500).json({ success: false, error: 'Erreur lors de la suppression du client' });
-    }
-    res.status(500).render('error', { error: 'Erreur lors de la suppression du client' });
-  }
-};
+    await prisma.client.delete({ where: { id: Number(id) } });
+    res.status(200).json({ message: 'Client supprimé avec succès.' });
+}

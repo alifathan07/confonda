@@ -15,7 +15,8 @@ import { createVirement, deleteVirement, generateVirementPDF, index, listBanques
 import { createMiseadis, deleteMiseadis, generateMiseadisPDF, indexDis, listBanquesMiseadis, postMiseadis, showUpdateMiseadis, updateMis } from '../controllers/misediscontrollrt.js';
 import { createFourniture, postFourniture } from '../controllers/fournitureController.js';
 import { addUser, listUsers } from '../controllers/usersController.js';
-import { createClient, deleteClient, indexClient, updateClient } from '../controllers/clientController.js';
+import { deleteClient, indexClients, postClient, updateClient } from '../controllers/clientController.js';
+import { indexChantiers, postChantier } from '../controllers/chantierController.js';
 
 export const dashboardRouter = express.Router();
 dashboardRouter.use(isAuthenticated)
@@ -213,21 +214,21 @@ dashboardRouter.get('/dashboard', async (req, res) => {
          // < -----------Trésorerie :  Virements ----------------- >
          
         dashboardRouter.get('/tresorerie/virements/banque/:id/create', createVirement);
-        dashboardRouter.get('/tresorerie/virements/banque/:banqueId', index);
+        dashboardRouter.get('/tresorerie/virements', index);
         dashboardRouter.get('/tresorerie/virements/banque/:banqueId/update/:id', showUpdateVirement);
-        dashboardRouter.patch('/tresorerie/virements/banque/:banqueId/update/:id', updateVire);
+        dashboardRouter.patch('/tresorerie/virements/update/:id', updateVire);
         dashboardRouter.get('/tresorerie/virements/banque/:id/pdf', generateVirementPDF);
         dashboardRouter.post('/tresorerie/virements/banque/:id/create', postVirement);
-        dashboardRouter.delete('/tresorerie/virements/banque/:banqueId/delete/:id', deleteVirement);
+        dashboardRouter.delete('/tresorerie/virements/delete/:id', deleteVirement);
         dashboardRouter.get('/tresorerie/virements/banques', listBanquesVirements);
         // < -----------Trésorerie :  Mise a Disposition ----------------- >
         dashboardRouter.get('/tresorerie/miseadis/banque/:id/create', createMiseadis);
-        dashboardRouter.get('/tresorerie/miseadis/banque/:banqueId', indexDis);
+        dashboardRouter.get('/tresorerie/miseadis', indexDis);
         dashboardRouter.get('/tresorerie/miseadis/banque/:banqueId/update/:id', showUpdateMiseadis);
-        dashboardRouter.patch('/tresorerie/miseadis/banque/:banqueId/update/:id', updateMis);
+        dashboardRouter.patch('/tresorerie/miseadis/update/:id', updateMis);
         dashboardRouter.get('/tresorerie/miseadis/banque/:id/pdf', generateMiseadisPDF);
         dashboardRouter.post('/tresorerie/miseadis/banque/:id/create', postMiseadis);
-        dashboardRouter.delete('/tresorerie/miseadis/banque/:banqueId/delete/:id', deleteMiseadis);
+        dashboardRouter.delete('/tresorerie/miseadis/delete/:id', deleteMiseadis);
         dashboardRouter.get('/tresorerie/miseadis/banques', listBanquesMiseadis);
 
         dashboardRouter.get('/api/fournisseurs', suppliersList);
@@ -255,20 +256,16 @@ dashboardRouter.get('/dashboard', async (req, res) => {
         dashboardRouter.get('/ventes', (req, res) => {
             res.render('dashboard/ventes/index');
         })
-        // In your routes file
-        dashboardRouter.get('/clients', indexClient);
+        /// Clients
+        dashboardRouter.get('/ventes/clients', indexClients);
+        dashboardRouter.post('/ventes/clients', postClient);
+        dashboardRouter.patch('/ventes/clients/:id', updateClient);
+        dashboardRouter.delete('/ventes/clients/:id', deleteClient);
 
-        // POST /dashboard/ventes/clients - Create new client
-        dashboardRouter.post('/clients', createClient);
-        
-        // PUT /dashboard/ventes/clients/:id - Update client
-        dashboardRouter.put('/clients/:id', updateClient);
-        
-        // PATCH /dashboard/ventes/clients/:id - Update client (alternative)
-        dashboardRouter.patch('/clients/:id', updateClient);
-        
-        // DELETE /dashboard/ventes/clients/:id - Delete client
-        dashboardRouter.delete('/clients/:id', deleteClient);
-      
-      
-        // dashboardRouter.get("/ventes/chantiers", listChantiers); // List all chantiers
+      /// Chantiers
+      dashboardRouter.get('/ventes/chantiers', indexChantiers);
+      dashboardRouter.post('/ventes/chantiers', postChantier);
+
+      // dashboardRouter.post('/ventes/chantiers', postChantier);
+      // dashboardRouter.patch('/ventes/chantiers/:id', updateChantier);
+      // dashboardRouter.delete('/ventes/chantiers/:id', deleteChantier);

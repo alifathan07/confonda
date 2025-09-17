@@ -11,10 +11,9 @@ export const indexDis = async(req , res) => {
     const miseadis  = await prisma.miseadis.findMany({
         orderBy: { id: 'desc' },
         include: {  banque: true, chantier : true },
-        where: { banqueId: Number(banqueId) }
     });
     const chantiers = await prisma.chantier.findMany()
-    res.render('dashboard/tresorerie/reglements/miseadis/index' , { miseadis, banqueId, chantiers } )
+    res.render('dashboard/tresorerie/reglements/miseadis/index' , { miseadis, chantiers } )
 }
 
 export const createMiseadis = async(req , res) => {
@@ -32,6 +31,7 @@ export const postMiseadis = async (req, res) => {
         if (isNaN(banqueId)) {
             return res.status(400).json({ error: "ID de banque invalide." });
         }
+        
 
         const banqueExists = await prisma.banque.findUnique({
             where: { id: banqueId }
@@ -56,7 +56,7 @@ export const postMiseadis = async (req, res) => {
             }
         });
 
-        res.redirect('/tresorerie/miseadis/banque/' + banqueId);
+        res.redirect('/tresorerie/miseadis');
 
     } catch (error) {
         console.error("Erreur lors de la création du virement :", error);
@@ -92,17 +92,17 @@ export const showUpdateMiseadis = async (req, res) => {
 
 export const updateMis = async (req, res) => {
     const id = Number(req.params.id);
-    const banqueId = Number(req.params.banqueId);
 
-    if (isNaN(banqueId) || isNaN(id)) {
-        return res.status(400).json({ error: "ID invalide." });
-    }
+    
 
     // Extract form fields
-    const { beneficiaire, date, dateReglement, montant, obs, rib, objet, cin, chantier } = req.body;
+    const { beneficiaire, date, dateReglement, montant, obs, rib, objet, cin, chantier, banque } = req.body;
 
     // ✅ Update fournisseur (if exists or create new)
-   
+    const findBanque = await prisma.banque.findFirst({
+        where: { name: banque }
+    }); 
+    const banqueId = findBanque.id;
 
 
     // ✅ Update virement
@@ -121,7 +121,7 @@ export const updateMis = async (req, res) => {
         }
     });
 
-    res.redirect(`/tresorerie/miseadis/banque/${banqueId}`); // ✅ redirect to list
+    res.redirect(`/tresorerie/miseadis`); // ✅ redirect to list
 };
 
 
@@ -271,7 +271,6 @@ doc.end();
 
 export const deleteMiseadis = async (req, res) => {
     const id = Number(req.params.id);
-    const banqueId = Number(req.params.banqueId);
     await prisma.miseadis.delete({
         where: { id }
     });

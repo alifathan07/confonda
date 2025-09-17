@@ -2,40 +2,97 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gestion des Clients</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="Clients" />
+  <meta name="author" content="Confonda" />
+  <title>Clients</title>
   <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <!-- Enhanced Status Styles -->
   <style>
-    .table-container { margin-top: 20px; }
-    .client-table { width: 100%; border-collapse: collapse; }
-    .client-table th, .client-table td { 
-      border: 1px solid #dee2e6; 
-      padding: 8px; 
-      text-align: left; 
+    /* General Button Style */
+    .custom-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 15px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      text-transform: uppercase;
+    }
+
+    .custom-btn i {
+      font-size: 14px;
+    }
+
+    .custom-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Specific Color Variants */
+    .btn-success.custom-btn { background-color: #28a745; color: white; }
+    .btn-success.custom-btn:hover { background-color: #218838; }
+    .btn-outline-success.custom-btn { background-color: white; color: #28a745; border: 2px solid #28a745; }
+    .btn-outline-success.custom-btn:hover { background-color: #28a745; color: white; }
+    .btn-secondary.custom-btn { background-color: #6c757d; color: white; }
+    .btn-secondary.custom-btn:hover { background-color: #5a6268; }
+    .btn-primary.custom-btn { background-color: #007bff; color: white; }
+    .btn-primary.custom-btn:hover { background-color: #0056b3; }
+    .btn-warning.excel-save-btn { font-size: 13px; padding: 6px 10px; border-radius: 6px; }
+    .excel-delete-btn { background-color: transparent; color: #dc3545; border: none; padding: 6px; font-size: 15px; cursor: pointer; }
+    .excel-delete-btn:hover { color: #bd2130; }
+
+    .excel-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .excel-table th,
+    .excel-table td {
+      border: 1px solid #dee2e6;
+      padding: 8px;
+      text-align: center;
       vertical-align: middle;
     }
-    .client-table th { 
-      background-color: #4e73df; 
-      color: white; 
-      font-weight: 600;
-      text-transform: uppercase;
-      font-size: 0.8rem;
+
+    .excel-table thead th {
+      background-color: #f8f9fa;
+      font-weight: bold;
     }
-    .client-table tbody tr:hover { background-color: #f8f9fc; }
-    .actions { display: flex; gap: 5px; justify-content: center; }
-    .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; }
-    .editable { cursor: text; }
-    .editable:focus { background-color: #fff3cd; outline: 2px solid #ffc107; }
-    .select2-container { width: 100% !important; }
-    .toast { z-index: 9999; }
-    .loading { opacity: 0.6; pointer-events: none; }
-    @media (max-width: 768px) {
-      .client-table { font-size: 0.75rem; }
-      .client-table th, .client-table td { padding: 4px; }
-      .btn-sm { padding: 0.125rem 0.25rem; font-size: 0.7rem; }
+
+    .excel-table tbody tr:nth-child(even) {
+      background-color: #f2f2f2;
     }
+
+    .excel-table tbody tr:hover {
+      background-color: #e9ecef;
+    }
+
+    .excel-dirty-row { background-color: #fff3cd; }
+    .dragging { opacity: 0.5; }
+    .drag-over { border-left: 2px solid #007bff; }
+
+    .chantier-select {
+      width: 100%;
+      padding: 5px;
+      border: none;
+      background: transparent;
+      font-size: 15px;
+      color: #333;
+    }
+    .chantier-select:focus {
+      outline: none;
+      border: 1px solid #007bff;
+      border-radius: 4px;
+    }
+    .chantier-cell { padding: 5px; }
   </style>
 </head>
 <body id="page-top">
@@ -45,304 +102,507 @@
       <div id="content">
         <%- include('../../../layouts/topbar') %>
         <div class="container-fluid">
-
-          <!-- Page Header -->
-          <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-              <i class="fas fa-users"></i> Gestion des Clients
-            </h1>
-            <button id="addClientBtn" class="btn btn-primary btn-sm">
-              <i class="fas fa-plus"></i> Nouveau Client
-            </button>
-          </div>
-
-          <!-- Alert Messages -->
-          <div id="alertContainer"></div>
-
-          <!-- Clients Table -->
           <div class="card shadow mb-4">
             <div class="card-header py-3">
               <h6 class="m-0 font-weight-bold text-primary">Liste des Clients</h6>
             </div>
             <div class="card-body">
+              <div class="mb-4" style="display: flex; align-items: center; gap: 20px;">
+               
+                <button id="addRowBtn" class="btn btn-outline-success custom-btn d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
+                  <i class="fas fa-plus mr-2" ></i> Ajouter Client
+                </button>
+                <button id="saveTableBtn" class="btn btn-primary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
+                  <i class="fas fa-save mr-2"></i> Enregistrer
+                </button>
+                <button id="downloadPdfBtn" class="btn btn-info d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
+                  <i class="fas fa-file-pdf mr-2"></i> Télécharger PDF
+                </button>
+                <button id="downloadExcelBtn" class="btn btn-success d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
+                  <i class="fas fa-file-excel mr-2"></i> Télécharger Excel
+                </button>
+                <span id="excelUploadMsg" style="font-size:15px; margin-left:10px;"></span>
+              </div>
+              <div class="mb-3" style="max-width: 350px;">
+                <input
+                  type="text"
+                  id="clientSearch"
+                  class="form-control"
+                  placeholder="Rechercher un client..."
+                  style="font-size: 15px;"
+                />
+              </div>
+             
+             
               <div class="table-responsive">
-                <table class="client-table" id="clientTable">
+                <table id="editableTable" class="excel-table">
                   <thead>
-                    <tr>
-                      <th>Nom</th>
-                      <th>Email</th>
-                      <th>ICE</th>
-                      <th>Identif. Fiscal</th>
-                      <th>Tél. Client</th>
-                      <th>Contact</th>
-                      <th>Tél. Contact</th>
-                      <th>Adresse</th>
-                      <th>Chantier</th>
-                      <th>Actions</th>
+                    <tr style="position: sticky; top: 0; background-color: white; z-index: 1;">
+                      <th draggable="true">Nom</th>
+                      <th draggable="true">ICE</th>
+                      <th draggable="true">Identifiant Fiscale</th>
+                      <th draggable="true">Téléphone Client</th>
+                      <th draggable="true">Contact</th>
+                      <th draggable="true">Téléphone Contact</th>
+                      <th draggable="true">Chantier</th>
+                      <th style="width:70px;">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <% clients.forEach(function(client) { %>
-                    <tr data-client-id="<%= client.id %>">
-                      <td class="editable" data-field="name"><%= client.name %></td>
-                      <td class="editable" data-field="email"><%= client.email || '' %></td>
-                      <td class="editable" data-field="ice"><%= client.ice %></td>
-                      <td class="editable" data-field="identifFiscal"><%= client.identifFiscal %></td>
-                      <td class="editable" data-field="telClient"><%= client.telClient %></td>
-                      <td class="editable" data-field="contact"><%= client.contact %></td>
-                      <td class="editable" data-field="telContact"><%= client.telContact %></td>
-                      <td class="editable" data-field="address"><%= client.address || '' %></td>
-                      <td>
-                        <select class="chantier-select form-control form-control-sm" data-field="chantierId">
-                          <option value="">-- Aucun --</option>
-                          <% chantiers.forEach(function(chantier) { %>
-                            <option value="<%= chantier.id %>" 
-                              <%= client.chantier.length > 0 && client.chantier[0].id === chantier.id ? 'selected' : '' %>>
-                              <%= chantier.nom %>
-                            </option>
-                          <% }) %>
-                        </select>
-                      </td>
-                      <td class="actions">
-                        <button class="btn btn-success btn-sm save-btn" title="Sauvegarder">
-                          <i class="fas fa-save"></i>
-                        </button>
-                        <button class="btn btn-danger btn-sm delete-btn" title="Supprimer">
-                          <i class="fas fa-trash"></i>
-                        </button>
-                      </td>
-                    </tr>
+                    <% clients.forEach(client => { %>
+                      <tr data-id="<%= client.id %>">
+                        <td contenteditable="true" data-name="name"><%= client.name %></td>
+                        <td contenteditable="true" data-name="ice"><%= client.ice %></td>
+                        <td contenteditable="true" data-name="identifFiscal"><%= client.identifFiscal %></td>
+                        <td contenteditable="true" data-name="telClient"><%= client.telClient %></td>
+                        <td contenteditable="true" data-name="contact"><%= client.contact %></td>
+                        <td contenteditable="true" data-name="telContact"><%= client.telContact %></td>
+                        <td data-name="chantier" class="chantier-cell">
+                          <select class="chantier-select">
+                            <% chantiers.forEach(chantier => { %>
+                              <option value="<%= chantier.nom %>" <%= client.chantier && client.chantier.some(c => c.nom === chantier.nom) ? 'selected' : '' %>><%= chantier.nom %></option>
+                            <% }); %>
+                          </select>
+                        </td>
+                        <td>
+                          <button class="delete-row excel-delete-btn" title="Supprimer" aria-label="Supprimer">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                          <button class="update-row excel-save-btn btn btn-sm btn-warning" title="Mettre à jour" aria-label="Mettre à jour" style="margin-left:5px;">
+                            <i class="fas fa-edit"></i>
+                          </button>
+                        </td>
+                      </tr>
                     <% }) %>
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
-
         </div>
       </div>
-    </div>
-  </div>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+      <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          const { jsPDF } = window.jspdf;
+          const uploadForm = document.getElementById('excelUploadForm');
+          const fileInput = document.getElementById('excelFile');
+          const msg = document.getElementById('excelUploadMsg');
+          const table = document.getElementById("editableTable");
+          const searchInput = document.getElementById("clientSearch");
+          const chantierFilter = document.getElementById("chantierFilter");
+          const dateFilter = document.getElementById("dateFilter");
+          const dateToFilter = document.getElementById("dateToFilter");
 
-  <!-- Scripts -->
-  <script src="/vendor/jquery/jquery.min.js"></script>
-  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
-  <script src="/js/sb-admin-2.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-  <script>
-    $(document).ready(function() {
-      
-      // Initialize Select2
-      $('.chantier-select').select2({
-        placeholder: "-- Choisir un chantier --",
-        allowClear: true,
-        width: '100%'
-      });
-
-      // Show alert message
-      function showAlert(message, type = 'success') {
-        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-        const alertHtml = `
-          <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-            ${message}
-            <button type="button" class="close" data-dismiss="alert">
-              <span>&times;</span>
-            </button>
-          </div>
-        `;
-        $('#alertContainer').html(alertHtml);
-        
-        // Auto-dismiss after 3 seconds
-        setTimeout(() => {
-          $('.alert').fadeOut();
-        }, 3000);
-      }
-
-      // Make table cells editable
-      $(document).on('click', '.editable', function() {
-        if ($(this).find('input').length > 0) return;
-        
-        const currentValue = $(this).text();
-        const input = $('<input type="text" class="form-control form-control-sm">');
-        input.val(currentValue);
-        $(this).html(input);
-        input.focus().select();
-        
-        // Save on Enter or blur
-        input.on('blur keypress', function(e) {
-          if (e.type === 'blur' || e.which === 13) {
-            const newValue = $(this).val();
-            $(this).parent().text(newValue);
+          // Convert dd/mm/yyyy → yyyy-mm-dd ISO format or null if empty
+          function convertDateToISO(dateStr) {
+            if (!dateStr || dateStr.trim() === '') return null;
+            const parts = dateStr.split('/');
+            if (parts.length !== 3) return dateStr.trim();
+            const [day, month, year] = parts;
+            return `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
           }
-        });
-      });
 
-      // Add new client row
-      $('#addClientBtn').on('click', function() {
-        const chantierOptions = $('#clientTable tbody tr:first .chantier-select').html();
-        const newRow = `
-          <tr data-client-id="">
-            <td class="editable" data-field="name"></td>
-            <td class="editable" data-field="email"></td>
-            <td class="editable" data-field="ice"></td>
-            <td class="editable" data-field="identifFiscal"></td>
-            <td class="editable" data-field="telClient"></td>
-            <td class="editable" data-field="contact"></td>
-            <td class="editable" data-field="telContact"></td>
-            <td class="editable" data-field="address"></td>
-            <td>
-              <select class="chantier-select form-control form-control-sm" data-field="chantierId">
-                ${chantierOptions || '<option value="">-- Aucun --</option>'}
-              </select>
-            </td>
-            <td class="actions">
-              <button class="btn btn-success btn-sm save-btn" title="Sauvegarder">
-                <i class="fas fa-save"></i>
-              </button>
-              <button class="btn btn-danger btn-sm delete-btn" title="Supprimer">
+          // Convert yyyy-mm-dd to Date object, or null if invalid/empty
+          function toDate(dateStr) {
+            if (!dateStr) return null;
+            const date = new Date(dateStr);
+            return isNaN(date.getTime()) ? null : date;
+          }
+
+          // Combined filter function to apply search, chantier, and date filters
+         // Combined filter function to apply search, chantier, and date filters
+           // Combined filter function to apply search, chantier, and date filters
+function applyAllFilters() {
+  const searchText = searchInput?.value.toLowerCase().trim() || "";
+  const selectedChantierId = chantierFilter?.value.trim() || "";
+  const startDate = dateFilter?.value ? toDate(dateFilter.value) : null;
+  const endDate = dateToFilter?.value ? toDate(dateToFilter.value) : null;
+
+  // Map chantier names to IDs
+  const chantierMap = <%- JSON.stringify(chantiers.map(c => ({ id: c.id, nom: c.nom }))) %>;
+  const chantierNameToId = {};
+  chantierMap.forEach(c => {
+    chantierNameToId[c.nom] = c.id;
+  });
+
+  const rows = table.querySelectorAll("tbody tr");
+
+  rows.forEach(row => {
+    const chantierCell = row.querySelector("td[data-name='chantier']");
+    const chantierName = (chantierCell ? chantierCell.querySelector("select")?.value || "" : "").trim();
+    const chantierId = chantierName ? chantierNameToId[chantierName] || "" : "";
+
+    const rowText = row.innerText.toLowerCase();
+    const matchesSearch = searchText === "" || rowText.includes(searchText);
+    const matchesChantier = selectedChantierId === "" || chantierId === selectedChantierId;
+    const matchesDate = true; // Placeholder, implement if date column exists
+
+    row.style.display = (matchesSearch && matchesChantier && matchesDate) ? "" : "none";
+  });
+}
+
+// Attach filter listeners
+          if (searchInput) searchInput.addEventListener("input", applyAllFilters);
+          if (chantierFilter) chantierFilter.addEventListener("change", applyAllFilters);
+          if (dateFilter) dateFilter.addEventListener("change", applyAllFilters);
+          if (dateToFilter) dateToFilter.addEventListener("change", applyAllFilters);
+
+          // Excel upload
+          if (uploadForm && fileInput) {
+            fileInput.addEventListener('change', function () {
+              if (fileInput.files.length) {
+                uploadForm.requestSubmit();
+              }
+            });
+
+            uploadForm.addEventListener('submit', function (e) {
+              e.preventDefault();
+              if (!fileInput.files.length) {
+                msg.textContent = 'Veuillez sélectionner un fichier Excel.';
+                msg.style.color = 'red';
+                return;
+              }
+              const formData = new FormData(uploadForm);
+              msg.textContent = 'Importation en cours...';
+              msg.style.color = '#1976d2';
+              fetch('/ventes/clients/import', {
+                method: 'POST',
+                body: formData
+              })
+              .then(res => res.text())
+              .then(text => {
+                msg.textContent = text;
+                msg.style.color = 'green';
+                setTimeout(() => window.location.reload(), 1200);
+              })
+              .catch(() => {
+                msg.textContent = "Erreur lors de l'importation du fichier.";
+                msg.style.color = 'red';
+              });
+            });
+          }
+
+          // Drag and drop columns
+          let dragSrcIdx = null;
+          function swapColumns(table, fromIdx, toIdx) {
+            const headerRow = table.tHead.rows[0];
+            if (fromIdx === toIdx) return;
+            headerRow.insertBefore(headerRow.children[fromIdx], headerRow.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
+            Array.from(table.tBodies[0].rows).forEach(row => {
+              row.insertBefore(row.children[fromIdx], row.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
+            });
+          }
+
+          Array.from(table.tHead.rows[0].cells).forEach((th, idx) => {
+            th.addEventListener('dragstart', function (e) {
+              dragSrcIdx = idx;
+              e.dataTransfer.effectAllowed = 'move';
+              th.classList.add('dragging');
+            });
+            th.addEventListener('dragend', function () {
+              dragSrcIdx = null;
+              th.classList.remove('dragging');
+              Array.from(table.tHead.rows[0].cells).forEach(cell => cell.classList.remove('drag-over'));
+            });
+            th.addEventListener('dragover', function (e) {
+              e.preventDefault();
+              th.classList.add('drag-over');
+            });
+            th.addEventListener('dragleave', function () {
+              th.classList.remove('drag-over');
+            });
+            th.addEventListener('drop', function (e) {
+              e.preventDefault();
+              th.classList.remove('drag-over');
+              if (dragSrcIdx !== null && dragSrcIdx !== idx) {
+                swapColumns(table, dragSrcIdx, idx);
+              }
+            });
+          });
+
+          // Add Row
+          document.getElementById("addRowBtn").addEventListener("click", function () {
+            const tbody = table.querySelector("tbody");
+            const colCount = table.querySelectorAll("thead th").length;
+            const tr = document.createElement("tr");
+            tr.setAttribute("data-dirty", "true");
+            tr.classList.add("excel-dirty-row");
+
+            const fields = ['name', 'ice', 'identifFiscal', 'telClient', 'contact', 'telContact', 'chantier'];
+            fields.forEach(field => {
+              const td = document.createElement("td");
+              td.setAttribute("data-name", field);
+              if (field !== 'chantier') {
+                td.contentEditable = "true";
+              } else {
+                td.classList.add('chantier-cell');
+                const chantierSelect = document.createElement('select');
+                chantierSelect.className = 'chantier-select';
+                const chantierOptions = <%- JSON.stringify(chantiers.map(c => c.nom)) %>;
+                chantierOptions.forEach(option => {
+                  const opt = document.createElement('option');
+                  opt.value = option;
+                  opt.textContent = option;
+                  chantierSelect.appendChild(opt);
+                });
+                td.appendChild(chantierSelect);
+              }
+              tr.appendChild(td);
+            });
+
+            const tdActions = document.createElement("td");
+            tdActions.innerHTML = `
+              <button class="delete-row excel-delete-btn" title="Supprimer" aria-label="Supprimer">
                 <i class="fas fa-trash"></i>
               </button>
-            </td>
-          </tr>
-        `;
-        
-        $('#clientTable tbody').prepend(newRow);
-        
-        // Initialize Select2 for new row
-        $('#clientTable tbody tr:first .chantier-select').select2({
-          placeholder: "-- Choisir un chantier --",
-          allowClear: true,
-          width: '100%'
-        });
-        
-        // Focus on first field
-        $('#clientTable tbody tr:first .editable:first').click();
-      });
-
-      // Save client (create or update)
-      $(document).on('click', '.save-btn', function() {
-        const row = $(this).closest('tr');
-        const clientId = row.data('client-id');
-        const isUpdate = clientId && clientId !== '';
-        
-        // Disable button and show loading
-        const btn = $(this);
-        btn.prop('disabled', true);
-        row.addClass('loading');
-        
-        // Collect data
-        const data = {};
-        row.find('[data-field]').each(function() {
-          const field = $(this).data('field');
-          let value;
-          
-          if ($(this).hasClass('chantier-select')) {
-            value = $(this).val();
-          } else {
-            value = $(this).text().trim();
-          }
-          
-          if (field === 'chantierId') {
-            data[field] = value;
-          } else {
-            data[field] = value;
-          }
-        });
-
-        // API call
-        const url = isUpdate ? `/dashboard/ventes/clients/${clientId}` : '/dashboard/ventes/clients';
-        const method = isUpdate ? 'PATCH' : 'POST';
-
-        $.ajax({
-          url: url,
-          method: method,
-          data: JSON.stringify(data),
-          contentType: 'application/json',
-          headers: {
-            'Accept': 'application/json'
-          },
-          success: function(response) {
-            if (response.success) {
-              showAlert(response.message, 'success');
-              
-              if (!isUpdate && response.client) {
-                row.data('client-id', response.client.id);
-              }
-            } else {
-              showAlert(response.error || 'Erreur inconnue', 'error');
-            }
-          },
-          error: function(xhr) {
-            let errorMsg = 'Erreur lors de la sauvegarde';
-            if (xhr.responseJSON && xhr.responseJSON.error) {
-              errorMsg = xhr.responseJSON.error;
-            }
-            showAlert(errorMsg, 'error');
-          },
-          complete: function() {
-            btn.prop('disabled', false);
-            row.removeClass('loading');
-          }
-        });
-      });
-
-      // Delete client
-      $(document).on('click', '.delete-btn', function() {
-        const row = $(this).closest('tr');
-        const clientId = row.data('client-id');
-        
-        if (!confirm('Êtes-vous sûr de vouloir supprimer ce client ?')) {
-          return;
-        }
-        
-        if (!clientId || clientId === '') {
-          // Just remove the row if not saved
-          row.fadeOut(300, function() {
-            $(this).remove();
+              <button class="update-row excel-save-btn btn btn-sm btn-warning" title="Mettre à jour" aria-label="Mettre à jour" style="margin-left:5px;">
+                <i class="fas fa-edit"></i>
+              </button>`;
+            tr.appendChild(tdActions);
+            tbody.insertBefore(tr, tbody.firstChild);
           });
-          return;
-        }
-        
-        // Disable button and show loading
-        const btn = $(this);
-        btn.prop('disabled', true);
-        row.addClass('loading');
 
-        $.ajax({
-          url: `/dashboard/ventes/clients/${clientId}`,
-          method: 'DELETE',
-          headers: {
-            'Accept': 'application/json'
-          },
-          success: function(response) {
-            if (response.success) {
-              showAlert(response.message, 'success');
-              row.fadeOut(300, function() {
-                $(this).remove();
-              });
-            } else {
-              showAlert(response.error || 'Erreur lors de la suppression', 'error');
+          // Delete Row
+          table.querySelector("tbody").addEventListener("click", async function (e) {
+            if (e.target.closest(".delete-row")) {
+              const row = e.target.closest("tr");
+              const id = row.getAttribute("data-id");
+              if (confirm("Êtes-vous sûr de vouloir supprimer ce client ?")) {
+                if (id) {
+                  try {
+                    const response = await fetch(`/ventes/clients/${id}`, {
+                      method: "DELETE"
+                    });
+                    if (response.ok) {
+                      row.remove();
+                      alert("Client supprimé avec succès.");
+                    } else {
+                      alert("Erreur lors de la suppression du client.");
+                    }
+                  } catch (err) {
+                    alert("Erreur réseau lors de la suppression.");
+                  }
+                } else {
+                  row.remove();
+                }
+              }
             }
-          },
-          error: function(xhr) {
-            let errorMsg = 'Erreur lors de la suppression';
-            if (xhr.responseJSON && xhr.responseJSON.error) {
-              errorMsg = xhr.responseJSON.error;
+
+            if (e.target.closest(".update-row")) {
+              const row = e.target.closest("tr");
+              await autoUpdateRow(row);
             }
-            showAlert(errorMsg, 'error');
-          },
-          complete: function() {
-            if (!row.hasClass('fadeOut')) {
-              btn.prop('disabled', false);
-              row.removeClass('loading');
+          });
+
+          // Auto-update row on blur or select change
+          table.addEventListener("blur", async function (e) {
+            const cell = e.target.closest("td[data-name]");
+            if (cell && (cell.isContentEditable || cell.querySelector("select"))) {
+              const row = cell.parentElement;
+              if (row.getAttribute("data-id")) {
+                await autoUpdateRow(row);
+              }
+            }
+          }, true);
+
+          // Handle select change for chantier
+          table.addEventListener("change", async function (e) {
+            const select = e.target.closest("select");
+            if (select && select.classList.contains('chantier-select')) {
+              const row = select.closest("tr");
+              if (row.getAttribute("data-id")) {
+                await autoUpdateRow(row);
+              }
+            }
+          });
+
+          // Mark row as dirty on input
+          table.addEventListener("input", function (e) {
+            const cell = e.target.closest("td[data-name]");
+            if (cell) {
+              const row = cell.parentElement;
+              row.setAttribute("data-dirty", "true");
+              row.classList.add("excel-dirty-row");
+            }
+          });
+
+          // Update row
+          async function autoUpdateRow(row) {
+            if (!row.getAttribute("data-dirty")) return;
+            const cells = Array.from(row.querySelectorAll("td[data-name]"));
+            const data = {};
+            const id = row.getAttribute("data-id");
+
+            cells.forEach(cell => {
+              const key = cell.getAttribute("data-name");
+              let value = cell.querySelector("select") ? cell.querySelector("select").value : cell.innerText.trim();
+              data[key] = value;
+            });
+
+            try {
+              let response;
+              if (id) {
+                response = await fetch(`/ventes/clients/${id}`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(data)
+                });
+              } else {
+                response = await fetch('/ventes/clients', {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(data)
+                });
+                if (response.ok) {
+                  const result = await response.json();
+                  row.setAttribute("data-id", result.id);
+                }
+              }
+              if (response.ok) {
+                row.removeAttribute("data-dirty");
+                row.classList.remove("excel-dirty-row");
+                alert("Client mis à jour avec succès.");
+              } else {
+                alert("Erreur lors de la mise à jour du client.");
+              }
+            } catch (err) {
+              alert("Erreur réseau lors de la mise à jour.");
             }
           }
-        });
-      });
 
-    });
-  </script>
+          // Save all dirty rows
+          document.getElementById("saveTableBtn").addEventListener("click", async function () {
+            const dirtyRows = Array.from(table.querySelectorAll("tbody tr[data-dirty='true']"));
+            if (dirtyRows.length === 0) {
+              alert("Aucune modification à enregistrer.");
+              return;
+            }
+
+            let successCount = 0, failCount = 0;
+
+            for (const row of dirtyRows) {
+              const cells = Array.from(row.querySelectorAll("td[data-name]"));
+              const data = {};
+              const id = row.getAttribute("data-id");
+
+              cells.forEach(cell => {
+                const key = cell.getAttribute("data-name");
+                let value = cell.querySelector("select") ? cell.querySelector("select").value : cell.innerText.trim();
+                data[key] = value;
+              });
+
+              try {
+                let response;
+                if (id) {
+                  response = await fetch(`/ventes/clients/${id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                  });
+                } else {
+                  response = await fetch('/ventes/clients', {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                  });
+                  if (response.ok) {
+                    const result = await response.json();
+                    row.setAttribute("data-id", result.id);
+                  }
+                }
+                if (response.ok) {
+                  row.removeAttribute("data-dirty");
+                  row.classList.remove("excel-dirty-row");
+                  successCount++;
+                } else {
+                  failCount++;
+                }
+              } catch {
+                failCount++;
+              }
+            }
+
+            if (successCount > 0) alert(`${successCount} client(s) enregistré(s)/modifié(s) avec succès !`);
+            if (failCount > 0) alert(`${failCount} client(s) n'ont pas pu être enregistrés.`);
+            window.location.reload();
+          });
+
+          // Download Excel
+          document.getElementById("downloadExcelBtn").addEventListener("click", function () {
+            const ws = XLSX.utils.table_to_sheet(table, { raw: true });
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "clients");
+            XLSX.writeFile(wb, "liste_clients.xlsx");
+          });
+
+          // Download PDF
+          document.getElementById("downloadPdfBtn").addEventListener("click", function () {
+            try {
+              const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+              const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
+              const rows = table.querySelectorAll("tbody tr");
+              const title = document.querySelector(".card-header h6").innerText;
+
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(18);
+              doc.setTextColor(40, 40, 40);
+              doc.text(title, 10, 20);
+
+              const tableData = [];
+              rows.forEach(row => {
+                if (row.style.display !== "none") {
+                  const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
+                    let value = cell.querySelector("select") ? cell.querySelector("select").value : cell.innerText.trim();
+                    return value || "";
+                  });
+                  tableData.push(rowData);
+                }
+              });
+
+              doc.autoTable({
+                head: [headers],
+                body: tableData,
+                startY: 30,
+                theme: 'grid',
+                styles: {
+                  font: 'helvetica',
+                  fontSize: 8,
+                  textColor: [40, 40, 40],
+                  cellPadding: 2,
+                  lineColor: [200, 200, 200],
+                  lineWidth: 0.1
+                },
+                headStyles: {
+                  fillColor: [22, 160, 133],
+                  textColor: [255, 255, 255],
+                  fontSize: 8,
+                  fontStyle: 'bold'
+                },
+                margin: { top: 30, left: 10, right: 10 }
+              });
+
+              doc.save("liste_clients.pdf");
+            } catch (err) {
+              console.error("PDF generation error:", err);
+              alert("Erreur lors de la génération du PDF.");
+            }
+          });
+
+          // Initialize filters
+          applyAllFilters();
+        });
+      </script>
+      <script src="/vendor/jquery/jquery.min.js"></script>
+      <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+      <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+      <script src="/js/sb-admin-2.min.js"></script>
+      <script src="/vendor/datatables/jquery.dataTables.min.js"></script>
+      <script src="/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+      <script src="/js/demo/datatables-demo.js"></script>
+    </div>
+  </div>
 </body>
 </html>

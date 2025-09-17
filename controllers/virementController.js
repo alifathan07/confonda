@@ -1,19 +1,17 @@
 import prisma from "../db.js"
 import PDFDocument from "pdfkit";
 import fs from "fs";
-import path from 'path';
+import path, { parse } from 'path';
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export const index = async(req , res) => {
-    const banqueId = req.params.banqueId;
     const virements  = await prisma.virement.findMany({
         include: { fournisseur: true, banque: true,  chantier : true },
-        where: { banqueId: Number(banqueId) }
-    });
+    }); 
     const chantiers = await prisma.chantier.findMany();
-    res.render('dashboard/tresorerie/reglements/virements/index' , { virements, banqueId, chantiers } )
+    res.render('dashboard/tresorerie/reglements/virements/index' , { virements, chantiers } )
 }
 
 export const createVirement = async(req , res) => {
@@ -163,17 +161,15 @@ export const showUpdateVirement = async (req, res) => {
 export const updateVire = async (req, res) => {
     try {
         const id = Number(req.params.id);
-        const banqueId = Number(req.params.banqueId);
-        const { beneficiaire, date, dateReglement, montant, obs, rib, montantLettre, objet, cause, rtgs, srbm, instantane, chantier } = req.body;
+        const { beneficiaire, date, dateReglement, montant, obs, rib, montantLettre, objet, cause, rtgs, srbm, instantane, chantier, banque } = req.body;
 
         // Validate IDs
-        if (isNaN(banqueId) || isNaN(id)) {
-            return res.status(400).json({ error: "ID invalide." });
-        }
-
+        const findBanque = await prisma.banque.findFirst({
+            where: { name: banque }
+        });
         // Check if banque exists
         const banqueExists = await prisma.banque.findUnique({
-            where: { id: banqueId }
+            where: { id: findBanque.id }
         });
         if (!banqueExists) {
             return res.status(404).json({ error: "Banque non trouvée." });
@@ -247,7 +243,8 @@ export const updateVire = async (req, res) => {
                 }
             });
         }
-
+        const randomChantier = await prisma.chantier.findMany();
+        const randomChantierId = randomChantier[Math.floor(Math.random() * randomChantier.length)].id;
         // Prepare update data
         const updateData = {
             beneficiaire: beneficiaire || existingVirement.beneficiaire,
@@ -261,8 +258,8 @@ export const updateVire = async (req, res) => {
             instantane: instantaneBoolean,
             objet: objet !== undefined ? objet : existingVirement.objet,
             cause: cause !== undefined ? cause : existingVirement.cause,
-            banque: { connect: { id: banqueId } },
-            chantier : { connect: { id: parseInt(chantier) } },
+            banque: { connect: { id: findBanque.id } },
+            chantier : { connect: { id: chantier ? parseInt(chantier) : parseInt(randomChantierId)} },
         };
 
         // Only connect fournisseur if it exists
@@ -436,7 +433,6 @@ export const suppliersList = async (req, res) => {
 };
 export const deleteVirement = async (req, res) => {
     const id = Number(req.params.id);
-    const banqueId = Number(req.params.banqueId);
     await prisma.virement.delete({
         where: { id }
     });
