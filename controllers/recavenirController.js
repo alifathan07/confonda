@@ -6,7 +6,6 @@ export const showRecavenir = async (req, res) => {
         include: {
           banque: true,
           client: true,
-          chantier: true
         },
       });
     const banques = await prisma.banque.findMany();
