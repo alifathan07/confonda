@@ -233,8 +233,6 @@ model Recavenir {
   obs String?  
   client         Client @relation(fields: [clientId], references: [id])
   clientId       Int
-  chantier         Chantier? @relation(fields: [chantierId], references: [id])
-  chantierId       Int?
   banque              Banque   @relation("BanqueRecavenir", fields: [banqueId], references: [id])
   banqueId            Int
   createdAt     DateTime @default(now())

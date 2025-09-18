@@ -198,18 +198,19 @@
               <form id="excelUploadForm" enctype="multipart/form-data" method="POST" action="/" style="margin: 0;">
                 <input type="file" id="excelFile" name="excelFile" accept=".xlsx,.xls" style="display:none;" hidden>
               </form>
-              <button id="downloadExcelBtn" class="btn btn-outline-success custom-btn d-flex align-items-center" type="button">
-                <i class="fas fa-file-download mr-2"></i> Télécharger Excel
-              </button>
-              <button id="downloadPdfBtn" class="btn btn-info custom-btn d-flex align-items-center" type="button">
-                <i class="fas fa-file-pdf mr-2"></i> Télécharger PDF
-              </button>
               <button id="addRowBtn" class="btn btn-secondary custom-btn d-flex align-items-center" type="button">
                 <i class="fas fa-plus mr-2"></i> Ajouter
               </button>
               <button id="saveTableBtn" class="btn btn-primary custom-btn d-flex align-items-center" type="button">
                 <i class="fas fa-save mr-2"></i> Enregistrer
               </button>
+              <button id="downloadExcelBtn" class="btn btn-success custom-btn d-flex align-items-center" type="button">
+                <i class="fas fa-file-download mr-2"></i> Télécharger Excel
+              </button>
+              <button id="downloadPdfBtn" class="btn btn-success custom-btn d-flex align-items-center" type="button">
+                <i class="fas fa-file-pdf mr-2"></i> Télécharger PDF
+              </button>
+            
               <span id="excelUploadMsg" style="font-size:15px; margin-left:10px;"></span>
             </div>
             <div class="mb-3" style="max-width: 350px;">
@@ -228,12 +229,7 @@
                   <option value="<%= client.name %>"><%= client.name %></option>
                 <% }); %>
               </select>
-              <select id="chantierFilter" class="form-control" style="font-size: 15px; width: 250px;">
-                <option value="">-- Filtrer par chantier --</option>
-                <% chantiers.forEach(chantier => { %>
-                  <option value="<%= chantier.nom %>"><%= chantier.nom %></option>
-                <% }); %>
-              </select>
+              
             </div>
             <%
               function formatDateToDDMMYYYY(dateInput) {
@@ -256,7 +252,6 @@
                     <th draggable="true">Date d'échéance</th>
                     <th draggable="true">Statut</th>
                     <th draggable="true">Banque</th>
-                    <th draggable="true">Chantier</th>
                     <th draggable="true">Date de règlement</th>
                     <th draggable="true">Observation</th>
                     <th style="width:70px;">Actions</th>
@@ -288,7 +283,7 @@
                               default: bgColor = '#6c757d';                  // gray
                             }
                           %>
-                          <select class="statut-select" style="font-size: 15px; background-color: <%= bgColor %>; color: <%= recave.statut === 'non échu' ? '#000' : '#fff' %>;" data-id="<%= recave.id %>">
+                          <select  class="statut-select" style="font-size: 15px; background-color: <%= bgColor %>; color: <%= recave.statut === 'non échu' ? '#000' : '#fff' %>;" data-id="<%= recave.id %>" name="statut">
                             <% ['non échu', 'impayé', 'échu', 'payé'].forEach(option => { %>
                               <option value="<%= option %>" <%= recave.statut === option ? 'selected' : '' %>><%= option %></option>
                             <% }) %>
@@ -296,14 +291,7 @@
                         </td>
                         
                         <td contenteditable="true" data-name="banque"><%= recave.banque.name %></td>
-                        <td data-name="chantier" class="chantier-cell">
-                          <select class="chantier-select" style="font-size: 15px;">
-                            <option value="">-- Sélectionner un chantier --</option>
-                            <% chantiers.filter(chantier => chantier.clientId === recave.client.id).forEach(chantier => { %>
-                              <option value="<%= chantier.nom %>" data-chantier-id="<%= chantier.id %>" <%= recave.chantier.nom === chantier.nom ? 'selected' : '' %>><%= chantier.nom %></option>
-                            <% }); %>
-                          </select>
-                        </td>
+                       
                         <td contenteditable="true" data-name="dateReglement"><%= formatDateToDDMMYYYY(recave.dateReglement) %></td>
                         <td contenteditable="true" data-name="obs"><%= recave.obs %></td>
                         <td>
@@ -332,7 +320,6 @@
 
 <script>
   const clients = <%- JSON.stringify(clients) %>;
-  const chantiers = <%- JSON.stringify(chantiers) %>;
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
@@ -376,33 +363,7 @@
     }
   };
 
-  const updateChantierDropdown = (clientSelect, chantierSelect) => {
-    const selectedClientName = clientSelect.value;
-    const selectedClient = clients.find(client => client.name === selectedClientName);
-    const clientId = selectedClient ? selectedClient.id : null;
-    const currentChantier = chantierSelect.value;
-
-    chantierSelect.innerHTML = '<option value="">-- Sélectionner un chantier --</option>';
-    if (clientId) {
-      const filteredChantiers = chantiers.filter(chantier => chantier.clientId === clientId);
-      filteredChantiers.forEach(chantier => {
-        const option = document.createElement('option');
-        option.value = chantier.nom;
-        option.setAttribute('data-chantier-id', chantier.id);
-        option.textContent = chantier.nom;
-        if (chantier.nom === currentChantier) option.selected = true;
-        chantierSelect.appendChild(option);
-      });
-      if (!filteredChantiers.length) {
-        const option = document.createElement('option');
-        option.value = '';
-        option.textContent = 'Aucun chantier disponible';
-        option.disabled = true;
-        chantierSelect.appendChild(option);
-      }
-    }
-  };
-
+ 
   const getStatusClass = (statut) => {
     const normalized = statut.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').trim();
     return ['en-circulation', 'paye', 'impaye', 'annule'].includes(normalized) ? normalized : 'en-circulation';
@@ -464,26 +425,29 @@
   row.querySelectorAll("td[data-name]").forEach(cell => {
     const key = cell.getAttribute("data-name");
     let value = cell.querySelector("select") ? cell.querySelector("select").value : cell.innerText.trim();
-    
+
     if (key === 'beneficiaire') {
-      const selectedClient = clients.find(client => client.name === value);
+      const selectedClient = clients.find(client => client.id == value || client.name === value);
       if (selectedClient) data[key] = selectedClient.id;
-    } else if (key === 'chantier') {
-      const selectedChantier = chantiers.find(chantier => chantier.nom === value);
-      if (selectedChantier) data[key] = selectedChantier.id;
+
     } else if (['dateEcheance', 'dateReglement'].includes(key)) {
       value = convertDateToISO(value);
       if (value) data[key] = value;
+
     } else if (key === 'montant') {
       value = parseFloat(value.replace(/,/g, '.').replace(/[^\d.-]/g, '')) || 0;
       data[key] = value;
-    } else if (value && key !== 'statut') {
+
+    } else if (key === 'statut') {
+      data[key] = value;  // ✅ Include statut always
+
+    } else if (value) {
       data[key] = value;
     }
   });
   return Object.keys(data).length ? data : null;
 };
-  // Event Handlers
+
   const handleRowUpdate = async (row) => {
     if (!row.getAttribute("data-dirty")) return;
     const id = row.getAttribute("data-id");
@@ -513,17 +477,13 @@
     console.error('Table or tbody not found');
     return;
   }
-  if (!Array.isArray(clients) || !Array.isArray(chantiers)) {
-    console.error('Clients or chantiers data is missing or invalid');
-    return;
-  }
+  
 
   const tbody = table.querySelector('tbody');
   const headers = Array.from(table.querySelectorAll('thead th'));
   const colCount = headers.length;
   const tr = document.createElement('tr');
   let clientSelect = null;
-  let chantierSelect = null;
 
   // Cache headers to avoid repeated DOM queries
   headers.slice(0, -1).forEach((header, i) => {
@@ -551,19 +511,7 @@
         td.appendChild(clientSelect);
         break;
 
-      case 'Chantier':
-        dataName = 'chantier';
-        td.classList.add('chantier-cell');
-        chantierSelect = document.createElement('select');
-        chantierSelect.className = 'chantier-select';
-        chantierSelect.style.fontSize = '15px';
-        const chantierDefault = document.createElement('option');
-        chantierDefault.value = '';
-        chantierDefault.textContent = '-- Sélectionner un chantier --';
-        chantierSelect.appendChild(chantierDefault);
-        td.appendChild(chantierSelect);
-        break;
-
+   
       case 'Designation':
         dataName = 'designation';
         td.contentEditable = true;
@@ -581,19 +529,24 @@
         td.textContent = new Date().toLocaleDateString('fr-FR'); // Default to current date
         break;
 
-      case 'Statut':
-        dataName = 'statut';
-        td.classList.add('statut-cell');
-        const statutSelect = document.createElement('select');
-        statutSelect.className = 'statut-select';
-        ['non échu', 'impayé', 'échu', 'payé'].forEach(status => {
-          const option = document.createElement('option');
-          option.value = status;
-          option.textContent = status;
-          statutSelect.appendChild(option);
-        });
-        td.appendChild(statutSelect);
-        break;
+        case 'Statut':
+  dataName = 'statut';
+  td.classList.add('statut-cell');
+
+  const statutSelect = document.createElement('select');
+  statutSelect.className = 'statut-select';
+  statutSelect.name = 'statut';          // ✅ Add this so your API gets the field
+  statutSelect.value = 'non échu';       // ✅ Default value
+
+  ['non échu', 'impayé', 'échu', 'payé'].forEach(status => {
+    const option = document.createElement('option');
+    option.value = status;
+    option.textContent = status;
+    statutSelect.appendChild(option);
+  });
+
+  td.appendChild(statutSelect);
+  break;
 
       case 'Banque':
         dataName = 'banque';
@@ -640,47 +593,7 @@
   tr.classList.add('excel-dirty-row');
   tbody.insertBefore(tr, tbody.firstChild);
 
-  // Client -> Chantier connection
-  if (clientSelect && chantierSelect) {
-    const populateChantiers = () => {
-      const clientId = parseInt(clientSelect.value) || 0;
-      chantierSelect.innerHTML = ''; // Clear existing options
-      const defaultOption = document.createElement('option');
-      defaultOption.value = '';
-      defaultOption.textContent = '-- Sélectionner un chantier --';
-      chantierSelect.appendChild(defaultOption);
-
-      if (clientId) {
-        const filteredChantiers = chantiers.filter(ch => ch.clientId === clientId);
-        if (filteredChantiers.length > 0) {
-          filteredChantiers.forEach(ch => {
-            const option = document.createElement('option');
-            option.value = ch.id;
-            option.textContent = ch.nom;
-            chantierSelect.appendChild(option);
-          });
-        } else {
-          const noOption = document.createElement('option');
-          noOption.value = '';
-          noOption.textContent = 'Aucun chantier disponible';
-          noOption.disabled = true;
-          chantierSelect.appendChild(noOption);
-        }
-      }
-    };
-
-    clientSelect.addEventListener('change', () => {
-      populateChantiers();
-      tr.setAttribute('data-dirty', 'true');
-      tr.classList.add('excel-dirty-row');
-    });
-
-    // Only populate initially if a client is pre-selected
-    if (clientSelect.value) {
-      populateChantiers();
-    }
-  }
-
+ 
   // Add event listeners for action buttons (assuming external handlers)
   deleteBtn.addEventListener('click', () => handleDeleteRow(tr));
   updateBtn.addEventListener('click', () => handleUpdateRow(tr));
@@ -777,7 +690,7 @@
   }, true);
 
   table.addEventListener("change", async (e) => {
-    const select = e.target.closest("td[data-name='beneficiaire'] select, td[data-name='chantier'] select");
+    const select = e.target.closest("td[data-name='beneficiaire'] select");
     if (select) {
       const row = select.closest("tr");
       row.setAttribute("data-dirty", "true");
@@ -815,11 +728,8 @@
   // Initialize existing rows
   table.querySelectorAll('tbody tr:not(:last-child)').forEach(row => {
     const clientSelect = row.querySelector('td[data-name="beneficiaire"] select');
-    const chantierSelect = row.querySelector('td[data-name="chantier"] select');
-    if (clientSelect && chantierSelect) {
-      updateChantierDropdown(clientSelect, chantierSelect);
+    if (clientSelect) {
       clientSelect.addEventListener('change', () => {
-        updateChantierDropdown(clientSelect, chantierSelect);
         row.setAttribute('data-dirty', 'true');
         row.classList.add('excel-dirty-row');
       });
@@ -830,7 +740,7 @@
   const handleFilter = (selector, dataName, value) => {
     const rows = table.querySelectorAll("tbody tr:not(:last-child)");
     rows.forEach(row => {
-      const cell = row.querySelector(`td[data-name='${dataName}']${dataName === 'beneficiaire' || dataName === 'chantier' ? ' select' : ''}`);
+      const cell = row.querySelector(`td[data-name='${dataName}']${dataName === 'beneficiaire' ? ' select' : ''}`);
       const cellValue = cell ? (cell.querySelector('select') ? cell.querySelector('select').value : cell.innerText).toLowerCase() : '';
       row.style.display = (value === "" || cellValue === value) ? "" : "none";
     });
@@ -855,10 +765,6 @@
 
   document.getElementById("supplierFilter")?.addEventListener("change", function () {
     handleFilter("#supplierFilter", "beneficiaire", this.value.toLowerCase());
-  });
-
-  document.getElementById("chantierFilter")?.addEventListener("change", function () {
-    handleFilter("#chantierFilter", "chantier", this.value.toLowerCase());
   });
 
   // Column Drag and Drop (unchanged from original)
@@ -993,16 +899,16 @@
           fillColor: [245, 245, 245]
         },
         columnStyles: {
-          0: { cellWidth: 18, halign: 'center' },
-          1: { cellWidth: 18, halign: 'left' },
-          2: { cellWidth: 15, halign: 'left' },
-          3: { cellWidth: 25, halign: 'left' },
-          4: { cellWidth: 20, halign: 'right' },
-          5: { cellWidth: 18, halign: 'center' },
-          6: { cellWidth: 23, halign: 'left' },
-          7: { cellWidth: 18, halign: 'center' },
-          8: { cellWidth: 15, halign: 'left' },
-          9: { cellWidth: 25, halign: 'left', overflow: 'linebreak' }
+          0: { cellWidth: 24, halign: 'center' },
+          1: { cellWidth: 24, halign: 'left' },
+          2: { cellWidth: 27, halign: 'left' },
+          3: { cellWidth: 24, halign: 'left' },
+          4: { cellWidth: 24, halign: 'right' },
+          5: { cellWidth: 24, halign: 'center' },
+          6: { cellWidth: 24, halign: 'left' },
+          7: { cellWidth: 24, halign: 'center' },
+          8: { cellWidth: 24, halign: 'left' },
+          9: { cellWidth: 24, halign: 'left', overflow: 'linebreak' }
         },
         margin: { top: 30, left: 10, right: 10 },
         tableWidth: 'wrap',
@@ -1048,7 +954,7 @@
 </script>
 
 <style>
-.client-select, .chantier-select, .statut-select {
+.client-select, .statut-select {
   width: 100%;
   padding: 5px;
   border: none;
@@ -1056,12 +962,12 @@
   font-size: 15px;
   color: #333;
 }
-.client-select:focus, .chantier-select:focus, .statut-select:focus {
+.client-select:focus, .statut-select:focus {
   outline: none;
   border: 1px solid #007bff;
   border-radius: 4px;
 }
-.client-cell, .chantier-cell, .statut-cell {
+.client-cell, .statut-cell {
   padding: 5px;
 }
 </style>

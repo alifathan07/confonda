@@ -27,7 +27,6 @@ export const createRecavenir = async (req, res) => {
             dateEcheance,
             statut, 
             dateReglement,
-            chantier,
             obs
             
       } = req.body;
@@ -39,18 +38,7 @@ export const createRecavenir = async (req, res) => {
       let client = await prisma.client.findFirst({
         where: { id: beneficiaire },
       });
-      let findChantier = await prisma.chantier.findFirst({
-        where: { id: chantier },
-      });
-  
-      if (!findChantier) {
-        findChantier = await prisma.chantier.create({
-          data: {
-            nom: chantier,
-            client: { connect: { id: client.id } },
-          },
-        });
-      }
+      
   
       // Find or create banque
       let findBanque = await prisma.banque.findFirst({
@@ -81,7 +69,6 @@ export const createRecavenir = async (req, res) => {
           statut,
           obs,
           client: { connect: { id: client.id } },
-          chantier: { connect: { id: findChantier.id } },
           banque: { connect: { id: findBanque.id } },
         },
       });
@@ -120,15 +107,14 @@ export const deleteRecavenir = async (req, res) => {
 export const updateRecavenir = async (req, res) => {
 try {
     const { id } = req.params;
-    const { designation, banque, beneficiaire, montant, dateEcheance, statut, dateReglement, obs , chantier} = req.body;
+    const { designation, banque, beneficiaire, montant, dateEcheance, statut, dateReglement, obs} = req.body;
     console.log(`🔄 Updating recavenir ${id}...`);
     const updatedRecavenir = await prisma.recavenir.findUnique({ where: { id: parseInt(id) } });
     if (!updatedRecavenir) {
     return res.status(404).json({ error: "Recavenir non trouvé." });
     }
     
-    let findChantier = await prisma.chantier.findFirst({ where: { id: chantier } });
-
+    
     
     
 
@@ -163,7 +149,6 @@ try {
         statut,
         obs,
         client: { connect: { id: client.id } },
-        chantier: { connect: { id: findChantier.id } },
         banque: { connect: { id: findBanque.id } },
     },
     });
