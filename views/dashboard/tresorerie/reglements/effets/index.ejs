@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-  <meta name="description" content="Effets" />
+  <meta name="description" content="effets" />
   <meta name="author" content="Confonda" />
-  <title>Effets</title>
+  <title>effets</title>
   <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
   <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
@@ -115,9 +115,12 @@
     background-color: #f2f2f2;
   }
 
-  .excel-table tbody tr:hover {
-    background-color: #e9ecef;
+  .excel-table tbody td {
+      padding: 1px;
+      height: 1px;
   }
+
+ 
         .statut-cell {
           text-align: center !important;
           vertical-align: middle !important;
@@ -210,215 +213,206 @@
           animation: statusChange 0.3s ease;
         }
       </style>
-      <body>
-        
-     <body id="page-top">
-
-      <div id="wrapper">
-        <%- include('../../../../layouts/sidebar') %>
-        <div id="content-wrapper" class="d-flex flex-column">
-          <div id="content">
-            <%- include('../../../../layouts/topbar') %>
-            <div class="container-fluid">
-              <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                  <% if (id) { %>
-                    <h6 class="m-0 font-weight-bold text-primary">Liste des effets <%= banqueName.name %></h6>
-                  <% } else { %>
-                    <h6 class="m-0 font-weight-bold text-primary">Liste des effets</h6>
-                  <% } %>
-                </div>
-                <div class="card-body">
-                  <div class="mb-4" style="display: flex; align-items: center; gap: 20px;">
-                    <!-- <form id="excelUploadForm" enctype="multipart/form-data" method="POST" action="/" style="margin: 0;">
-                      <label for="excelFile" class="btn btn-success d-flex align-items-center" style="font-weight:600; font-size:15px; margin-bottom: 0; height: 42px;">
-                        <i class="fas fa-file-excel mr-2"></i> Importer Excel
-                        <input type="file" id="excelFile" name="excelFile" accept=".xlsx,.xls" style="display:none;">
-                      </label>
-                    </form> -->
-                    <% if (id) { %>
-                      <%
-                        const supportedBanks = banques.map(banque => banque.name.toLowerCase());
-                        const bankKey = banqueName.name.toLowerCase();
-                      %>
-                      <% if (bankKey === "credit agricole" && supportedBanks.includes("credit agricole")) { %>
-                        <a href="/tresorerie/effets/create/format/credit_agricole/<%=id%>" 
-                           class="btn btn-outline-danger d-flex align-items-center" 
-                           type="button" 
-                           style="font-weight:600; font-size:15px; height: 42px;">
-                          <i class="fas fa-file-invoice-dollar mr-2"></i> Etablir effet
-                        </a>
-                      <% } else if (supportedBanks.includes(bankKey)) { %>
-                        <a href="/tresorerie/effets/create/format/<%= bankKey %>/<%=id%>" 
-                           class="btn btn-outline-danger d-flex align-items-center" 
-                           type="button" 
-                           style="font-weight:600; font-size:15px; height: 42px;">
-                          <i class="fas fa-file-invoice-dollar mr-2"></i> Etablir effet
-                        </a>
-                      <% } %>
-                    <% } %>
-                    <button id="addRowBtn" class="btn btn-secondary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
-                      <i class="fas fa-plus mr-2"></i> Ajouter effet
-                    </button>
-                    <button id="saveTableBtn" class="btn btn-primary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
-                      <i class="fas fa-save mr-2"></i> Enregistrer
-                    </button>
-                    <button id="downloadPdfBtn" class="btn btn-info d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
-                      <i class="fas fa-file-pdf mr-2"></i> Télécharger PDF
-                    </button>
-                    <button id="downloadExcelBtn" class="btn btn-success d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
-                      <i class="fas fa-file-excel mr-2"></i> Télécharger Excel
-                    </button>
-                    <span id="excelUploadMsg" style="font-size:15px; margin-left:10px;"></span>
-                  </div>
-                  <div class="mb-3" style="max-width: 350px;">
-                    <input
-                      type="text"
-                      id="supplierSearch"
-                      class="form-control"
-                      placeholder="Rechercher un effet..."
-                      style="font-size: 15px;"
-                    />
-                  </div>
-                  <div class="mb-3 d-flex align-items-center" style="max-width: 350px;">
-                    <select id="banqueFilter" class="form-control mr-2" style="font-size: 15px; width: 300px;">
-                      <option value="">-- Filtrer par banque --</option>
-                      <% banques.forEach(banque => { %>
-                        <option value="<%= banque.name %>"><%= banque.name %></option>
-                      <% }); %>
-                    </select>
-                    <select id="supplierFilter" class="form-control" style="font-size: 15px; width: 250px;">
-                      <option value="">-- Filtrer par fournisseur --</option>
-                      <% fournisseurs.forEach(fournisseur => { %>
-                        <option value="<%= fournisseur.name %>"><%= fournisseur.name %></option>
-                      <% }); %>
-                    </select>
-                  </div>
-                  <div class="mb-3 d-flex align-items-center" style="max-width: 350px;">
-                    <select id="statusFilter" class="form-control mr-2" style="font-size: 15px; width: 200px;">
-                      <option value="">-- Filtrer par statut --</option>
-                      <option value="En Circulation">En Circulation</option>
-                      <option value="PAYÉ">Payé</option>
-                      <option value="Impayé">Impayé</option>
-                      <option value="Annulé">Annulé</option>
-                      <option value="Treso">Treso</option>
-                    </select>
-                    <select id="chantierFilter" class="form-control mr-2" style="font-size: 15px; width: 200px;">
-                      <option value="">-- Filtrer par chantier --</option>
-                      <% chantiers.forEach(chantier => { %>
-                        <option value="<%= chantier.nom %>"><%= chantier.nom ? chantier.nom : '-- Aucun --' %></option>
-                      <% }); %>
-                    </select>
-                  </div>
-
-                  <div class="form-group mr-2">
-                    <label for="dateFilter" class="mr-2">Date :</label>
-                    <div class="input-group">
-                      <span class="input-group-text">Du</span>
-
-                      <input type="date" id="dateFilter" class="form-control">
-                      <div class="input-group-append">
-                        <span class="input-group-text">Au</span>
-                      </div>
-                      <input type="date" id="dateToFilter" class="form-control" style="font-size: 15px; width: 20px;">
-                    </div>
-                  </div>
-
-
-                  
-                  
       
-                  <div class="table-responsive">
-                    <%
-                      function formatDateToDDMMYYYY(dateInput) {
-                        if (!dateInput) return '';
-                        const date = new Date(dateInput);
-                        if (isNaN(date)) return dateInput;
-                        const day = String(date.getDate()).padStart(2, '0');
-                        const month = String(date.getMonth() + 1).padStart(2, '0');
-                        const year = date.getFullYear();
-                        return `${day}/${month}/${year}`;
-                      }
-                    %>
-                    <table id="editableTable" class="excel-table">
-                      <thead>
-                        <tr style="position: sticky; top: 0; background-color: white; z-index: 1;">
-                          <th draggable="true">Date</th>
-                          <th draggable="true">N° Chèque</th>
-                          <th draggable="true">Banque</th>
-                          <th draggable="true">Bénéficiaire</th>
-                          <th draggable="true">Montant</th>
-                          <th draggable="true">Echeance</th>
-                          <th draggable="true">Statut</th>
-                          <th draggable="true">Date Reglement</th>
-                          <th draggable="true">Chantier</th>
-                          <th draggable="true">Observation</th>
-                          <th style="width:70px;">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <% if (typeof effets !== 'undefined' && effets.length) { %>
-                          <% effets.forEach(effet => { %>
-                            <tr data-id="<%= effet.id %>">
-                              <td contenteditable="true" data-name="dateEtablissement"><%= formatDateToDDMMYYYY(effet.dateEtablissement) %></td>
-                              <td contenteditable="true" data-name="numero"><%= effet.numero %></td>
-                              <td contenteditable="true" data-name="banque"><%= effet.banque ? effet.banque.name : '' %></td>
-                              <td contenteditable="true" data-name="beneficiaire"><%= effet.beneficiaire %></td>
-                              <td contenteditable="true" data-name="montant"><%= effet.montant ? effet.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '' %></td>
-                              <td contenteditable="true" data-name="dateEcheance"><%= effet.dateEcheance ? formatDateToDDMMYYYY(effet.dateEcheance) : '' %></td>
-                              <td data-name="statut" class="statut-cell">
-                                <span 
-                                  class="statut-badge <%= effet.statut.toLowerCase().replace(/[éè]/g, 'e').replace(/\s+/g, '-') %>"
-                                  onclick="toggleSelect(this)">
-                                  <%= effet.statut %>
-                                </span>
-                              </td>
-                              <td contenteditable="true" data-name="dateReglement"><%= formatDateToDDMMYYYY(effet.dateReglement) %></td>
-                              <td data-name="chantier" class="chantier-cell">
-                                <select class="chantier-select">
-                                  <% chantiers.forEach(chantier => { %>
-                                    <option value="<%= chantier.nom %>" <%= effet.chantier && effet.chantier.nom === chantier.nom ? 'selected' : '' %>><%= chantier.nom %></option>
-                                  <% }); %>
-                                </select>
-                              </td>
-                              <td contenteditable="true" data-name="obs"><%= effet.obs %></td>
-                              <td>
-                                <button class="delete-row excel-delete-btn" title="Supprimer" aria-label="Supprimer"><i class="fas fa-trash"></i></button>
-                                <button class="update-row excel-save-btn btn btn-sm btn-warning" title="Mettre à jour" aria-label="Mettre à jour" style="margin-left:5px;"><i class="fas fa-edit"></i></button>
-                              </td>
-                            </tr>
-                          <% }) %>
+        
+        <body id="page-top">
+          <div id="wrapper">
+            <%- include('../../../../layouts/sidebar') %>
+            <div id="content-wrapper" class="d-flex flex-column">
+              <div id="content">
+                <%- include('../../../../layouts/topbar') %>
+                <div class="container-fluid">
+                  <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                      <% if (id) { %>
+                        <h6 class="m-0 font-weight-bold text-primary">Liste des effets <%= banqueName.name %></h6>
+                      <% } else { %>
+                        <h6 class="m-0 font-weight-bold text-primary">Liste des effets</h6>
+                      <% } %>
+                    </div>
+                    <div class="card-body">
+                      <div class="mb-4" style="display: flex; align-items: center; gap: 20px;">
+                        <form id="excelUploadForm" enctype="multipart/form-data" method="POST" action="/" style="margin: 0;">
+                            <input type="file" id="excelFile" name="excelFile" accept=".xlsx,.xls" style="display:none;" hidden>
+                        </form>
+                        <% if (id) { %>
+                          <%
+                            const supportedBanks = banques.map(banque => banque.name.toLowerCase());
+                            const bankKey = banqueName.name.toLowerCase();
+                          %>
+                          <% if (bankKey === "credit agricole" && supportedBanks.includes("credit agricole")) { %>
+                            <a href="/tresorerie/effets/create/format/credit_agricole/<%=id%>" 
+                               class="btn btn-outline-danger d-flex align-items-center" 
+                               type="button" 
+                               style="font-weight:600; font-size:15px; height: 42px;">
+                              <i class="fas fa-file-invoice-dollar mr-2"></i> Etablir cheque
+                            </a>
+                          <% } else if (supportedBanks.includes(bankKey)) { %>
+                            <a href="/tresorerie/effets/create/format/<%= bankKey %>/<%=id%>" 
+                               class="btn btn-outline-danger d-flex align-items-center" 
+                               type="button" 
+                               style="font-weight:600; font-size:15px; height: 42px;">
+                              <i class="fas fa-file-invoice-dollar mr-2"></i> Etablir cheque
+                            </a>
+                          <% } %>
                         <% } %>
-                        <tr>
-                          <td colspan="4">Total</td>
-                          <td id="total">
-                            <%= effets.reduce((total, effet) => total + effet.montant, 0).toFixed(2) %>
-                          </td>
-                          <td colspan="6"></td>
-                        </tr>
-                      </tbody>
-                    </table>
+                        <button id="addRowBtn" class="btn btn-primary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
+                          <i class="fas fa-plus mr-2"></i> Ajouter Chèque
+                        </button>
+                        <button id="saveTableBtn" class="btn btn-primary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
+                          <i class="fas fa-save mr-2"></i> Enregistrer
+                        </button>
+                        <button id="downloadPdfBtn" class="btn btn-success d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
+                          <i class="fas fa-file-pdf mr-2"></i> Télécharger PDF
+                        </button>
+                        <button id="downloadExcelBtn" class="btn btn-success d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
+                          <i class="fas fa-file-excel mr-2"></i> Télécharger Excel
+                        </button>
+                        <span id="excelUploadMsg" style="font-size:15px; margin-left:10px;"></span>
+                      </div>
+                      <div class="mb-3" style="max-width: 350px;">
+                        <input
+                          type="text"
+                          id="supplierSearch"
+                          class="form-control"
+                          placeholder="Rechercher un chèque..."
+                          style="font-size: 15px;"
+                        />
+                      </div>
+                      <div class="mb-3 d-flex align-items-center" style="max-width: 350px;">
+                        <select id="banqueFilter" class="form-control mr-2" style="font-size: 15px; width: 300px;">
+                          <option value="">-- Filtrer par banque --</option>
+                          <% banques.forEach(banque => { %>
+                            <option value="<%= banque.name %>"><%= banque.name %></option>
+                          <% }); %>
+                        </select>
+                        <select id="supplierFilter" class="form-control" style="font-size: 15px; width: 250px;">
+                          <option value="">-- Filtrer par fournisseur --</option>
+                          <% fournisseurs.forEach(fournisseur => { %>
+                            <option value="<%= fournisseur.name %>"><%= fournisseur.name %></option>
+                          <% }); %>
+                        </select>
+                        
+                      </div>
+                      <div class="mb-3 d-flex align-items-center" style="max-width: 350px;">
+                        <select id="statusFilter" class="form-control mr-2" style="font-size: 15px; width: 200px;">
+                          <option value="">-- Filtrer par statut --</option>
+                          <option value="En Circulation">En Circulation</option>
+                          <option value="PAYÉ">Payé</option>
+                          <option value="Impayé">Impayé</option>
+                          <option value="Annulé">Annulé</option>
+                          <option value="Treso">Treso</option>
+                        </select>
+                        <select id="chantierFilter" class="form-control mr-2" style="font-size: 15px; width: 200px;">
+                          <option value="">-- Filtrer par chantier --</option>
+                          <% chantiers.forEach(chantier => { %>
+                            <option value="<%= chantier.nom %>"><%= chantier.nom ? chantier.nom : '-- Aucun --' %></option>
+                          <% }); %>
+                        </select>
+                      </div>
+    
+                      <div class="form-group mr-2">
+                        <label for="dateFilter" class="mr-2">Date :</label>
+                        <div class="input-group">
+                          <span class="input-group-text">Du</span>
+
+                          <input type="date" id="dateFilter" class="form-control" >
+                          <div class="input-group-append">
+                            <span class="input-group-text">AU</span>
+                          </div>
+                          <input type="date" id="dateToFilter" class="form-control" style="font-size: 15px; width: 20px;">
+                        </div>
+                      </div>
+          
+                      <div class="table-responsive">
+                        <%
+                          function formatDateToDDMMYYYY(dateInput) {
+                            if (!dateInput) return '';
+                            const date = new Date(dateInput);
+                            if (isNaN(date)) return dateInput;
+                            const day = String(date.getDate()).padStart(2, '0');
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const year = date.getFullYear();
+                            return `${day}/${month}/${year}`;
+                          }
+                        %>
+                        <table id="editableTable" class="excel-table">
+                          <thead>
+                            <tr style="position: sticky; top: 0; background-color: white; z-index: 1;">
+                              <th draggable="true">Date</th>
+                              <th draggable="true">N° Chèque</th>
+                              <th draggable="true">Banque</th>
+                              <th draggable="true">Bénéficiaire</th>
+                              <th draggable="true">Montant</th>
+                              <th draggable="true">Echeance</th>
+                              <th draggable="true">Statut</th>
+                              <th draggable="true">Date Reglement</th>
+                              <th draggable="true">Chantier</th>
+                              <th draggable="true">Observation</th>
+                              <th style="width:70px;">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <% if (typeof effets !== 'undefined' && effets.length) { %>
+                              <% effets.forEach(cheque => { %>
+                                <tr data-id="<%= cheque.id %>">
+                                  <td contenteditable="true" data-name="dateEtablissement"><%= formatDateToDDMMYYYY(cheque.dateEtablissement) %></td>
+                                  <td contenteditable="true" data-name="numero"><%= cheque.numero %></td>
+                                  <td contenteditable="true" data-name="banque"><%= cheque.banque ? cheque.banque.name : '' %></td>
+                                  <td contenteditable="true" data-name="beneficiaire"><%= cheque.beneficiaire %></td>
+                                  <td contenteditable="true" data-name="montant"><%= cheque.montant ? cheque.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '' %></td>
+                                  <td contenteditable="true" data-name="dateEcheance"><%= cheque.dateEcheance ? formatDateToDDMMYYYY(cheque.dateEcheance) : '' %></td>
+                                  <td data-name="statut" class="statut-cell">
+                                    <span 
+                                      class="statut-badge <%= cheque.statut.toLowerCase().replace(/[éè]/g, 'e').replace(/\s+/g, '-') %>"
+                                      onclick="toggleSelect(this)">
+                                      <%= cheque.statut %>
+                                    </span>
+                                  </td>
+                                  <td contenteditable="true" data-name="dateReglement"><%= formatDateToDDMMYYYY(cheque.dateReglement) %></td>
+                                  <td data-name="chantier" class="chantier-cell">
+                                    <select class="chantier-select">
+                                      <% chantiers.forEach(chantier => { %>
+                                        <option value="<%= chantier.nom %>" <%= cheque.chantier && cheque.chantier.nom === chantier.nom ? 'selected' : '' %>><%= chantier.nom %></option>
+                                      <% }); %>
+                                    </select>
+                                  </td>
+                                  <td contenteditable="true" data-name="obs"><%= cheque.obs %></td>
+                                  <td>
+                                    <button class="delete-row excel-delete-btn" title="Supprimer" aria-label="Supprimer"><i class="fas fa-trash"></i></button>
+                                    <button class="update-row excel-save-btn btn btn-sm btn-warning" title="Mettre à jour" aria-label="Mettre à jour" style="margin-left:5px;"><i class="fas fa-edit"></i></button>
+                                  </td>
+                                </tr>
+                              <% }) %>
+                            <% } %>
+                            <tr>
+                              <td colspan="4">Total</td>
+                              <td id="total">
+                                <%= effets.reduce((total, cheque) => total + cheque.montant, 0).toFixed(2) %>
+                              </td>
+                              <td colspan="6"></td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
-     
-          <script>
-            document.addEventListener("DOMContentLoaded", function () {
+              <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+              <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+             
+            <script>
+              document.addEventListener("DOMContentLoaded", function () {
   const { jsPDF } = window.jspdf;
   const uploadForm = document.getElementById('excelUploadForm');
   const fileInput = document.getElementById('excelFile');
   const msg = document.getElementById('excelUploadMsg');
   const table = document.getElementById("editableTable");
   const statusFilter = document.getElementById("statusFilter");
+  const chantierFilter = document.getElementById("chantierFilter");
   const banqueFilter = document.getElementById("banqueFilter");
   const supplierFilter = document.getElementById("supplierFilter");
-  const chantierFilter = document.getElementById("chantierFilter"); // Added chantierFilter
   const searchInput = document.getElementById("supplierSearch");
   const dateFilter = document.getElementById("dateFilter");
   const dateToFilter = document.getElementById("dateToFilter");
@@ -463,9 +457,9 @@
   // Combined filter function to apply all filters
   function applyAllFilters() {
     const selectedStatus = statusFilter?.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim() || "";
+    const selectedChantier = chantierFilter?.value.toLowerCase().trim() || "";
     const selectedBanque = banqueFilter?.value.toLowerCase().trim() || "";
     const selectedSupplier = supplierFilter?.value.toLowerCase().trim() || "";
-    const selectedChantier = chantierFilter?.value.toLowerCase().trim() || ""; // Added selectedChantier
     const searchText = searchInput?.value.toLowerCase().trim() || "";
     const startDate = dateFilter?.value ? toDate(dateFilter.value) : null;
     const endDate = dateToFilter?.value ? toDate(dateToFilter.value) : null;
@@ -474,27 +468,27 @@
 
     rows.forEach(row => {
       const statusCell = row.querySelector("td[data-name='statut']");
+      const chantierCell = row.querySelector("td[data-name='chantier']");
       const banqueCell = row.querySelector("td[data-name='banque']");
       const supplierCell = row.querySelector("td[data-name='beneficiaire']");
-      const chantierCell = row.querySelector("td[data-name='chantier']"); // Added chantierCell
       const dateCell = row.querySelector("td[data-name='dateEcheance']");
       
       const statusText = (statusCell ? (statusCell.querySelector("select")?.value || statusCell.querySelector("span")?.textContent || "").toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') : "").trim();
+      const chantierName = (chantierCell ? chantierCell.querySelector("select")?.value.toLowerCase() || "" : "").trim();
       const banqueName = (banqueCell ? banqueCell.innerText.toLowerCase() : "").trim();
       const supplierName = (supplierCell ? supplierCell.innerText.toLowerCase() : "").trim();
-      const chantierName = (chantierCell ? chantierCell.querySelector("select")?.value.toLowerCase() || "" : "").trim(); // Added chantierName
       const rowText = row.innerText.toLowerCase();
       const dateText = dateCell ? dateCell.innerText.trim() : "";
       const rowDate = dateText ? toDate(convertDateToISO(dateText)) : null;
 
       const matchesStatus = selectedStatus === "" || statusText === selectedStatus;
+      const matchesChantier = selectedChantier === "" || chantierName === selectedChantier;
       const matchesBanque = selectedBanque === "" || banqueName === selectedBanque;
       const matchesSupplier = selectedSupplier === "" || supplierName === selectedSupplier;
-      const matchesChantier = selectedChantier === "" || chantierName === selectedChantier; // Added matchesChantier
       const matchesSearch = searchText === "" || rowText.includes(searchText);
       const matchesDate = (!startDate || !rowDate || rowDate >= startDate) && (!endDate || !rowDate || rowDate <= endDate);
 
-      row.style.display = (matchesStatus && matchesBanque && matchesSupplier && matchesChantier && matchesSearch && matchesDate) ? "" : "none";
+      row.style.display = (matchesStatus && matchesChantier && matchesBanque && matchesSupplier && matchesSearch && matchesDate) ? "" : "none";
     });
 
     updateTotal();
@@ -502,9 +496,9 @@
 
   // Attach filter listeners
   if (statusFilter) statusFilter.addEventListener("change", applyAllFilters);
+  if (chantierFilter) chantierFilter.addEventListener("change", applyAllFilters);
   if (banqueFilter) banqueFilter.addEventListener("change", applyAllFilters);
   if (supplierFilter) supplierFilter.addEventListener("change", applyAllFilters);
-  if (chantierFilter) chantierFilter.addEventListener("change", applyAllFilters); // Added chantierFilter listener
   if (searchInput) searchInput.addEventListener("input", applyAllFilters);
   if (dateFilter) dateFilter.addEventListener("change", applyAllFilters);
   if (dateToFilter) dateToFilter.addEventListener("change", applyAllFilters);
@@ -648,7 +642,7 @@
             td.classList.add('statut-cell');
             const select = document.createElement('select');
             select.className = 'statut-select';
-            const statutOptions = ['En Circulation', 'Payé', 'Impayé', 'Annulé', 'Treso'];
+            const statutOptions = ['En circulation', 'Payé', 'Impayé', 'Annulé', 'Treso'];
             statutOptions.forEach(option => {
               const opt = document.createElement('option');
               opt.value = option;
@@ -876,24 +870,82 @@
 
   // Download Excel functionality
   document.getElementById("downloadExcelBtn")?.addEventListener("click", function () {
-    const table = document.getElementById("editableTable");
-    const ws = XLSX.utils.table_to_sheet(table, { raw: true, cellDates: true });
+  const table = document.getElementById("editableTable");
+  const rows = table.querySelectorAll("tbody tr:not(:last-child)");
+  const headers = Array.from(table.querySelectorAll("thead th"))
+    .slice(0, -1)
+    .map(th => th.innerText);
 
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let R = 1; R <= range.e.r; ++R) {
-      const cellAddress = { c: 4, r: R };
-      const cellRef = XLSX.utils.encode_cell(cellAddress);
-      if (ws[cellRef] && typeof ws[cellRef].v === 'string') {
-        ws[cellRef].v = parseFloat(ws[cellRef].v.replace(/\s/g, '').replace(',', '.')) || 0;
-        ws[cellRef].t = 'n';
-      }
+  // Prepare data for the Excel sheet
+  const tableData = [];
+  rows.forEach(row => {
+    if (row.style.display !== "none") {
+      const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
+        let value = "";
+        const select = cell.querySelector("select");
+        if (select) {
+          // For select elements (Chantier and Statut), use the selected value
+          value = select.value || "";
+        } else {
+          // For other cells, use the text content
+          value = cell.innerText.trim();
+        }
+
+        // Handle date formatting
+        if (cell.dataset.name && ['dateEtablissement', 'dateEcheance', 'dateReglement'].includes(cell.dataset.name) && value) {
+          if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            const [year, month, day] = value.split('-');
+            value = `${day}/${month}/${year}`;
+          } else if (!value.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+            const date = new Date(value);
+            if (!isNaN(date.getTime())) {
+              const day = String(date.getDate()).padStart(2, '0');
+              const month = String(date.getMonth() + 1).padStart(2, '0');
+              const year = date.getFullYear();
+              value = `${day}/${month}/${year}`;
+            }
+          }
+        }
+
+        // Handle montant formatting
+        if (cell.dataset.name === "montant" && value) {
+          let cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+          const number = parseFloat(cleaned);
+          if (!isNaN(number)) {
+            value = number;
+          }
+        }
+
+        return value || "";
+      });
+      tableData.push(rowData);
     }
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "effets");
-    XLSX.writeFile(wb, "liste_effets.xlsx");
   });
 
+  // Create worksheet from headers and table data
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...tableData]);
+
+  // Set number format for montant column (index 4)
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let R = 1; R <= range.e.r; ++R) {
+    const cellAddress = { c: 4, r: R }; // Montant column
+    const cellRef = XLSX.utils.encode_cell(cellAddress);
+    if (ws[cellRef] && typeof ws[cellRef].v === 'number') {
+      ws[cellRef].z = '#,##0.00'; // Format as number with 2 decimal places
+    }
+  }
+
+  // Add total row
+  const totalRow = Array(headers.length).fill('');
+  totalRow[3] = 'Total';
+  totalRow[4] = parseFloat(document.getElementById("total").innerText.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.')) || 0;
+  XLSX.utils.sheet_add_aoa(ws, [totalRow], { origin: -1 });
+
+  // Create workbook and save
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "effets");
+  XLSX.writeFile(wb, "liste_effets.xlsx");
+});
   // Download PDF functionality
   document.getElementById("downloadPdfBtn")?.addEventListener("click", function () {
     try {
@@ -1063,9 +1115,9 @@
     select.addEventListener('change', async function () {
       const newStatut = select.value;
       const row = select.closest('tr');
-      const effetId = row.getAttribute('data-id');
+      const chequeId = row.getAttribute('data-id');
 
-      if (!effetId) {
+      if (!chequeId) {
         alert("Impossible de modifier un chèque non enregistré.");
         select.blur();
         return;
@@ -1075,7 +1127,7 @@
       select.classList.add('status-updating');
 
       try {
-        const res = await fetch(`/tresorerie/effets/${effetId}/update-statut`, {
+        const res = await fetch(`/tresorerie/effets/${chequeId}/update-statut`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ statut: newStatut }),
@@ -1123,68 +1175,69 @@
     });
   }
 
-  // Initialize total calculation on page load
-  updateTotal();
+  // Initialize total calculation and apply filters on page load
+  applyAllFilters();
 });
-          </script>
-        <style>
-          .statut-select {
-            width: 100%;
-            padding: 5px;
-            border: none;
-            background: transparent;
-            font-size: 15px;
-            color: #333;
-          }
-          .statut-select:focus {
-            outline: none;
-            border: 1px solid #007bff;
-            border-radius: 4px;
-          }
-          .statut-cell {
-            padding: 5px;
-          }
-          .statut-badge {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-          }
-          .statut-badge.en-circulation {
-            background-color: #e3f2fd;
-            color: #1976d2;
-          }
-          .statut-badge.paye {
-            background-color: #e8f5e9;
-            color: #2e7d32;
-          }
-          .statut-badge.impaye {
-            background-color: #ffebee;
-            color: #d32f2f;
-          }
-          .statut-badge.annule {
-            background-color: #f5f5f5;
-            color: #616161;
-          }
-          .statut-badge.treso {
-            background-color: #fff3e0;
-            color: #f57c00;
-          }
-          .status-updating {
-            opacity: 0.6;
-            transition: opacity 0.3s ease;
-          }
-          </style>
-<script src="/vendor/jquery/jquery.min.js"></script>
-<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
-<script src="/js/sb-admin-2.min.js"></script>
-<script src="/vendor/datatables/jquery.dataTables.min.js"></script>
-<script src="/vendor/datatables/dataTables.bootstrap4.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-<script src="/js/demo/datatables-demo.js"></script>
-</body>
+            </script>
+              <style>
+                .statut-select {
+                  width: 100%;
+                  padding: 5px;
+                  border: none;
+                  background: transparent;
+                  font-size: 15px;
+                  color: #333;
+                }
+                .statut-select:focus {
+                  outline: none;
+                  border: 1px solid #007bff;
+                  border-radius: 4px;
+                }
+                .statut-cell {
+                  padding: 5px;
+                }
+                .statut-badge {
+                  display: inline-block;
+                  padding: 5px 10px;
+                  border-radius: 12px;
+                  font-size: 14px;
+                  font-weight: 500;
+                  cursor: pointer;
+                  transition: all 0.3s ease;
+                }
+                .statut-badge.en-circulation {
+                  background-color: #e3f2fd;
+                  color: #1976d2;
+                }
+                .statut-badge.paye {
+                  background-color: #e8f5e9;
+                  color: #2e7d32;
+                }
+                .statut-badge.impaye {
+                  background-color: #ffebee;
+                  color: #d32f2f;
+                }
+                .statut-badge.annule {
+                  background-color: #f5f5f5;
+                  color: #616161;
+                }
+                .statut-badge.treso {
+                  background-color: #fff3e0;
+                  color: #f57c00;
+                }
+                .status-updating {
+                  opacity: 0.6;
+                  transition: opacity 0.3s ease;
+                }
+              </style>
+              <script src="/vendor/jquery/jquery.min.js"></script>
+              <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+              <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+              <script src="/js/sb-admin-2.min.js"></script>
+              <script src="/vendor/datatables/jquery.dataTables.min.js"></script>
+              <script src="/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+              <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+              <script src="/js/demo/datatables-demo.js"></script>
+            </div>
+          </div>
+        </body> 

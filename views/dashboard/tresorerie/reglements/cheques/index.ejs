@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
    <!-- Enhanced Status Styles -->
-      <style>
+    <style>
         /* General Button Style */
   .custom-btn {
     display: inline-flex;
@@ -642,7 +642,7 @@
             td.classList.add('statut-cell');
             const select = document.createElement('select');
             select.className = 'statut-select';
-            const statutOptions = ['En Circulation', 'Payé', 'Impayé', 'Annulé', 'Treso'];
+            const statutOptions = ['En circulation', 'Payé', 'Impayé', 'Annulé', 'Treso'];
             statutOptions.forEach(option => {
               const opt = document.createElement('option');
               opt.value = option;
@@ -870,24 +870,82 @@
 
   // Download Excel functionality
   document.getElementById("downloadExcelBtn")?.addEventListener("click", function () {
-    const table = document.getElementById("editableTable");
-    const ws = XLSX.utils.table_to_sheet(table, { raw: true, cellDates: true });
+  const table = document.getElementById("editableTable");
+  const rows = table.querySelectorAll("tbody tr:not(:last-child)");
+  const headers = Array.from(table.querySelectorAll("thead th"))
+    .slice(0, -1)
+    .map(th => th.innerText);
 
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let R = 1; R <= range.e.r; ++R) {
-      const cellAddress = { c: 4, r: R };
-      const cellRef = XLSX.utils.encode_cell(cellAddress);
-      if (ws[cellRef] && typeof ws[cellRef].v === 'string') {
-        ws[cellRef].v = parseFloat(ws[cellRef].v.replace(/\s/g, '').replace(',', '.')) || 0;
-        ws[cellRef].t = 'n';
-      }
+  // Prepare data for the Excel sheet
+  const tableData = [];
+  rows.forEach(row => {
+    if (row.style.display !== "none") {
+      const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
+        let value = "";
+        const select = cell.querySelector("select");
+        if (select) {
+          // For select elements (Chantier and Statut), use the selected value
+          value = select.value || "";
+        } else {
+          // For other cells, use the text content
+          value = cell.innerText.trim();
+        }
+
+        // Handle date formatting
+        if (cell.dataset.name && ['dateEtablissement', 'dateEcheance', 'dateReglement'].includes(cell.dataset.name) && value) {
+          if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            const [year, month, day] = value.split('-');
+            value = `${day}/${month}/${year}`;
+          } else if (!value.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+            const date = new Date(value);
+            if (!isNaN(date.getTime())) {
+              const day = String(date.getDate()).padStart(2, '0');
+              const month = String(date.getMonth() + 1).padStart(2, '0');
+              const year = date.getFullYear();
+              value = `${day}/${month}/${year}`;
+            }
+          }
+        }
+
+        // Handle montant formatting
+        if (cell.dataset.name === "montant" && value) {
+          let cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+          const number = parseFloat(cleaned);
+          if (!isNaN(number)) {
+            value = number;
+          }
+        }
+
+        return value || "";
+      });
+      tableData.push(rowData);
     }
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "cheques");
-    XLSX.writeFile(wb, "liste_cheques.xlsx");
   });
 
+  // Create worksheet from headers and table data
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...tableData]);
+
+  // Set number format for montant column (index 4)
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let R = 1; R <= range.e.r; ++R) {
+    const cellAddress = { c: 4, r: R }; // Montant column
+    const cellRef = XLSX.utils.encode_cell(cellAddress);
+    if (ws[cellRef] && typeof ws[cellRef].v === 'number') {
+      ws[cellRef].z = '#,##0.00'; // Format as number with 2 decimal places
+    }
+  }
+
+  // Add total row
+  const totalRow = Array(headers.length).fill('');
+  totalRow[3] = 'Total';
+  totalRow[4] = parseFloat(document.getElementById("total").innerText.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.')) || 0;
+  XLSX.utils.sheet_add_aoa(ws, [totalRow], { origin: -1 });
+
+  // Create workbook and save
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "cheques");
+  XLSX.writeFile(wb, "liste_cheques.xlsx");
+});
   // Download PDF functionality
   document.getElementById("downloadPdfBtn")?.addEventListener("click", function () {
     try {

@@ -201,7 +201,7 @@
                   </button>
                 </form> -->
                 <button id="saveAllChanges" class="btn btn-primary custom-btn" title="Enregistrer toutes les modifications">
-                  <i class="fas fa-save mr-2"></i> Enregistrer tout
+                  <i class="fas fa-save mr-2"></i> Enregistrer
                 </button>
                 <button id="downloadExcelBtn" class="btn btn-outline-success custom-btn d-flex align-items-center" type="button">
                   <i class="fas fa-file-download mr-2"></i> Télécharger Excel
@@ -329,7 +329,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
       const { jsPDF } = window.jspdf;
-
+    
       async function supprimerMiseadispo(id) {
         try {
           if (confirm('Êtes-vous sûr de vouloir supprimer cette mise à disposition ?')) {
@@ -349,7 +349,7 @@
           alert('Erreur réseau lors de la suppression.');
         }
       }
-
+    
       async function downloadPDF(id) {
         try {
           const res = await fetch(`/tresorerie/miseadis/banque/${id}/pdf`);
@@ -368,7 +368,7 @@
           alert('Erreur lors du téléchargement du PDF');
         }
       }
-
+    
       document.addEventListener("DOMContentLoaded", function () {
         const uploadForm = document.getElementById('excelUploadForm');
         const fileInput = document.getElementById('excelFile');
@@ -382,7 +382,7 @@
         const resetFilters = document.getElementById('resetFilters');
         const noResults = document.getElementById('noResults');
         const filterLoading = document.getElementById('filterLoading');
-
+    
         function formatDateToDDMMYYYY(dateInput) {
           if (!dateInput) return '';
           const date = new Date(dateInput);
@@ -392,24 +392,24 @@
           const year = date.getFullYear();
           return `${day}/${month}/${year}`;
         }
-
+    
         const montantWordsCache = new Map();
         function numberToFrenchWords(n) {
           if (montantWordsCache.has(n)) return montantWordsCache.get(n);
           let input = n;
           if (typeof n === "string") n = n.replace(/\s/g, '').replace(',', '.');
           n = Math.floor(Number(n));
-
+    
           if (n === 0) {
             montantWordsCache.set(input, "ZÉRO");
             return "ZÉRO";
           }
-
+    
           const ones = ["", "UN", "DEUX", "TROIS", "QUATRE", "CINQ", "SIX", "SEPT", "HUIT", "NEUF"];
           const teens = ["DIX", "ONZE", "DOUZE", "TREIZE", "QUATORZE", "QUINZE", "SEIZE", "DIX-SEPT", "DIX-HUIT", "DIX-NEUF"];
           const tens = ["", "DIX", "VINGT", "TRENTE", "QUARANTE", "CINQUANTE", "SOIXANTE", "SOIXANTE", "QUATRE-VINGT", "QUATRE-VINGT"];
           const scales = ["", "MILLE", "MILLION", "MILLIARD", "BILLION", "BILLIARD", "TRILLION"];
-
+    
           function chunkNumber(num) {
             let chunks = [];
             while (num > 0) {
@@ -418,18 +418,18 @@
             }
             return chunks;
           }
-
+    
           function chunkToWords(chunk) {
             let h = Math.floor(chunk / 100);
             let t = Math.floor((chunk % 100) / 10);
             let o = chunk % 10;
             let str = "";
-
+    
             if (h > 0) {
               str += (h === 1 ? "CENT" : ones[h] + " CENT");
               if (t !== 0 || o !== 0) str += " ";
             }
-
+    
             let num2 = t * 10 + o;
             if (num2 > 0) {
               if (num2 < 10) {
@@ -452,13 +452,13 @@
                 }
               }
             }
-
+    
             return str.trim();
           }
-
+    
           let chunks = chunkNumber(n);
           let words = [];
-
+    
           for (let i = chunks.length - 1; i >= 0; i--) {
             let chunk = chunks[i];
             if (chunk === 0) continue;
@@ -470,12 +470,12 @@
             }
             words.push(chunkWord);
           }
-
+    
           let result = words.join(" ").replace(/\s+/g, ' ').trim();
           montantWordsCache.set(input, result);
           return result;
         }
-
+    
         function convertMontantToLettre(montant) {
           if (!montant || isNaN(montant)) return null;
           let parts = String(montant).split(".");
@@ -488,7 +488,7 @@
           }
           return text;
         }
-
+    
         function convertDateToISO(dateStr) {
           if (!dateStr || dateStr.trim() === '') return null;
           const parts = dateStr.split('/');
@@ -514,7 +514,7 @@
           }
           return dateString;
         }
-
+    
         function sanitizeInput(input) {
           return input.replace(/[<>&'"]/g, (char) => ({
             '<': '&lt;',
@@ -524,9 +524,9 @@
             '"': '&quot;'
           }[char])).trim();
         }
-
+    
         function updateTotal() {
-          const rows = table.querySelectorAll("tbody tr:not(:last-child)");
+          const rows = table.querySelectorAll("tbody tr"); // Fixed: removed :not(:last-child)
           let total = 0;
           let visibleCount = 0;
           rows.forEach(row => {
@@ -543,9 +543,9 @@
           if (totalCell) {
             totalCell.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
           }
-          noResults.style.display = visibleCount === 0 && rows.length > 0 ? 'block' : 'none';
+          if (noResults) noResults.style.display = visibleCount === 0 && rows.length > 0 ? 'block' : 'none';
         }
-
+    
         function debounce(func, wait) {
           let timeout;
           return function (...args) {
@@ -557,7 +557,7 @@
             }, wait);
           };
         }
-
+    
         function applyFilters() {
           const chantierValue = chantierFilter.value;
           const dateFromValue = dateFromFilter.value;
@@ -565,18 +565,18 @@
           const searchValue = supplierSearch.value.toLowerCase().trim().replace(/[^\w\s]/g, '');
           const rows = table.querySelectorAll("tbody tr");
           let visibleCount = 0;
-
+    
           if (dateFromValue && dateToValue && dateFromValue > dateToValue) {
             alert('Erreur : La date de début doit être antérieure ou égale à la date de fin.');
             dateFromFilter.value = '';
             dateToFilter.value = '';
             return;
           }
-
+    
           rows.forEach(row => {
             let showRow = true;
             const isNoDataRow = row.querySelector("td[colspan='7']") !== null;
-
+    
             if (isNoDataRow) {
               if (chantierValue || dateFromValue || dateToValue || searchValue) {
                 showRow = false;
@@ -596,7 +596,7 @@
                   showRow = false;
                 }
               }
-
+    
               if ((dateFromValue || dateToValue) && showRow) {
                 const dateEcheanceCell = row.querySelector("td[data-name='dateEcheance']");
                 if (dateEcheanceCell) {
@@ -626,7 +626,7 @@
                   showRow = false;
                 }
               }
-
+    
               if (searchValue && showRow) {
                 const beneficiaireCell = row.querySelector("td[data-name='beneficiaire']");
                 const banqueCell = row.querySelector("td[data-name='banque']");
@@ -641,24 +641,24 @@
                 showRow = texts.some(text => text.includes(searchValue));
               }
             }
-
+    
             row.style.display = showRow ? '' : 'none';
             if (showRow && !isNoDataRow) visibleCount++;
           });
-
-          noResults.style.display = visibleCount === 0 && rows.length > 0 ? 'block' : 'none';
+    
+          if (noResults) noResults.style.display = visibleCount === 0 && rows.length > 0 ? 'block' : 'none';
           updateTotal();
         }
-
+    
         const debouncedApplyFilters = debounce(applyFilters, 300);
-
+    
         if (uploadForm && fileInput) {
           fileInput.addEventListener('change', function () {
             if (fileInput.files.length) {
               uploadForm.requestSubmit();
             }
           });
-
+    
           uploadForm.addEventListener('submit', function(e) {
             e.preventDefault();
             if (!fileInput.files.length) {
@@ -685,7 +685,7 @@
             });
           });
         }
-
+    
         let dragSrcIdx = null;
         function swapColumns(table, fromIdx, toIdx) {
           const headerRow = table.tHead.rows[0];
@@ -695,7 +695,7 @@
             row.insertBefore(row.children[fromIdx], row.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
           });
         }
-
+    
         Array.from(table.tHead.rows[0].cells).forEach((th, idx) => {
           if (idx < table.tHead.rows[0].cells.length - 1) {
             th.addEventListener('dragstart', function (e) {
@@ -724,7 +724,7 @@
             });
           }
         });
-
+    
         table.addEventListener("input", function (e) {
           const target = e.target;
           const cell = target.closest("td[data-name]");
@@ -737,7 +737,7 @@
             }
           }
         });
-
+    
         table.addEventListener("change", function (e) {
           if (e.target.tagName === "SELECT" && e.target.getAttribute("data-name") === "chantier") {
             const row = e.target.closest("tr");
@@ -745,7 +745,7 @@
             row.classList.add("excel-dirty-row");
           }
         });
-
+    
         async function autoUpdateRow(row) {
           if (!row.getAttribute("data-dirty")) return true;
           const cells = Array.from(row.querySelectorAll("td[data-name]"));
@@ -756,9 +756,10 @@
             dateReglement: null
           };
           const id = row.getAttribute("data-id");
-
+    
           let hasInvalidDate = false;
-
+          let hasInvalidMontant = false;
+    
           cells.forEach(cell => {
             const key = cell.getAttribute("data-name");
             if (key === "chantier") {
@@ -769,7 +770,10 @@
               let value = sanitizeInput(cell.innerText.trim());
               if (key === "montant") {
                 value = parseFloat(value.replace(/\s/g, '').replace(',', '.'));
-                if (isNaN(value)) return;
+                if (isNaN(value) || value < 0) { // Added: basic validation
+                  hasInvalidMontant = true;
+                  return;
+                }
                 data[key] = value;
                 data.montantLettre = convertMontantToLettre(value);
               } else if (key === "dateEcheance") {
@@ -784,24 +788,28 @@
               }
             }
           });
-
+    
           if (hasInvalidDate) {
             alert(`Erreur : La date d'échéance est invalide ou vide pour la ligne avec ID ${id}. Veuillez entrer une date au format JJ/MM/AAAA.`);
             return false;
           }
-
+          if (hasInvalidMontant) {
+            alert(`Erreur : Le montant est invalide (doit être un nombre positif) pour la ligne avec ID ${id}.`);
+            return false;
+          }
+    
           if (!id) {
             alert(`Erreur : Aucun ID de mise à disposition trouvé pour la ligne.`);
             return false;
           }
-
+    
           try {
             const response = await fetch(`/tresorerie/miseadis/update/${id}`, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(data)
             });
-
+    
             if (response.ok) {
               const result = await response.json();
               row.removeAttribute("data-dirty");
@@ -830,38 +838,39 @@
             }
           } catch (err) {
             console.error("Erreur mise à jour ligne", id, ":", err.message);
-            alert(`Erreur réseau lors de la mise à jour de la ligne ${id}.`);
+            window.location.reload();
             return false;
           }
         }
-
+    
         saveAllButton.addEventListener('click', async function () {
           const dirtyRows = document.querySelectorAll("#editableTable tbody tr[data-dirty='true']");
           if (dirtyRows.length === 0) {
             alert("Aucune modification à enregistrer.");
             return;
           }
-
+    
           let allSuccessful = true;
           for (const row of dirtyRows) {
             const success = await autoUpdateRow(row);
             if (!success) allSuccessful = false;
           }
-
+    
           if (allSuccessful) {
             alert("Toutes les modifications ont été enregistrées avec succès.");
             window.location.reload();
           } else {
-            alert("Certaines modifications n'ont pas pu être enregistrées. Veuillez vérifier les erreurs.");
+            window.location.reload();
+    
           }
           updateTotal();
         });
-
+    
         chantierFilter.addEventListener('change', debouncedApplyFilters);
         dateFromFilter.addEventListener('change', debouncedApplyFilters);
         dateToFilter.addEventListener('change', debouncedApplyFilters);
         supplierSearch.addEventListener('input', debouncedApplyFilters);
-
+    
         resetFilters.addEventListener('click', function () {
           chantierFilter.value = '';
           dateFromFilter.value = '';
@@ -869,25 +878,25 @@
           supplierSearch.value = '';
           debouncedApplyFilters();
         });
-
+    
         document.getElementById("downloadPdfBtn").addEventListener("click", function () {
           const table = document.getElementById("editableTable");
-          const rows = table.querySelectorAll("tbody tr:not(:last-child)");
+          const rows = table.querySelectorAll("tbody tr"); // Fixed: removed :not(:last-child)
           if (rows.length === 0) {
             alert("Aucune donnée à exporter en PDF.");
             return;
           }
-
+    
           try {
             const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
             const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
             const title = document.querySelector(".card-header h6").innerText;
-
+    
             doc.setFont("helvetica", "bold");
             doc.setFontSize(18);
             doc.setTextColor(40, 40, 40);
             doc.text(title, 10, 20);
-
+    
             const tableData = [];
             rows.forEach(row => {
               if (row.style.display !== "none") {
@@ -899,7 +908,7 @@
                   } else if (cell.innerText) {
                     value = cell.innerText.trim();
                   }
-
+    
                   if (cell.dataset.name === "dateEcheance" && value) {
                     if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
                       const [year, month, day] = value.split('-');
@@ -914,7 +923,7 @@
                       }
                     }
                   }
-
+    
                   if (cell.dataset.name === "montant" && value) {
                     let cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
                     const number = parseFloat(cleaned);
@@ -924,13 +933,13 @@
                       value = `${integerPart},${parts[1]}`;
                     }
                   }
-
+    
                   return value || "";
                 });
                 tableData.push(rowData);
               }
             });
-
+    
             doc.autoTable({
               head: [headers],
               body: tableData,
@@ -971,7 +980,7 @@
               margin: { top: 30, left: 10, right: 10 },
               tableWidth: 'wrap'
             });
-
+    
             const pageCount = doc.internal.getNumberOfPages();
             for (let i = 1; i <= pageCount; i++) {
               doc.setPage(i);
@@ -979,7 +988,7 @@
               doc.setTextColor(100);
               doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
             }
-
+    
             let total = document.getElementById("total").innerText || "0";
             total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
             const totalNumber = parseFloat(total);
@@ -988,35 +997,35 @@
               const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
               total = `${integerPart},${parts[1]}`;
             }
-
+    
             const finalY = doc.lastAutoTable.finalY || 30;
             doc.setFont("helvetica", "bold");
             doc.setFontSize(12);
             doc.setTextColor(22, 160, 133);
             doc.text(`Total: ${total} MAD`, 10, finalY + 15);
-
+    
             doc.save("liste_mises_a_disposition.pdf");
           } catch (err) {
             console.error("Erreur génération PDF:", err);
             alert("Erreur lors de la génération du PDF. Veuillez vérifier la console.");
           }
         });
-
+    
         document.getElementById("downloadExcelBtn").addEventListener("click", function () {
           const table = document.getElementById("editableTable");
-          const rows = table.querySelectorAll("tbody tr:not(:last-child)");
+          const rows = table.querySelectorAll("tbody tr"); // Fixed: removed :not(:last-child)
           let visibleRows = Array.from(rows).filter(row => row.style.display !== "none");
-
+    
           if (visibleRows.length === 0) {
             alert("Aucune donnée visible à exporter en Excel. Veuillez vérifier les filtres.");
             return;
           }
-
+    
           try {
             const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
             const tableData = [];
             let invalidData = null;
-
+    
             visibleRows.forEach((row, rowIndex) => {
               const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map((cell, colIndex) => {
                 let value = "";
@@ -1026,7 +1035,7 @@
                 } else if (cell.innerText) {
                   value = cell.innerText.trim();
                 }
-
+    
                 if (cell.dataset.name === "montant" && value) {
                   const cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
                   const number = parseFloat(cleaned);
@@ -1038,27 +1047,27 @@
                     invalidData = `Montant non numérique à la ligne ${rowIndex + 1}: "${value}"`;
                   }
                 }
-
+    
                 if (cell.dataset.name === "dateEcheance" && value) {
                   if (!/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
                     invalidData = `Format de date invalide à la ligne ${rowIndex + 1}, colonne ${cell.dataset.name}: "${value}"`;
                   }
                 }
-
+    
                 return value || "";
               });
-
+    
               while (rowData.length < headers.length) {
                 rowData.push("");
               }
-
+    
               tableData.push(rowData);
             });
-
+    
             if (invalidData) {
               throw new Error(invalidData);
             }
-
+    
             let total = document.getElementById("total").innerText || "0";
             total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
             const totalNumber = parseFloat(total);
@@ -1070,10 +1079,10 @@
             }
             const totalRow = ["Total", "", formattedTotal, "", "", ""];
             tableData.push(totalRow);
-
+    
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.aoa_to_sheet([headers, ...tableData], { skipHeader: false });
-
+    
             ws['!cols'] = [
               { wch: 18 },
               { wch: 18 },
@@ -1082,7 +1091,7 @@
               { wch: 25 },
               { wch: 23 }
             ];
-
+    
             headers.forEach((_, i) => {
               const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
               if (!ws[cellRef]) ws[cellRef] = { v: headers[i], t: 's' };
@@ -1098,7 +1107,7 @@
                 }
               };
             });
-
+    
             tableData.forEach((row, rowIndex) => {
               row.forEach((value, colIndex) => {
                 const cellRef = XLSX.utils.encode_cell({ r: rowIndex + 1, c: colIndex });
@@ -1120,7 +1129,7 @@
                 }
               });
             });
-
+    
             XLSX.utils.book_append_sheet(wb, ws, "MisesADisposition");
             XLSX.writeFile(wb, "liste_mises_a_disposition.xlsx");
           } catch (err) {
@@ -1128,7 +1137,7 @@
             alert(`Erreur lors de la génération du fichier Excel : ${err.message}`);
           }
         });
-
+    
         applyFilters();
       });
     </script>
