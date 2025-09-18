@@ -326,7 +326,6 @@ model Chantier {
   clientId Int?
   client   Client? @relation("ClientChantier", fields: [clientId], references: [id])
 
-  recavenir Recavenir[]  
   cheques    Cheque[]  @relation("ChequesChantier")
   effets     Effet[]   @relation("EffetsChantier")
   payavenir Payavenir[] @relation("PayavenirChantier")
