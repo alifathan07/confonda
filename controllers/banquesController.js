@@ -184,9 +184,6 @@ export const getSituationBancaire = async (req, res) => {
           },
           banque: {
             select: { name: true },
-          },
-          chantier: {
-            select : { nom : true},
           }
         },
         orderBy: {

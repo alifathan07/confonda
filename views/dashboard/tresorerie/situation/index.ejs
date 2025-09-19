@@ -615,19 +615,17 @@
                         <th>Désignation</th>
                         <th>Montant</th>
                         <th>Date Échéance</th>
-                        <th>Chantier</th>
                         <th>Statut</th>
                         <th>Banque</th>
                       </tr>
                     </thead>
                     <tbody>
                       <% recavenirs.forEach(c => { %>
-                        <tr class="recavenir-row" data-client="<%= c.client.name %>" data-chantier="<%= c.chantier.nom ? c.chantier.nom : '-- Aucun --' %>" data-banque="<%= c.banque.name ? c.banque.name : '-- Aucune --' %>" data-statut="<%= c.statut %>">
+                        <tr class="recavenir-row" data-client="<%= c.client.name %>" data-banque="<%= c.banque.name ? c.banque.name : '-- Aucune --' %>" data-statut="<%= c.statut %>">
                           <td><%= c.client.name %></td>
                           <td><%= c.designation %></td>
                           <td class="text-right"><%= c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %> </td>
                           <td><%= new Date(c.dateEcheance).toLocaleDateString('fr-FR') %></td>
-                          <td><%= c.chantier.nom ? c.chantier.nom : '-- Aucun --' %></td>
                           <td>
                             <span class="badge badge-<%= c.statut === 'échu' ? 'warning' : c.statut === 'impayé' ? 'danger' : 'success' %>">
                               <%= c.statut %>

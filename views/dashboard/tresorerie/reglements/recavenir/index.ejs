@@ -806,11 +806,75 @@
 
   // Excel Download
   document.getElementById("downloadExcelBtn")?.addEventListener("click", () => {
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.table_to_sheet(table, { raw: true, cellDates: true });
-    XLSX.utils.book_append_sheet(wb, ws, "Cheques");
-    XLSX.writeFile(wb, "liste_recettes_a_venir.xlsx");
+  // Get table headers (excluding the last column for actions)
+  const headers = Array.from(table.querySelectorAll("thead th"))
+    .slice(0, -1)
+    .map(th => th.innerText);
+
+  // Get table rows (excluding the last row if it's a footer or empty)
+  const rows = table.querySelectorAll("tbody tr:not(:last-child)");
+  const tableData = [];
+
+  // Process each row to extract data
+  rows.forEach(row => {
+    if (row.style.display !== "none") {
+      const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
+        let value = "";
+        const select = cell.querySelector("select");
+        if (select) {
+          // For select elements (e.g., statut, beneficiaire), use the selected value
+          value = select.value;
+        } else if (cell.innerText) {
+          // For text cells, use innerText
+          value = cell.innerText.trim();
+        }
+
+        // Handle date formatting for date columns
+        if (cell.dataset.name && ['dateEtablissement', 'dateEcheance', 'dateReglement'].includes(cell.dataset.name) && value) {
+          if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            const [year, month, day] = value.split('-');
+            value = `${day}/${month}/${year}`;
+          } else if (!value.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+            const date = new Date(value);
+            if (!isNaN(date.getTime())) {
+              const day = String(date.getDate()).padStart(2, '0');
+              const month = String(date.getMonth() + 1).padStart(2, '0');
+              const year = date.getFullYear();
+              value = `${day}/${month}/${year}`;
+            }
+          }
+        }
+
+        // Handle montant formatting
+        if (cell.dataset.name === "montant" && value) {
+          let cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+          const number = parseFloat(cleaned);
+          if (!isNaN(number)) {
+            const parts = number.toFixed(2).split('.');
+            const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+            value = `${integerPart},${parts[1]}`;
+          }
+        }
+
+        return value || "";
+      });
+      tableData.push(rowData);
+    }
   });
+
+  // Create worksheet from processed data
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet([headers, ...tableData], { skipHeader: true });
+  
+  // Optionally, set column widths for better readability
+  ws['!cols'] = headers.map(() => ({ wch: 20 }));
+
+  // Append the worksheet to the workbook
+  XLSX.utils.book_append_sheet(wb, ws, "Cheques");
+
+  // Download the Excel file
+  XLSX.writeFile(wb, "liste_recettes_a_venir.xlsx");
+});
 
 
   document.getElementById("downloadPdfBtn")?.addEventListener("click", function () {

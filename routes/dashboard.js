@@ -198,7 +198,7 @@ dashboardRouter.get('/dashboard', async (req, res) => {
         
         // < -----------Trésorerie :  Payavenir ----------------- >
         dashboardRouter.get('/tresorerie/payavenir', showPayavenir);
-        dashboardRouter.post('/tresorerie/payavenir/create', createPayavenir);
+        dashboardRouter.post('/tresorerie/payavenir', createPayavenir);
         dashboardRouter.delete('/tresorerie/payavenir/:id', deletePayavenir);
         dashboardRouter.patch('/tresorerie/payavenir/:id', updatePayavenir);
         dashboardRouter.put('/tresorerie/payavenir/:id/update-statut', updatePayavenirStatut);
