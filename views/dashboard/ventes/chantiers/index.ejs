@@ -109,19 +109,15 @@
             </div>
             <div class="card-body">
               <div class="mb-4" style="display: flex; align-items: center; gap: 20px;">
-                <button id="addRowBtn" class="btn btn-outline-success custom-btn d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
-                  <i class="fas fa-plus mr-2"></i> Ajouter Chantier
-                </button>
-                <button id="saveTableBtn" class="btn btn-primary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
-                  <i class="fas fa-save mr-2"></i> Enregistrer
-                </button>
-                <button id="downloadPdfBtn" class="btn btn-info d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
+               
+             
+                <!-- <button id="downloadPdfBtn" class="btn btn-info d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
                   <i class="fas fa-file-pdf mr-2"></i> Télécharger PDF
                 </button>
                 <button id="downloadExcelBtn" class="btn btn-success d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
                   <i class="fas fa-file-excel mr-2"></i> Télécharger Excel
                 </button>
-                
+                 -->
                 <span id="excelUploadMsg" style="font-size:15px; margin-left:10px;"></span>
               </div>
               <div class="mb-3" style="display: flex; gap: 20px;">
@@ -140,7 +136,6 @@
                     <tr style="position: sticky; top: 0; background-color: white; z-index: 1;">
                       <th draggable="true">Nom</th>
                       <th draggable="true">Client</th>
-                      <th style="width:70px;">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -148,20 +143,9 @@
                       <tr data-id="<%= chantier.id %>">
                         <td contenteditable="true" data-name="nom"><%= chantier.nom %></td>
                         <td data-name="clientId">
-                          <select class="client-select">
-                            <% clients.forEach(c => { %>
-                              <option value="<%= c.id %>" <%= chantier.clientId === c.id ? 'selected' : '' %>><%= c.name %></option>
-                            <% }) %>
-                          </select>
+                            <%= clients.find(c => c.id === chantier.clientId)?.name || '' %>
                         </td>
-                        <td>
-                          <button class="delete-row excel-delete-btn" title="Supprimer" aria-label="Supprimer">
-                            <i class="fas fa-trash"></i>
-                          </button>
-                          <button class="update-row excel-save-btn btn btn-sm btn-warning" title="Mettre à jour" aria-label="Mettre à jour" style="margin-left:5px;">
-                            <i class="fas fa-edit"></i>
-                          </button>
-                        </td>
+                       
                       </tr>
                     <% }) %>
                   </tbody>

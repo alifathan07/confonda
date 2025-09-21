@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <title>Modifier clientss</title>
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+  <style>
+    .custom-btn { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; padding: 6px 12px; border-radius: 6px; border: none; transition: all 0.2s; }
+    .btn-primary.custom-btn { background-color: #007bff; color: white; }
+    .btn-secondary.custom-btn { background-color: #6c757d; color: white; }
+    .form-control { margin-bottom: 12px; }
+  </style>
+</head>
+<body id="page-top">
+  <div id="wrapper">
+    <%- include('../../../layouts/sidebar') %>
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <%- include('../../../layouts/topbar') %>
+
+        <div class="container-fluid">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 text-gray-800">Modifier clients</h1>
+            <a href="/ventes/clients" class="btn btn-secondary custom-btn">
+              <i class="fas fa-arrow-left"></i> Retour
+            </a>
+          </div>
+
+          <div class="card shadow mb-4 p-4">
+              <form action="/ventes/clients/<%= clients.id %>/edit/?_method=PUT" method="POST">
+                <div class="row">
+                  <div class="col-md-6">
+                    <label for="name">Nom du clients</label>
+                    <input type="text" id="name" name="name" class="form-control" value="<%= clients.name || '' %>" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="ice">ICE</label>
+                    <input type="text" id="ice" name="ice" class="form-control" value="<%= clients.ice || '' %>">
+                  </div>
+                </div>
+              
+                <div class="row">
+                  <div class="col-md-6">
+                    <label for="identifFiscal">Identif. Fiscal</label>
+                    <input type="text" id="identifFiscal" name="identifFiscal" class="form-control" value="<%= clients.identifFiscal || '' %>">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" class="form-control" value="<%= clients.email || '' %>">
+                  </div>
+                </div>
+              
+                <div class="row">
+                  <div class="col-md-6">
+                    <label for="contact">Nom du Contact</label>
+                    <input type="text" id="contact" name="contact" class="form-control" value="<%= clients.contact || '' %>">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="telContact">Téléphone du Contact</label>
+                    <input type="text" id="telContact" name="telContact" class="form-control" value="<%= clients.telContact || '' %>">
+                  </div>
+                </div>
+              
+                <div class="row">
+                  <div class="col-md-6">
+                    <label for="telclients">Téléphone clients</label>
+                    <input type="text" id="telclients" name="telclients" class="form-control" value="<%= clients.telclients || '' %>">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="address">Adresse</label>
+                    <input type="text" id="address" name="address" class="form-control" value="<%= clients.address || '' %>">
+                  </div>
+                </div>
+              
+                <div class="mt-4">
+                  <button type="submit" class="btn btn-primary custom-btn">
+                    <i class="fas fa-save"></i> Mettre à jour
+                  </button>
+                  <a href="/ventes/clients" class="btn btn-secondary custom-btn">
+                    <i class="fas fa-times"></i> Annuler
+                  </a>
+                </div>
+              </form>
+              
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

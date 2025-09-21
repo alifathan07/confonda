@@ -156,6 +156,12 @@
               
                 <span id="excelUploadMsg" style="font-size:15px; margin-left:10px;"></span>
               </div>
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <input type="text" id="supplierSearch" class="form-control" placeholder="Rechercher par bénéficiaire" style="width: 200px;">
+                <button id="resetFilters" class="btn btn-secondary custom-btn" title="Réinitialiser les filtres">
+                  <i class="fas fa-undo mr-2"></i> Réinitialiser
+                </button>
+              </div>
              
               <div class="table-responsive">
                 <% 
@@ -220,7 +226,7 @@
                               <% if (virement.chantier) { %>
                                 <option value="<%= virement.chantier.id %>"><%= virement.chantier.nom %></option>
                               <% } else { %>
-                                <option value="">Choisir un chantier</option>
+                                <option value="">Aucun</option>
                               <% } %>
                               <% chantiers.forEach(chantier => { %>
                                 <% if (!virement.chantier || virement.chantier.id !== chantier.id) { %>
@@ -263,7 +269,8 @@
       <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
       <script>
         const { jsPDF } = window.jspdf;
-      
+        const resetFilters = document.getElementById('resetFilters');
+
         async function supprimerVirement(id) {
           try {
             if (confirm('Êtes-vous sûr de vouloir supprimer ce virement ?')) {
@@ -311,6 +318,7 @@
           const chantierFilter = document.getElementById('chantierFilter');
           const dateFilter = document.getElementById('dateFilter');
           const dateToFilter = document.getElementById('dateToFilter');
+          const supplierSearch = document.getElementById('supplierSearch');
       
           // Client-side function to format dates to dd/mm/yyyy
           function formatDateToDDMMYYYY(dateInput) {
@@ -468,6 +476,7 @@
             const chantierValue = chantierFilter.value;
             const dateFromValue = dateFilter.value;
             const dateToValue = dateToFilter.value;
+            const supplierValue = supplierSearch.value.toLowerCase().trim();
             const rows = table.querySelectorAll("tbody tr");
       
             rows.forEach(row => {
@@ -510,11 +519,36 @@
                 }
               }
       
+              // Filter by supplier (bénéficiaire)
+              if (supplierValue && showRow) {
+                const beneficiaireCell = row.querySelector("td[data-name='beneficiaire']");
+                const beneficiaireText = beneficiaireCell ? beneficiaireCell.innerText.toLowerCase() : '';
+                showRow = showRow && beneficiaireText.includes(supplierValue);
+              }
+      
               row.style.display = showRow ? '' : 'none';
             });
       
             updateTotal();
           }
+      
+          // Reset filters
+          resetFilters.addEventListener('click', function () {
+            // Reset all filter inputs
+            chantierFilter.value = "";
+            dateFilter.value = "";
+            dateToFilter.value = "";
+            if (supplierSearch) {
+              supplierSearch.value = "";
+            }
+            // Show all rows
+            const rows = table.querySelectorAll("tbody tr");
+            rows.forEach(row => {
+              row.style.display = '';
+            });
+            // Update total
+            updateTotal();
+          });
       
           // Auto-submit Excel upload form
           fileInput.addEventListener('change', function () {
@@ -730,15 +764,14 @@
           dateFilter.addEventListener('change', applyFilters);
           dateToFilter.addEventListener('change', applyFilters);
       
-          // Supplier search (existing)
-          const searchInput = document.getElementById("supplierSearch");
-          if (searchInput) {
-            searchInput.addEventListener("input", function () {
-              applyFilters(); // Re-apply all filters including supplier search
+          // Supplier search
+          if (supplierSearch) {
+            supplierSearch.addEventListener("input", function () {
+              applyFilters();
             });
           }
       
-          // PDF Download (unchanged)
+          // PDF Download
           document.getElementById("downloadPdfBtn")?.addEventListener("click", function () {
             const table = document.getElementById("editableTable");
             const rows = table.querySelectorAll("tbody tr:not(:last-child)");
@@ -876,7 +909,7 @@
             }
           });
       
-          // Excel Download (unchanged)
+          // Excel Download
           document.getElementById("downloadExcelBtn")?.addEventListener("click", function () {
             const table = document.getElementById("editableTable");
             const rows = table.querySelectorAll("tbody tr:not(:last-child)");

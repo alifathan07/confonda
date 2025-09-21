@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="Client Dashboard" />
+  <title><%= clients.name %> - Détails Client</title>
+
+  <!-- Fonts & Icons -->
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700,900" rel="stylesheet" />
+
+  <!-- Theme CSS -->
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+
+  <style>
+    .card-header { font-weight: 600; font-size: 1.1rem; }
+    .client-info p { margin-bottom: 0.4rem; }
+    .badge { font-size: 0.85rem; padding: 0.4em 0.7em; }
+    .table th { background: #f8f9fc; }
+    .page-title { font-weight: 700; color: #4e73df; }
+  </style>
+</head>
+<body id="page-top">
+  <div id="wrapper">
+
+    <!-- Sidebar -->
+    <%- include('../../../../layouts/sidebar') %>
+
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+
+        <!-- Topbar -->
+        <%- include('../../../../layouts/topbar') %>
+
+        <div class="container-fluid">
+
+          <!-- Page Header -->
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 page-title"><i class="fas fa-user"></i> <%= clients.name %></h1>
+            <div>
+              <a href="/ventes/clients/<%= clients.id %>/edit" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-edit"></i> Modifier
+              </a>
+              <a href="/ventes/clients" class="btn btn-primary btn-sm">
+                <i class="fas fa-arrow-left"></i> Retour
+              </a>
+            </div>
+          </div>
+
+          <!-- Client Info -->
+          <div class="row">
+            <div class="col-lg-6">
+              <div class="card shadow mb-4">
+                <div class="card-header">Informations Client</div>
+                <div class="card-body client-info">
+                  <p><strong>ICE :</strong> <%= clients.ice %></p>
+                  <p><strong>Identifiant Fiscal :</strong> <%= clients.identifFiscal %></p>
+                  <p><strong>Contact :</strong> <%= clients.contact %></p>
+                  <p><strong>Téléphone Client :</strong> <%= clients.telClient || "Non renseigné" %></p>
+                  <p><strong>Téléphone Contact :</strong> <%= clients.telContact || "Non renseigné" %></p>
+                  <p><strong>Adresse :</strong> <%= clients.address || "Non renseignée" %></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Stats Card -->
+            <div class="col-lg-6">
+              <div class="card shadow mb-4 text-center">
+                <div class="card-header">Statistiques</div>
+                <div class="card-body">
+                  <h5>Total Chantiers</h5>
+                  <h2 class="text-primary font-weight-bold">
+                    <%= clients.chantier ? clients.chantier.length : 0 %>
+                  </h2>
+                  <a href="#chantiers" class="btn btn-sm btn-success mt-2" data-toggle="modal" data-target="#newChantierModal">
+                    <i class="fas fa-plus"></i> Nouveau Chantier
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chantiers -->
+          <div id="chantiers" class="card shadow mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span><i class="fas fa-project-diagram"></i> Chantiers</span>
+              <a href="/ventes/clients/<%= clients.id %>/chantiers/new" class="btn btn-success btn-sm"  data-toggle="modal" data-target="#newChantierModal">
+                <i class="fas fa-plus"></i> Ajouter
+              </a>
+            </div>
+            <!-- New Chantier Modal -->
+
+<div class="modal fade" id="newChantierModal" tabindex="-1" role="dialog" aria-labelledby="newChantierModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <form id="chantierForm" action="/ventes/clients/<%= clients.id %>/chantiers" method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title" id="newChantierModalLabel">Nouveau Chantier</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Fermer" >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="nom">Nom</label>
+              <input type="text" name="nom" id="nom" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label for="objet">Objet</label>
+              <input type="text" name="objet" id="objet" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label for="montantContratHt">Montant Contrat HT</label>
+              <input type="number" step="0.01" name="montantContratHt" id="montantContratHt" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label for="natureContrat">Nature Contrat</label>
+              <input type="text" name="natureContrat" id="natureContrat" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label for="numContrat">Numéro Contrat</label>
+              <input type="text" name="numContrat" id="numContrat" class="form-control" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- update Chantier Modal -->
+
+
+  
+            <div class="card-body">
+              <% if (clients.chantier && clients.chantier.length > 0) { %>
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Nom</th>
+                      <th>Objet</th>
+                      <th>MT Contrat HT</th>
+                      <th>Nature</th>
+                      <th>N° Contrat</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% clients.chantier.forEach(c => { %>
+                      <tr>
+                        <td><%= c.nom %></td>
+                        <td><%= c.objet %></td>
+                        <td><%= c.montantContratHt %> DH</td>
+                        <td><%= c.natureContrat %></td>
+                        <td><%= c.numContrat %></td>
+                        <td>
+                          <a href="/ventes/clients/<%= clients.id %>/chantiers/<%= c.id %>" class="btn btn-primary btn-sm">
+                            <i class="fas fa-eye"></i>
+                          </a>
+                          <a class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#updateChantierModal">
+                            <i class="fas fa-edit"></i>
+                          </a>
+                          <form action="/ventes/clients/<%= clients.id %>/chantiers/<%= c.id %>?_method=DELETE" method="POST" style="display:inline;">
+                            <button class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce chantier ?')">
+                              <i class="fas fa-trash"></i>
+                            </button>
+                          </form>
+                        </td>
+                      </tr>
+                      <div class="modal fade" id="updateChantierModal" tabindex="-1" role="dialog" aria-labelledby="updateChantierModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg" role="document">
+                          <div class="modal-content">
+                            <form id="updateChantierForm" action="/ventes/clients/<%= clients.id %>/chantiers/<%= c.id %>/?_method=PUT" method="POST">
+                              <div class="modal-header">
+                                <h5 class="modal-title" id="updateChantierModalLabel">Modifier Chantier</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Fermer" >
+                                  <span aria-hidden="true">&times;</span>
+                                </button>
+                              </div>
+                              <div class="modal-body">
+                                <div class="form-group">
+                                  <label for="nom">Nom</label>
+                                  <input type="text" name="nom" id="nom" class="form-control" required value="<%= c.nom %>" />
+                                </div>
+                                <div class="form-group">
+                                  <label for="objet">Objet</label>
+                                  <input type="text" name="objet" id="objet" class="form-control" value="<%= c.objet %>" />
+                                </div>
+                                <div class="form-group">
+                                  <label for="montantContratHt">Montant Contrat HT</label>
+                                  <input type="number" step="0.01" name="montantContratHt" id="montantContratHt" class="form-control" value="<%= c.montantContratHt %>" />
+                                </div>
+                                <div class="form-group">
+                                  <label for="natureContrat">Nature Contrat</label>
+                                  <input type="text" name="natureContrat" id="natureContrat" class="form-control" value="<%= c.natureContrat %>" />
+                                </div>
+                                <div class="form-group">
+                                  <label for="numContrat">Numéro Contrat</label>
+                                  <input type="text" name="numContrat" id="numContrat" class="form-control" value="<%= c.numContrat %>" />
+                                </div>
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                                <button type="submit" class="btn btn-primary">Modifier</button>
+                              </div>
+                            </form>
+                          </div>
+                        </div>
+                      </div>
+                    <% }) %>
+                  </tbody>
+                
+                </table>
+              <% } else { %>
+                <p class="text-muted">Aucun chantier trouvé pour ce client.</p>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- Invoices (Fake for now) -->
+         
+
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  
+</body>
+</html>

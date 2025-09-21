@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -155,6 +154,9 @@
                   <input type="date" id="dateToFilter" class="form-control" style="font-size: 15px; width: 160px;">
                 </div>
               </div>
+              <button id="resetFilters" class="btn btn-secondary custom-btn">
+                <i class="fas fa-undo mr-2"></i> Réinitialiser
+              </button>
               <table id="editableTable" class="excel-table">
                 <thead>
                   <tr style="position: sticky; top: 0; background-color: white; z-index: 1;">
@@ -214,7 +216,9 @@
   <script src="/vendor/datatables/jquery.dataTables.min.js"></script>
   <script src="/vendor/datatables/dataTables.bootstrap4.min.js"></script>
   <script src="/js/demo/datatables-demo.js"></script>
-  <script>
+  <script>  
+      const resetFilters = document.getElementById('resetFilters');
+
     <% function formatDateToDDMMYYYY(dateInput) {
       if (!dateInput) return '';
       const date = new Date(dateInput);
@@ -224,6 +228,16 @@
       const year = date.getFullYear();
       return `${day}/${month}/${year}`;
     } %>
+      resetFilters.addEventListener("click", function () {
+        statusFilter.value = "";
+        chantierFilter.value = "";
+        banqueFilter.value = "";
+        supplierFilter.value = "";
+        searchInput.value = "";
+        dateFilter.value = "";
+        dateToFilter.value = "";
+          applyAllFilters();
+      });
     document.addEventListener("DOMContentLoaded", function () {
       const { jsPDF } = window.jspdf;
       const uploadForm = document.getElementById('excelUploadForm');

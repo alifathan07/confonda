@@ -245,14 +245,14 @@
                                class="btn btn-outline-danger d-flex align-items-center" 
                                type="button" 
                                style="font-weight:600; font-size:15px; height: 42px;">
-                              <i class="fas fa-file-invoice-dollar mr-2"></i> Etablir cheque
+                              <i class="fas fa-file-invoice-dollar mr-2"></i> Etablir effet
                             </a>
                           <% } else if (supportedBanks.includes(bankKey)) { %>
                             <a href="/tresorerie/effets/create/format/<%= bankKey %>/<%=id%>" 
                                class="btn btn-outline-danger d-flex align-items-center" 
                                type="button" 
                                style="font-weight:600; font-size:15px; height: 42px;">
-                              <i class="fas fa-file-invoice-dollar mr-2"></i> Etablir cheque
+                              <i class="fas fa-file-invoice-dollar mr-2"></i> Etablir effet
                             </a>
                           <% } %>
                         <% } %>
@@ -323,6 +323,9 @@
                           <input type="date" id="dateToFilter" class="form-control" style="font-size: 15px; width: 20px;">
                         </div>
                       </div>
+                      <button id="resetFilters" class="btn btn-secondary custom-btn">
+                        <i class="fas fa-undo mr-2"></i> Réinitialiser
+                      </button>
           
                       <div class="table-responsive">
                         <%
@@ -340,10 +343,10 @@
                           <thead>
                             <tr style="position: sticky; top: 0; background-color: white; z-index: 1;">
                               <th draggable="true">Date</th>
-                              <th draggable="true">N° Chèque</th>
+                              <th draggable="true">N° Effet</th>
                               <th draggable="true">Banque</th>
                               <th draggable="true">Bénéficiaire</th>
-                              <th draggable="true">Montant</th>
+                              <th draggable="true" style="width: 200px;">Montant</th>
                               <th draggable="true">Echeance</th>
                               <th draggable="true">Statut</th>
                               <th draggable="true">Date Reglement</th>
@@ -354,30 +357,30 @@
                           </thead>
                           <tbody>
                             <% if (typeof effets !== 'undefined' && effets.length) { %>
-                              <% effets.forEach(cheque => { %>
-                                <tr data-id="<%= cheque.id %>">
-                                  <td contenteditable="true" data-name="dateEtablissement"><%= formatDateToDDMMYYYY(cheque.dateEtablissement) %></td>
-                                  <td contenteditable="true" data-name="numero"><%= cheque.numero %></td>
-                                  <td contenteditable="true" data-name="banque"><%= cheque.banque ? cheque.banque.name : '' %></td>
-                                  <td contenteditable="true" data-name="beneficiaire"><%= cheque.beneficiaire %></td>
-                                  <td contenteditable="true" data-name="montant"><%= cheque.montant ? cheque.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '' %></td>
-                                  <td contenteditable="true" data-name="dateEcheance"><%= cheque.dateEcheance ? formatDateToDDMMYYYY(cheque.dateEcheance) : '' %></td>
+                              <% effets.forEach(effet => { %>
+                                <tr data-id="<%= effet.id %>">
+                                  <td contenteditable="true" data-name="dateEtablissement"><%= formatDateToDDMMYYYY(effet.dateEtablissement) %></td>
+                                  <td contenteditable="true" data-name="numero"><%= effet.numero %></td>
+                                  <td contenteditable="true" data-name="banque"><%= effet.banque ? effet.banque.name : '' %></td>
+                                  <td contenteditable="true" data-name="beneficiaire"><%= effet.beneficiaire %></td>
+                                  <td contenteditable="true" data-name="montant"><%= effet.montant ? effet.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '' %></td>
+                                  <td contenteditable="true" data-name="dateEcheance"><%= effet.dateEcheance ? formatDateToDDMMYYYY(effet.dateEcheance) : '' %></td>
                                   <td data-name="statut" class="statut-cell">
                                     <span 
-                                      class="statut-badge <%= cheque.statut.toLowerCase().replace(/[éè]/g, 'e').replace(/\s+/g, '-') %>"
+                                      class="statut-badge <%= effet.statut.toLowerCase().replace(/[éè]/g, 'e').replace(/\s+/g, '-') %>"
                                       onclick="toggleSelect(this)">
-                                      <%= cheque.statut %>
+                                      <%= effet.statut %>
                                     </span>
                                   </td>
-                                  <td contenteditable="true" data-name="dateReglement"><%= formatDateToDDMMYYYY(cheque.dateReglement) %></td>
+                                  <td contenteditable="true" data-name="dateReglement"><%= formatDateToDDMMYYYY(effet.dateReglement) %></td>
                                   <td data-name="chantier" class="chantier-cell">
                                     <select class="chantier-select">
                                       <% chantiers.forEach(chantier => { %>
-                                        <option value="<%= chantier.nom %>" <%= cheque.chantier && cheque.chantier.nom === chantier.nom ? 'selected' : '' %>><%= chantier.nom %></option>
+                                        <option value="<%= chantier.nom %>" <%= effet.chantier && effet.chantier.nom === chantier.nom ? 'selected' : '' %>><%= chantier.nom %></option>
                                       <% }); %>
                                     </select>
                                   </td>
-                                  <td contenteditable="true" data-name="obs"><%= cheque.obs %></td>
+                                  <td contenteditable="true" data-name="obs"><%= effet.obs %></td>
                                   <td>
                                     <button class="delete-row excel-delete-btn" title="Supprimer" aria-label="Supprimer"><i class="fas fa-trash"></i></button>
                                     <button class="update-row excel-save-btn btn btn-sm btn-warning" title="Mettre à jour" aria-label="Mettre à jour" style="margin-left:5px;"><i class="fas fa-edit"></i></button>
@@ -388,7 +391,7 @@
                             <tr>
                               <td colspan="4">Total</td>
                               <td id="total">
-                                <%= effets.reduce((total, cheque) => total + cheque.montant, 0).toFixed(2) %>
+                                <%= effets.reduce((total, effet) => total + effet.montant, 0).toFixed(2) %>
                               </td>
                               <td colspan="6"></td>
                             </tr>
@@ -416,6 +419,8 @@
   const searchInput = document.getElementById("supplierSearch");
   const dateFilter = document.getElementById("dateFilter");
   const dateToFilter = document.getElementById("dateToFilter");
+  const resetFilters = document.getElementById("resetFilters");
+
 
   // Convert dd/mm/yyyy → yyyy-mm-dd ISO format or null if empty
   function convertDateToISO(dateStr) {
@@ -433,6 +438,16 @@
     return isNaN(date.getTime()) ? null : date;
   }
 
+  resetFilters.addEventListener("click", function () {
+    statusFilter.value = "";
+    chantierFilter.value = "";
+    banqueFilter.value = "";
+    supplierFilter.value = "";
+    searchInput.value = "";
+    dateFilter.value = "";
+    dateToFilter.value = "";
+      applyAllFilters();
+  });
   // Function to update total - calculates only visible rows
   function updateTotal() {
     const rows = document.querySelectorAll("#editableTable tbody tr:not(:last-child)");
@@ -605,7 +620,7 @@
       if (header && header.innerText) {
         let dataName = '';
         switch (header.innerText.trim()) {
-          case 'N° Chèque': 
+          case 'N° Effet': 
             dataName = 'numero'; 
             td.contentEditable = "true"; 
             break;
@@ -1115,9 +1130,9 @@
     select.addEventListener('change', async function () {
       const newStatut = select.value;
       const row = select.closest('tr');
-      const chequeId = row.getAttribute('data-id');
+      const effetId = row.getAttribute('data-id');
 
-      if (!chequeId) {
+      if (!effetId) {
         alert("Impossible de modifier un chèque non enregistré.");
         select.blur();
         return;
@@ -1127,7 +1142,7 @@
       select.classList.add('status-updating');
 
       try {
-        const res = await fetch(`/tresorerie/effets/${chequeId}/update-statut`, {
+        const res = await fetch(`/tresorerie/effets/${effetId}/update-statut`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ statut: newStatut }),

@@ -323,6 +323,10 @@
                           <input type="date" id="dateToFilter" class="form-control" style="font-size: 15px; width: 20px;">
                         </div>
                       </div>
+                      <button id="resetFilters" class="btn btn-secondary custom-btn">
+                        <i class="fas fa-undo mr-2"></i> Réinitialiser
+                      </button>
+                      
           
                       <div class="table-responsive">
                         <%
@@ -343,7 +347,7 @@
                               <th draggable="true">N° Chèque</th>
                               <th draggable="true">Banque</th>
                               <th draggable="true">Bénéficiaire</th>
-                              <th draggable="true">Montant</th>
+                              <th draggable="true" style="width: 200px;">Montant</th>
                               <th draggable="true">Echeance</th>
                               <th draggable="true">Statut</th>
                               <th draggable="true">Date Reglement</th>
@@ -416,6 +420,7 @@
   const searchInput = document.getElementById("supplierSearch");
   const dateFilter = document.getElementById("dateFilter");
   const dateToFilter = document.getElementById("dateToFilter");
+  const resetFilters = document.getElementById("resetFilters");
 
   // Convert dd/mm/yyyy → yyyy-mm-dd ISO format or null if empty
   function convertDateToISO(dateStr) {
@@ -433,6 +438,16 @@
     return isNaN(date.getTime()) ? null : date;
   }
 
+  resetFilters.addEventListener("click", () => {
+    statusFilter.value = "";
+    chantierFilter.value = "";
+    banqueFilter.value = "";
+    supplierFilter.value = "";
+    searchInput.value = "";
+    dateFilter.value = "";
+    dateToFilter.value = "";
+    applyAllFilters();
+  });
   // Function to update total - calculates only visible rows
   function updateTotal() {
     const rows = document.querySelectorAll("#editableTable tbody tr:not(:last-child)");
@@ -1035,14 +1050,14 @@
         columnStyles: {
           0: { cellWidth: 18, halign: 'center' },
           1: { cellWidth: 18, halign: 'left' },
-          2: { cellWidth: 15, halign: 'left' },
+          2: { cellWidth: 20, halign: 'left' },
           3: { cellWidth: 25, halign: 'left' },
           4: { cellWidth: 20, halign: 'right' },
           5: { cellWidth: 18, halign: 'center' },
           6: { cellWidth: 23, halign: 'left' },
           7: { cellWidth: 18, halign: 'center' },
-          8: { cellWidth: 15, halign: 'left' },
-          9: { cellWidth: 25, halign: 'left', overflow: 'linebreak' }
+          8: { cellWidth: 18, halign: 'left' },
+          9: { cellWidth: 18, halign: 'left', overflow: 'linebreak' }
         },
         margin: { top: 30, left: 10, right: 10 },
         tableWidth: 'wrap',

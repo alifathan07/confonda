@@ -1,78 +1,104 @@
 import prisma from "../db.js";
 
-export const indexClients = async (req, res) => {
-    const clients = await prisma.client.findMany({
-      include : {
-          chantier : true
-      }
-    });
-    const chantiers = await prisma.chantier.findMany();
-    res.render('dashboard/ventes/client/index', { clients , chantiers });
-}
-export const postClient = async (req , res) => {
-      const { name , ice , identifFiscal , telClient , contact , telContact } = req.body;
-      const client = await prisma.client.create({
-          data : {
-              name : name , ice : ice , identifFiscal : identifFiscal , telClient : telClient , contact : contact , telContact : telContact 
-          }
-      })
-      res.status(201).json(client);
-}
-export const updateClient = async (req, res) => {
-  try {
-    const { name, ice, identifFiscal, telClient, contact, telContact, chantier } = req.body;
-    const { id } = req.params;
-
-    if (!id) return res.status(400).json({ error: "Client ID is required" });
-    if (!name || !ice || !identifFiscal) {
-      return res.status(400).json({ error: "Name, ICE, and Identifiant Fiscal are required" });
-    }
-
-    let chantierConnect = undefined;
-
-    // If chantier is sent as a name (string not a number)
-    if (chantier && isNaN(chantier)) {
-      const chantierRecord = await prisma.chantier.findFirst({
-        where: { nom: chantier },
+export const indexClient = async(req, res) => {
+      const clients = await prisma.client.findMany({
+        orderBy: { id: 'desc' },
+        include: {
+          chantier: true 
+        }
       });
-      if (!chantierRecord) {
-        return res.status(400).json({ error: "Chantier not found" });
-      }
-      chantierConnect = { connect: { id: chantierRecord.id } };
-    }
-    // If chantier is sent as an ID
-    else if (chantier) {
-      chantierConnect = { connect: { id: parseInt(chantier) } };
-    }
+      res.render('dashboard/ventes/client/index', { clients })
+}
+export const createUi = (req, res) => {
+    res.render('dashboard/ventes/client/create')
+}
+export const postClient = async (req, res) => { 
+  const {name , ice , identifFiscal , email , contact , telContact , telClient , address} = req.body
+  const client = await prisma.client.create({
+    data: {
+      name : name,
+      ice : ice ? ice : Math.floor(Math.random() * 1000000).toString(), 
+      identifFiscal : identifFiscal ? identifFiscal : Math.floor(Math.random() * 1000000).toString(),
+      email : email ? email : "",
+      contact : contact ? contact : "",
+      telContact : telContact ? telContact : "",
+      telClient : telClient ? telClient : "",
+      address : address ? address : "",
+    },
+  });
+  res.redirect("/ventes/clients");
+};
 
-    const updateData = {
-      name,
-      ice,
-      identifFiscal,
-      telClient,
-      contact,
-      telContact,
-      chantier: chantierConnect,
-    };
 
+
+export const updateClient = async (req, res) => {
+  const clientId = parseInt(req.params.id);
+  const { name, ice, identifFiscal, email, contact, telContact, telClient, address } = req.body;
+
+  try {
     // Update the client
-    const client = await prisma.client.update({
-      where: { id: parseInt(id) },
-      data: updateData,
-      include: { chantier: true },
+   const update =  await prisma.client.update({
+      where: { id: clientId },
+      data: {
+        name,
+        ice,
+        identifFiscal,
+        email,
+        contact,
+        telContact,
+        telClient,
+        address
+      }
     });
-
-    res.status(200).json(client);
-  } catch (error) {
-    console.error("Error updating client:", error);
-    if (error.code === "P2025") {
-      return res.status(404).json({ error: "Client not found" });
+    if (update) {
+      console.log("Client updated successfully");
+      
+    }else{
+      console.log("Client not updated");
+      
     }
-    res.status(500).json({ error: "Internal server error" });
+
+    // Redirect back to client list or detail page
+    res.redirect('/ventes/clients');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Erreur lors de la mise à jour du client');
   }
 };
-export const deleteClient = async (req , res) => {
-    const { id } = req.params;
-    await prisma.client.delete({ where: { id: Number(id) } });
-    res.status(200).json({ message: 'Client supprimé avec succès.' });
+
+export const updateUiClient = async(req, res) => {
+  const clients = await prisma.client.findUnique({
+    where: { id: parseInt(req.params.id) },
+  });
+  res.render('dashboard/ventes/client/update', { clients })
 }
+export const showClient = async (req, res) => {
+  const clients = await prisma.client.findUnique({
+    where: { id: parseInt(req.params.id) },
+    include: {
+      chantier: true,
+      recavenir: true,
+    },
+  });
+  res.render('dashboard/ventes/client/clientboard/index', { clients })
+}
+
+
+export const destroyClient = async(req, res) => {
+  try {
+    const clientId = parseInt(req.params.id);
+    await prisma.client.delete({
+      where: {
+        id: clientId
+      }
+    })
+    res.status(200).send("deleted");
+  } catch (error) {
+    console.log('Error : ' , error)
+    res.status(500).send('Erreur lors de la suppression du client');
+  }
+}
+
+
+
+ 

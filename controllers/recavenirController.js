@@ -6,12 +6,13 @@ export const showRecavenir = async (req, res) => {
         include: {
           banque: true,
           client: true,
+          chantier: true,
         },
       });
     const banques = await prisma.banque.findMany();
     const clients = await prisma.client.findMany();
     const chantiers = await prisma.chantier.findMany();
-    res.render('dashboard/tresorerie/reglements/recavenir/index', { recavenirs : recavenirs , banques , clients , chantiers});
+    res.render('dashboard/tresorerie/reglements/recavenir/index', { recavenirs : recavenirs , banques , clients , chantiers });
 }
   
 
@@ -26,16 +27,14 @@ export const createRecavenir = async (req, res) => {
             dateEcheance,
             statut, 
             dateReglement,
-            obs
-            
+            obs,
+            chantier
       } = req.body;
 
 
-      // Find Chantier 
-     
       // Find or create client
       let client = await prisma.client.findFirst({
-        where: { id: beneficiaire },
+        where: { id: parseInt(beneficiaire) },
       });
       
   
@@ -69,6 +68,7 @@ export const createRecavenir = async (req, res) => {
           obs,
           client: { connect: { id: client.id } },
           banque: { connect: { id: findBanque.id } },
+          chantier: { connect: { id: parseInt(chantier) } },
         },
       });
   
@@ -106,7 +106,7 @@ export const deleteRecavenir = async (req, res) => {
 export const updateRecavenir = async (req, res) => {
 try {
     const { id } = req.params;
-    const { designation, banque, beneficiaire, montant, dateEcheance, statut, dateReglement, obs} = req.body;
+    const { designation, banque, beneficiaire, montant, dateEcheance, statut, dateReglement, obs, chantier} = req.body;
     console.log(`🔄 Updating recavenir ${id}...`);
     const updatedRecavenir = await prisma.recavenir.findUnique({ where: { id: parseInt(id) } });
     if (!updatedRecavenir) {
@@ -117,7 +117,7 @@ try {
     
     
 
-    let client = await prisma.client.findFirst({ where: { id: beneficiaire } });
+    let client = await prisma.client.findFirst({ where: { id: parseInt(beneficiaire) } });
 
     
 
@@ -149,6 +149,8 @@ try {
         obs,
         client: { connect: { id: client.id } },
         banque: { connect: { id: findBanque.id } },
+        chantier: { connect: { id: parseInt(chantier) } },
+
     },
     });
     console.log(`✅ Recavenir updated successfully: ${id}`);
@@ -187,4 +189,3 @@ export const updateRecavenirStatut = async (req, res) => {
       res.status(500).json({ error: "Erreur lors de la mise à jour du statut." });
     }
 };
-

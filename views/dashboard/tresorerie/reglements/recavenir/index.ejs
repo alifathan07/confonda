@@ -182,7 +182,6 @@
 </head>
 <body id="page-top">
 
-  ```ejs
 <div id="wrapper">
   <%- include('../../../../layouts/sidebar') %>
   <div id="content-wrapper" class="d-flex flex-column">
@@ -226,7 +225,7 @@
               <select id="supplierFilter" class="form-control mr-2" style="font-size: 15px; width: 250px;">
                 <option value="">-- Filtrer par client --</option>
                 <% clients.forEach(client => { %>
-                  <option value="<%= client.name %>"><%= client.name %></option>
+                  <option value="<%= client.id %>"><%= client.name %></option>
                 <% }); %>
               </select>
               
@@ -254,18 +253,19 @@
                     <th draggable="true">Banque</th>
                     <th draggable="true">Date de règlement</th>
                     <th draggable="true">Observation</th>
+                    <th draggable="true">Chantier</th>
                     <th style="width:70px;">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (typeof recavenirs !== 'undefined' && recavenirs.length) { %>
                     <% recavenirs.forEach(recave => { %>
-                      <tr data-id="<%= recave.id %>">
+                      <tr data-id="<%= recave.id %>" data-chantier-id="<%= recave.chantierId || '' %>">
                         <td data-name="beneficiaire" class="client-cell">
                           <select class="client-select" style="font-size: 15px;">
                             <option value="">-- Sélectionner un client --</option>
                             <% clients.forEach(client => { %>
-                              <option value="<%= client.name %>" data-client-id="<%= client.id %>" <%= recave.client.name === client.name ? 'selected' : '' %>><%= client.name %></option>
+                              <option value="<%= client.id %>" <%= recave.clientId === client.id ? 'selected' : '' %>><%= client.name %></option>
                             <% }); %>
                           </select>
                         </td>
@@ -294,6 +294,11 @@
                        
                         <td contenteditable="true" data-name="dateReglement"><%= formatDateToDDMMYYYY(recave.dateReglement) %></td>
                         <td contenteditable="true" data-name="obs"><%= recave.obs %></td>
+                        <td data-name="chantier" class="chantier-cell">
+                          <select class="chantier-select" style="font-size: 15px;">
+                            <option value=""><%= recave.chantier.name %> </option>
+                          </select>
+                        </td>
                         <td>
                           <button class="delete-row excel-delete-btn" title="Supprimer" aria-label="Supprimer"><i class="fas fa-trash"></i></button>
                           <button class="update-row excel-save-btn btn btn-sm btn-warning" title="Mettre à jour" aria-label="Mettre à jour" style="margin-left:5px;"><i class="fas fa-edit"></i></button>
@@ -320,6 +325,7 @@
 
 <script>
   const clients = <%- JSON.stringify(clients) %>;
+  const chantiers = <%- JSON.stringify(chantiers) %>;
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
@@ -398,7 +404,8 @@
     try {
       await apiRequest(`${API_BASE_URL}/${id}`, 'PATCH', data);
     } catch (err) {
-      throw new Error('Erreur lors de la mise à jour de la ligne');
+      console.log(err);
+      
     }
   };
 
@@ -427,8 +434,10 @@
     let value = cell.querySelector("select") ? cell.querySelector("select").value : cell.innerText.trim();
 
     if (key === 'beneficiaire') {
-      const selectedClient = clients.find(client => client.id == value || client.name === value);
-      if (selectedClient) data[key] = selectedClient.id;
+      data[key] = value ? parseInt(value) : null;
+
+    } else if (key === 'chantier') {
+      data[key] = value ? parseInt(value) : null;
 
     } else if (['dateEcheance', 'dateReglement'].includes(key)) {
       value = convertDateToISO(value);
@@ -468,6 +477,36 @@
       updateTotal();
     } catch (err) {
       alert(err.message);
+    }
+  };
+
+  const populateChantier = (row) => {
+    const clientSelect = row.querySelector(".client-select");
+    const chantierSelect = row.querySelector(".chantier-select");
+    if (!clientSelect || !chantierSelect) return;
+
+    const clientId = parseInt(clientSelect.value) || null;
+    const currentChantierId = row.getAttribute("data-chantier-id") || "";
+
+    chantierSelect.innerHTML = '<option value="">-- Sélectionner un chantier --</option>';
+
+    if (clientId) {
+      const clientChantiers = chantiers.filter((c) => c.clientId === clientId);
+      clientChantiers.forEach((ch) => {
+        const option = document.createElement("option");
+        option.value = ch.id;
+        option.textContent = ch.nom;
+        chantierSelect.appendChild(option);
+      });
+    }
+
+    // Set initial value if applicable (for existing rows)
+    if (currentChantierId && [...chantierSelect.options].some(opt => opt.value === currentChantierId)) {
+      chantierSelect.value = currentChantierId;
+      // Remove the attribute after initial population to avoid resetting on future changes
+      row.removeAttribute("data-chantier-id");
+    } else {
+      chantierSelect.value = "";
     }
   };
 
@@ -511,6 +550,18 @@
         td.appendChild(clientSelect);
         break;
 
+      case 'Chantier':
+        dataName = 'chantier';
+        td.classList.add('chantier-cell');
+        const chantierSelect = document.createElement('select');
+        chantierSelect.className = 'chantier-select';
+        chantierSelect.style.fontSize = '15px';
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = '';
+        defaultOpt.textContent = '-- Sélectionner un chantier --';
+        chantierSelect.appendChild(defaultOpt);
+        td.appendChild(chantierSelect);
+        break;
    
       case 'Designation':
         dataName = 'designation';
@@ -593,8 +644,36 @@
   tr.classList.add('excel-dirty-row');
   tbody.insertBefore(tr, tbody.firstChild);
 
- 
-  // Add event listeners for action buttons (assuming external handlers)
+  // Populate chantier options (initially empty since no client selected)
+  populateChantier(tr);
+
+  // Add event listeners for the new row
+  const newClientSelect = tr.querySelector('.client-select');
+  if (newClientSelect) {
+    newClientSelect.addEventListener('change', () => {
+      const row = newClientSelect.closest('tr');
+      populateChantier(row);
+      row.setAttribute("data-dirty", "true");
+      row.classList.add("excel-dirty-row");
+      if (row.getAttribute("data-id")) {
+        handleRowUpdate(row);
+      }
+    });
+  }
+
+  const newChantierSelect = tr.querySelector('.chantier-select');
+  if (newChantierSelect) {
+    newChantierSelect.addEventListener('change', () => {
+      const row = newChantierSelect.closest('tr');
+      row.setAttribute("data-dirty", "true");
+      row.classList.add("excel-dirty-row");
+      if (row.getAttribute("data-id")) {
+        handleRowUpdate(row);
+      }
+    });
+  }
+
+  // Add event listeners for action buttons
   deleteBtn.addEventListener('click', () => handleDeleteRow(tr));
   updateBtn.addEventListener('click', () => handleUpdateRow(tr));
 
@@ -725,46 +804,75 @@
     updateTotal();
   });
 
-  // Initialize existing rows
-  table.querySelectorAll('tbody tr:not(:last-child)').forEach(row => {
-    const clientSelect = row.querySelector('td[data-name="beneficiaire"] select');
-    if (clientSelect) {
-      clientSelect.addEventListener('change', () => {
-        row.setAttribute('data-dirty', 'true');
-        row.classList.add('excel-dirty-row');
-      });
-    }
+  // Initialize existing rows: populate chantier options
+  const rows = document.querySelectorAll("#editableTable tbody tr:not(:last-child)");
+  rows.forEach((row) => {
+    populateChantier(row);
+  });
+
+  // Add event listeners for existing client and chantier selects
+  const clientSelects = document.querySelectorAll(".client-select");
+  clientSelects.forEach((select) => {
+    select.addEventListener("change", () => {
+      const row = select.closest("tr");
+      populateChantier(row);
+      row.setAttribute("data-dirty", "true");
+      row.classList.add("excel-dirty-row");
+      if (row.getAttribute("data-id")) {
+        handleRowUpdate(row);
+      }
+    });
+  });
+
+  const chantierSelects = document.querySelectorAll(".chantier-select");
+  chantierSelects.forEach((select) => {
+    select.addEventListener("change", () => {
+      const row = select.closest("tr");
+      row.setAttribute("data-dirty", "true");
+      row.classList.add("excel-dirty-row");
+      if (row.getAttribute("data-id")) {
+        handleRowUpdate(row);
+      }
+    });
   });
 
   // Search and Filter Handlers
   const handleFilter = (selector, dataName, value) => {
-    const rows = table.querySelectorAll("tbody tr:not(:last-child)");
-    rows.forEach(row => {
-      const cell = row.querySelector(`td[data-name='${dataName}']${dataName === 'beneficiaire' ? ' select' : ''}`);
-      const cellValue = cell ? (cell.querySelector('select') ? cell.querySelector('select').value : cell.innerText).toLowerCase() : '';
-      row.style.display = (value === "" || cellValue === value) ? "" : "none";
-    });
-    updateTotal();
-  };
+  const rows = table.querySelectorAll("tbody tr:not(:last-child)");
+  rows.forEach(row => {
+    const cell = row.querySelector(`td[data-name='${dataName}']`);
+    let cellValue = '';
 
+    if (dataName === 'beneficiaire') {
+      const select = cell.querySelector('select');
+      cellValue = select ? select.value : '';
+      row.style.display = (value === "" || cellValue === value) ? "" : "none";
+    } else {
+      cellValue = cell ? cell.innerText.toLowerCase() : '';
+      row.style.display = (value === "" || cellValue === value.toLowerCase()) ? "" : "none";
+    }
+  });
+  updateTotal();
+};
   document.getElementById("supplierSearch")?.addEventListener("input", function () {
     const filter = this.value.toLowerCase();
     const rows = table.querySelectorAll("tbody tr:not(:last-child)");
     rows.forEach(row => {
-      const rowText = Array.from(row.querySelectorAll("td[data-name]")).map(cell => 
-        cell.querySelector('select') ? cell.querySelector('select').value : cell.innerText
-      ).join(' ').toLowerCase();
+      const rowText = Array.from(row.querySelectorAll("td[data-name]")).map(cell => {
+        const select = cell.querySelector('select');
+        return select ? (select.options[select.selectedIndex]?.text || '') : cell.innerText;
+      }).join(' ').toLowerCase();
       row.style.display = rowText.includes(filter) ? "" : "none";
     });
     updateTotal();
   });
 
   document.getElementById("banqueFilter")?.addEventListener("change", function () {
-    handleFilter("#banqueFilter", "banque", this.value.toLowerCase());
+    handleFilter("#banqueFilter", "banque", this.value);
   });
 
   document.getElementById("supplierFilter")?.addEventListener("change", function () {
-    handleFilter("#supplierFilter", "beneficiaire", this.value.toLowerCase());
+    handleFilter("#supplierFilter", "beneficiaire", this.value);
   });
 
   // Column Drag and Drop (unchanged from original)
@@ -811,7 +919,7 @@
     .slice(0, -1)
     .map(th => th.innerText);
 
-  // Get table rows (excluding the last row if it's a footer or empty)
+  // Get table rows (excluding the last row for total)
   const rows = table.querySelectorAll("tbody tr:not(:last-child)");
   const tableData = [];
 
@@ -822,15 +930,15 @@
         let value = "";
         const select = cell.querySelector("select");
         if (select) {
-          // For select elements (e.g., statut, beneficiaire), use the selected value
-          value = select.value;
+          // For select elements (e.g., statut, beneficiaire), use the selected text
+          value = select.options[select.selectedIndex]?.text || select.value;
         } else if (cell.innerText) {
           // For text cells, use innerText
           value = cell.innerText.trim();
         }
 
         // Handle date formatting for date columns
-        if (cell.dataset.name && ['dateEtablissement', 'dateEcheance', 'dateReglement'].includes(cell.dataset.name) && value) {
+        if (cell.dataset.name && ['dateEcheance', 'dateReglement'].includes(cell.dataset.name) && value) {
           if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
             const [year, month, day] = value.split('-');
             value = `${day}/${month}/${year}`;
@@ -845,15 +953,11 @@
           }
         }
 
-        // Handle montant formatting
+        // Handle montant as a number
         if (cell.dataset.name === "montant" && value) {
-          let cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+          const cleaned = value.replace(/,/g, '.').replace(/[^\d.-]/g, '');
           const number = parseFloat(cleaned);
-          if (!isNaN(number)) {
-            const parts = number.toFixed(2).split('.');
-            const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-            value = `${integerPart},${parts[1]}`;
-          }
+          return isNaN(number) ? 0 : number; // Return as number, not string
         }
 
         return value || "";
@@ -865,7 +969,7 @@
   // Create worksheet from processed data
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.json_to_sheet([headers, ...tableData], { skipHeader: true });
-  
+
   // Optionally, set column widths for better readability
   ws['!cols'] = headers.map(() => ({ wch: 20 }));
 
@@ -875,8 +979,6 @@
   // Download the Excel file
   XLSX.writeFile(wb, "liste_recettes_a_venir.xlsx");
 });
-
-
   document.getElementById("downloadPdfBtn")?.addEventListener("click", function () {
     try {
       const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
@@ -897,7 +999,7 @@
             let value = "";
             const select = cell.querySelector("select");
             if (select) {
-              value = select.value;
+              value = select.options[select.selectedIndex]?.text || select.value;
             } else if (cell.innerText) {
               value = cell.innerText.trim();
             }
@@ -1018,7 +1120,7 @@
 </script>
 
 <style>
-.client-select, .statut-select {
+.client-select, .chantier-select, .statut-select {
   width: 100%;
   padding: 5px;
   border: none;
@@ -1026,16 +1128,15 @@
   font-size: 15px;
   color: #333;
 }
-.client-select:focus, .statut-select:focus {
+.client-select:focus, .chantier-select:focus, .statut-select:focus {
   outline: none;
   border: 1px solid #007bff;
   border-radius: 4px;
 }
-.client-cell, .statut-cell {
+.client-cell, .chantier-cell, .statut-cell {
   padding: 5px;
 }
 </style>
-```
   
 <script src="/vendor/jquery/jquery.min.js"></script>
 <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>

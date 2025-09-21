@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="Chantier Dashboard" />
+  <title><%= chantier.nom %> - Détails Chantier</title>
+
+  <!-- Fonts & Icons -->
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700,900" rel="stylesheet" />
+
+  <!-- Theme CSS -->
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+
+  <style>
+    /* Page title & headers */
+    .page-title { font-weight: 700; color: #4e73df; }
+    .card-header { font-weight: 600; font-size: 1.1rem; background-color: #4e73df; color: #fff; }
+
+    /* Stats cards */
+    .stats-card { border-left: 4px solid #4e73df; }
+    .stats-card h2 { font-size: 2.2rem; margin: 0; color: #1cc88a; }
+    .stats-card p { margin: 0; font-size: 0.9rem; color: #6c757d; }
+
+    /* Tables */
+    .table th { background: #f8f9fc; }
+    .table-hover tbody tr:hover { background-color: #f1f3f6; }
+    
+    /* Badges */
+    .badge-success { background-color: #1cc88a; }
+    .badge-warning { background-color: #f6c23e; }
+    .badge-danger { background-color: #e74a3b; }
+  </style>
+</head>
+<body id="page-top">
+  <div id="wrapper">
+
+    <!-- Sidebar -->
+    <%- include('../../../../../layouts/sidebar') %>
+
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+
+        <!-- Topbar -->
+        <%- include('../../../../../layouts/topbar') %>
+
+        <div class="container-fluid">
+
+          <!-- Page Header -->
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 page-title"><i class="fas fa-project-diagram"></i> <%= chantier.nom %></h1>
+            <div>
+             
+              <a href="/ventes/clients" class="btn btn-primary btn-sm">
+                <i class="fas fa-arrow-left"></i> Retour Clients
+              </a>
+            </div>
+          </div>
+
+          <!-- Stats Cards -->
+          <div class="row mb-4">
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+              <div class="card shadow stats-card text-center">
+                <div class="card-body">
+                  <h2><%= chantier.montantContratHt || 0 %> DH</h2>
+                  <p>Montant Contrat HT</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+              <div class="card shadow stats-card text-center">
+                <div class="card-body">
+                  <h2><%= chantier.cheques ? chantier.cheques.length : 0 %></h2>
+                  <p>Factures</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chantier Info -->
+          <div class="row mb-4">
+            <div class="col-lg-12">
+              <div class="card shadow">
+                <div class="card-header"><i class="fas fa-info-circle"></i> Informations Chantier</div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <p><strong>Objet:</strong> <%= chantier.objet || "-" %></p>
+                      <p><strong>Nature Contrat:</strong> <%= chantier.natureContrat || "-" %></p>
+                      <p><strong>Numéro Contrat:</strong> <%= chantier.numContrat || "-" %></p>
+                    </div>
+                    
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Items Table -->
+          <div class="d-flex justify-content-end mb-2">
+            <button id="addItemBtn" class="btn btn-success btn-sm">
+              <i class="fas fa-plus"></i> Ajouter Item
+            </button>
+          </div>
+          
+          <table class="table table-striped table-hover" id="itemsTable">
+            <thead>
+              <tr>
+                <th>Nature Travaux</th>
+                <th>Num Prix</th>
+                <th>Désignation</th>
+                <th>Unité</th>
+                <th>Quantité</th>
+                <th>Prix Unitaire</th>
+                <th>Total HT</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="itemsTbody">
+              <% if (chantier.items.length === 0) { %>
+                <tr id="noItemRow">
+                  <td colspan="8" class="text-center">Aucun item trouvé</td>
+                </tr>
+              <% } else { %>
+                <% chantier.items.forEach(item => { %>
+                  <tr>
+                    <td><%= item.natureTravaux %></td>
+                    <td><%= item.numPrix || "-" %></td>
+                    <td><%= item.designation %></td>
+                    <td><%= item.unite || "-" %></td>
+                    <td><%= item.qte %></td>
+                    <td><%= item.prixUnitaire %> DH</td>
+                    <td><%= item.totalHt %> DH</td>
+                    <td>
+                      <form id="deleteItemForm_<%= item.id %>" action="/ventes/chantiers/<%= chantier.id %>/items/<%= item.id %>/?_method=DELETE" method="post">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="confirm('Voulez-vous vraiment supprimer cet item ?') ? fetch(this.parentNode.action, { method: 'DELETE' }).then(res => { if(res.status === 200) location.reload(); }) : null"><i class="fas fa-trash"></i></button>
+                      </form>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } %>
+            </tbody>
+          </table>
+          
+          <!-- Submit All Button -->
+          <button id="submitItemsBtn" class="btn btn-primary mt-2">Enregistrer</button>
+          
+
+          <!-- Cheques / Payments Table -->
+        
+
+        </div> <!-- container-fluid -->
+      </div> <!-- content -->
+    </div> <!-- content-wrapper -->
+  </div> <!-- wrapper -->
+  <script>
+    const addItemBtn = document.getElementById('addItemBtn');
+    const itemsTbody = document.getElementById('itemsTbody');
+    const submitItemsBtn = document.getElementById('submitItemsBtn');
+    
+    addItemBtn.addEventListener('click', () => {
+      // Remove "no items" row if exists
+      const noItemRow = document.getElementById('noItemRow');
+      if (noItemRow) noItemRow.remove();
+    
+      // Create a new row
+      const row = document.createElement('tr');
+    
+      row.innerHTML = `
+        <td><input type="text" class="form-control" name="natureTravaux" required></td>
+        <td><input type="text" class="form-control" name="numPrix"></td>
+        <td><input type="text" class="form-control" name="designation" required></td>
+        <td><input type="text" class="form-control" name="unite"></td>
+        <td><input type="number" class="form-control qte" name="qte" required></td>
+        <td><input type="number" class="form-control prixUnitaire" name="prixUnitaire" required></td>
+        <td class="totalHt">0 DH</td>
+        <td><button type="button" class="btn btn-danger btn-sm removeBtn"><i class="fas fa-trash"></i></button></td>
+      `;
+    
+      itemsTbody.appendChild(row);
+    
+      // Add calculation for Total HT
+      const qteInput = row.querySelector('.qte');
+      const prixInput = row.querySelector('.prixUnitaire');
+      const totalCell = row.querySelector('.totalHt');
+    
+      function updateTotal() {
+        const qte = parseFloat(qteInput.value) || 0;
+        const prix = parseFloat(prixInput.value) || 0;
+        totalCell.textContent = (qte * prix).toFixed(2) + ' DH';
+      }
+    
+      qteInput.addEventListener('input', updateTotal);
+      prixInput.addEventListener('input', updateTotal);
+    
+      // Remove row
+      row.querySelector('.removeBtn').addEventListener('click', () => {
+        row.remove();
+        if (itemsTbody.children.length === 0) {
+          const tr = document.createElement('tr');
+          tr.id = 'noItemRow';
+          tr.innerHTML = '<td colspan="8" class="text-center">Aucun item trouvé</td>';
+          itemsTbody.appendChild(tr);
+        }
+      });
+    });
+    
+    // Submit all rows
+    submitItemsBtn.addEventListener('click', () => {
+      const rows = Array.from(itemsTbody.querySelectorAll('tr'));
+      const items = [];
+    
+      rows.forEach(row => {
+        const inputs = row.querySelectorAll('input');
+        if (inputs.length > 0) {
+          const item = {
+            natureTravaux: inputs[0].value,
+            numPrix: inputs[1].value,
+            designation: inputs[2].value,
+            unite: inputs[3].value,
+            qte: parseFloat(inputs[4].value),
+            prixUnitaire: parseFloat(inputs[5].value),
+          };
+          items.push(item);
+        }
+      });
+    
+      if(items.length === 0){
+        alert("Aucun item à envoyer !");
+        return;
+      }
+    
+      // Send to server via fetch
+      fetch('/ventes/clients/<%= clients.id %>/chantiers/<%= chantier.id %>/items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if(data.success){
+          alert('Items ajoutés avec succès !');
+          location.reload(); // reload to see updated table
+        } else {
+          alert('Erreur lors de l\'ajout');
+        }
+      })
+      .catch(err => console.error(err));
+    });
+    </script>
+    
+
+</body>
+</html>

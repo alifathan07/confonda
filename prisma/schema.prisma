@@ -233,6 +233,8 @@ model Recavenir {
   obs String?  
   client         Client @relation(fields: [clientId], references: [id])
   clientId       Int
+  chantier         Chantier? @relation("RecavenirChantier", fields: [chantierId], references: [id])
+  chantierId       Int?
   banque              Banque   @relation("BanqueRecavenir", fields: [banqueId], references: [id])
   banqueId            Int
   createdAt     DateTime @default(now())
@@ -303,39 +305,61 @@ model Banque {
 
 
 model Client {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String?
-  ice       String @unique
-  identifFiscal String
-  telClient String
-  contact   String
-  telContact String
-  address   String?
-  recavenir Recavenir[]  
-  chantier Chantier[] @relation("ClientChantier")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             Int        @id @default(autoincrement())
+  name           String
+  email          String?
+  ice            String     @unique
+  identifFiscal  String
+  telClient      String
+  contact        String
+  telContact     String
+  address        String?
+  recavenir      Recavenir[]
+  chantier       Chantier[] @relation("ClientChantier")
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 }
 
 model Chantier {
-  id        Int     @id @default(autoincrement())
-  nom       String
-  users     User[]                 // one chantier → many users
-  demandes  DemandeFourniture[]    // one chantier → many demandes
-  clientId Int?
-  client   Client? @relation("ClientChantier", fields: [clientId], references: [id])
+  id              Int      @id @default(autoincrement())
+  nom             String @unique
+  objet           String?
+  montantContratHt Float?
+  natureContrat   String?
+  numContrat      String?
+  recavenir       Recavenir[] @relation("RecavenirChantier")
 
-  cheques    Cheque[]  @relation("ChequesChantier")
-  effets     Effet[]   @relation("EffetsChantier")
-  payavenir Payavenir[] @relation("PayavenirChantier")
-  virements  Virement[] @relation("VirementsChantier")
-  miseadis  Miseadis[] @relation("MiseadisChantier")
+  clientId        Int?
+  client          Client?   @relation("ClientChantier", fields: [clientId], references: [id])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  // Relations
+  users           User[]
+  demandes        DemandeFourniture[]
+  items           ChantierItem[]   // 🔥 chantier has many invoice-like items
+
+  cheques         Cheque[]   @relation("ChequesChantier")
+  effets          Effet[]    @relation("EffetsChantier")
+  payavenir       Payavenir[] @relation("PayavenirChantier")
+  virements       Virement[] @relation("VirementsChantier")
+  miseadis        Miseadis[] @relation("MiseadisChantier")
+
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 }
 
+model ChantierItem {
+  id            Int     @id @default(autoincrement())
+  natureTravaux String
+  numPrix       String?
+  designation   String
+  unite         String?
+  qte           Float
+  prixUnitaire  Float
+  totalHt       Float
+
+  chantierId    Int
+  chantier      Chantier @relation(fields: [chantierId], references: [id])
+}
 
 
 // Demande Fourniture : 

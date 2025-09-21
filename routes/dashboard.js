@@ -15,8 +15,9 @@ import { createVirement, deleteVirement, generateVirementPDF, index, listBanques
 import { createMiseadis, deleteMiseadis, generateMiseadisPDF, indexDis, listBanquesMiseadis, postMiseadis, showUpdateMiseadis, updateMis } from '../controllers/misediscontrollrt.js';
 import { createFourniture, postFourniture } from '../controllers/fournitureController.js';
 import { addUser, listUsers } from '../controllers/usersController.js';
-import { deleteClient, indexClients, postClient, updateClient } from '../controllers/clientController.js';
-import { indexChantiers, postChantier } from '../controllers/chantierController.js';
+// import { deleteClient, indexClients, postClient, updateClient } from '../controllers/clientController.js';
+import {  destroyChantier, destroyChantierDetails, indexChantiers, postChantier, postChantierItems, showChantierDetails, updateChantier } from '../controllers/chantierController.js';
+import { createUi, destroyClient, indexClient, postClient, showClient, updateClient, updateUiClient } from '../controllers/clientController.js';
 
 export const dashboardRouter = express.Router();
 dashboardRouter.use(isAuthenticated)
@@ -257,15 +258,30 @@ dashboardRouter.get('/dashboard', async (req, res) => {
             res.render('dashboard/ventes/index');
         })
         /// Clients
-        dashboardRouter.get('/ventes/clients', indexClients);
-        dashboardRouter.post('/ventes/clients', postClient);
-        dashboardRouter.patch('/ventes/clients/:id', updateClient);
-        dashboardRouter.delete('/ventes/clients/:id', deleteClient);
+        // dashboardRouter.get('/ventes/clients', indexClients);
+        // dashboardRouter.post('/ventes/clients', postClient);
+        // dashboardRouter.patch('/ventes/clients/:id', updateClient);
+        // dashboardRouter.delete('/ventes/clients/:id', deleteClient);
 
       /// Chantiers
       dashboardRouter.get('/ventes/chantiers', indexChantiers);
-      dashboardRouter.post('/ventes/chantiers', postChantier);
 
       // dashboardRouter.post('/ventes/chantiers', postChantier);
       // dashboardRouter.patch('/ventes/chantiers/:id', updateChantier);
       // dashboardRouter.delete('/ventes/chantiers/:id', deleteChantier);
+
+
+        dashboardRouter.get('/ventes/clients', indexClient);
+        dashboardRouter.get('/ventes/clients/new', createUi );
+        dashboardRouter.post('/ventes/clients', postClient);
+        dashboardRouter.get('/ventes/clients/:id/edit', updateUiClient);
+        dashboardRouter.put('/ventes/clients/:id/edit', updateClient);
+        dashboardRouter.get('/ventes/clients/:id', showClient)
+        // add chantier based on client id 
+        dashboardRouter.post('/ventes/clients/:clientId/chantiers', postChantier);
+        dashboardRouter.get('/ventes/clients/:clientId/chantiers/:chantierId', showChantierDetails);
+        dashboardRouter.post('/ventes/clients/:clientId/chantiers/:chantierId/items', postChantierItems);
+        dashboardRouter.put('/ventes/clients/:clientId/chantiers/:chantierId', updateChantier);
+        dashboardRouter.delete('/ventes/clients/:clientId/chantiers/:chantierId', destroyChantier);
+        dashboardRouter.delete('/ventes/chantiers/:chantierId/items/:chantierItemId', destroyChantierDetails);
+        dashboardRouter.delete('/ventes/clients/:id', destroyClient);
