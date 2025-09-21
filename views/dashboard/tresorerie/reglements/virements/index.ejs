@@ -911,133 +911,133 @@
       
           // Excel Download
           document.getElementById("downloadExcelBtn")?.addEventListener("click", function () {
-            const table = document.getElementById("editableTable");
-            const rows = table.querySelectorAll("tbody tr:not(:last-child)");
-            let visibleRows = Array.from(rows).filter(row => row.style.display !== "none");
-      
-            if (visibleRows.length === 0) {
-              alert("Aucune donnée visible à exporter en Excel. Veuillez vérifier le filtre de recherche.");
-              return;
-            }
-      
-            try {
-              const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
-              const tableData = [];
-              let invalidData = null;
-      
-              visibleRows.forEach((row, rowIndex) => {
-                const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map((cell, colIndex) => {
-                  let value = "";
-                  const select = cell.querySelector("select");
-                  if (select) {
-                    value = select.options[select.selectedIndex].text.trim();
-                  } else if (cell.innerText) {
-                    value = cell.innerText.trim();
-                  }
-      
-                  if (cell.dataset.name === "montant" && value) {
-                    const cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-                    const number = parseFloat(cleaned);
-                    if (!isNaN(number)) {
-                      const parts = number.toFixed(2).split('.');
-                      const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-                      value = `${integerPart},${parts[1]}`;
-                    } else {
-                      invalidData = `Montant non numérique à la ligne ${rowIndex + 1}: "${value}"`;
-                    }
-                  }
-      
-                  if (cell.dataset.name && ['dateSaisie', 'dateReglement'].includes(cell.dataset.name) && value) {
-                    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
-                      invalidData = `Format de date invalide à la ligne ${rowIndex + 1}, colonne ${cell.dataset.name}: "${value}"`;
-                    }
-                  }
-      
-                  return value || "";
-                });
-      
-                while (rowData.length < headers.length) {
-                  rowData.push("");
-                }
-      
-                tableData.push(rowData);
-              });
-      
-              if (invalidData) {
-                throw new Error(invalidData);
-              }
-      
-              let total = document.getElementById("total")?.innerText || "0";
-              total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-              const totalNumber = parseFloat(total);
-              let formattedTotal = total;
-              if (!isNaN(totalNumber)) {
-                const parts = totalNumber.toFixed(2).split('.');
-                const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-                formattedTotal = `${integerPart},${parts[1]}`;
-              }
-              const totalRow = ["Total", "", formattedTotal, "", "", "", ""];
-              tableData.push(totalRow);
-      
-              const wb = XLSX.utils.book_new();
-              const ws = XLSX.utils.aoa_to_sheet([headers, ...tableData], { skipHeader: false });
-      
-              ws['!cols'] = [
-                { wch: 18 },
-                { wch: 18 },
-                { wch: 15 },
-                { wch: 25 },
-                { wch: 25 },
-                { wch: 18 },
-                { wch: 23 }
-              ];
-      
-              headers.forEach((_, i) => {
-                const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
-                if (!ws[cellRef]) ws[cellRef] = { v: headers[i], t: 's' };
-                ws[cellRef].s = {
-                  font: { bold: true },
-                  fill: { fgColor: { rgb: "16A085" } },
-                  alignment: { horizontal: i === 2 ? 'right' : i === 3 || i === 5 ? 'center' : 'left' },
-                  border: {
-                    top: { style: 'thin' },
-                    bottom: { style: 'thin' },
-                    left: { style: 'thin' },
-                    right: { style: 'thin' }
-                  }
-                };
-              });
-      
-              tableData.forEach((row, rowIndex) => {
-                row.forEach((value, colIndex) => {
-                  const cellRef = XLSX.utils.encode_cell({ r: rowIndex + 1, c: colIndex });
-                  if (!ws[cellRef]) ws[cellRef] = { v: value || "", t: 's' };
-                  ws[cellRef].s = ws[cellRef].s || {};
-                  ws[cellRef].s = {
-                    ...ws[cellRef].s,
-                    fill: { fgColor: { rgb: rowIndex % 2 === 0 ? "FFFFFF" : "F5F5F5" } },
-                    alignment: { horizontal: colIndex === 2 ? 'right' : colIndex === 3 || colIndex === 5 ? 'center' : 'left' },
-                    border: {
-                      top: { style: 'thin' },
-                      bottom: { style: 'thin' },
-                      left: { style: 'thin' },
-                      right: { style: 'thin' }
-                    }
-                  };
-                  if (rowIndex === tableData.length - 1 && (colIndex === 0 || colIndex === 2)) {
-                    ws[cellRef].s.font = { bold: true };
-                  }
-                });
-              });
-      
-              XLSX.utils.book_append_sheet(wb, ws, "Virements");
-              XLSX.writeFile(wb, "liste_virement.xlsx");
-            } catch (err) {
-              console.error("Excel generation error:", err);
-              alert(`Erreur lors de la génération du fichier Excel : ${err.message}`);
-            }
-          });
-      
+  const table = document.getElementById("editableTable");
+  const rows = table.querySelectorAll("tbody tr:not(:last-child)");
+  let visibleRows = Array.from(rows).filter(row => row.style.display !== "none");
+
+  if (visibleRows.length === 0) {
+    alert("Aucune donnée visible à exporter en Excel. Veuillez vérifier le filtre de recherche.");
+    return;
+  }
+
+  try {
+    const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
+    const tableData = [];
+    let invalidData = null;
+
+    visibleRows.forEach((row, rowIndex) => {
+      const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map((cell, colIndex) => {
+        let value = "";
+        const select = cell.querySelector("select");
+        if (select) {
+          value = select.options[select.selectedIndex].text.trim();
+        } else if (cell.innerText) {
+          value = cell.innerText.trim();
+        }
+
+        // Montant as number
+        if (cell.dataset.name === "montant" && value) {
+          const cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+          const number = parseFloat(cleaned);
+          if (!isNaN(number)) {
+            value = number; // keep as number
+          } else {
+            invalidData = `Montant non numérique à la ligne ${rowIndex + 1}: "${value}"`;
+          }
+        }
+
+        // Date validation
+        if (cell.dataset.name && ['dateSaisie', 'dateReglement'].includes(cell.dataset.name) && value) {
+          if (!/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+            invalidData = `Format de date invalide à la ligne ${rowIndex + 1}, colonne ${cell.dataset.name}: "${value}"`;
+          }
+        }
+
+        return value || "";
+      });
+
+      while (rowData.length < headers.length) rowData.push("");
+      tableData.push(rowData);
+    });
+
+    if (invalidData) throw new Error(invalidData);
+
+    // Total row as number
+    let total = document.getElementById("total")?.innerText || "0";
+    total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+    const totalNumber = parseFloat(total);
+    const totalRow = ["Total", "", !isNaN(totalNumber) ? totalNumber : 0, "", "", "", ""];
+    tableData.push(totalRow);
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...tableData], { skipHeader: false });
+
+    ws['!cols'] = [
+      { wch: 18 },
+      { wch: 18 },
+      { wch: 15 },
+      { wch: 25 },
+      { wch: 25 },
+      { wch: 18 },
+      { wch: 23 }
+    ];
+
+    // Header styling
+    headers.forEach((_, i) => {
+      const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
+      if (!ws[cellRef]) ws[cellRef] = { v: headers[i], t: 's' };
+      ws[cellRef].s = {
+        font: { bold: true },
+        fill: { fgColor: { rgb: "16A085" } },
+        alignment: { horizontal: i === 2 ? 'right' : i === 3 || i === 5 ? 'center' : 'left' },
+        border: {
+          top: { style: 'thin' },
+          bottom: { style: 'thin' },
+          left: { style: 'thin' },
+          right: { style: 'thin' }
+        }
+      };
+    });
+
+    // Rows styling
+    tableData.forEach((row, rowIndex) => {
+      row.forEach((value, colIndex) => {
+        const cellRef = XLSX.utils.encode_cell({ r: rowIndex + 1, c: colIndex });
+        const isMontantColumn = colIndex === 2;
+
+        if (!ws[cellRef]) {
+          ws[cellRef] = { 
+            v: value || "", 
+            t: isMontantColumn && typeof value === 'number' ? 'n' : 's' 
+          };
+        }
+
+        ws[cellRef].s = {
+          fill: { fgColor: { rgb: rowIndex % 2 === 0 ? "FFFFFF" : "F5F5F5" } },
+          alignment: { horizontal: isMontantColumn ? 'right' : colIndex === 3 || colIndex === 5 ? 'center' : 'left' },
+          border: {
+            top: { style: 'thin' },
+            bottom: { style: 'thin' },
+            left: { style: 'thin' },
+            right: { style: 'thin' }
+          }
+        };
+
+        if (rowIndex === tableData.length - 1 && (colIndex === 0 || isMontantColumn)) {
+          ws[cellRef].s.font = { bold: true };
+        }
+      });
+    });
+
+    XLSX.utils.book_append_sheet(wb, ws, "Virements");
+    XLSX.writeFile(wb, "liste_virement.xlsx");
+
+  } catch (err) {
+    console.error("Excel generation error:", err);
+    alert(`Erreur lors de la génération du fichier Excel : ${err.message}`);
+  }
+});
+
           // Initialize total and apply initial filters
           applyFilters();
         });
