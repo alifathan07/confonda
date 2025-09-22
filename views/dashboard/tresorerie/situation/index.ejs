@@ -616,12 +616,13 @@
                         <th>Montant</th>
                         <th>Date Échéance</th>
                         <th>Statut</th>
+                        <th>Chantier</th>
                         <th>Banque</th>
                       </tr>
                     </thead>
                     <tbody>
                       <% recavenirs.forEach(c => { %>
-                        <tr class="recavenir-row" data-client="<%= c.client.name %>" data-banque="<%= c.banque.name ? c.banque.name : '-- Aucune --' %>" data-statut="<%= c.statut %>">
+                        <tr class="recavenir-row" data-client="<%= c.client.name %>" data-banque="<%= c.banque.name ? c.banque.name : '-- Aucune --' %>" data-statut="<%= c.statut %>" data-chantier="<%= c.chantier.nom ? c.chantier.nom : '-- Aucun --' %>">
                           <td><%= c.client.name %></td>
                           <td><%= c.designation %></td>
                           <td class="text-right"><%= c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %> </td>
@@ -631,6 +632,7 @@
                               <%= c.statut %>
                             </span>
                           </td>
+                          <td><%= c.chantier.nom ? c.chantier.nom : '-- Aucun --' %></td>
                           <td><%= c.banque.name ? c.banque.name : '-- Aucune --' %></td>
                         </tr>
                       <% }) %>

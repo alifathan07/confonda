@@ -18,6 +18,7 @@ import { addUser, listUsers } from '../controllers/usersController.js';
 // import { deleteClient, indexClients, postClient, updateClient } from '../controllers/clientController.js';
 import {  destroyChantier, destroyChantierDetails, indexChantiers, postChantier, postChantierItems, showChantierDetails, updateChantier } from '../controllers/chantierController.js';
 import { createUi, destroyClient, indexClient, postClient, showClient, updateClient, updateUiClient } from '../controllers/clientController.js';
+import { indexHis } from '../controllers/historiqueControlelr.js';
 
 export const dashboardRouter = express.Router();
 dashboardRouter.use(isAuthenticated)
@@ -285,3 +286,7 @@ dashboardRouter.get('/dashboard', async (req, res) => {
         dashboardRouter.delete('/ventes/clients/:clientId/chantiers/:chantierId', destroyChantier);
         dashboardRouter.delete('/ventes/chantiers/:chantierId/items/:chantierItemId', destroyChantierDetails);
         dashboardRouter.delete('/ventes/clients/:id', destroyClient);
+
+
+        // Historique : 
+        dashboardRouter.get('/tresorerie/historique', indexHis);

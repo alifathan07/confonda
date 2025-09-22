@@ -5,18 +5,20 @@ export const showPayavenir = async (req, res) => {
       orderBy: { id: 'desc' },
         include: {
           banque: true,
-          fournisseur: true
+          fournisseur: true,
+          chantier: true
         },
       });
     const banques = await prisma.banque.findMany();
     const fournisseurs = await prisma.fournisseur.findMany()
-    res.render('dashboard/tresorerie/reglements/payavenir/index', { payavenirs : payavenirs , banques , fournisseurs });
+    const chantiers = await prisma.chantier.findMany()
+    res.render('dashboard/tresorerie/reglements/payavenir/index', { payavenirs : payavenirs , banques , fournisseurs , chantiers });
 }
 
 export const createPayavenir = async (req, res) => {
   try {
     console.log('🆕 Creating new effet...', req.body);
-    const { designation, banque, beneficiaire, montant, dateEcheance, statut, dateReglement, obs } = req.body;
+    const { designation, banque, beneficiaire, montant, dateEcheance, statut, dateReglement, obs, chantier } = req.body;
 
     // Validate required fields
     if (!beneficiaire) {
@@ -27,6 +29,9 @@ export const createPayavenir = async (req, res) => {
     }
     if (montant === undefined || montant === null || montant === '') {
       return res.status(400).json({ error: "Montant est requis." });
+    }
+    if (!chantier) {
+      return res.status(400).json({ error: "Chantier est requis." });
     }
 
     // Parse montant
@@ -100,6 +105,7 @@ export const createPayavenir = async (req, res) => {
       obs: obs || null,
       fournisseur: { connect: { id: fournisseur.id } },
       banque: { connect: { id: findBanque.id } },
+      chantier: { connect: { id: chantier.id } },
     };
 
     const payavenir = await prisma.payavenir.create({ data });
@@ -139,7 +145,7 @@ export const deletePayavenir = async (req, res) => {
 export const updatePayavenir = async (req, res) => {
   try {
     const { id } = req.params;
-    const { designation, banque, beneficiaire, montant, dateEcheance, statut, dateReglement, obs } = req.body;
+    const { designation, banque, beneficiaire, montant, dateEcheance, statut, dateReglement, obs, chantier } = req.body;
     console.log(`🔄 Updating payavenir ${id}...`);
 
     const existingPayavenir = await prisma.payavenir.findUnique({ where: { id: parseInt(id) } });
@@ -153,6 +159,7 @@ export const updatePayavenir = async (req, res) => {
     if ('designation' in req.body) data.designation = designation || null;
     if ('statut' in req.body) data.statut = statut || null;
     if ('obs' in req.body) data.obs = obs || null;
+    if ('chantier' in req.body) data.chantier = { connect: { id: parseInt(chantier) } };
 
     // Handle montant
     if ('montant' in req.body) {
@@ -190,7 +197,9 @@ export const updatePayavenir = async (req, res) => {
         }
         data.dateReglement = parsedDate;
       }
+
     }
+
 
     // Handle beneficiaire
     if ('beneficiaire' in req.body && beneficiaire) {
@@ -240,6 +249,7 @@ export const updatePayavenir = async (req, res) => {
     } else {
       return res.status(400).json({ error: "Banque est requise." });
     }
+
 
     const payavenir = await prisma.payavenir.update({
       where: { id: parseInt(id) },
