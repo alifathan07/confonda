@@ -6,7 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
   <meta name="description" content="Situation Bancaire" />
   <meta name="author" content="Confonda" />
-  <title>Situation Bancaire</title>
+  <title>Historique
+  </title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" type="text/css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
@@ -436,110 +437,814 @@
       <div id="content">
         <%- include('../../../layouts/topbar') %>
         <div class="container-fluid">
-            <div class="feature-message">
-                <div class="feature-card">
-                  <div class="feature-icon">
-                    <i class="fas fa-spinner fa-pulse"></i>
+          <h1 class="page-title fade-in">Historique</h1>
+          <!-- Filter Section -->
+          <div class="filter-section mb-4">
+            <form class="form-inline" method="GET">
+              <div class="form-group mr-2">
+                <label for="dateFilter" class="mr-2">Date :</label>
+                <div class="input-group">
+                  <input type="date" id="dateFilter" class="form-control" value="2020-01-01" hidden>
+                  <div class="input-group-append">
+                    <span class="input-group-text">à</span>
                   </div>
-                  <h2>Fonctionnalité en cours</h2>
-                  <p>Nous travaillons activement sur cette fonctionnalité. Elle sera bientôt disponible. Merci de votre patience !</p>
-                  <button class="btn btn-gradient" onclick="location.reload()">Actualiser</button>
+                  <input type="date" id="dateToFilter" class="form-control">
                 </div>
               </div>
-              
-              <style>
-              .feature-message {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                min-height: 70vh;
-                text-align: center;
-                padding: 1rem;
-              }
-              
-              .feature-card {
-                background: linear-gradient(135deg, #ffffff, #f3f4f6);
-                border-radius: 16px;
-                padding: 2rem 2.5rem;
-                max-width: 450px;
-                width: 100%;
-                box-shadow: 0 12px 30px rgba(0,0,0,0.15);
-                position: relative;
-                animation: popIn 0.5s ease forwards;
-                border: 1px solid #e5e7eb;
-              }
-              
-              .feature-card h2 {
-                color: #3829ab;
-                font-size: 1.6rem;
-                margin-bottom: 0.75rem;
-                font-weight: 600;
-              }
-              
-              .feature-card p {
-                color: #6b7280;
-                font-size: 1rem;
-                margin-bottom: 1.5rem;
-                line-height: 1.4;
-              }
-              
-              .feature-icon {
-                font-size: 3rem;
-                color: #3829ab;
-                margin-bottom: 1rem;
-              }
-              
-              .btn-gradient {
-                background: linear-gradient(135deg, #3829ab, #6a5ae7);
-                color: #fff;
-                padding: 0.65rem 1.4rem;
-                border-radius: 8px;
-                font-weight: 500;
-                font-size: 0.95rem;
-                border: none;
-                cursor: pointer;
-                transition: all 0.3s ease;
-              }
-              
-              .btn-gradient:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 20px rgba(56, 41, 171, 0.3);
-              }
-              
-              @keyframes popIn {
-                0% { opacity: 0; transform: scale(0.9); }
-                100% { opacity: 1; transform: scale(1); }
-              }
-              
-              /* Responsive */
-              @media (max-width: 576px) {
-                .feature-card {
-                  padding: 1.5rem 1.8rem;
-                }
-                .feature-card h2 {
-                  font-size: 1.4rem;
-                }
-                .feature-card p {
-                  font-size: 0.95rem;
-                }
-                .feature-icon {
-                  font-size: 2.5rem;
-                }
-              }
-              </style>
-              
+              <div class="form-group mr-2">
+                <label for="statutFilterCheques" class="mr-2">Statut :</label>
+                <select id="statutFilterCheques" class="form-control">
+                  <option value="">Tous</option>
+                  <option value="En circulation">En Circulation</option>
+                  <option value="Impayé">Impayé</option>
+                  <option value="Payé">Payé</option>
+                  <option value="Annulé">Annulé</option>
+                  <option value="Treso">Treso</option>
+                  
+                </select>
+              </div>
+              <div class="form-group mr-2">
+                <label for="fournisseurFilterCheques" class="mr-2">Fournisseur :</label>
+                <select id="fournisseurFilterCheques" class="form-control">
+                  <option value="">Tous</option>
+                  <% fournisseurs.forEach(f => { %>
+                    <option value="<%= f.name %>"><%= f.name %></option>
+                  <% }) %>
+                </select>
+              </div>
+              <div class="form-group mr-2">
+                <label for="banqueFilterCheques" class="mr-2">Banque :</label>
+                <select id="banqueFilterCheques" class="form-control">
+                  <option value="">Tous</option>
+                  <% banques.forEach(b => { %>
+                    <option value="<%= b.name %>"><%= b.name %></option>
+                  <% }) %>
+                </select>
+              </div>
+              <button type="button" class="btn btn-secondary" id="resetDateBtn" aria-label="Annuler filtre" style="background-color: #6a5ae7;">Annuler filtre</button>
+              <input type="hidden" name="from" value="01/01/2020">
+            </form>
+          </div>
+          <!-- Chèques List -->
+          <div class="card mb-4 fade-in">
+            <div class="card-header">
+              <h2>Listes Chèques</h2>
+            </div>
+            <div class="card-body">
+              <% if (!cheques.length) { %>
+                <p class="text-center text-muted">Aucun chèque trouvé.</p>
+              <% } else { %>
+                <div class="table-responsive">
+                  <table id="chequesTable" class="excel-table table table-bordered">
+                    <thead>
+                      <tr>
+                        <th>Date Etablissement</th>
+                        <th>Numéro</th>
+                        <th>Banque</th>
+                        <th>Bénéficiaire</th>
+                        <th>Montant</th>
+                        <th>Date Échéance</th>
+                        <th>Statut</th>
+                        <th>Observation</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% cheques.forEach(c => { %>
+                        <tr class="cheque-row" data-fournisseur="<%= c.beneficiaire %>" data-banque="<%= c.banque.name %>" data-statut="<%= c.statut %>" data-date="<%= new Date(c.dateEcheance).toISOString().split('T')[0] %>">
+                          <td><%= new Date(c.dateEtablissement).toLocaleDateString('fr-FR') %></td>
+                          <td><%= c.numero %></td>
+                          <td><%= c.banque.name %></td>
+                          <td><%= c.beneficiaire %></td>
+                          <td class="text-right montant" style="width: 10%;"><%= c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %></td>
+                          <td><%= new Date(c.dateEcheance).toLocaleDateString('fr-FR') %></td>
+                          <td>
+                            <% 
+                              // Map cheque status to Bootstrap 4 badge classes
+                              const statusClasses = {
+                                'en circulation': 'info', // Blue for cheques in circulation
+                                'impayé': 'danger',       // Red for unpaid cheques
+                                'payé': 'success',        // Green for paid cheques
+                                'annulé': 'danger',    // Gray for annulled cheques
+                                'treso': 'warning',    // Gray for unknown statuses
+                                'default': 'secondary'    // Gray for unknown statuses
+                              };
+                              // Normalize status to lowercase and get corresponding badge class
+                              const statusClass = statusClasses[c.statut.toLowerCase()] || statusClasses['default'];
+                            %>
+                            <span class="badge badge-<%= statusClass %>">
+                              <%= c.statut %>
+                            </span>
+                          </td>
+                          <td>
+                            <form action="/tresorerie/cheques/situation/<%= c.id %>?_method=PATCH" method="POST">
+                              <input id="obs" type="text" value="<%= c.obs %>" class="form-control" name="obs">
+                            </form>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td colspan="4">Total</td>
+                        <td class="text-right" id="displayTotalCheques">
+                          <%= cheques.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
+                        </td>
+                        <td colspan="4"></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              <% } %>
+            </div>
+          </div>
+          <!-- Note: Missing tables (effetsTable, payavenirsTable, recavenirsTable) should be added here if needed -->
         </div>
       </div>
     </div>
   </div>
 
   <!-- Scripts -->
+  <script>
+    // Centralized DOMContentLoaded handler to initialize all functionality
+    document.addEventListener('DOMContentLoaded', () => {
+      // Utility functions for number formatting
+      const parseFrenchNumber = (value) => {
+        if (!value) return 0;
+        const clean = value.toString().replace(/\s/g, '').replace(',', '.');
+        return parseFloat(clean) || 0;
+      };
+
+      const formatFrenchNumber = (value) => {
+        return value.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
+      };
+
+      // Get DOM elements for filters
+      const filters = {
+        statut: document.getElementById('statutFilterCheques'),
+        fournisseur: document.getElementById('fournisseurFilterCheques'),
+        banque: document.getElementById('banqueFilterCheques'),
+        dateFrom: document.getElementById('dateFilter'),
+        dateTo: document.getElementById('dateToFilter'),
+        resetButton: document.getElementById('resetDateBtn')
+      };
+
+      // Get table elements
+      const tables = {
+        cheques: document.getElementById('chequesTable'),
+        effets: document.getElementById('effetsTable'), // Expected but not in HTML
+        payavenirs: document.getElementById('payavenirsTable'), // Expected but not in HTML
+        recavenirs: document.getElementById('recavenirsTable') // Expected but not in HTML
+      };
+
+      // Get table rows
+      const rows = {
+        cheques: tables.cheques?.querySelectorAll('tbody tr.cheque-row') || [],
+        effets: tables.effets?.querySelectorAll('tbody tr.effet-row') || [],
+        payavenirs: tables.payavenirs?.querySelectorAll('tbody tr.payavenir-row') || [],
+        recavenirs: tables.recavenirs?.querySelectorAll('tbody tr.recavenir-row') || []
+      };
+
+      // Get total display elements
+      const totals = {
+        cheques: document.getElementById('displayTotalCheques'),
+        effets: document.getElementById('displayTotalEffets'),
+        payavenirs: document.getElementById('displayTotalPayavenirsValides'),
+        general: document.getElementById('displayTotalGeneral'),
+        grandTotal: document.getElementById('grandTotal')
+      };
+
+      // Minimum date for filtering
+      const MIN_DATE = new Date('2020-01-01');
+
+      // Filter rows based on selected criteria
+      const filterRows = () => {
+        const selected = {
+          statut: filters.statut?.value.toLowerCase() || '',
+          fournisseur: filters.fournisseur?.value.toLowerCase() || '',
+          banque: filters.banque?.value.toLowerCase() || '',
+          fromDate: filters.dateFrom?.value ? new Date(filters.dateFrom.value) : MIN_DATE,
+          toDate: filters.dateTo?.value ? new Date(filters.dateTo.value) : null
+        };
+
+        // Filter function for any row type
+        const filterTableRows = (rows, table, noResultId, colspan, type) => {
+          let visibleRows = 0;
+          rows.forEach(row => {
+            const rowStatut = row.getAttribute('data-statut')?.toLowerCase() || '';
+            const rowFournisseur = row.getAttribute('data-fournisseur')?.toLowerCase() || '';
+            const rowBanque = row.getAttribute('data-banque')?.toLowerCase() || '';
+            const rowDate = new Date(row.getAttribute('data-date'));
+
+            const showStatut = !selected.statut || rowStatut === selected.statut;
+            const showFournisseur = !selected.fournisseur || rowFournisseur === selected.fournisseur;
+            const showBanque = !selected.banque || rowBanque === selected.banque;
+            const showDate = rowDate >= MIN_DATE && rowDate >= selected.fromDate && (!selected.toDate || rowDate <= selected.toDate);
+
+            row.style.display = showStatut && showFournisseur && showBanque && showDate ? '' : 'none';
+            if (row.style.display !== 'none') visibleRows++;
+          });
+
+          // Handle "no results" message
+          let noResultMsg = document.getElementById(noResultId);
+          if (visibleRows === 0) {
+            if (!noResultMsg && table) {
+              noResultMsg = document.createElement('tr');
+              noResultMsg.id = noResultId;
+              noResultMsg.innerHTML = `<td colspan="${colspan}" class="text-muted text-center">Aucun ${type} trouvé pour ce filtre.</td>`;
+              table.querySelector('tbody').appendChild(noResultMsg);
+            }
+          } else if (noResultMsg) {
+            noResultMsg.remove();
+          }
+        };
+
+        // Apply filters to each table
+        filterTableRows(rows.cheques, tables.cheques, 'noChequeMsg', 8, 'chèque');
+        filterTableRows(rows.effets, tables.effets, 'noEffetMsg', 7, 'effet');
+        filterTableRows(rows.payavenirs, tables.payavenirs, 'noPayavenirMsg', 7, 'paiement');
+        filterTableRows(rows.recavenirs, tables.recavenirs, 'noRecetteMsg', 6, 'recette');
+
+        // Update totals
+        updateTotals();
+      };
+
+      // Update totals for visible rows
+      const updateTotals = () => {
+        let totalCheques = 0, totalEffets = 0, totalPayavenirs = 0;
+
+        rows.cheques.forEach(row => {
+          if (row.style.display !== 'none') {
+            const montant = parseFrenchNumber(row.querySelector('.montant')?.textContent);
+            totalCheques += montant;
+          }
+        });
+
+        rows.effets.forEach(row => {
+          if (row.style.display !== 'none') {
+            const montant = parseFrenchNumber(row.querySelector('.montant')?.textContent);
+            totalEffets += montant;
+          }
+        });
+
+        rows.payavenirs.forEach(row => {
+          if (row.style.display !== 'none') {
+            const montant = parseFrenchNumber(row.querySelector('.montant')?.textContent);
+            totalPayavenirs += montant;
+          }
+        });
+
+        // Update table footers
+        if (totals.cheques) totals.cheques.textContent = formatFrenchNumber(totalCheques);
+        if (totals.effets) totals.effets.textContent = formatFrenchNumber(totalEffets);
+        if (totals.payavenirs) totals.payavenirs.textContent = formatFrenchNumber(totalPayavenirs);
+        if (totals.general) totals.general.textContent = formatFrenchNumber(totalCheques + totalEffets + totalPayavenirs);
+        if (totals.grandTotal) totals.grandTotal.textContent = formatFrenchNumber(totalCheques + totalEffets + totalPayavenirs) + ' dirhams';
+      };
+
+      // Reset filters to default values
+      const resetFilters = () => {
+        filters.statut.value = '';
+        filters.fournisseur.value = '';
+        filters.banque.value = '';
+        if (filters.dateFrom) filters.dateFrom.value = '2020-01-01';
+        if (filters.dateTo) filters.dateTo.value = '';
+        filterRows();
+      };
+
+      // Initialize validation for cheques, effets, and payavenirs
+      const initializeValidation = (selector, endpoint, field, type) => {
+        const checkboxes = document.querySelectorAll(selector);
+        checkboxes.forEach(checkbox => {
+          checkbox.checked = checkbox.dataset[field] === 'true';
+          checkbox.addEventListener('change', async (e) => {
+            const id = e.target.dataset.id;
+            const validation = e.target.checked;
+            try {
+              const response = await fetch(`/tresorerie/${endpoint}/${id}/validation`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ [field]: validation })
+              });
+              if (!response.ok) throw new Error(`Erreur lors de la mise à jour du ${type}`);
+              console.log(`✅ ${type} ${id} updated: ${validation}`);
+              window.location.reload();
+            } catch (err) {
+              console.error(err);
+              e.target.checked = !validation; // Rollback
+              alert(`Erreur lors de la mise à jour du ${type}.`);
+            }
+          });
+        });
+      };
+
+      // PDF Generation Utilities
+      const loadScript = (src) => {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = src;
+          script.onload = resolve;
+          script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+          document.head.appendChild(script);
+        });
+      };
+
+      const createLoadingMessage = (message) => {
+        const div = document.createElement('div');
+        div.innerHTML = `<div class="alert alert-info" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">${message}</div>`;
+        document.body.appendChild(div);
+        return div;
+      };
+
+      // Generic function to add a table to PDF
+      const addSectionTable = (pdf, title, headers, data, yPosition, columnStyles, hasTotals = true) => {
+        if (yPosition > 220) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+        pdf.setFontSize(16);
+        pdf.text(title, 20, yPosition);
+        yPosition += 10;
+
+        if (data.length > 0) {
+          pdf.autoTable({
+            head: [headers],
+            body: data,
+            startY: yPosition,
+            theme: 'striped',
+            styles: { fontSize: 10, cellPadding: 2, lineWidth: 0.2, lineColor: [0, 0, 0] },
+            headStyles: { fillColor: [0, 128, 0], textColor: 255, fontStyle: 'bold', lineWidth: 0.2, lineColor: [0, 0, 0] },
+            columnStyles,
+            didParseCell: (data) => {
+              if (hasTotals && data.row.index === data.table.body.length - 1) {
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.fillColor = [240, 240, 240];
+                data.cell.styles.lineWidth = 0.2;
+                data.cell.styles.lineColor = [0, 0, 0];
+              }
+            }
+          });
+          return pdf.lastAutoTable.finalY + 20;
+        } else {
+          pdf.setFontSize(10);
+          pdf.text(`Aucun élément trouvé pour cette période.`, 20, yPosition);
+          return yPosition + 15;
+        }
+      };
+
+      // Generate Full PDF
+      window.downloadFullPagePDF = async () => {
+        const loadingMsg = createLoadingMessage('Génération du PDF complet en cours...');
+        try {
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js');
+          
+          const { jsPDF } = window.jspdf;
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          
+          // Header
+          pdf.setFontSize(20);
+          pdf.text('Situation Bancaire Complète', 20, 20);
+          pdf.setFontSize(12);
+          pdf.text(`Généré le: ${new Date().toLocaleString('fr-FR')}`, 30, 30);
+          let yPosition = 50;
+
+          // Section 1: Soldes Bancaires
+          const bankData = [];
+          let totalPositive = 0, totalNegative = 0, totalDmlt = 0;
+          document.querySelectorAll('#soldeTable tbody tr').forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 4) {
+              const bankName = cells[0].textContent.trim() || cells[0].querySelector('strong')?.textContent.trim();
+              const positive = parseFrenchNumber(cells[1].querySelector('input')?.value);
+              const negative = parseFrenchNumber(cells[2].querySelector('input')?.value);
+              const dmlt = parseFrenchNumber(cells[3].querySelector('input')?.value);
+              totalPositive += positive;
+              totalNegative += negative;
+              totalDmlt += dmlt;
+              bankData.push([bankName, formatFrenchNumber(positive), formatFrenchNumber(negative), formatFrenchNumber(dmlt)]);
+            }
+          });
+          bankData.push(['TOTAL', formatFrenchNumber(totalPositive), formatFrenchNumber(totalNegative), formatFrenchNumber(totalDmlt)]);
+          yPosition = addSectionTable(pdf, '1. Soldes Bancaires', ['Banque', 'Solde positif', 'Solde négatif', 'Dette à moyen et long terme'], bankData, yPosition, {
+            0: { halign: 'left' }, 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' }
+          });
+
+          // Section 2: Recettes à venir
+          const recetteData = [];
+          let totalRecette = 0;
+          rows.recavenirs.forEach(row => {
+            if (row.style.display !== 'none') {
+              const cells = row.querySelectorAll('td');
+              if (cells.length >= 6) {
+                const montant = parseFrenchNumber(cells[2].textContent);
+                totalRecette += montant;
+                recetteData.push([
+                  cells[0].textContent.trim(),
+                  cells[1].textContent.trim(),
+                  formatFrenchNumber(montant),
+                  cells[3].textContent.trim(),
+                  cells[4].textContent.trim(),
+                  cells[5].textContent.trim()
+                ]);
+              }
+            }
+          });
+          if (recetteData.length > 0) recetteData.push(['TOTAL', '', formatFrenchNumber(totalRecette), '', '', '']);
+          yPosition = addSectionTable(pdf, '2. Recettes à venir', ['Client', 'Désignation', 'Montant', 'Date Échéance', 'Statut', 'Banque'], recetteData, yPosition, {
+            0: { halign: 'left' }, 1: { halign: 'left' }, 2: { halign: 'right' }, 3: { halign: 'center' }, 4: { halign: 'center' }, 5: { halign: 'left' }
+          });
+
+          // Section 3: Chèques
+          const chequeData = [];
+          let chequesTotal = 0;
+          rows.cheques.forEach(row => {
+            if (row.style.display !== 'none') {
+              const cells = row.querySelectorAll('td');
+              if (cells.length >= 8) {
+                const montant = parseFrenchNumber(cells[4].textContent);
+                chequesTotal += montant;
+                chequeData.push([
+                  cells[1].textContent.trim(),
+                  formatFrenchNumber(montant),
+                  cells[5].textContent.trim(),
+                  cells[3].textContent.trim(),
+                  cells[2].textContent.trim(),
+                  cells[6].textContent.trim(),
+                  cells[7].querySelector('input')?.value || cells[7].textContent.trim()
+                ]);
+              }
+            }
+          });
+          if (chequeData.length > 0) chequeData.push(['TOTAL', formatFrenchNumber(chequesTotal), '', '', '', '', '']);
+          yPosition = addSectionTable(pdf, '3. Chèques en circulation', ['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut', 'Observation'], chequeData, yPosition, {
+            0: { halign: 'left', cellWidth: 25 }, 1: { halign: 'right', cellWidth: 25 }, 2: { halign: 'center', cellWidth: 25 }, 3: { halign: 'left', cellWidth: 30 }, 4: { halign: 'left', cellWidth: 30 }, 5: { halign: 'center', cellWidth: 25 }, 6: { halign: 'left', cellWidth: 30 }
+          });
+
+          // Section 4: Effets
+          const effetData = [];
+          let effetsTotal = 0;
+          rows.effets.forEach(row => {
+            if (row.style.display !== 'none') {
+              const cells = row.querySelectorAll('td');
+              if (cells.length >= 8) {
+                const montant = parseFrenchNumber(cells[4].textContent);
+                effetsTotal += montant;
+                effetData.push([
+                  cells[1].textContent.trim(),
+                  formatFrenchNumber(montant),
+                  cells[5].textContent.trim(),
+                  cells[3].textContent.trim(),
+                  cells[2].textContent.trim(),
+                  cells[6].textContent.trim(),
+                  cells[7].querySelector('input')?.value || cells[7].textContent.trim()
+                ]);
+              }
+            }
+          });
+          if (effetData.length > 0) effetData.push(['TOTAL', formatFrenchNumber(effetsTotal), '', '', '', '', '']);
+          yPosition = addSectionTable(pdf, '4. Effets en circulation', ['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut', 'Observation'], effetData, yPosition, {
+            0: { halign: 'left', cellWidth: 25 }, 1: { halign: 'right', cellWidth: 25 }, 2: { halign: 'center', cellWidth: 25 }, 3: { halign: 'left', cellWidth: 30 }, 4: { halign: 'left', cellWidth: 30 }, 5: { halign: 'center', cellWidth: 25 }, 6: { halign: 'left', cellWidth: 30 }
+          });
+
+          // Section 5: Paiements à venir
+          const payavenirData = [];
+          let payavenirsTotal = 0;
+          rows.payavenirs.forEach(row => {
+            if (row.style.display !== 'none') {
+              const cells = row.querySelectorAll('td');
+              if (cells.length >= 6) {
+                const montant = parseFrenchNumber(cells[3].textContent);
+                payavenirsTotal += montant;
+                payavenirData.push([
+                  cells[0].textContent.trim(),
+                  formatFrenchNumber(montant),
+                  cells[4].textContent.trim(),
+                  cells[2].textContent.trim(),
+                  cells[1].textContent.trim(),
+                  cells[5].textContent.trim()
+                ]);
+              }
+            }
+          });
+          if (payavenirData.length > 0) payavenirData.push(['TOTAL', formatFrenchNumber(payavenirsTotal), '', '', '', '']);
+          yPosition = addSectionTable(pdf, '5. Paiements à venir', ['Désignation', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut'], payavenirData, yPosition, {
+            0: { halign: 'left', cellWidth: 35 }, 1: { halign: 'right', cellWidth: 25 }, 2: { halign: 'center', cellWidth: 25 }, 3: { halign: 'left', cellWidth: 30 }, 4: { halign: 'left', cellWidth: 25 }, 5: { halign: 'center', cellWidth: 20 }
+          });
+
+          // Section 6: Recap Général
+          if (yPosition > 220) {
+            pdf.addPage();
+            yPosition = 20;
+          }
+          pdf.setFontSize(16);
+          pdf.text('Recap. Général', 20, yPosition);
+          yPosition += 15;
+          const generalTotal = chequesTotal + effetsTotal + payavenirsTotal;
+          const summaryData = [
+            ['Total Chèques', formatFrenchNumber(chequesTotal)],
+            ['Total Effets', formatFrenchNumber(effetsTotal)],
+            ['Total Paiements à venir', formatFrenchNumber(payavenirsTotal)],
+            ['TOTAL GÉNÉRAL', formatFrenchNumber(generalTotal)]
+          ];
+          pdf.autoTable({
+            head: [['Description', 'Montant']],
+            body: summaryData,
+            startY: yPosition,
+            theme: 'striped',
+            styles: { fontSize: 12, cellPadding: 4, lineWidth: 0.2, lineColor: [0, 0, 0] },
+            headStyles: { fillColor: [52, 144, 220], textColor: 255, fontStyle: 'bold', lineWidth: 0.2, lineColor: [0, 0, 0] },
+            columnStyles: { 0: { halign: 'left', cellWidth: 80 }, 1: { halign: 'right', cellWidth: 50 } },
+            didParseCell: (data) => {
+              if (data.row.index === 3) {
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.fillColor = [76, 175, 80];
+                data.cell.styles.textColor = 255;
+                data.cell.styles.fontSize = 14;
+                data.cell.styles.lineWidth = 0.2;
+                data.cell.styles.lineColor = [0, 0, 0];
+              }
+            }
+          });
+
+          // Footer statistics
+          const finalY = pdf.lastAutoTable.finalY + 15;
+          pdf.setFontSize(10);
+          pdf.text(`Nombre de chèques: ${chequeData.length > 0 ? chequeData.length - 1 : 0}`, 20, finalY);
+          pdf.text(`Nombre d'effets: ${effetData.length > 0 ? effetData.length - 1 : 0}`, 20, finalY + 8);
+          pdf.text(`Nombre de paiements à venir: ${payavenirData.length > 0 ? payavenirData.length - 1 : 0}`, 20, finalY + 16);
+          pdf.text(`Généré le: ${new Date().toLocaleString('fr-FR')}`, 20, finalY + 24);
+
+          pdf.save(`situation-bancaire-complete-${new Date().toISOString().split('T')[0]}.pdf`);
+        } catch (error) {
+          console.error('Error generating complete PDF:', error);
+          alert(`Erreur lors de la génération du PDF complet: ${error.message}`);
+        } finally {
+          document.body.removeChild(loadingMsg);
+        }
+      };
+
+      // Generic PDF generator for cheques, effets, and payavenirs
+      const generateTablePDF = async (type, title, headers, rows, columnStyles, filenamePrefix) => {
+        const loadingMsg = createLoadingMessage(`Génération du PDF ${type}...`);
+        try {
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js');
+          
+          const { jsPDF } = window.jspdf;
+          const pdf = new jsPDF('l', 'mm', 'a4');
+          
+          pdf.setFontSize(20);
+          pdf.setTextColor(30, 30, 120);
+          pdf.text(title, 20, 20);
+          pdf.setFontSize(11);
+          pdf.setTextColor(80, 80, 80);
+          const now = new Date();
+          pdf.text(`Généré le : ${now.toLocaleString('fr-FR')}`, 20, 30);
+
+          const data = [];
+          let totalAmount = 0;
+          rows.forEach(row => {
+            if (row.style.display !== 'none') {
+              const cells = row.querySelectorAll('td');
+              if (cells.length >= (type === 'payavenirs' ? 6 : 8)) {
+                const montantIndex = type === 'payavenirs' ? 3 : 4;
+                const montant = parseFrenchNumber(cells[montantIndex].textContent);
+                totalAmount += montant;
+                const rowData = type === 'payavenirs' ? [
+                  cells[0].textContent.trim(),
+                  cells[1].textContent.trim(),
+                  cells[2].textContent.trim(),
+                  formatFrenchNumber(montant),
+                  cells[4].textContent.trim(),
+                  cells[5].textContent.trim()
+                ] : [
+                  cells[1].textContent.trim(),
+                  formatFrenchNumber(montant),
+                  cells[5].textContent.trim(),
+                  cells[3].textContent.trim(),
+                  cells[2].textContent.trim(),
+                  cells[6].textContent.trim(),
+                  cells[7].querySelector('input')?.value || cells[7].textContent.trim()
+                ];
+                data.push(rowData);
+              }
+            }
+          });
+          if (data.length > 0) data.push(['TOTAL', formatFrenchNumber(totalAmount), '', '', '', '', ...(type !== 'payavenirs' ? [''] : [])]);
+
+          pdf.autoTable({
+            head: [headers],
+            body: data,
+            startY: 40,
+            theme: 'grid',
+            headStyles: { fillColor: [52, 152, 219], textColor: 255, fontStyle: 'bold', fontSize: 11 },
+            styles: { fontSize: 10, cellPadding: 3, lineColor: [230, 230, 230], lineWidth: 0.1 },
+            alternateRowStyles: { fillColor: [245, 245, 245] },
+            columnStyles,
+            didParseCell: (tableData) => {
+              if (tableData.row.index === data.length - 1) {
+                tableData.cell.styles.fontStyle = 'bold';
+                tableData.cell.styles.fillColor = [230, 230, 230];
+              }
+            }
+          });
+
+          pdf.save(`${filenamePrefix}-${now.toISOString().split('T')[0]}.pdf`);
+        } catch (error) {
+          console.error(`Erreur PDF ${type}:`, error);
+          alert(`Erreur lors de la génération du PDF des ${type}`);
+        } finally {
+          document.body.removeChild(loadingMsg);
+        }
+      };
+
+      // Specific PDF generators
+      window.downloadChequesPDF = () => generateTablePDF(
+        'chèques',
+        'Chèques à payer',
+        ['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut', 'Observation'],
+        rows.cheques,
+        {
+          0: { halign: 'left', cellWidth: 25 },
+          1: { halign: 'right', cellWidth: 30 },
+          2: { halign: 'center', cellWidth: 30 },
+          3: { halign: 'left', cellWidth: 45 },
+          4: { halign: 'left', cellWidth: 35 },
+          5: { halign: 'center', cellWidth: 30 },
+          6: { halign: 'left', cellWidth: 55 }
+        },
+        'cheques-en-circulation'
+      );
+
+      window.downloadEffetsPDF = () => generateTablePDF(
+        'effets',
+        'Effets à payer',
+        ['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut', 'Observation'],
+        rows.effets,
+        {
+          0: { halign: 'left', cellWidth: 25 },
+          1: { halign: 'right', cellWidth: 30 },
+          2: { halign: 'center', cellWidth: 30 },
+          3: { halign: 'left', cellWidth: 45 },
+          4: { halign: 'left', cellWidth: 35 },
+          5: { halign: 'center', cellWidth: 30 },
+          6: { halign: 'left', cellWidth: 55 }
+        },
+        'effets-en-circulation'
+      );
+
+      window.downloadPayavenirsPDF = () => generateTablePDF(
+        'payavenirs',
+        'Paiements à venir',
+        ['Désignation', 'Banque', 'Bénéficiaire', 'Montant', 'Date Échéance', 'Statut'],
+        rows.payavenirs,
+        {
+          0: { halign: 'left', cellWidth: 35 },
+          1: { halign: 'left', cellWidth: 30 },
+          2: { halign: 'left', cellWidth: 40 },
+          3: { halign: 'right', cellWidth: 25 },
+          4: { halign: 'center', cellWidth: 30 },
+          5: { halign: 'center', cellWidth: 25 }
+        },
+        'paiements-a-venir'
+      );
+
+      window.downloadRecettesPDF = async () => {
+        const loadingMsg = createLoadingMessage('Génération du PDF recettes...');
+        try {
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+          const { jsPDF } = window.jspdf;
+          const pdf = new jsPDF('p', 'mm', 'a4');
+
+          pdf.setFontSize(16);
+          pdf.setTextColor(0, 102, 204);
+          pdf.text('Recettes à venir', 15, 20);
+          pdf.setFontSize(10);
+          pdf.setTextColor(0, 0, 0);
+          const now = new Date();
+          pdf.text(`Date: ${now.toLocaleDateString('fr-FR')}`, 15, 28);
+
+          const data = [];
+          let totalAmount = 0;
+          rows.recavenirs.forEach(row => {
+            if (row.style.display !== 'none') {
+              const cells = row.querySelectorAll('td');
+              if (cells.length >= 6) {
+                const montant = parseFrenchNumber(cells[2].textContent);
+                totalAmount += montant;
+                data.push([
+                  cells[0].textContent.trim(),
+                  cells[1].textContent.trim(),
+                  formatFrenchNumber(montant),
+                  cells[3].textContent.trim(),
+                  cells[4].textContent.trim(),
+                  cells[5].textContent.trim()
+                ]);
+              }
+            }
+          });
+
+          const headers = ['Client', 'Désignation', 'Montant', 'Date Échéance', 'Statut', 'Banque'];
+          const columnWidths = [35, 40, 25, 25, 25, 35];
+          const startX = 15;
+          const cellHeight = 8;
+          let yPosition = 40;
+
+          pdf.setFontSize(8).setFont(undefined, 'bold').setTextColor(255, 255, 255);
+          let currentX = startX;
+          headers.forEach((header, i) => {
+            pdf.setFillColor(0, 102, 204);
+            pdf.rect(currentX, yPosition, columnWidths[i], cellHeight, 'F');
+            pdf.text(header, currentX + 1, yPosition + 5);
+            currentX += columnWidths[i];
+          });
+          yPosition += cellHeight;
+
+          pdf.setFontSize(7).setFont(undefined, 'normal').setTextColor(0, 0, 0);
+          data.forEach(row => {
+            if (yPosition > 270) {
+              pdf.addPage();
+              yPosition = 20;
+              currentX = startX;
+              pdf.setFont(undefined, 'bold').setTextColor(255, 255, 255);
+              headers.forEach((header, i) => {
+                pdf.setFillColor(0, 102, 204);
+                pdf.rect(currentX, yPosition, columnWidths[i], cellHeight, 'F');
+                pdf.text(header, currentX + 1, yPosition + 5);
+                currentX += columnWidths[i];
+              });
+              yPosition += cellHeight;
+              pdf.setFont(undefined, 'normal').setTextColor(0, 0, 0);
+            }
+            currentX = startX;
+            row.forEach((cell, i) => {
+              const text = cell.toString();
+              const displayText = text.length > 25 ? text.substring(0, 25) + '...' : text;
+              pdf.rect(currentX, yPosition, columnWidths[i], cellHeight);
+              pdf.text(displayText, currentX + 1, yPosition + 5);
+              currentX += columnWidths[i];
+            });
+            yPosition += cellHeight;
+          });
+
+          yPosition += 10;
+          pdf.setFont(undefined, 'bold').setFontSize(10);
+          pdf.text(`Total: ${formatFrenchNumber(totalAmount)}`, startX, yPosition);
+          yPosition += 8;
+          pdf.setFont(undefined, 'normal').setFontSize(8);
+          pdf.text(`Nombre de recettes à venir: ${data.length}`, startX, yPosition);
+
+          pdf.save(`recettes-a-venir-${now.toISOString().split('T')[0]}.pdf`);
+        } catch (error) {
+          console.error('Erreur PDF recettes:', error);
+          alert('Erreur lors de la génération du PDF des recettes à venir');
+        } finally {
+          document.body.removeChild(loadingMsg);
+        }
+      };
+
+      // Delete Banque
+      window.deleteBanque = async (id) => {
+        try {
+          const response = await fetch(`/tresorerie/banques/delete/${id}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+          });
+          if (response.ok) {
+            alert('Banque supprimée avec succès');
+            location.reload();
+          } else {
+            alert('Erreur lors de la suppression de la banque');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Erreur lors de la suppression de la banque');
+        }
+      };
+
+      // Event Listeners
+      filters.statut?.addEventListener('change', filterRows);
+      filters.fournisseur?.addEventListener('change', filterRows);
+      filters.banque?.addEventListener('change', filterRows);
+      filters.dateFrom?.addEventListener('change', filterRows);
+      filters.dateTo?.addEventListener('change', filterRows);
+      filters.resetButton?.addEventListener('click', resetFilters);
+
+      // Initialize validations
+      initializeValidation('input[name="validation"]', 'cheques', 'validation', 'chèque');
+      initializeValidation('input[name="validationEffet"]', 'effets', 'effetvalidation', 'effet');
+      initializeValidation('input[name="validationPayavenir"]', 'payavenir', 'payavenirvalidation', 'paiement');
+
+      // Initial filter run
+      filterRows();
+    });
+  </script>
   <script src="/vendor/jquery/jquery.min.js"></script>
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
   <script src="/js/sb-admin-2.min.js"></script>
 </body>
-
 
 </html>
 

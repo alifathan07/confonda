@@ -4,14 +4,14 @@
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-  <meta name="description" content="Cheques" />
+  <meta name="description" content="cheques" />
   <meta name="author" content="Confonda" />
-  <title>Cheques</title>
+  <title>cheques</title>
   <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
   <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
    <!-- Enhanced Status Styles -->
-    <style>
+      <style>
         /* General Button Style */
   .custom-btn {
     display: inline-flex;
@@ -225,9 +225,9 @@
                   <div class="card shadow mb-4">
                     <div class="card-header py-3">
                       <% if (id) { %>
-                        <h6 class="m-0 font-weight-bold text-primary">Liste des chèques <%= banqueName.name %></h6>
+                        <h6 class="m-0 font-weight-bold text-primary">Liste des cheques <%= banqueName.name %></h6>
                       <% } else { %>
-                        <h6 class="m-0 font-weight-bold text-primary">Liste des chèques</h6>
+                        <h6 class="m-0 font-weight-bold text-primary">Liste des cheques</h6>
                       <% } %>
                     </div>
                     <div class="card-body">
@@ -257,7 +257,7 @@
                           <% } %>
                         <% } %>
                         <button id="addRowBtn" class="btn btn-primary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
-                          <i class="fas fa-plus mr-2"></i> Ajouter Chèque
+                          <i class="fas fa-plus mr-2"></i> Ajouter cheque
                         </button>
                         <button id="saveTableBtn" class="btn btn-primary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
                           <i class="fas fa-save mr-2"></i> Enregistrer
@@ -326,7 +326,6 @@
                       <button id="resetFilters" class="btn btn-secondary custom-btn">
                         <i class="fas fa-undo mr-2"></i> Réinitialiser
                       </button>
-                      
           
                       <div class="table-responsive">
                         <%
@@ -344,7 +343,7 @@
                           <thead>
                             <tr style="position: sticky; top: 0; background-color: white; z-index: 1;">
                               <th draggable="true">Date</th>
-                              <th draggable="true">N° Chèque</th>
+                              <th draggable="true">N° cheque</th>
                               <th draggable="true">Banque</th>
                               <th draggable="true">Bénéficiaire</th>
                               <th draggable="true" style="width: 200px;">Montant</th>
@@ -384,7 +383,6 @@
                                   <td contenteditable="true" data-name="obs"><%= cheque.obs %></td>
                                   <td>
                                     <button class="delete-row excel-delete-btn" title="Supprimer" aria-label="Supprimer"><i class="fas fa-trash"></i></button>
-                                    <button class="update-row excel-save-btn btn btn-sm btn-warning" title="Mettre à jour" aria-label="Mettre à jour" style="margin-left:5px;"><i class="fas fa-edit"></i></button>
                                   </td>
                                 </tr>
                               <% }) %>
@@ -422,6 +420,7 @@
   const dateToFilter = document.getElementById("dateToFilter");
   const resetFilters = document.getElementById("resetFilters");
 
+
   // Convert dd/mm/yyyy → yyyy-mm-dd ISO format or null if empty
   function convertDateToISO(dateStr) {
     if (!dateStr || dateStr.trim() === '') return null;
@@ -438,7 +437,7 @@
     return isNaN(date.getTime()) ? null : date;
   }
 
-  resetFilters.addEventListener("click", () => {
+  resetFilters.addEventListener("click", function () {
     statusFilter.value = "";
     chantierFilter.value = "";
     banqueFilter.value = "";
@@ -446,7 +445,7 @@
     searchInput.value = "";
     dateFilter.value = "";
     dateToFilter.value = "";
-    applyAllFilters();
+      applyAllFilters();
   });
   // Function to update total - calculates only visible rows
   function updateTotal() {
@@ -620,7 +619,7 @@
       if (header && header.innerText) {
         let dataName = '';
         switch (header.innerText.trim()) {
-          case 'N° Chèque': 
+          case 'N° cheque': 
             dataName = 'numero'; 
             td.contentEditable = "true"; 
             break;
@@ -1050,14 +1049,14 @@
         columnStyles: {
           0: { cellWidth: 18, halign: 'center' },
           1: { cellWidth: 18, halign: 'left' },
-          2: { cellWidth: 20, halign: 'left' },
+          2: { cellWidth: 15, halign: 'left' },
           3: { cellWidth: 25, halign: 'left' },
           4: { cellWidth: 20, halign: 'right' },
           5: { cellWidth: 18, halign: 'center' },
           6: { cellWidth: 23, halign: 'left' },
           7: { cellWidth: 18, halign: 'center' },
-          8: { cellWidth: 18, halign: 'left' },
-          9: { cellWidth: 18, halign: 'left', overflow: 'linebreak' }
+          8: { cellWidth: 15, halign: 'left' },
+          9: { cellWidth: 25, halign: 'left', overflow: 'linebreak' }
         },
         margin: { top: 30, left: 10, right: 10 },
         tableWidth: 'wrap',

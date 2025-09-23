@@ -4,6 +4,9 @@ export const indexChantiers = async (req, res) => {
     const chantiers = await prisma.chantier.findMany({
       include : {
           client : true
+      },
+      orderBy : {
+        nom : 'asc'
       }
     });
     const clients = await prisma.client.findMany();

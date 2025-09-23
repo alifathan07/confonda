@@ -10,10 +10,14 @@ export const index = async(req , res) => {
     const virements  = await prisma.virement.findMany({
         include: { fournisseur: true, banque: true,  chantier : true },
         orderBy : {
-            id: 'desc'
+            date: 'desc'
         }
     }); 
-    const chantiers = await prisma.chantier.findMany();
+    const chantiers = await prisma.chantier.findMany({
+        orderBy : {
+            nom: 'asc'
+        }
+    });
     res.render('dashboard/tresorerie/reglements/virements/index' , { virements, chantiers } )
 }
 
@@ -164,7 +168,7 @@ export const showUpdateVirement = async (req, res) => {
 export const updateVire = async (req, res) => {
     try {
         const id = Number(req.params.id);
-        const { beneficiaire, date, dateReglement, montant, obs, rib, montantLettre, objet, cause, rtgs, srbm, instantane, chantier, banque } = req.body;
+        const { beneficiaire, dateSaisie, dateReglement, montant, obs, rib, montantLettre, objet, cause, rtgs, srbm, instantane, chantier, banque } = req.body;
 
         // Validate IDs
         const findBanque = await prisma.banque.findFirst({
@@ -186,10 +190,10 @@ export const updateVire = async (req, res) => {
             return res.status(404).json({ error: "Virement non trouvé." });
         }
 
-        // Validate and convert date
+        // Validate and convert datedate
         let formattedDate = existingVirement.date; // Preserve existing date if not provided
-        if (date) {
-            const parsedDate = new Date(date);
+        if (dateSaisie) {
+            const parsedDate = new Date(dateSaisie);
             if (isNaN(parsedDate)) {
                 return res.status(400).json({ error: "Format de date invalide pour dateSaisie." });
             }
@@ -251,7 +255,7 @@ export const updateVire = async (req, res) => {
         // Prepare update data
         const updateData = {
             beneficiaire: beneficiaire || existingVirement.beneficiaire,
-            date: formattedDate,
+            date: dateSaisie ? new Date(dateSaisie) : existingVirement.date,
             dateReglement: formattedDateReglement,
             montant: montant ? parseFloat(montant) : existingVirement.montant,
             obs: obs !== undefined ? obs : existingVirement.obs,
@@ -342,13 +346,13 @@ export const generateVirementPDF = async (req, res) => {
         doc.moveDown(4)
            .font('Helvetica-Bold')
            .fontSize(14)
-           .fillColor('#1A4D99')
+           .fillColor('#555555')
            .text(`Objet : ${virement.objet || 'N/A'} ${virement.rtgs ? 'RTGS' : ''} ${virement.srbm ? 'SRBM' : ''} ${virement.instantane ? 'Instantané' : ''}`, 50, doc.y, { width: 495, align: 'left' });
 
         doc.moveDown(1)
            .font('Helvetica')
            .fontSize(12)
-           .fillColor('#333333')
+           .fillColor('#555555')
            .text(virement.cause || '', { width: 495, align: 'justify' });
 
         doc.moveDown(1)
@@ -388,8 +392,8 @@ export const generateVirementPDF = async (req, res) => {
             const bgColor = i % 2 === 0 ? '#F2F2F2' : '#FFFFFF';
             doc.rect(boxX, currentY, boxWidth, rowHeight).fill(bgColor).stroke();
 
-            doc.font('Helvetica-Bold').fontSize(11).fillColor('#1A4D99').text(item.title, boxX + 15, currentY + 8, { width: 180 });
-            doc.font('Helvetica').fontSize(11).fillColor('#333333').text(item.value, boxX + 220, currentY + 8, { width: boxWidth - 240 });
+            doc.font('Helvetica-Bold').fontSize(11).fillColor('#555555').text(item.title, boxX + 15, currentY + 8, { width: 180 });
+            doc.font('Helvetica').fontSize(11).fillColor('#555555').text(item.value, boxX + 220, currentY + 8, { width: boxWidth - 240 });
 
             currentY += rowHeight;
         });

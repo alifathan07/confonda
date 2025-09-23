@@ -415,7 +415,7 @@ export const importExelCheques = async (req, res) => {
     });
   }
 };
-
+ 
 
 // ✅ Render all cheques
 export const showCheques = async (req, res) => {
@@ -424,13 +424,12 @@ export const showCheques = async (req, res) => {
     const cheques = await prisma.cheque.findMany({
       orderBy: { id: 'desc' },
       include: {
+        
         fournisseur: true,
         banque: true,
         chantier: true
       },
-      
     });
-    const {id} = req.params
     console.log(`✅ Found ${cheques.length} cheques`);
 
     const fournisseurs = await prisma.fournisseur.findMany();
@@ -438,22 +437,24 @@ export const showCheques = async (req, res) => {
 
     const banques = await prisma.banque.findMany();
     console.log(`✅ Found ${banques.length} banques`);
-    const chantiers = await prisma.chantier.findMany();
+    const {id} = req.params 
+    const chantiers = await prisma.chantier.findMany({
+      orderBy: { nom: 'asc' },
+    });
     console.log(`✅ Found ${chantiers.length} chantiers`);
     res.render("dashboard/tresorerie/reglements/cheques/index", {
       cheques,
       fournisseurs,
       banques,
-      id,
-      chantiers
+      chantiers,
+      id
     });
   } catch (error) {
     console.error('❌ Error fetching cheques:', {
       error: error.message,
       stack: error.stack
-
     });
-    res.status(500).json({ error: "Erreur lors de la récupération des chèques." });
+    res.status(500).json({ error: "Erreur lors de la récupération des cheques." });
   }
 };
 
@@ -505,7 +506,6 @@ export const deleteCheque = async (req, res) => {
     res.status(500).json({ error: "Erreur lors de la suppression du chèque." });
   }
 };
-
 
 export const updateCheque = async (req, res) => {
   try {
@@ -599,7 +599,7 @@ export const updateCheque = async (req, res) => {
       data
     });
 
-    console.log(`✅ Cheque updated successfully: ${id}`);
+    console.log(`✅ cheque updated successfully: ${id}`);
     res.json(cheque);
 
   } catch (error) {
@@ -610,6 +610,7 @@ export const updateCheque = async (req, res) => {
     res.status(500).json({ error: "Erreur lors de la mise à jour du chèque." });
   }
 };
+
 
 export const bmce = async (req, res) => {
   const {id} = req.params     
@@ -776,6 +777,9 @@ export const createCheque = async (req, res) => {
       dateEtablissement,
       dateReglement,
       statut,
+      obs,
+      montantPaye,
+      reste,
       banque,
       chantier
     } = req.body;
@@ -792,11 +796,10 @@ export const createCheque = async (req, res) => {
           ice: ` `,
           rib: ` `,
           banque : '',
-          agence : '',
-          identifFiscal: ``,
+          identifFiscal: ` `,
           telFournisseur: ' ',
           contact: ' ',
-          telContact: '',
+          telContact: ' ',
         },
       });
     }
@@ -811,7 +814,7 @@ export const createCheque = async (req, res) => {
         data: {
           name: banque,
           rib: 0,
-          agence: '',
+          agence: ' ',
           solde: 0,
           dateSolde: new Date(),
           positive: 0,
@@ -821,21 +824,45 @@ export const createCheque = async (req, res) => {
       });
     }
 
+    // --- Get last effet for this banque ---
+    const lastCheque = await prisma.cheque.findFirst({
+      where: { banqueId: findBanque.id },
+      orderBy: { id: 'desc' },
+    });
+
+    let nextNumero;
+    if (numero) {
+      // Use user-provided number
+      nextNumero = String(numero);
+    } else if (lastCheque) {
+      // Auto increment from last number
+      const lastNumero = parseInt(lastCheque.numero, 10);
+      nextNumero = isNaN(lastNumero) ? '1' : String(lastNumero + 1);
+    } else {
+      // First record, default to 1
+      nextNumero = '1';
+    }
+
+    // --- Create cheque ---
+    const chantierData = await prisma.chantier.findFirst({
+      where : {nom : chantier}
+    })
     const cheque = await prisma.cheque.create({
       data: {
-        numero,
+        numero: nextNumero,
         montant: parseFloat(montant),
         beneficiaire,
         dateEcheance: new Date(dateEcheance),
-        dateEtablissement: new Date(dateEtablissement),
-        dateReglement: dateReglement ? new Date(dateReglement) : null,
-        statut,
+        dateEtablissement: new Date(),
+        statut: 'En circulation',
+        ville : "",
+        obs,
+        chantier : { connect: { id: parseInt(chantierData.id) } },
         fournisseur: { connect: { id: fournisseur.id } },
         banque: { connect: { id: findBanque.id } },
-        chantier: { connect: { id: parseInt(chantier) } },
+
       },
     });
-
     console.log(`✅ Cheque created successfully: ${cheque.id}`);
     res.json(cheque);
   } catch (error) {

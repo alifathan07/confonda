@@ -219,6 +219,7 @@ model Payavenir {
   banqueId            Int
    chantier         Chantier? @relation("PayavenirChantier", fields: [chantierId], references: [id])
   chantierId       Int?
+  chantierText String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }

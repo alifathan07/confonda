@@ -9,7 +9,7 @@ import prisma from '../db.js';
 import { createBanque, deleteBanque, displayBanques, displayBanquesForcheques, getSituationBancaire, showCreate, updateChequeInStituation, updateChequeValidation, updateEffetInStituation, updateEffetValidation, updatePayValidation, updateSituationBancaire, showEditBanque, updateBanque, listBanques } from '../controllers/banquesController.js';
 import { awb, bmce, bmci, bp, cam, cdm, createCheque, deleteCheque, etablirCheque, importExelCheques, listBanquesCheques, showCheques, showChequesForbanque, updateCheque, updateChequeStatut } from '../controllers/chequesController.js';
 import {createEffet, deleteEffet, Eawb, Ebmce, Ebmci, Ebp, Ecam, Ecdm, etablirEffet, importExelEffets, listBanquesEffets, showEffets, showEffetsForbanque, updateEffet, updateEffetStatut} from '../controllers/effetsController.js';
-import { createPayavenir, deletePayavenir, showPayavenir, updatePayavenir, updatePayavenirStatut } from '../controllers/payavenirController.js';
+import { createPayavenir, deletePayavenir, showPayavenir, updatePayavenir, updatePayavenirChantier, updatePayavenirStatut } from '../controllers/payavenirController.js';
 import { createRecavenir, deleteRecavenir, showRecavenir, updateRecavenir, updateRecavenirStatut } from '../controllers/recavenirController.js';
 import { createVirement, deleteVirement, generateVirementPDF, index, listBanquesVirements, postVirement, showUpdateVirement, suppliersList, updateVire } from '../controllers/virementController.js';
 import { createMiseadis, deleteMiseadis, generateMiseadisPDF, indexDis, listBanquesMiseadis, postMiseadis, showUpdateMiseadis, updateMis } from '../controllers/misediscontrollrt.js';
@@ -204,6 +204,7 @@ dashboardRouter.get('/dashboard', async (req, res) => {
         dashboardRouter.delete('/tresorerie/payavenir/:id', deletePayavenir);
         dashboardRouter.patch('/tresorerie/payavenir/:id', updatePayavenir);
         dashboardRouter.put('/tresorerie/payavenir/:id/update-statut', updatePayavenirStatut);
+        dashboardRouter.put('/tresorerie/payavenir/:id/update-chantier', updatePayavenirChantier);
         dashboardRouter.patch('/tresorerie/payavenir/:id/validation', updatePayValidation);
         
 
