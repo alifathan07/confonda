@@ -537,8 +537,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       if (successCount > 0 || errorMessages.length > 0) {
-        window.location.reload();
-        if (errorMessages.length > 0) {
+          if (errorMessages.length > 0) {
           message += `\nErreurs rencontrées :\n${errorMessages.join('\n')}`;
         }
         alert(message);
