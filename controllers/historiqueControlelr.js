@@ -28,6 +28,8 @@ export const indexHis = async (req, res) => {
           lte: toDate,
           not: null,
         },
+        statut: { not: 'Annulé' },
+
         dateEcheance: { not: null },
       },
       select: {
@@ -57,6 +59,7 @@ export const indexHis = async (req, res) => {
           lte: toDate,
           not: null,
         },
+        statut: { not: 'Annulé' },
         dateEcheance: { not: null },
       },
       select: {
