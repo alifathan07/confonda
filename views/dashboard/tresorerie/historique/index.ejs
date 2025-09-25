@@ -530,7 +530,11 @@
                         
                           <td><%= c.banque %> </td>
                           <td><%= c.beneficiaire %></td>
-                          <td class="text-right montant" style="width: 10%;"><%= c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %></td>
+                          <td class="text-right montant" style="width: 10%;">
+                            <%= c.montant != null 
+                                  ? c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') 
+                                  : '' %>
+                          </td>
                           <td><%= new Date(c.dateEcheance).toLocaleDateString('fr-FR') %></td>
                        
                          
