@@ -675,16 +675,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let hasInvalidDate = false;
 
+  // Collect data from cells
   cells.forEach(cell => {
     const key = cell.getAttribute("data-name");
     if (key === "chantier") {
       const select = cell.querySelector("select[data-name='chantier']");
-      const value = select.value;
-      if (value) {
-        data[key] = value;
-      } else {
-        data[key] = null;
-      }
+      data[key] = select.value || null;
     } else {
       let value = sanitizeInput(cell.innerText.trim());
       if (key === "montant") {
@@ -698,11 +694,7 @@ document.addEventListener("DOMContentLoaded", function () {
           hasInvalidDate = true;
           return;
         }
-        if (value) {
-          data[key] = value;
-        } else if (key === 'dateReglement') {
-          data[key] = null;
-        }
+        data[key] = value || (key === 'dateReglement' ? null : undefined);
       } else if (value !== '') {
         data[key] = value;
       }
@@ -719,35 +711,65 @@ document.addEventListener("DOMContentLoaded", function () {
     return false;
   }
 
+  // Caret helpers
+  function getCaretPosition(el) {
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return 0;
+    const range = sel.getRangeAt(0);
+    const preRange = range.cloneRange();
+    preRange.selectNodeContents(el);
+    preRange.setEnd(range.endContainer, range.endOffset);
+    return preRange.toString().length;
+  }
+
+  function setCaretPosition(el, pos) {
+    const range = document.createRange();
+    const sel = window.getSelection();
+    const textLength = el.innerText.length;
+    const safePos = Math.min(pos, textLength); // prevent offset errors
+    range.selectNodeContents(el);
+    range.setStart(el.firstChild || el, safePos);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
   try {
     const response = await fetch(`/tresorerie/virements/update/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
     });
-
     const result = await response.json();
+
     if (response.ok) {
       row.removeAttribute("data-dirty");
       row.classList.remove("excel-dirty-row");
       const updatedVirement = result.virement || {};
+
+      // Update cells without breaking cursor
       cells.forEach(cell => {
         const key = cell.getAttribute("data-name");
-        // Only update cell if the key exists in the response and has a valid value
-        if (key in updatedVirement && updatedVirement[key] !== null && updatedVirement[key] !== undefined) {
-          if (key === "chantier") {
-            const select = cell.querySelector("select[data-name='chantier']");
-            select.value = updatedVirement[key]?.id || updatedVirement[key] || '';
-          } else if (key === "montant") {
-            cell.innerText = Number(updatedVirement[key]).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-          } else if (['dateSaisie', 'dateReglement'].includes(key)) {
-            cell.innerText = updatedVirement[key] ? formatDateToDDMMYYYY(updatedVirement[key]) : '';
-          } else {
-            cell.innerText = updatedVirement[key] || '';
-          }
+        if (!(key in updatedVirement) || updatedVirement[key] === null || updatedVirement[key] === undefined) return;
+
+        const isFocused = document.activeElement === cell;
+        let caretPos = 0;
+        if (isFocused) caretPos = getCaretPosition(cell);
+
+        if (key === "chantier") {
+          const select = cell.querySelector("select[data-name='chantier']");
+          select.value = updatedVirement[key]?.id || updatedVirement[key] || '';
+        } else if (key === "montant") {
+          cell.innerText = Number(updatedVirement[key]).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        } else if (['dateSaisie', 'dateReglement'].includes(key)) {
+          cell.innerText = updatedVirement[key] ? formatDateToDDMMYYYY(updatedVirement[key]) : '';
+        } else {
+          cell.innerText = updatedVirement[key].toString().trim();
         }
-        // If key is not in the response, preserve the existing cell content
+
+        if (isFocused) setCaretPosition(cell, caretPos); // restore cursor
       });
+
       return true;
     } else {
       alert(`Erreur lors de la mise à jour de la ligne ${id}: ${result.message || 'Erreur inconnue'}`);
@@ -755,11 +777,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   } catch (err) {
     console.error("Error updating row", id, ":", err.message);
-    alert(`Erreur réseau lors de la mise à jour de la ligne ${id}.`);
+    alert(`Erreur réseau lors de la mise à jour de la ligne ${id}: ${err.message}`);
     return false;
   }
 }
-  saveAllButton.addEventListener('click', async function () {
+
+
+saveAllButton.addEventListener('click', async function () {
     const dirtyRows = document.querySelectorAll("#editableTable tbody tr[data-dirty='true']");
     if (dirtyRows.length === 0) {
       alert("Aucune modification à enregistrer.");

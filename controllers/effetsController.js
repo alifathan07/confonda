@@ -669,7 +669,7 @@ export const etablirEffet = async (req, res) => {
     });
 
     console.log(`✅ Effet created successfully: ${effet.id}`);
-    res.redirect(`/tresorerie/effets/banque/${id}`);
+    res.redirect(`/tresorerie/effets`);
   } catch (error) {
     console.error('❌ Error creating effet:', {
       error: error.message,

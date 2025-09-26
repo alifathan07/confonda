@@ -6,8 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
   <meta name="description" content="Situation Bancaire" />
   <meta name="author" content="Confonda" />
-  <title>Historique
-  </title>
+  <title>Historique</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" type="text/css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
@@ -37,59 +36,57 @@
       margin: 0;
     }
     .custom-card {
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  background: white;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
-  margin-bottom: 1rem;
-}
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      background: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+      margin-bottom: 1rem;
+    }
 
-.custom-card-header {
-  background: #3829ab;
-  color: white;
-  padding: 0.75rem 1rem;
-  border-radius: 6px 6px 0 0;
-}
+    .custom-card-header {
+      background: #3829ab;
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 6px 6px 0 0;
+    }
 
-.custom-card-header h2 {
-  font-size: 1.1rem;
-  margin: 0;
-  font-weight: 500;
-}
+    .custom-card-header h2 {
+      font-size: 1.1rem;
+      margin: 0;
+      font-weight: 500;
+    }
 
-.custom-card-body {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px; /* spacing between buttons */
-  justify-content: center;
-  align-items: center;
-  padding: 1rem;
-}
+    .custom-card-body {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
 
-.custom-btn {
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: white;
-  transition: background 0.2s ease;
-}
+    .custom-btn {
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: white;
+      transition: background 0.2s ease;
+    }
 
-.custom-btn i {
-  font-size: 1rem;
-}
+    .custom-btn i {
+      font-size: 1rem;
+    }
 
-/* Color Variants */
-.btn-primary { background: #3829ab; }
-.btn-info    { background: #6a5ae7; }
+    .btn-primary { background: #3829ab; }
+    .btn-info    { background: #6a5ae7; }
 
-
-.btn-primary:hover { background: #2d218a; }
-.btn-info:hover    { background: #5746d6; }
+    .btn-primary:hover { background: #2d218a; }
+    .btn-info:hover    { background: #5746d6; }
 
     .container-fluid {
       padding: 1rem;
@@ -329,7 +326,6 @@
     .badge-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
     .badge-info { background: linear-gradient(135deg, #60a5fa, #3b82f6); color: #fff; }
 
-    /* Responsive Design */
     @media (max-width: 768px) {
       .container-fluid {
         padding: 0.5rem;
@@ -367,6 +363,10 @@
         flex: 0 0 100%;
         max-width: 100%;
       }
+      .montant {
+        min-width: 130px;
+        width: 130px;
+      }
     }
 
     @media (max-width: 576px) {
@@ -383,12 +383,20 @@
       .card-header h2 {
         font-size: 1rem;
       }
+      .montant {
+        min-width: 130px;
+        width: 130px;
+      }
     }
 
     @media (min-width: 768px) {
       .row > [class*="col-md-3"] {
         flex: 0 0 25%;
         max-width: 25%;
+      }
+      .montant {
+        min-width: 130px;
+        width: 130px;
       }
     }
 
@@ -427,7 +435,6 @@
         box-shadow: none;
       }
     }
-  
   </style>
 </head>
 <body id="page-top">
@@ -437,68 +444,56 @@
       <div id="content">
         <%- include('../../../layouts/topbar') %>
         <div class="container-fluid">
-          <h1 class="page-title fade-in">Historique</h1>
-          <!-- Filter Section -->
-       <!-- Filter Section -->
-<div class="filter-section mb-4">
-  <form class="form-inline" method="GET">
-    <div class="form-group mr-2">
-      <label for="dateFromFilter" class="mr-2">Date de :</label>
-      <input type="date" id="dateFromFilter" class="form-control" value="2020-01-01">
-    </div>
-    <div class="form-group mr-2">
-      <label for="dateToFilter" class="mr-2">à :</label>
-      <input type="date" id="dateToFilter" class="form-control">
-    </div>
-    <div class="form-group mr-2">
-      <label for="typeFilter" class="mr-2">Type :</label>
-      <select id="typeFilter" class="form-control">
-        <option value="">Tous</option>
-        <option value="cheque">Chèque</option>
-        <option value="effet">Effet</option>
-        <option value="virement">Virement</option>
-        <option value="mise a disposition">Mise à disposition</option>
-      </select>
-    </div>
-    <div class="form-group mr-2">
-      <label for="statutFilterCheques" class="mr-2">Statut :</label>
-      <select id="statutFilterCheques" class="form-control">
-        <option value="">Tous</option>
-        <option value="En circulation">En Circulation</option>
-        <option value="Impayé">Impayé</option>
-        <option value="Payé">Payé</option>
-        <option value="Annulé">Annulé</option>
-        <option value="Treso">Treso</option>
-      </select>
-    </div>
-    <div class="form-group mr-2">
-      <label for="fournisseurFilterCheques" class="mr-2">Fournisseur :</label>
-      <select id="fournisseurFilterCheques" class="form-control">
-        <option value="">Tous</option>
-        <% fournisseurs.forEach(f => { %>
-          <option value="<%= f.name %>"><%= f.name %></option>
-        <% }) %>
-      </select>
-    </div>
-    <div class="form-group mr-2">
-      <label for="banqueFilterCheques" class="mr-2">Banque :</label>
-      <select id="banqueFilterCheques" class="form-control">
-        <option value="">Tous</option>
-        <% banques.forEach(b => { %>
-          <option value="<%= b.name %>"><%= b.name %></option>
-        <% }) %>
-      </select>
-    </div>
-    <button type="button" class="btn btn-secondary" id="resetDateBtn" aria-label="Annuler filtre" style="background-color: #6a5ae7;">Annuler filtre</button>
-  </form>
-</div>
-          <!-- Chèques List -->
+          <h1 class="page-title fade-in">Historique Des Opérations</h1>
+          <!-- Filter Section for Operations -->
+          <div class="filter-section mb-4">
+            <form class="form-inline" method="GET">
+              <div class="form-group mr-2">
+                <label for="dateFromFilter" class="mr-2">Date de :</label>
+                <input type="date" id="dateFromFilter" class="form-control" >
+              </div>
+              <div class="form-group mr-2">
+                <label for="dateToFilter" class="mr-2">à :</label>
+                <input type="date" id="dateToFilter" class="form-control">
+              </div>
+              <div class="form-group mr-2">
+                <label for="typeFilter" class="mr-2">Type :</label>
+                <select id="typeFilter" class="form-control">
+                  <option value="">Tous</option>
+                  <option value="Chèque">Chèque</option>
+                  <option value="Effet">Effet</option>
+                  <option value="Virement">Virement</option>
+                  <option value="Mise à disposition">Mise à disposition</option>
+                </select>
+              </div>
+              <div class="form-group mr-2">
+                <label for="fournisseurFilterCheques" class="mr-2">Fournisseur :</label>
+                <select id="fournisseurFilterCheques" class="form-control">
+                  <option value="">Tous</option>
+                  <% fournisseurs.forEach(f => { %>
+                    <option value="<%= f.name %>"><%= f.name %></option>
+                  <% }) %>
+                </select>
+              </div>
+              <div class="form-group mr-2">
+                <label for="banqueFilterCheques" class="mr-2">Banque :</label>
+                <select id="banqueFilterCheques" class="form-control">
+                  <option value="">Tous</option>
+                  <% banques.forEach(b => { %>
+                    <option value="<%= b.name %>"><%= b.name %></option>
+                  <% }) %>
+                </select>
+              </div>
+              <button type="button" class="btn btn-secondary" id="resetDateBtn" aria-label="Annuler filtre" style="background-color: #6a5ae7;">Annuler filtre</button>
+            </form>
+          </div>
+          <!-- Operations List -->
           <div class="card mb-4 fade-in">
             <div class="card-header d-flex justify-content-between align-items-center">
-              <h2>Liste des opérations</h2>
+              <h2>Liste des réglements effectués</h2>
               <div>
-                <button class="btn btn-info mr-2" onclick="downloadPDF()">Télécharger PDF</button>
-                <button class="btn btn-success" onclick="downloadExcel()">Télécharger Excel</button>
+                <button class="btn btn-info mr-2" onclick="downloadPDF('chequesTable')">Télécharger PDF</button>
+                <button class="btn btn-success" onclick="downloadExcel('chequesTable')">Télécharger Excel</button>
               </div>
             </div>
             <div class="card-body">
@@ -512,12 +507,10 @@
                         <th>Date Etablissement</th>
                         <th>Type</th>
                         <th>Numéro</th>
-                        
                         <th>Banque</th>
                         <th>Bénéficiaire</th>
                         <th>Montant</th>
                         <th>Date Échéance</th>
-                      
                         <th>Observation</th>
                       </tr>
                     </thead>
@@ -525,19 +518,16 @@
                       <% historique.forEach(c => { %>
                         <tr class="operation-row" data-type="<%= c.type %>" data-fournisseur="<%= c.beneficiaire %>" data-banque="<%= c.banque %>" data-statut="<%= c.statut %>" data-date="<%= new Date(c.dateEcheance).toISOString().split('T')[0] %>">
                           <td><%= new Date(c.dateEtablissement).toLocaleDateString('fr-FR') %></td>
-                          <td><%= c.type %> </td>
+                          <td><%= c.type %></td>
                           <td><%= c.numero %></td>
-                        
-                          <td><%= c.banque %> </td>
+                          <td><%= c.banque %></td>
                           <td><%= c.beneficiaire %></td>
-                          <td class="text-right montant" style="width: 10%;">
+                          <td class="text-right montant" style="width: 150px;">
                             <%= c.montant != null 
                                   ? c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') 
                                   : '' %>
                           </td>
                           <td><%= new Date(c.dateEcheance).toLocaleDateString('fr-FR') %></td>
-                       
-                         
                           <td>
                             <form action="/tresorerie/cheques/situation/<%= c.id %>?_method=PATCH" method="POST">
                               <input id="obs" type="text" value="<%= c.obs %>" class="form-control" name="obs">
@@ -560,12 +550,175 @@
               <% } %>
             </div>
           </div>
-          <!-- Note: Missing tables (effetsTable, payavenirsTable, recavenirsTable) should be added here if needed -->
+          <!-- Filter Section for Virements De fonds -->
+          <div class="filter-section mb-4">
+            <form class="form-inline" method="GET">
+              <div class="form-group mr-2">
+                <label for="dateFromFilterVirement" class="mr-2">Date de :</label>
+                <input type="date" id="dateFromFilterVirement" class="form-control">
+              </div>
+              <div class="form-group mr-2">
+                <label for="dateToFilterVirement" class="mr-2">à :</label>
+                <input type="date" id="dateToFilterVirement" class="form-control">
+              </div>
+              <div class="form-group mr-2">
+                <label for="banqueFilterVirement" class="mr-2">Banque :</label>
+                <select id="banqueFilterVirement" class="form-control">
+                  <option value="">Tous</option>
+                  <% banques.forEach(b => { %>
+                    <option value="<%= b.name %>"><%= b.name %></option>
+                  <% }) %>
+                </select>
+              </div>
+              <button type="button" class="btn btn-secondary" id="resetDateBtnVirement" aria-label="Annuler filtre" style="background-color: #6a5ae7;">Annuler filtre</button>
+            </form>
+          </div>
+          <!-- Virement au fonds List -->
+          <div class="card mb-4 fade-in">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h2>Virements De fonds</h2>
+              <div>
+                <button class="btn btn-info mr-2" onclick="downloadPDF('virementDeFondsTable')">Télécharger PDF</button>
+                <button class="btn btn-success" onclick="downloadExcel('virementDeFondsTable')">Télécharger Excel</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <% if (!virementdeFands.length) { %>
+                <p class="text-center text-muted">Aucun virement trouvé.</p>
+              <% } else { %>
+                <div class="table-responsive">
+                  <table id="virementDeFondsTable" class="excel-table table table-bordered">
+                    <thead>
+                      <tr>
+                        <th>Date Etablissement</th>
+                        <th>Banque</th>
+                        <th>Bénéficiaire</th>
+                        <th>Montant</th>
+                        <th>Observation</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% virementdeFands.forEach(c => { %>
+                        <tr class="virement-row" data-banque="<%= c.banque.name %>" data-date="<%= new Date(c.date).toISOString().split('T')[0] %>">
+                          <td><%= new Date(c.date).toLocaleDateString('fr-FR') %></td>
+                          <td><%= c.banque.name %></td>
+                          <td><%= c.beneficiaire %></td>
+                          <td class="text-right montant" style="width: 150px;">
+                            <%= c.montant != null 
+                                  ? c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') 
+                                  : '' %>
+                          </td>
+                          <td><%= c.obs ? c.obs : "" %></td>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td colspan="3">Total</td>
+                        <td class="text-right" id="displayTotalVirements">
+                          <%= virementdeFands.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
+                        </td>
+                        <td colspan="1"></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              <% } %>
+            </div>
+          </div>
+          <!-- Soldes Bancaires -->
+          <form id="soldeForm" action="/tresorerie/historique/banque" method="POST">
+            <div class="card mb-4 fade-in">
+              <div class="card-header">
+                <h2>Soldes Bancaires</h2>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table id="soldeTable" class="excel-table table table-bordered">
+                    <thead>
+                      <tr>
+                        <th>Banque</th>
+                        <th>Solde Positif</th>
+                        <th>Solde Négatif</th>
+                        <th>Dette MLT</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% banques.forEach((b, index) => { %>
+                        <tr>
+                          <td><strong><%= b.name %></strong></td>
+                          <td>
+                            <input 
+                              type="text" 
+                              name="positive[]" 
+                              value="<%= b.positive != null ? b.positive.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') : '' %>"
+                              class="form-control text-right"
+                            />
+                          </td>
+                          <td>
+                            <input 
+                              type="text" 
+                              name="negative[]" 
+                              value="<%= b.negative != null ? b.negative.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') : '' %>"
+                              class="form-control text-right"
+                            />
+                          </td>
+                          <td>
+                            <input 
+                              type="text" 
+                              name="dmlt[]" 
+                              value="<%= b.dmlt != null ? b.dmlt.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') : '' %>"
+                              class="form-control text-right"
+                            />
+                          </td>
+                          <input type="hidden" name="banqueId[]" value="<%= b.id %>">
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td>Total</td>
+                        <td>
+                          <input 
+                            type="text" 
+                            name="totalPositive" 
+                            class="form-control text-right"
+                            value="<%= banques.reduce((acc, b) => acc + (b.positive || 0), 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>"
+                            readonly
+                          />
+                        </td>
+                        <td>
+                          <input 
+                            type="text" 
+                            name="totalNegative" 
+                            class="form-control text-right"
+                            value="<%= banques.reduce((acc, b) => acc + (b.negative || 0), 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>"
+                            readonly
+                          />
+                        </td>
+                        <td>
+                          <input 
+                            type="text" 
+                            name="totalDmlt" 
+                            class="form-control text-right"
+                            value="<%= banques.reduce((acc, b) => acc + (b.dmlt || 0), 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>"
+                            readonly
+                          />
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+              <div class="card-footer d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary" hidden>Mettre à jour</button>
+              </div>
+            </div>
+          </form>
         </div>
       </div>
     </div>
   </div>
-
   <!-- Scripts -->
   <script>
     // Centralized DOMContentLoaded handler to initialize all functionality
@@ -583,28 +736,38 @@
 
       // Get DOM elements for filters
       const filters = {
-        type: document.getElementById('typeFilter'),
-        statut: document.getElementById('statutFilterCheques'),
-        fournisseur: document.getElementById('fournisseurFilterCheques'),
-        banque: document.getElementById('banqueFilterCheques'),
-        dateFrom: document.getElementById('dateFromFilter'),
-        dateTo: document.getElementById('dateToFilter'),
-        resetButton: document.getElementById('resetDateBtn')
+        operations: {
+          type: document.getElementById('typeFilter'),
+          fournisseur: document.getElementById('fournisseurFilterCheques'),
+          banque: document.getElementById('banqueFilterCheques'),
+          dateFrom: document.getElementById('dateFromFilter'),
+          dateTo: document.getElementById('dateToFilter'),
+          resetButton: document.getElementById('resetDateBtn')
+        },
+        virements: {
+          banque: document.getElementById('banqueFilterVirement'),
+          dateFrom: document.getElementById('dateFromFilterVirement'),
+          dateTo: document.getElementById('dateToFilterVirement'),
+          resetButton: document.getElementById('resetDateBtnVirement')
+        }
       };
 
       // Get table elements
       const tables = {
-        operations: document.getElementById('chequesTable')
+        operations: document.getElementById('chequesTable'),
+        virements: document.getElementById('virementDeFondsTable')
       };
 
       // Get table rows
       const rows = {
-        operations: tables.operations?.querySelectorAll('tbody tr.operation-row') || []
+        operations: tables.operations?.querySelectorAll('tbody tr.operation-row') || [],
+        virements: tables.virements?.querySelectorAll('tbody tr.virement-row') || []
       };
 
       // Get total display elements
       const totals = {
-        operations: document.getElementById('displayTotalOperations')
+        operations: document.getElementById('displayTotalOperations'),
+        virements: document.getElementById('displayTotalVirements')
       };
 
       // Minimum date for filtering
@@ -613,32 +776,47 @@
       // Filter rows based on selected criteria
       const filterRows = () => {
         const selected = {
-          type: filters.type?.value.toLowerCase() || '',
-          statut: filters.statut?.value.toLowerCase() || '',
-          fournisseur: filters.fournisseur?.value.toLowerCase() || '',
-          banque: filters.banque?.value.toLowerCase() || '',
-          fromDate: filters.dateFrom?.value ? new Date(filters.dateFrom.value) : MIN_DATE,
-          toDate: filters.dateTo?.value ? new Date(filters.dateTo.value) : null
+          operations: {
+            type: filters.operations.type?.value.toLowerCase() || '',
+            fournisseur: filters.operations.fournisseur?.value.toLowerCase() || '',
+            banque: filters.operations.banque?.value.toLowerCase() || '',
+            fromDate: filters.operations.dateFrom?.value ? new Date(filters.operations.dateFrom.value) : MIN_DATE,
+            toDate: filters.operations.dateTo?.value ? new Date(filters.operations.dateTo.value) : null
+          },
+          virements: {
+            banque: filters.virements.banque?.value.toLowerCase() || '',
+            fromDate: filters.virements.dateFrom?.value ? new Date(filters.virements.dateFrom.value) : MIN_DATE,
+            toDate: filters.virements.dateTo?.value ? new Date(filters.virements.dateTo.value) : null
+          }
         };
 
-        // Filter function for operations rows
-        const filterTableRows = (rows, table, noResultId, colspan) => {
+        // Filter function for table rows
+        const filterTableRows = (rows, table, noResultId, colspan, filterType) => {
           let visibleRows = 0;
           rows.forEach(row => {
-            const rowType = row.getAttribute('data-type')?.toLowerCase() || '';
-            const rowStatut = row.getAttribute('data-statut')?.toLowerCase() || '';
-            const rowFournisseur = row.getAttribute('data-fournisseur')?.toLowerCase() || '';
-            const rowBanque = row.getAttribute('data-banque')?.toLowerCase() || '';
-            const rowDate = new Date(row.getAttribute('data-date'));
+            if (filterType === 'operations') {
+              const rowType = row.getAttribute('data-type')?.toLowerCase() || '';
+              const rowFournisseur = row.getAttribute('data-fournisseur')?.toLowerCase() || '';
+              const rowBanque = row.getAttribute('data-banque')?.toLowerCase() || '';
+              const rowDate = new Date(row.getAttribute('data-date'));
 
-            const showType = !selected.type || rowType === selected.type;
-            const showStatut = !selected.statut || rowStatut === selected.statut;
-            const showFournisseur = !selected.fournisseur || rowFournisseur === selected.fournisseur;
-            const showBanque = !selected.banque || rowBanque === selected.banque;
-            const showDate = rowDate >= MIN_DATE && rowDate >= selected.fromDate && (!selected.toDate || rowDate <= selected.toDate);
+              const showType = !selected.operations.type || rowType === selected.operations.type;
+              const showFournisseur = !selected.operations.fournisseur || rowFournisseur === selected.operations.fournisseur;
+              const showBanque = !selected.operations.banque || rowBanque === selected.operations.banque;
+              const showDate = rowDate >= MIN_DATE && rowDate >= selected.operations.fromDate && (!selected.operations.toDate || rowDate <= selected.operations.toDate);
 
-            row.style.display = showType && showStatut && showFournisseur && showBanque && showDate ? '' : 'none';
-            if (row.style.display !== 'none') visibleRows++;
+              row.style.display = showType && showFournisseur && showBanque && showDate ? '' : 'none';
+              if (row.style.display !== 'none') visibleRows++;
+            } else if (filterType === 'virements') {
+              const rowBanque = row.getAttribute('data-banque')?.toLowerCase() || '';
+              const rowDate = new Date(row.getAttribute('data-date'));
+
+              const showBanque = !selected.virements.banque || rowBanque === selected.virements.banque;
+              const showDate = rowDate >= MIN_DATE && rowDate >= selected.virements.fromDate && (!selected.virements.toDate || rowDate <= selected.virements.toDate);
+
+              row.style.display = showBanque && showDate ? '' : 'none';
+              if (row.style.display !== 'none') visibleRows++;
+            }
           });
 
           // Handle "no results" message
@@ -655,8 +833,9 @@
           }
         };
 
-        // Apply filters to the operations table
-        filterTableRows(rows.operations, tables.operations, 'noOperationMsg', 8);
+        // Apply filters to both tables
+        filterTableRows(rows.operations, tables.operations, 'noOperationMsg', 8, 'operations');
+        filterTableRows(rows.virements, tables.virements, 'noVirementMsg', 5, 'virements');
 
         // Update totals
         updateTotals();
@@ -665,6 +844,7 @@
       // Update totals for visible rows
       const updateTotals = () => {
         let totalOperations = 0;
+        let totalVirements = 0;
 
         rows.operations.forEach(row => {
           if (row.style.display !== 'none') {
@@ -673,18 +853,31 @@
           }
         });
 
-        // Update table footer
+        rows.virements.forEach(row => {
+          if (row.style.display !== 'none') {
+            const montant = parseFrenchNumber(row.querySelector('.montant')?.textContent);
+            totalVirements += montant;
+          }
+        });
+
+        // Update table footers
         if (totals.operations) totals.operations.textContent = formatFrenchNumber(totalOperations);
+        if (totals.virements) totals.virements.textContent = formatFrenchNumber(totalVirements);
       };
 
       // Reset filters to default values
-      const resetFilters = () => {
-        filters.type.value = '';
-        filters.statut.value = '';
-        filters.fournisseur.value = '';
-        filters.banque.value = '';
-        if (filters.dateFrom) filters.dateFrom.value = '2020-01-01';
-        if (filters.dateTo) filters.dateTo.value = '';
+      const resetFilters = (table) => {
+        if (table === 'operations') {
+          filters.operations.type.value = '';
+          filters.operations.fournisseur.value = '';
+          filters.operations.banque.value = '';
+          filters.operations.dateFrom.value = '2020-01-01';
+          filters.operations.dateTo.value = '';
+        } else if (table === 'virements') {
+          filters.virements.banque.value = '';
+          filters.virements.dateFrom.value = '2020-01-01';
+          filters.virements.dateTo.value = '';
+        }
         filterRows();
       };
 
@@ -699,8 +892,8 @@
         });
       };
 
-      // Generate PDF for operations table
-      window.downloadPDF = async () => {
+      // Generate PDF for specified table
+      window.downloadPDF = async (tableId) => {
         try {
           await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
           await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js');
@@ -710,7 +903,8 @@
           
           pdf.setFontSize(20);
           pdf.setTextColor(30, 30, 120);
-          pdf.text('Historique des Opérations', 20, 20);
+          const title = tableId === 'chequesTable' ? 'Historique des Opérations' : 'Virements De fonds';
+          pdf.text(title, 20, 20);
           pdf.setFontSize(11);
           pdf.setTextColor(80, 80, 80);
           const now = new Date();
@@ -718,10 +912,13 @@
 
           const data = [];
           let totalAmount = 0;
-          rows.operations.forEach(row => {
+          const rowsToProcess = tableId === 'chequesTable' ? rows.operations : rows.virements;
+          const isOperationsTable = tableId === 'chequesTable';
+
+          rowsToProcess.forEach(row => {
             if (row.style.display !== 'none') {
               const cells = row.querySelectorAll('td');
-              if (cells.length >= 8) {
+              if (isOperationsTable && cells.length >= 8) {
                 const montant = parseFrenchNumber(cells[5].textContent);
                 totalAmount += montant;
                 data.push([
@@ -734,29 +931,56 @@
                   cells[6].textContent.trim(),
                   cells[7].querySelector('input')?.value || cells[7].textContent.trim()
                 ]);
+              } else if (!isOperationsTable && cells.length >= 5) {
+                const montant = parseFrenchNumber(cells[3].textContent);
+                totalAmount += montant;
+                data.push([
+                  cells[0].textContent.trim(),
+                  cells[1].textContent.trim(),
+                  cells[2].textContent.trim(),
+                  formatFrenchNumber(montant),
+                  cells[4].textContent.trim()
+                ]);
               }
             }
           });
-          if (data.length > 0) data.push(['', '', '', '', 'Total', formatFrenchNumber(totalAmount), '', '']);
+
+          if (data.length > 0) {
+            if (isOperationsTable) {
+              data.push(['', '', '', '', 'Total', formatFrenchNumber(totalAmount), '', '']);
+            } else {
+              data.push(['', '', 'Total', formatFrenchNumber(totalAmount), '']);
+            }
+          }
 
           pdf.autoTable({
-            head: [['Date Etablissement', 'Type', 'Numéro', 'Banque', 'Bénéficiaire', 'Montant', 'Date Échéance', 'Observation']],
+            head: isOperationsTable 
+              ? [['Date Etablissement', 'Type', 'Numéro', 'Banque', 'Bénéficiaire', 'Montant', 'Date Échéance', 'Observation']]
+              : [['Date Etablissement', 'Banque', 'Bénéficiaire', 'Montant', 'Observation']],
             body: data,
             startY: 40,
             theme: 'grid',
             headStyles: { fillColor: [52, 152, 219], textColor: 255, fontStyle: 'bold', fontSize: 11 },
             styles: { fontSize: 10, cellPadding: 3, lineColor: [230, 230, 230], lineWidth: 0.1 },
             alternateRowStyles: { fillColor: [245, 245, 245] },
-            columnStyles: {
-              0: { halign: 'left', cellWidth: 25 },
-              1: { halign: 'left', cellWidth: 25 },
-              2: { halign: 'left', cellWidth: 20 },
-              3: { halign: 'left', cellWidth: 25 },
-              4: { halign: 'left', cellWidth: 30 },
-              5: { halign: 'right', cellWidth: 25 },
-              6: { halign: 'center', cellWidth: 25 },
-              7: { halign: 'left', cellWidth: 40 }
-            },
+            columnStyles: isOperationsTable 
+              ? {
+                  0: { halign: 'left', cellWidth: 40 },
+                  1: { halign: 'left', cellWidth: 30 },
+                  2: { halign: 'left', cellWidth: 30 },
+                  3: { halign: 'left', cellWidth: 30 },
+                  4: { halign: 'left', cellWidth: 35 },
+                  5: { halign: 'right', cellWidth: 30 },
+                  6: { halign: 'center', cellWidth: 30 },
+                  7: { halign: 'left', cellWidth: 40 }
+                }
+              : {
+                  0: { halign: 'left', cellWidth: 50 },
+                  1: { halign: 'left', cellWidth: 50 },
+                  2: { halign: 'left', cellWidth: 50 },
+                  3: { halign: 'right', cellWidth:50 },
+                  4: { halign: 'left', cellWidth: 50 }
+                },
             didParseCell: (tableData) => {
               if (tableData.row.index === data.length - 1) {
                 tableData.cell.styles.fontStyle = 'bold';
@@ -765,34 +989,52 @@
             }
           });
 
-          pdf.save(`historique-operations-${now.toISOString().split('T')[0]}.pdf`);
+          pdf.save(`${title.toLowerCase().replace(/\s/g, '-')}-${now.toISOString().split('T')[0]}.pdf`);
         } catch (error) {
           console.error('Erreur PDF:', error);
           alert('Erreur lors de la génération du PDF');
         }
       };
 
-      // Generate Excel for operations table
-      window.downloadExcel = async () => {
+      // Generate Excel for specified table
+      window.downloadExcel = async (tableId) => {
         try {
           await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
           
           const wb = XLSX.utils.book_new();
+          const isOperationsTable = tableId === 'chequesTable';
           const ws_data = [
-            ["Date Etablissement", "Type", "Numéro", "Banque", "Bénéficiaire", "Montant", "Date Échéance", "Observation"]
+            isOperationsTable 
+              ? ["Date Etablissement", "Type", "Numéro", "Banque", "Bénéficiaire", "Montant", "Date Échéance", "Observation"]
+              : ["Date Etablissement", "Banque", "Bénéficiaire", "Montant", "Observation"]
           ];
           let total = 0;
-          rows.operations.forEach(row => {
+          const rowsToProcess = isOperationsTable ? rows.operations : rows.virements;
+
+          rowsToProcess.forEach(row => {
             if (row.style.display !== 'none') {
               const cells = row.querySelectorAll('td');
-              if (cells.length >= 8) {
+              if (isOperationsTable && cells.length >= 8) {
                 const rowData = [];
                 for (let i = 0; i < 8; i++) {
                   let text = cells[i].querySelector('input') ? cells[i].querySelector('input').value : cells[i].textContent.trim();
                   if (i === 5) { // montant
                     const num = parseFrenchNumber(text);
                     total += num;
-                    rowData.push(num); // push as number for Excel
+                    rowData.push(num);
+                  } else {
+                    rowData.push(text);
+                  }
+                }
+                ws_data.push(rowData);
+              } else if (!isOperationsTable && cells.length >= 5) {
+                const rowData = [];
+                for (let i = 0; i < 5; i++) {
+                  let text = cells[i].textContent.trim();
+                  if (i === 3) { // montant
+                    const num = parseFrenchNumber(text);
+                    total += num;
+                    rowData.push(num);
                   } else {
                     rowData.push(text);
                   }
@@ -801,11 +1043,17 @@
               }
             }
           });
-          ws_data.push(['', '', '', '', 'Total', total, '', '']);
+
+          if (isOperationsTable) {
+            ws_data.push(['', '', '', '', 'Total', total, '', '']);
+          } else {
+            ws_data.push(['', '', 'Total', total, '']);
+          }
 
           const ws = XLSX.utils.aoa_to_sheet(ws_data);
-          XLSX.utils.book_append_sheet(wb, ws, "Historique");
-          XLSX.writeFile(wb, `historique-operations-${new Date().toISOString().split('T')[0]}.xlsx`);
+          const sheetName = isOperationsTable ? 'Historique' : 'Virements';
+          XLSX.utils.book_append_sheet(wb, ws, sheetName);
+          XLSX.writeFile(wb, `${sheetName.toLowerCase()}-${new Date().toISOString().split('T')[0]}.xlsx`);
         } catch (error) {
           console.error('Erreur Excel:', error);
           alert('Erreur lors de la génération du fichier Excel');
@@ -813,13 +1061,16 @@
       };
 
       // Event Listeners
-      filters.type?.addEventListener('change', filterRows);
-      filters.statut?.addEventListener('change', filterRows);
-      filters.fournisseur?.addEventListener('change', filterRows);
-      filters.banque?.addEventListener('change', filterRows);
-      filters.dateFrom?.addEventListener('change', filterRows);
-      filters.dateTo?.addEventListener('change', filterRows);
-      filters.resetButton?.addEventListener('click', resetFilters);
+      filters.operations.type?.addEventListener('change', filterRows);
+      filters.operations.fournisseur?.addEventListener('change', filterRows);
+      filters.operations.banque?.addEventListener('change', filterRows);
+      filters.operations.dateFrom?.addEventListener('change', filterRows);
+      filters.operations.dateTo?.addEventListener('change', filterRows);
+      filters.operations.resetButton?.addEventListener('click', () => resetFilters('operations'));
+      filters.virements.banque?.addEventListener('change', filterRows);
+      filters.virements.dateFrom?.addEventListener('change', filterRows);
+      filters.virements.dateTo?.addEventListener('change', filterRows);
+      filters.virements.resetButton?.addEventListener('click', () => resetFilters('virements'));
 
       // Initial filter run
       filterRows();
@@ -830,5 +1081,4 @@
   <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
   <script src="/js/sb-admin-2.min.js"></script>
 </body>
-
 </html>
