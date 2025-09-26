@@ -224,311 +224,421 @@
       </div>
     </div>
   </div>
- <script>
+  <script>
   <% function formatDateToDDMMYYYY(dateInput) {
-  if (!dateInput) return '';
-  const date = new Date(dateInput);
-  if (isNaN(date)) return dateInput;
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
-  return `${day}/${month}/${year}`;
-} %>
+    if (!dateInput) return '';
+    const date = new Date(dateInput);
+    if (isNaN(date)) return dateInput;
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  } %>
 
-const chantiers = <%- JSON.stringify(chantiers) %>;
+  const chantiers = <%- JSON.stringify(chantiers) %>;
 
-document.addEventListener("DOMContentLoaded", function () {
-  const { jsPDF } = window.jspdf;
-  const uploadForm = document.getElementById('excelUploadForm');
-  const fileInput = document.getElementById('excelFile');
-  const msg = document.getElementById('excelUploadMsg');
-  const table = document.getElementById("editableTable");
-  const resetFilters = document.getElementById('resetFilters');
-  const supplierSearch = document.getElementById('supplierSearch');
-  const banqueFilter = document.getElementById('banqueFilter');
-  const supplierFilter = document.getElementById('supplierFilter');
-  const statusFilter = document.getElementById('statusFilter');
-  const chantierFilter = document.getElementById('chantierFilter');
-  const dateToFilter = document.getElementById('dateToFilter');
+  document.addEventListener("DOMContentLoaded", function () {
+    const { jsPDF } = window.jspdf;
+    const uploadForm = document.getElementById('excelUploadForm');
+    const fileInput = document.getElementById('excelFile');
+    const msg = document.getElementById('excelUploadMsg');
+    const table = document.getElementById("editableTable");
+    const resetFilters = document.getElementById('resetFilters');
+    const supplierSearch = document.getElementById('supplierSearch');
+    const banqueFilter = document.getElementById('banqueFilter');
+    const supplierFilter = document.getElementById('supplierFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const chantierFilter = document.getElementById('chantierFilter');
+    const dateToFilter = document.getElementById('dateToFilter');
 
-  // Initialize chantier cells
-  document.querySelectorAll('td[data-name="chantier"]').forEach(cell => {
-    const span = cell.querySelector('span');
-    if (!span) {
-      const text = cell.textContent.trim() || '-- Sélectionner un chantier --';
-      cell.innerHTML = '';
-      const newSpan = document.createElement('span');
-      newSpan.className = 'statut-badge chantier';
-      newSpan.textContent = text;
-      newSpan.onclick = () => window.toggleSelectChantier(newSpan);
-      cell.appendChild(newSpan);
+    // Initialize chantier cells
+    document.querySelectorAll('td[data-name="chantier"]').forEach(cell => {
+      const span = cell.querySelector('span');
+      if (!span) {
+        const text = cell.textContent.trim() || '-- Sélectionner un chantier --';
+        cell.innerHTML = '';
+        const newSpan = document.createElement('span');
+        newSpan.className = 'statut-badge chantier';
+        newSpan.textContent = text;
+        newSpan.onclick = () => window.toggleSelectChantier(newSpan);
+        cell.appendChild(newSpan);
+      }
+    });
+
+    // Convert dd/mm/yyyy → yyyy-mm-dd ISO format or null if empty
+    function convertDateToISO(dateStr) {
+      if (!dateStr || dateStr.trim() === '') return null;
+      const parts = dateStr.split('/');
+      if (parts.length !== 3) return null;
+      const [day, month, year] = parts;
+      const isoDate = `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      const date = new Date(isoDate);
+      return isNaN(date) ? null : isoDate;
     }
-  });
 
-  // Convert dd/mm/yyyy → yyyy-mm-dd ISO format or null if empty
-  function convertDateToISO(dateStr) {
-    if (!dateStr || dateStr.trim() === '') return null;
-    const parts = dateStr.split('/');
-    if (parts.length !== 3) return null;
-    const [day, month, year] = parts;
-    const isoDate = `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    const date = new Date(isoDate);
-    return isNaN(date) ? null : isoDate;
-  }
-
-  // Update total for visible rows
-  function updateTotal() {
-    const rows = document.querySelectorAll("#editableTable tbody tr:not(:last-child)");
-    let total = 0;
-    rows.forEach(row => {
-      if (row.style.display !== "none") {
-        const montantCell = row.querySelector("td[data-name='montant']");
-        if (montantCell) {
-          const value = parseFloat(montantCell.innerText.replace(/,/g, '.').replace(/[^\d.-]/g, ''));
-          if (!isNaN(value)) total += value;
+    // Update total for visible rows
+    function updateTotal() {
+      const rows = document.querySelectorAll("#editableTable tbody tr:not(:last-child)");
+      let total = 0;
+      rows.forEach(row => {
+        if (row.style.display !== "none") {
+          const montantCell = row.querySelector("td[data-name='montant']");
+          if (montantCell) {
+            const value = parseFloat(montantCell.innerText.replace(/,/g, '.').replace(/[^\d.-]/g, ''));
+            if (!isNaN(value)) total += value;
+          }
         }
+      });
+      const totalCell = document.getElementById("total");
+      if (totalCell) {
+        totalCell.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       }
-    });
-    const totalCell = document.getElementById("total");
-    if (totalCell) {
-      totalCell.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
-  }
 
-  // Get status class for styling
-  function getStatusClass(statut) {
-    const normalized = statut.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').trim();
-    switch (normalized) {
-      case 'non-echu': return 'non-echu';
-      case 'paye': return 'paye';
-      case 'impaye': return 'impaye';
-      case 'echu': return 'echu';
-      default: return 'non-echu';
+    // Get status class for styling
+    function getStatusClass(statut) {
+      const normalized = statut.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').trim();
+      switch (normalized) {
+        case 'non-echu': return 'non-echu';
+        case 'paye': return 'paye';
+        case 'impaye': return 'impaye';
+        case 'echu': return 'echu';
+        default: return 'non-echu';
+      }
     }
-  }
 
-  // Mark row as dirty on edit
-  function markRowDirty(cell) {
-    const row = cell.closest('tr');
-    if (row) {
-      row.setAttribute("data-dirty", "true");
-      row.classList.add("excel-dirty-row");
+    // Mark row as dirty on edit
+    function markRowDirty(cell) {
+      const row = cell.closest('tr');
+      if (row) {
+        row.setAttribute("data-dirty", "true");
+        row.classList.add("excel-dirty-row");
+      }
     }
-  }
 
-  // Collect row data
-  function collectRowData(row) {
-    const data = {};
-    const cells = row.querySelectorAll("td[data-name]");
-    
-    cells.forEach(cell => {
-      const key = cell.getAttribute("data-name");
-      let value;
+    // Collect row data
+    function collectRowData(row) {
+      const data = {};
+      const cells = row.querySelectorAll("td[data-name]");
       
-      if (key === 'statut' || key === 'chantier') {
-        const span = cell.querySelector("span");
-        const select = cell.querySelector("select");
-        value = span ? span.textContent.trim() : (select ? select.value : "");
-        if (key === 'chantier' && value === '-- Sélectionner un chantier --') {
-          value = null;
+      cells.forEach(cell => {
+        const key = cell.getAttribute("data-name");
+        let value;
+        
+        if (key === 'statut' || key === 'chantier') {
+          const span = cell.querySelector("span");
+          const select = cell.querySelector("select");
+          value = span ? span.textContent.trim() : (select ? select.value : "");
+          if (key === 'chantier' && value === '-- Sélectionner un chantier --') {
+            value = null;
+          }
+        } else {
+          value = cell.innerText.trim();
         }
-      } else {
-        value = cell.innerText.trim();
+        
+        if (key === 'dateEcheance') {
+          data[key] = convertDateToISO(value);
+        } else if (key === 'montant') {
+          value = value.replace(/,/g, '.').replace(/[^\d.-]/g, '');
+          const parsedValue = parseFloat(value);
+          data[key] = isNaN(parsedValue) ? null : parsedValue;
+        } else {
+          data[key] = value || null;
+        }
+      });
+
+      // Validate required fields
+      if (!data.beneficiaire || data.beneficiaire.trim() === '') {
+        throw new Error("Bénéficiaire est requis.");
       }
-      
-      if (key === 'dateEcheance') {
-        data[key] = convertDateToISO(value);
-      } else if (key === 'montant') {
-        value = value.replace(/,/g, '.').replace(/[^\d.-]/g, '');
-        const parsedValue = parseFloat(value);
-        data[key] = isNaN(parsedValue) ? null : parsedValue;
-      } else {
-        data[key] = value || null;
+      if (!data.banque || data.banque.trim() === '') {
+        throw new Error("Banque est requise.");
+      }
+      if (data.montant === null || data.montant === undefined) {
+        throw new Error("Montant doit être un nombre valide.");
+      }
+
+      return data;
+    }
+
+    // Save a single row
+    async function saveRow(row, isPatchOnly = false) {
+      if (!row.getAttribute("data-dirty")) return { success: true, id: row.getAttribute("data-id") || 'nouvelle' };
+      const id = row.getAttribute("data-id");
+      if (isPatchOnly && !id) return { success: true, id: 'nouvelle' }; // Skip new rows for PATCH-only
+      try {
+        const data = collectRowData(row);
+        
+        let response;
+        if (id) {
+          response = await fetch(`/tresorerie/payavenir/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+          });
+        } else if (!isPatchOnly) {
+          response = await fetch(`/tresorerie/payavenir`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+          });
+        } else {
+          return { success: true, id: 'nouvelle' }; // Skip POST if patch-only
+        }
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (!id) row.setAttribute("data-id", result.id);
+          row.removeAttribute("data-dirty");
+          row.classList.remove("excel-dirty-row");
+          updateTotal();
+          return { success: true, id: id || result.id };
+        } else {
+          const errorData = await response.json();
+          throw new Error(`Ligne ${id || 'nouvelle'} : ${errorData.error || "Erreur inconnue"}`);
+        }
+      } catch (err) {
+        console.error("Erreur:", err);
+        return { success: false, error: err.message, id: id || 'nouvelle' };
+      }
+    }
+
+    // Add event listener for contenteditable fields
+    table.addEventListener('input', function (e) {
+      if (e.target.hasAttribute('contenteditable')) {
+        markRowDirty(e.target);
       }
     });
 
-    // Validate required fields
-    if (!data.beneficiaire || data.beneficiaire.trim() === '') {
-      throw new Error("Bénéficiaire est requis.");
-    }
-    if (!data.banque || data.banque.trim() === '') {
-      throw new Error("Banque est requise.");
-    }
-    if (data.montant === null || data.montant === undefined) {
-      throw new Error("Montant doit être un nombre valide.");
-    }
+    // Toggle status select
+    window.toggleSelect = function(spanElem) {
+      const currentStatut = spanElem.textContent.trim();
+      const statutOptions = ['non échu', 'impayé', 'échu', 'payé'];
+      const cell = spanElem.closest('td');
+      const row = spanElem.closest('tr');
 
-    return data;
-  }
-
-  // Save a single row
-  async function saveRow(row) {
-    if (!row.getAttribute("data-dirty")) return;
-    const id = row.getAttribute("data-id");
-    try {
-      const data = collectRowData(row);
-      
-      let response;
-      if (id) {
-        response = await fetch(`/tresorerie/payavenir/${id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        });
-      } else {
-        response = await fetch(`/tresorerie/payavenir`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        });
-      }
-      
-      if (response.ok) {
-        const result = await response.json();
-        if (!id) row.setAttribute("data-id", result.id);
-        row.removeAttribute("data-dirty");
-        row.classList.remove("excel-dirty-row");
-        updateTotal();
-        return { success: true, id: id || 'nouvelle' };
-      } else {
-        const errorData = await response.json();
-        throw new Error(`Ligne ${id || 'nouvelle'} : ${errorData.error || "Erreur inconnue"}`);
-      }
-    } catch (err) {
-      console.error("Erreur:", err);
-      return { success: false, error: err.message, id: id || 'nouvelle' };
-    }
-  }
-
-  // Add event listener for contenteditable fields
-  table.addEventListener('input', function (e) {
-    if (e.target.hasAttribute('contenteditable')) {
-      markRowDirty(e.target);
-    }
-  });
-
-  // Toggle status select
-  window.toggleSelect = function(spanElem) {
-    const currentStatut = spanElem.textContent.trim();
-    const statutOptions = ['non échu', 'impayé', 'échu', 'payé'];
-    const cell = spanElem.closest('td');
-    const row = spanElem.closest('tr');
-
-    const select = document.createElement('select');
-    select.className = 'statut-select form-control';
-    select.style.cssText = 'width: 100%; height: auto; font-size: 14px; padding: 5px;';
-    statutOptions.forEach(option => {
-      const opt = document.createElement('option');
-      opt.value = option;
-      opt.textContent = option;
-      if (option.toLowerCase() === currentStatut.toLowerCase()) opt.selected = true;
-      select.appendChild(opt);
-    });
-
-    cell.innerHTML = '';
-    cell.appendChild(select);
-    select.focus();
-
-    select.addEventListener('change', function() {
-      const newStatut = select.value;
-      markRowDirty(cell);
-
-      const statusClass = getStatusClass(newStatut);
-      const newSpan = document.createElement('span');
-      newSpan.className = `statut-badge ${statusClass}`;
-      newSpan.textContent = newStatut;
-      newSpan.onclick = () => window.toggleSelect(newSpan);
-      cell.innerHTML = '';
-      cell.appendChild(newSpan);
-      newSpan.classList.add('status-updating');
-    });
-
-    select.addEventListener('blur', () => setTimeout(() => { if (select.parentNode) restoreSpan(); }, 100));
-    select.addEventListener('keydown', e => { if (e.key === 'Escape') restoreSpan(); });
-
-    function restoreSpan() {
-      const statusClass = getStatusClass(currentStatut);
-      const span = document.createElement('span');
-      span.className = `statut-badge ${statusClass}`;
-      span.textContent = currentStatut;
-      span.onclick = () => window.toggleSelect(span);
-      cell.innerHTML = '';
-      cell.appendChild(span);
-    }
-  };
-
-  // Toggle chantier select
-  window.toggleSelectChantier = function(spanElement) {
-    const currentChantier = spanElement.textContent.trim();
-    const cell = spanElement.closest('td');
-    const row = spanElement.closest('tr');
-
-    const select = document.createElement('select');
-    select.className = 'statut-select form-control';
-    select.style.cssText = 'width: 100%; height: auto; font-size: 14px; padding: 5px;';
-
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = '-- Sélectionner un chantier --';
-    select.appendChild(defaultOption);
-
-    if (!chantiers || !Array.isArray(chantiers) || chantiers.length === 0) {
-      console.error('Chantiers array is undefined, empty, or not an array');
-      const errorOption = document.createElement('option');
-      errorOption.value = '';
-      errorOption.textContent = 'Aucun chantier disponible';
-      select.appendChild(errorOption);
-    } else {
-      chantiers.forEach(chantier => {
+      const select = document.createElement('select');
+      select.className = 'statut-select form-control';
+      select.style.cssText = 'width: 100%; height: auto; font-size: 14px; padding: 5px;';
+      statutOptions.forEach(option => {
         const opt = document.createElement('option');
-        opt.value = chantier.nom;
-        opt.textContent = chantier.nom;
-        if (chantier.nom.toLowerCase() === currentChantier.toLowerCase()) {
-          opt.selected = true;
-        }
+        opt.value = option;
+        opt.textContent = option;
+        if (option.toLowerCase() === currentStatut.toLowerCase()) opt.selected = true;
         select.appendChild(opt);
       });
-    }
 
-    cell.innerHTML = '';
-    cell.appendChild(select);
-    select.focus();
-
-    select.addEventListener('change', function() {
-      const newChantier = select.value;
-      markRowDirty(cell);
-
-      const newSpan = document.createElement('span');
-      newSpan.className = 'statut-badge chantier';
-      newSpan.textContent = newChantier || '-- Sélectionner un chantier --';
-      newSpan.onclick = () => window.toggleSelectChantier(newSpan);
       cell.innerHTML = '';
-      cell.appendChild(newSpan);
-      newSpan.classList.add('status-updating');
+      cell.appendChild(select);
+      select.focus();
+
+      select.addEventListener('change', function() {
+        const newStatut = select.value;
+        markRowDirty(cell);
+
+        const statusClass = getStatusClass(newStatut);
+        const newSpan = document.createElement('span');
+        newSpan.className = `statut-badge ${statusClass}`;
+        newSpan.textContent = newStatut;
+        newSpan.onclick = () => window.toggleSelect(newSpan);
+        cell.innerHTML = '';
+        cell.appendChild(newSpan);
+        newSpan.classList.add('status-updating');
+      });
+
+      select.addEventListener('blur', () => setTimeout(() => { if (select.parentNode) restoreSpan(); }, 100));
+      select.addEventListener('keydown', e => { if (e.key === 'Escape') restoreSpan(); });
+
+      function restoreSpan() {
+        const statusClass = getStatusClass(currentStatut);
+        const span = document.createElement('span');
+        span.className = `statut-badge ${statusClass}`;
+        span.textContent = currentStatut;
+        span.onclick = () => window.toggleSelect(span);
+        cell.innerHTML = '';
+        cell.appendChild(span);
+      }
+    };
+
+    // Toggle chantier select
+    window.toggleSelectChantier = function(spanElement) {
+      const currentChantier = spanElement.textContent.trim();
+      const cell = spanElement.closest('td');
+      const row = spanElement.closest('tr');
+
+      const select = document.createElement('select');
+      select.className = 'statut-select form-control';
+      select.style.cssText = 'width: 100%; height: auto; font-size: 14px; padding: 5px;';
+
+      const defaultOption = document.createElement('option');
+      defaultOption.value = '';
+      defaultOption.textContent = '-- Sélectionner un chantier --';
+      select.appendChild(defaultOption);
+
+      if (!chantiers || !Array.isArray(chantiers) || chantiers.length === 0) {
+        console.error('Chantiers array is undefined, empty, or not an array');
+        const errorOption = document.createElement('option');
+        errorOption.value = '';
+        errorOption.textContent = 'Aucun chantier disponible';
+        select.appendChild(errorOption);
+      } else {
+        chantiers.forEach(chantier => {
+          const opt = document.createElement('option');
+          opt.value = chantier.nom;
+          opt.textContent = chantier.nom;
+          if (chantier.nom.toLowerCase() === currentChantier.toLowerCase()) {
+            opt.selected = true;
+          }
+          select.appendChild(opt);
+        });
+      }
+
+      cell.innerHTML = '';
+      cell.appendChild(select);
+      select.focus();
+
+      select.addEventListener('change', function() {
+        const newChantier = select.value;
+        markRowDirty(cell);
+
+        const newSpan = document.createElement('span');
+        newSpan.className = 'statut-badge chantier';
+        newSpan.textContent = newChantier || '-- Sélectionner un chantier --';
+        newSpan.onclick = () => window.toggleSelectChantier(newSpan);
+        cell.innerHTML = '';
+        cell.appendChild(newSpan);
+        newSpan.classList.add('status-updating');
+      });
+
+      select.addEventListener('blur', () => setTimeout(() => { if (select.parentNode) restoreSpan(); }, 100));
+      select.addEventListener('keydown', e => { if (e.key === 'Escape') restoreSpan(); });
+
+      function restoreSpan() {
+        const span = document.createElement('span');
+        span.className = 'statut-badge chantier';
+        span.textContent = currentChantier || '-- Sélectionner un chantier --';
+        span.onclick = () => window.toggleSelectChantier(span);
+        cell.innerHTML = '';
+        cell.appendChild(span);
+      }
+    };
+
+    // Auto-save for PATCH requests when clicking outside the table
+    document.addEventListener('click', async function (e) {
+      if (!table.contains(e.target)) {
+        const dirtyRows = document.querySelectorAll("#editableTable tbody tr[data-dirty='true'][data-id]");
+        let successCount = 0;
+        let errorMessages = [];
+
+        for (const row of dirtyRows) {
+          const result = await saveRow(row, true); // true for PATCH-only
+          if (result.success) {
+            successCount++;
+          } else {
+            errorMessages.push(result.error);
+          }
+        }
+
+        if (successCount > 0 || errorMessages.length > 0) {
+          let message = successCount > 0 ? `${successCount} ligne(s) mise(s) à jour avec succès.` : '';
+          if (errorMessages.length > 0) {
+            message += `\nErreurs rencontrées :\n${errorMessages.join('\n')}`;
+          }
+          alert(message);
+          if (errorMessages.length === 0 && successCount > 0) {
+            window.location.reload();
+          }
+        }
+      }
     });
 
-    select.addEventListener('blur', () => setTimeout(() => { if (select.parentNode) restoreSpan(); }, 100));
-    select.addEventListener('keydown', e => { if (e.key === 'Escape') restoreSpan(); });
+    // Add new row
+    document.getElementById("addRowBtn").addEventListener("click", function () {
+      const tbody = table.querySelector("tbody");
+      const fields = [
+        { name: 'designation', editable: true, value: '' },
+        { name: 'banque', editable: true, value: '' },
+        { name: 'beneficiaire', editable: true, value: '' },
+        { name: 'montant', editable: true, value: '0,00' },
+        { name: 'dateEcheance', editable: true, value: '' },
+        { name: 'statut', editable: false, value: 'non échu' },
+        { name: 'chantier', editable: false, value: '' },
+        { name: 'obs', editable: true, value: '' },
+      ];
 
-    function restoreSpan() {
-      const span = document.createElement('span');
-      span.className = 'statut-badge chantier';
-      span.textContent = currentChantier || '-- Sélectionner un chantier --';
-      span.onclick = () => window.toggleSelectChantier(span);
-      cell.innerHTML = '';
-      cell.appendChild(span);
-    }
-  };
+      const tr = document.createElement("tr");
+      fields.forEach(field => {
+        const td = document.createElement("td");
+        td.setAttribute('data-name', field.name);
+        
+        if (field.name === 'statut') {
+          td.classList.add('statut-cell');
+          const span = document.createElement('span');
+          span.className = 'statut-badge non-echu';
+          span.textContent = field.value;
+          span.onclick = () => window.toggleSelect(span);
+          td.appendChild(span);
+        } else if (field.name === 'chantier') {
+          td.classList.add('chantier-cell');
+          const span = document.createElement('span');
+          span.className = 'statut-badge chantier';
+          span.textContent = '-- Sélectionner un chantier --';
+          span.onclick = () => window.toggleSelectChantier(span);
+          td.appendChild(span);
+        } else {
+          td.contentEditable = field.editable;
+          td.textContent = field.value;
+        }
+        tr.appendChild(td);
+      });
 
-  // Auto-save when clicking outside the table
-  document.addEventListener('click', async function (e) {
-    if (!table.contains(e.target)) {
+      const tdDelete = document.createElement("td");
+      tdDelete.innerHTML = '<button class="delete-row excel-delete-btn" title="Supprimer" aria-label="Supprimer"><i class="fas fa-trash"></i></button>';
+      tr.appendChild(tdDelete);
+      tr.setAttribute("data-dirty", "true");
+      tr.classList.add("excel-dirty-row");
+      tbody.insertBefore(tr, tbody.firstChild);
+      updateTotal();
+    });
+
+    // Delete row
+    table.addEventListener('click', async function (e) {
+      if (e.target.closest('.delete-row')) {
+        const row = e.target.closest('tr');
+        const id = row.getAttribute('data-id');
+        if (id) {
+          if (confirm('Voulez-vous vraiment supprimer cette ligne ?')) {
+            try {
+              const response = await fetch(`/tresorerie/payavenir/${id}`, {
+                method: 'DELETE',
+              });
+              if (response.ok) {
+                row.remove();
+                updateTotal();
+              } else {
+                const errorData = await response.json();
+                alert(`Erreur lors de la suppression : ${errorData.error || 'Erreur inconnue'}`);
+              }
+            } catch (err) {
+              console.error('Erreur:', err);
+              alert(`Erreur lors de la suppression : ${err.message}`);
+            }
+          }
+        } else {
+          row.remove();
+          updateTotal();
+        }
+      }
+    });
+
+    // Save all dirty rows (manual save via Enregistrer button for POST and PATCH)
+    document.getElementById("saveTableBtn").addEventListener("click", async function () {
       const dirtyRows = document.querySelectorAll("#editableTable tbody tr[data-dirty='true']");
       let successCount = 0;
       let errorMessages = [];
 
       for (const row of dirtyRows) {
-        const result = await saveRow(row);
+        const result = await saveRow(row, false); // false to allow both POST and PATCH
         if (result.success) {
           successCount++;
         } else {
@@ -536,353 +646,249 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
-      if (successCount > 0 || errorMessages.length > 0) {
-          if (errorMessages.length > 0) {
-          message += `\nErreurs rencontrées :\n${errorMessages.join('\n')}`;
-        }
+      let message = successCount > 0 ? `${successCount} ligne(s) enregistrée(s) avec succès.` : '';
+      if (errorMessages.length > 0) {
+        message += `\nErreurs rencontrées :\n${errorMessages.join('\n')}`;
+      }
+      if (message) {
         alert(message);
-        if (errorMessages.length === 0 && successCount > 0) {
-          window.location.reload();
-        }
       }
-    }
-  });
-
-  // Add new row
-  document.getElementById("addRowBtn").addEventListener("click", function () {
-    const tbody = table.querySelector("tbody");
-    const fields = [
-      { name: 'designation', editable: true, value: '' },
-      { name: 'banque', editable: true, value: '' },
-      { name: 'beneficiaire', editable: true, value: '' },
-      { name: 'montant', editable: true, value: '0,00' },
-      { name: 'dateEcheance', editable: true, value: '' },
-      { name: 'statut', editable: false, value: 'non échu' },
-      { name: 'chantier', editable: false, value: '' },
-      { name: 'obs', editable: true, value: '' },
-    ];
-
-    const tr = document.createElement("tr");
-    fields.forEach(field => {
-      const td = document.createElement("td");
-      td.setAttribute('data-name', field.name);
-      
-      if (field.name === 'statut') {
-        td.classList.add('statut-cell');
-        const span = document.createElement('span');
-        span.className = 'statut-badge non-echu';
-        span.textContent = field.value;
-        span.onclick = () => window.toggleSelect(span);
-        td.appendChild(span);
-      } else if (field.name === 'chantier') {
-        td.classList.add('chantier-cell');
-        const span = document.createElement('span');
-        span.className = 'statut-badge chantier';
-        span.textContent = '-- Sélectionner un chantier --';
-        span.onclick = () => window.toggleSelectChantier(span);
-        td.appendChild(span);
-      } else {
-        td.contentEditable = field.editable;
-        td.textContent = field.value;
+      if (errorMessages.length === 0 && successCount > 0) {
+        window.location.reload();
       }
-      tr.appendChild(td);
+      updateTotal();
     });
 
-    const tdDelete = document.createElement("td");
-    tdDelete.innerHTML = '<button class="delete-row excel-delete-btn" title="Supprimer" aria-label="Supprimer"><i class="fas fa-trash"></i></button><button class="update-row excel-save-btn btn btn-sm btn-warning" title="Mettre à jour" aria-label="Mettre à jour" style="margin-left:5px;"><i class="fas fa-edit"></i></button>';
-    tr.appendChild(tdDelete);
-    tr.setAttribute("data-dirty", "true");
-    tr.classList.add("excel-dirty-row");
-    tbody.insertBefore(tr, tbody.firstChild);
-    updateTotal();
-  });
+    // Unified filter function
+    function applyFilters() {
+      const searchTerm = supplierSearch.value.toLowerCase();
+      const selectedSupplier = supplierFilter.value.toLowerCase();
+      const selectedBanque = banqueFilter.value.toLowerCase();
+      const selectedStatus = statusFilter.value.toLowerCase();
+      const selectedChantier = chantierFilter.value.toLowerCase();
+      const dateTo = dateToFilter.value;
 
-  // Delete row
-  table.addEventListener('click', async function (e) {
-    if (e.target.closest('.delete-row')) {
-      const row = e.target.closest('tr');
-      const id = row.getAttribute('data-id');
-      if (id) {
-        if (confirm('Voulez-vous vraiment supprimer cette ligne ?')) {
-          try {
-            const response = await fetch(`/tresorerie/payavenir/${id}`, {
-              method: 'DELETE',
-            });
-            if (response.ok) {
-              row.remove();
-              updateTotal();
-            } else {
-              const errorData = await response.json();
-              alert(`Erreur lors de la suppression : ${errorData.error || 'Erreur inconnue'}`);
-            }
-          } catch (err) {
-            console.error('Erreur:', err);
-            alert(`Erreur lors de la suppression : ${err.message}`);
+      const rows = document.querySelectorAll("#editableTable tbody tr:not(:last-child)");
+      rows.forEach(row => {
+        const designation = row.querySelector("td[data-name='designation']").innerText.toLowerCase();
+        const beneficiaire = row.querySelector("td[data-name='beneficiaire']").innerText.toLowerCase();
+        const banque = row.querySelector("td[data-name='banque']").innerText.toLowerCase();
+        const montant = row.querySelector("td[data-name='montant']").innerText.toLowerCase();
+        const dateEcheanceText = row.querySelector("td[data-name='dateEcheance']").innerText.trim();
+        const statutCell = row.querySelector("td[data-name='statut']");
+        const chantierCell = row.querySelector("td[data-name='chantier']");
+        
+        let statutText = "";
+        if (statutCell) {
+          const span = statutCell.querySelector("span");
+          const select = statutCell.querySelector("select");
+          statutText = (span ? span.textContent : (select ? select.value : "")).toLowerCase().trim();
+        }
+
+        let chantierText = "";
+        if (chantierCell) {
+          const span = chantierCell.querySelector("span");
+          const select = chantierCell.querySelector("select");
+          chantierText = (span ? span.textContent : (select ? select.value : "")).toLowerCase().trim();
+          if (chantierText === '-- sélectionner un chantier --') chantierText = '';
+        }
+
+        let dateEcheanceISO = null;
+        if (dateEcheanceText) {
+          const parts = dateEcheanceText.split('/');
+          if (parts.length === 3) {
+            dateEcheanceISO = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
           }
         }
-      } else {
-        row.remove();
-        updateTotal();
-      }
-    }
-  });
 
-  // Save all dirty rows (manual save via Enregistrer button)
-  document.getElementById("saveTableBtn").addEventListener("click", async function () {
-    const dirtyRows = document.querySelectorAll("#editableTable tbody tr[data-dirty='true']");
-    let successCount = 0;
-    let errorMessages = [];
+        const matchesSearch = !searchTerm || 
+          designation.includes(searchTerm) || 
+          beneficiaire.includes(searchTerm) || 
+          banque.includes(searchTerm) || 
+          montant.includes(searchTerm) || 
+          statutText.includes(searchTerm) || 
+          chantierText.includes(searchTerm);
+        const matchesSupplier = !selectedSupplier || beneficiaire === selectedSupplier;
+        const matchesBanque = !selectedBanque || banque === selectedBanque;
+        const matchesStatus = !selectedStatus || statutText === selectedStatus;
+        const matchesChantier = !selectedChantier || chantierText === selectedChantier;
+        const matchesDate = !dateTo || (dateEcheanceISO && dateEcheanceISO <= dateTo);
 
-    for (const row of dirtyRows) {
-      const result = await saveRow(row);
-      if (result.success) {
-        successCount++;
-      } else {
-        errorMessages.push(result.error);
-      }
-    }
-    
-    updateTotal();
-    window.location.reload();
-    if (errorMessages.length > 0) {
-      message += `\nErreurs rencontrées :\n${errorMessages.join('\n')}`;
-    }
-    alert(message);
-    if (errorMessages.length === 0 && successCount > 0) {
-      window.location.reload();
-    }
-  });
-
-  // Unified filter function
-  function applyFilters() {
-    const searchTerm = supplierSearch.value.toLowerCase();
-    const selectedSupplier = supplierFilter.value.toLowerCase();
-    const selectedBanque = banqueFilter.value.toLowerCase();
-    const selectedStatus = statusFilter.value.toLowerCase();
-    const selectedChantier = chantierFilter.value.toLowerCase();
-    const dateTo = dateToFilter.value;
-
-    const rows = document.querySelectorAll("#editableTable tbody tr:not(:last-child)");
-    rows.forEach(row => {
-      const designation = row.querySelector("td[data-name='designation']").innerText.toLowerCase();
-      const beneficiaire = row.querySelector("td[data-name='beneficiaire']").innerText.toLowerCase();
-      const banque = row.querySelector("td[data-name='banque']").innerText.toLowerCase();
-      const montant = row.querySelector("td[data-name='montant']").innerText.toLowerCase();
-      const dateEcheanceText = row.querySelector("td[data-name='dateEcheance']").innerText.trim();
-      const statutCell = row.querySelector("td[data-name='statut']");
-      const chantierCell = row.querySelector("td[data-name='chantier']");
-      
-      let statutText = "";
-      if (statutCell) {
-        const span = statutCell.querySelector("span");
-        const select = statutCell.querySelector("select");
-        statutText = (span ? span.textContent : (select ? select.value : "")).toLowerCase().trim();
-      }
-
-      let chantierText = "";
-      if (chantierCell) {
-        const span = chantierCell.querySelector("span");
-        const select = chantierCell.querySelector("select");
-        chantierText = (span ? span.textContent : (select ? select.value : "")).toLowerCase().trim();
-        if (chantierText === '-- sélectionner un chantier --') chantierText = '';
-      }
-
-      let dateEcheanceISO = null;
-      if (dateEcheanceText) {
-        const parts = dateEcheanceText.split('/');
-        if (parts.length === 3) {
-          dateEcheanceISO = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-        }
-      }
-
-      const matchesSearch = !searchTerm || 
-        designation.includes(searchTerm) || 
-        beneficiaire.includes(searchTerm) || 
-        banque.includes(searchTerm) || 
-        montant.includes(searchTerm) || 
-        statutText.includes(searchTerm) || 
-        chantierText.includes(searchTerm);
-      const matchesSupplier = !selectedSupplier || beneficiaire === selectedSupplier;
-      const matchesBanque = !selectedBanque || banque === selectedBanque;
-      const matchesStatus = !selectedStatus || statutText === selectedStatus;
-      const matchesChantier = !selectedChantier || chantierText === selectedChantier;
-      const matchesDate = !dateTo || (dateEcheanceISO && dateEcheanceISO <= dateTo);
-
-      row.style.display = (matchesSearch && matchesSupplier && matchesBanque && matchesStatus && matchesChantier && matchesDate) ? "" : "none";
-    });
-    updateTotal();
-  }
-
-  // Reset filters
-  resetFilters.addEventListener("click", function () {
-    supplierSearch.value = "";
-    banqueFilter.value = "";
-    supplierFilter.value = "";
-    statusFilter.value = "";
-    chantierFilter.value = "";
-    dateToFilter.value = "";
-    applyFilters();
-  });
-
-  // Add filter event listeners
-  supplierSearch.addEventListener("input", applyFilters);
-  supplierFilter.addEventListener("change", applyFilters);
-  banqueFilter.addEventListener("change", applyFilters);
-  statusFilter.addEventListener("change", applyFilters);
-  chantierFilter.addEventListener("change", applyFilters);
-  dateToFilter.addEventListener("change", applyFilters);
-
-  // Excel download
-  document.getElementById("downloadExcelBtn").addEventListener("click", function () {
-    const rows = document.querySelectorAll("#editableTable tbody tr:not(:last-child)");
-    const data = [];
-    const headers = Array.from(document.querySelectorAll("#editableTable thead th"))
-                         .slice(0, -1)
-                         .map(th => th.textContent.trim());
-
-    rows.forEach(row => {
-      if (row.style.display !== "none") {
-        const cells = Array.from(row.querySelectorAll("td[data-name]"));
-        const rowData = {};
-        cells.forEach((cell, index) => {
-          const key = headers[index];
-          let value = cell.textContent.trim();
-
-          if (cell.getAttribute("data-name") === "statut" || cell.getAttribute("data-name") === "chantier") {
-            const span = cell.querySelector("span");
-            const select = cell.querySelector("select");
-            value = span ? span.textContent.trim() : (select ? select.value : "");
-            if (cell.getAttribute("data-name") === "chantier" && value === '-- Sélectionner un chantier --') {
-              value = '';
-            }
-          } 
-
-          if (cell.getAttribute("data-name") === "montant") {
-            value = parseFloat(value.replace(/\s|DH/g, "").replace(',', '.')) || 0;
-          }
-
-          rowData[key] = value;
-        });
-        data.push(rowData);
-      }
-    });
-
-    const totalCell = document.getElementById("total");
-    if (totalCell) {
-      const totalRow = {};
-      headers.forEach((header, index) => {
-        if (header === "Montant") {
-          totalRow[header] = parseFloat(totalCell.textContent.trim().replace(/\s|DH/g, "").replace(',', '.')) || 0;
-        } else if (index === 0) {
-          totalRow[header] = "Total";
-        } else {
-          totalRow[header] = "";
-        }
+        row.style.display = (matchesSearch && matchesSupplier && matchesBanque && matchesStatus && matchesChantier && matchesDate) ? "" : "none";
       });
-      data.push(totalRow);
+      updateTotal();
     }
 
-    const ws = XLSX.utils.json_to_sheet(data, { header: headers });
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Payements");
-    XLSX.writeFile(wb, "payements_a_venir.xlsx");
-  });
+    // Reset filters
+    resetFilters.addEventListener("click", function () {
+      supplierSearch.value = "";
+      banqueFilter.value = "";
+      supplierFilter.value = "";
+      statusFilter.value = "";
+      chantierFilter.value = "";
+      dateToFilter.value = "";
+      applyFilters();
+    });
 
-  // PDF download
-  document.getElementById("downloadPdfBtn")?.addEventListener("click", function () {
-    try {
-      const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-      const table = document.getElementById("editableTable");
-      const rows = table.querySelectorAll("tbody tr:not(:last-child)");
-      const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
-      const title = document.querySelector(".card-header h6").innerText;
+    // Add filter event listeners
+    supplierSearch.addEventListener("input", applyFilters);
+    supplierFilter.addEventListener("change", applyFilters);
+    banqueFilter.addEventListener("change", applyFilters);
+    statusFilter.addEventListener("change", applyFilters);
+    chantierFilter.addEventListener("change", applyFilters);
+    dateToFilter.addEventListener("change", applyFilters);
 
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(18);
-      doc.setTextColor(40, 40, 40);
-      doc.text(title, 10, 20);
+    // Excel download
+    document.getElementById("downloadExcelBtn").addEventListener("click", function () {
+      const rows = document.querySelectorAll("#editableTable tbody tr:not(:last-child)");
+      const data = [];
+      const headers = Array.from(document.querySelectorAll("#editableTable thead th"))
+                           .slice(0, -1)
+                           .map(th => th.textContent.trim());
 
-      const tableData = [];
       rows.forEach(row => {
         if (row.style.display !== "none") {
-          const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
-            let value = "";
-            const select = cell.querySelector("select");
-            const span = cell.querySelector("span");
-            if (select) {
-              const selectedOption = select.options[select.selectedIndex];
-              value = selectedOption ? selectedOption.textContent : "";
-            } else if (span) {
-              value = span.textContent.trim();
-              if (cell.dataset.name === "chantier" && value === '-- Sélectionner un chantier --') {
+          const cells = Array.from(row.querySelectorAll("td[data-name]"));
+          const rowData = {};
+          cells.forEach((cell, index) => {
+            const key = headers[index];
+            let value = cell.textContent.trim();
+
+            if (cell.getAttribute("data-name") === "statut" || cell.getAttribute("data-name") === "chantier") {
+              const span = cell.querySelector("span");
+              const select = cell.querySelector("select");
+              value = span ? span.textContent.trim() : (select ? select.value : "");
+              if (cell.getAttribute("data-name") === "chantier" && value === '-- Sélectionner un chantier --') {
                 value = '';
               }
-            } else if (cell.innerText) {
-              value = cell.innerText.trim();
+            } 
+
+            if (cell.getAttribute("data-name") === "montant") {
+              value = parseFloat(value.replace(/\s|DH/g, "").replace(',', '.')) || 0;
             }
-            if (cell.dataset.name === "montant" && value) {
-              let cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-              const number = parseFloat(cleaned);
-              if (!isNaN(number)) {
-                const parts = number.toFixed(2).split('.');
-                const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-                value = `${integerPart},${parts[1]}`;
-              }
-            }
-            return value || "";
+
+            rowData[key] = value;
           });
-          tableData.push(rowData);
+          data.push(rowData);
         }
       });
 
-      doc.autoTable({
-        head: [headers],
-        body: tableData,
-        startY: 30,
-        theme: 'grid',
-        styles: { font: 'helvetica', fontSize: 8, textColor: [40, 40, 40], cellPadding: 2, lineColor: [200, 200, 200], lineWidth: 0.1, minCellHeight: 10, overflow: 'linebreak' },
-        headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255], fontSize: 7, fontStyle: 'bold', halign: 'center', cellPadding: 2 },
-        bodyStyles: { fillColor: [255, 255, 255] },
-        alternateRowStyles: { fillColor: [245, 245, 245] },
-        columnStyles: { 0: { cellWidth: 28, halign: 'center' }, 1: { cellWidth: 28, halign: 'left' }, 2: { cellWidth: 28, halign: 'left' }, 3: { cellWidth: 28, halign: 'left' }, 4: { cellWidth: 28, halign: 'right' }, 5: { cellWidth: 28, halign: 'center' }, 6: { cellWidth: 28, halign: 'center' }, 7: { cellWidth: 28, halign: 'left' } },
-        margin: { top: 30, left: 10, right: 10 },
-        tableWidth: 'wrap'
-      });
-
-      const pageCount = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(100);
-        doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
+      const totalCell = document.getElementById("total");
+      if (totalCell) {
+        const totalRow = {};
+        headers.forEach((header, index) => {
+          if (header === "Montant") {
+            totalRow[header] = parseFloat(totalCell.textContent.trim().replace(/\s|DH/g, "").replace(',', '.')) || 0;
+          } else if (index === 0) {
+            totalRow[header] = "Total";
+          } else {
+            totalRow[header] = "";
+          }
+        });
+        data.push(totalRow);
       }
 
-      let total = document.getElementById("total").innerText || "0";
-      total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-      const totalNumber = parseFloat(total);
-      if (!isNaN(totalNumber)) {
-        const parts = totalNumber.toFixed(2).split('.');
-        const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-        total = `${integerPart},${parts[1]}`;
-      }
+      const ws = XLSX.utils.json_to_sheet(data, { header: headers });
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Payements");
+      XLSX.writeFile(wb, "payements_a_venir.xlsx");
+    });
 
-      const finalY = doc.lastAutoTable.finalY || 30;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.setTextColor(22, 160, 133);
-      doc.text(`Total: ${total} MAD`, 10, finalY + 15);
-      doc.save("liste_payements.pdf");
-    } catch (err) {
-      console.error("PDF generation error:", err);
-      alert("Erreur lors de la génération du PDF.");
-    }
+    // PDF download
+    document.getElementById("downloadPdfBtn")?.addEventListener("click", function () {
+      try {
+        const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+        const table = document.getElementById("editableTable");
+        const rows = table.querySelectorAll("tbody tr:not(:last-child)");
+        const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
+        const title = document.querySelector(".card-header h6").innerText;
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(18);
+        doc.setTextColor(40, 40, 40);
+        doc.text(title, 10, 20);
+
+        const tableData = [];
+        rows.forEach(row => {
+          if (row.style.display !== "none") {
+            const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
+              let value = "";
+              const select = cell.querySelector("select");
+              const span = cell.querySelector("span");
+              if (select) {
+                const selectedOption = select.options[select.selectedIndex];
+                value = selectedOption ? selectedOption.textContent : "";
+              } else if (span) {
+                value = span.textContent.trim();
+                if (cell.dataset.name === "chantier" && value === '-- Sélectionner un chantier --') {
+                  value = '';
+                }
+              } else if (cell.innerText) {
+                value = cell.innerText.trim();
+              }
+              if (cell.dataset.name === "montant" && value) {
+                let cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+                const number = parseFloat(cleaned);
+                if (!isNaN(number)) {
+                  const parts = number.toFixed(2).split('.');
+                  const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                  value = `${integerPart},${parts[1]}`;
+                }
+              }
+              return value || "";
+            });
+            tableData.push(rowData);
+          }
+        });
+
+        doc.autoTable({
+          head: [headers],
+          body: tableData,
+          startY: 30,
+          theme: 'grid',
+          styles: { font: 'helvetica', fontSize: 8, textColor: [40, 40, 40], cellPadding: 2, lineColor: [200, 200, 200], lineWidth: 0.1, minCellHeight: 10, overflow: 'linebreak' },
+          headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255], fontSize: 7, fontStyle: 'bold', halign: 'center', cellPadding: 2 },
+          bodyStyles: { fillColor: [255, 255, 255] },
+          alternateRowStyles: { fillColor: [245, 245, 245] },
+          columnStyles: { 0: { cellWidth: 28, halign: 'center' }, 1: { cellWidth: 28, halign: 'left' }, 2: { cellWidth: 28, halign: 'left' }, 3: { cellWidth: 28, halign: 'left' }, 4: { cellWidth: 28, halign: 'right' }, 5: { cellWidth: 28, halign: 'center' }, 6: { cellWidth: 28, halign: 'center' }, 7: { cellWidth: 28, halign: 'left' } },
+          margin: { top: 30, left: 10, right: 10 },
+          tableWidth: 'wrap'
+        });
+
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+          doc.setPage(i);
+          doc.setFontSize(8);
+          doc.setTextColor(100);
+          doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
+        }
+
+        let total = document.getElementById("total").innerText || "0";
+        total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+        const totalNumber = parseFloat(total);
+        if (!isNaN(totalNumber)) {
+          const parts = totalNumber.toFixed(2).split('.');
+          const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+          total = `${integerPart},${parts[1]}`;
+        }
+
+        const finalY = doc.lastAutoTable.finalY || 30;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.setTextColor(22, 160, 133);
+        doc.text(`Total: ${total} MAD`, 10, finalY + 15);
+        doc.save("liste_payements.pdf");
+      } catch (err) {
+        console.error("PDF generation error:", err);
+        alert("Erreur lors de la génération du PDF.");
+      }
+    });
+
+    // Initialize
+    applyFilters();
+    updateTotal();
   });
-
-  // Initialize
-  applyFilters();
-  updateTotal();
-});
- </script>
+  </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>

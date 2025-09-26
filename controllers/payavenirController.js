@@ -76,7 +76,7 @@ export const createPayavenir = async (req, res) => {
     }
 
     // Find or create banque
-    let findBanque = await prisma.fournisseur.findFirst({
+    let findBanque = await prisma.banque.findFirst({
       where: { name: banque },
     });
 
