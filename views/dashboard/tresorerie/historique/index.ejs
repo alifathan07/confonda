@@ -516,7 +516,7 @@
                     </thead>
                     <tbody>
                       <% historique.forEach(c => { %>
-                        <tr class="operation-row" data-type="<%= c.type %>" data-fournisseur="<%= c.beneficiaire %>" data-banque="<%= c.banque %>" data-statut="<%= c.statut %>" data-date="<%= new Date(c.dateEcheance).toISOString().split('T')[0] %>">
+                        <tr class="operation-row" data-type="<%= c.type %>" data-fournisseur="<%= c.beneficiaire %>" data-banque="<%= c.banque %>" data-statut="<%= c.statut %>" data-date="<%= c.type === 'Chèque' || c.type === 'Effet' ? c.dateEtablissement : c.date %> ">
                           <td><%= new Date(c.dateEtablissement).toLocaleDateString('fr-FR') %></td>
                           <td><%= c.type %></td>
                           <td><%= c.numero %></td>
