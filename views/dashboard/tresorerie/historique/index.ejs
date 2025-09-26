@@ -511,12 +511,13 @@
                         <th>Bénéficiaire</th>
                         <th>Montant</th>
                         <th>Date Échéance</th>
+                        <th>Chantier</th>
                         <th>Observation</th>
                       </tr>
                     </thead>
                     <tbody>
                       <% historique.forEach(c => { %>
-                        <tr class="operation-row" data-type="<%= c.type %>" data-fournisseur="<%= c.beneficiaire %>" data-banque="<%= c.banque %>" data-statut="<%= c.statut %>" data-date="<%= c.type === 'Chèque' || c.type === 'Effet' ? c.dateEtablissement : c.date %> ">
+                        <tr class="operation-row" data-type="<%= c.type %>" data-fournisseur="<%= c.beneficiaire %>" data-banque="<%= c.banque %>" data-statut="<%= c.statut %>" data-date="<%= new Date(c.dateEtablissement).toISOString().split('T')[0] %>">
                           <td><%= new Date(c.dateEtablissement).toLocaleDateString('fr-FR') %></td>
                           <td><%= c.type %></td>
                           <td><%= c.numero %></td>
@@ -528,6 +529,7 @@
                                   : '' %>
                           </td>
                           <td><%= new Date(c.dateEcheance).toLocaleDateString('fr-FR') %></td>
+                          <td><%= c.chantier %></td>
                           <td>
                             <form action="/tresorerie/cheques/situation/<%= c.id %>?_method=PATCH" method="POST">
                               <input id="obs" type="text" value="<%= c.obs %>" class="form-control" name="obs">
@@ -551,81 +553,7 @@
             </div>
           </div>
           <!-- Filter Section for Virements De fonds -->
-          <div class="filter-section mb-4">
-            <form class="form-inline" method="GET">
-              <div class="form-group mr-2">
-                <label for="dateFromFilterVirement" class="mr-2">Date de :</label>
-                <input type="date" id="dateFromFilterVirement" class="form-control">
-              </div>
-              <div class="form-group mr-2">
-                <label for="dateToFilterVirement" class="mr-2">à :</label>
-                <input type="date" id="dateToFilterVirement" class="form-control">
-              </div>
-              <div class="form-group mr-2">
-                <label for="banqueFilterVirement" class="mr-2">Banque :</label>
-                <select id="banqueFilterVirement" class="form-control">
-                  <option value="">Tous</option>
-                  <% banques.forEach(b => { %>
-                    <option value="<%= b.name %>"><%= b.name %></option>
-                  <% }) %>
-                </select>
-              </div>
-              <button type="button" class="btn btn-secondary" id="resetDateBtnVirement" aria-label="Annuler filtre" style="background-color: #6a5ae7;">Annuler filtre</button>
-            </form>
-          </div>
-          <!-- Virement au fonds List -->
-          <div class="card mb-4 fade-in">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <h2>Virements De fonds</h2>
-              <div>
-                <button class="btn btn-info mr-2" onclick="downloadPDF('virementDeFondsTable')">Télécharger PDF</button>
-                <button class="btn btn-success" onclick="downloadExcel('virementDeFondsTable')">Télécharger Excel</button>
-              </div>
-            </div>
-            <div class="card-body">
-              <% if (!virementdeFands.length) { %>
-                <p class="text-center text-muted">Aucun virement trouvé.</p>
-              <% } else { %>
-                <div class="table-responsive">
-                  <table id="virementDeFondsTable" class="excel-table table table-bordered">
-                    <thead>
-                      <tr>
-                        <th>Date Etablissement</th>
-                        <th>Banque</th>
-                        <th>Bénéficiaire</th>
-                        <th>Montant</th>
-                        <th>Observation</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <% virementdeFands.forEach(c => { %>
-                        <tr class="virement-row" data-banque="<%= c.banque.name %>" data-date="<%= new Date(c.date).toISOString().split('T')[0] %>">
-                          <td><%= new Date(c.date).toLocaleDateString('fr-FR') %></td>
-                          <td><%= c.banque.name %></td>
-                          <td><%= c.beneficiaire %></td>
-                          <td class="text-right montant" style="width: 150px;">
-                            <%= c.montant != null 
-                                  ? c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') 
-                                  : '' %>
-                          </td>
-                          <td><%= c.obs ? c.obs : "" %></td>
-                        </tr>
-                      <% }) %>
-                    </tbody>
-                    <tfoot>
-                      <tr>
-                        <td colspan="3">Total</td>
-                        <td class="text-right" id="displayTotalVirements">
-                          <%= virementdeFands.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
-                        </td>
-                        <td colspan="1"></td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-              <% } %>
-            </div>
-          </div>
+        
           <!-- Soldes Bancaires -->
           <form id="soldeForm" action="/tresorerie/historique/banque" method="POST">
             <div class="card mb-4 fade-in">
@@ -770,9 +698,6 @@
         virements: document.getElementById('displayTotalVirements')
       };
 
-      // Minimum date for filtering
-      const MIN_DATE = new Date('2020-01-01');
-
       // Filter rows based on selected criteria
       const filterRows = () => {
         const selected = {
@@ -780,12 +705,12 @@
             type: filters.operations.type?.value.toLowerCase() || '',
             fournisseur: filters.operations.fournisseur?.value.toLowerCase() || '',
             banque: filters.operations.banque?.value.toLowerCase() || '',
-            fromDate: filters.operations.dateFrom?.value ? new Date(filters.operations.dateFrom.value) : MIN_DATE,
+            fromDate: filters.operations.dateFrom?.value ? new Date(filters.operations.dateFrom.value) : null,
             toDate: filters.operations.dateTo?.value ? new Date(filters.operations.dateTo.value) : null
           },
           virements: {
             banque: filters.virements.banque?.value.toLowerCase() || '',
-            fromDate: filters.virements.dateFrom?.value ? new Date(filters.virements.dateFrom.value) : MIN_DATE,
+            fromDate: filters.virements.dateFrom?.value ? new Date(filters.virements.dateFrom.value) : null,
             toDate: filters.virements.dateTo?.value ? new Date(filters.virements.dateTo.value) : null
           }
         };
@@ -803,7 +728,7 @@
               const showType = !selected.operations.type || rowType === selected.operations.type;
               const showFournisseur = !selected.operations.fournisseur || rowFournisseur === selected.operations.fournisseur;
               const showBanque = !selected.operations.banque || rowBanque === selected.operations.banque;
-              const showDate = rowDate >= MIN_DATE && rowDate >= selected.operations.fromDate && (!selected.operations.toDate || rowDate <= selected.operations.toDate);
+              const showDate = (!selected.operations.fromDate || rowDate >= selected.operations.fromDate) && (!selected.operations.toDate || rowDate <= selected.operations.toDate);
 
               row.style.display = showType && showFournisseur && showBanque && showDate ? '' : 'none';
               if (row.style.display !== 'none') visibleRows++;
@@ -812,7 +737,7 @@
               const rowDate = new Date(row.getAttribute('data-date'));
 
               const showBanque = !selected.virements.banque || rowBanque === selected.virements.banque;
-              const showDate = rowDate >= MIN_DATE && rowDate >= selected.virements.fromDate && (!selected.virements.toDate || rowDate <= selected.virements.toDate);
+              const showDate = (!selected.virements.fromDate || rowDate >= selected.virements.fromDate) && (!selected.virements.toDate || rowDate <= selected.virements.toDate);
 
               row.style.display = showBanque && showDate ? '' : 'none';
               if (row.style.display !== 'none') visibleRows++;
@@ -871,11 +796,11 @@
           filters.operations.type.value = '';
           filters.operations.fournisseur.value = '';
           filters.operations.banque.value = '';
-          filters.operations.dateFrom.value = '2020-01-01';
+          filters.operations.dateFrom.value = '';
           filters.operations.dateTo.value = '';
         } else if (table === 'virements') {
           filters.virements.banque.value = '';
-          filters.virements.dateFrom.value = '2020-01-01';
+          filters.virements.dateFrom.value = '';
           filters.virements.dateTo.value = '';
         }
         filterRows();

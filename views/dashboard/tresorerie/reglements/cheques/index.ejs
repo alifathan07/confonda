@@ -375,6 +375,7 @@
                                   <td contenteditable="true" data-name="dateReglement"><%= formatDateToDDMMYYYY(cheque.dateReglement) %></td>
                                   <td data-name="chantier" class="chantier-cell">
                                     <select class="chantier-select">
+                                      <option value="Aucun" <%= !cheque.chantier ? 'selected' : '' %>>Aucun</option>
                                       <% chantiers.forEach(chantier => { %>
                                         <option value="<%= chantier.nom %>" <%= cheque.chantier && cheque.chantier.nom === chantier.nom ? 'selected' : '' %>><%= chantier.nom %></option>
                                       <% }); %>

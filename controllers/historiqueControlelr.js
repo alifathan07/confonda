@@ -1,21 +1,16 @@
 import prisma from "../db.js";
 export const indexHis = async (req, res) => {
   try {
-    const { from, to } = req.query;
 
     // Parse dates with fallback
-    const fromDate = from ? new Date(from) : new Date('1900-01-01');
-    const toDate = to ? new Date(to) : new Date('2100-01-01');
+  
 
     // Validate parsed dates
-    if (isNaN(fromDate) || isNaN(toDate)) {
-      return res.status(400).send('Invalid date format in query parameters.');
-    }
+   
 
     // Fetch cheques
     const cheques = await prisma.cheque.findMany({
       where: {
-        dateEtablissement: { gte: fromDate, lte: toDate, not: null },
         statut: { notIn: ['Annulé', 'annulé', 'ANNULE'] },
         dateEcheance: { not: null },
       },
@@ -24,6 +19,7 @@ export const indexHis = async (req, res) => {
         numero: true,
         dateEtablissement: true,
         montant: true,
+        chantier : {select: {nom: true}},
         dateEcheance: true,
         validation: true,
         beneficiaire: true,
@@ -37,7 +33,6 @@ export const indexHis = async (req, res) => {
     // Fetch effets
     const effets = await prisma.effet.findMany({
       where: {
-        dateEtablissement: { gte: fromDate, lte: toDate, not: null },
         statut: { notIn: ['Annulé', 'annulé', 'ANNULE'] },
         dateEcheance: { not: null },
       },
@@ -46,6 +41,7 @@ export const indexHis = async (req, res) => {
         numero: true,
         dateEtablissement: true,
         montant: true,
+        chantier : {select: {nom: true}},
         dateEcheance: true,
         validation: true,
         beneficiaire: true,
@@ -58,15 +54,12 @@ export const indexHis = async (req, res) => {
 
     // Fetch virements (excluding confonda)
     const virements = await prisma.virement.findMany({
-      where: {
-        date: { gte: fromDate, lte: toDate },
-        beneficiaire: { notIn: ["confonda", "CONFONDA", "Confonda"] },
-      },
       select: {
         id: true,
         designation: true,
         date: true,
         montant: true,
+        chantier : {select: {nom: true}},
         dateReglement: true,
         beneficiaire: true,
         obs: true,
@@ -84,7 +77,6 @@ export const indexHis = async (req, res) => {
     // Fetch mise à disposition
     const miseadis = await prisma.miseadis.findMany({
       where: {
-        date: { gte: fromDate, lte: toDate },
         NOT: { date: null },
       },
       select: {
@@ -93,6 +85,7 @@ export const indexHis = async (req, res) => {
         montant: true,
         date: true,
         dateReglement: true,
+        chantier : {select: {nom: true}},
         obs: true,
         cin: true,
         objet: true,
@@ -103,28 +96,28 @@ export const indexHis = async (req, res) => {
     });
 
     // Virements de fonds (only confonda)
-    const virementdeFands = await prisma.virement.findMany({
-      where: {
-        beneficiaire: { in: ["confonda", "CONFONDA", "Confonda"] },
-      },
-      select: {
-        id: true,
-        designation: true,
-        date: true,
-        montant: true,
-        dateReglement: true,
-        beneficiaire: true,
-        obs: true,
-        banque: { select: { name: true } },
-        objet: true,
-        cause: true,
-        rtgs: true,
-        srbm: true,
-        instantane: true,
-        montantLettres: true,
-      },
-      orderBy: { date: 'desc' },
-    });
+    // const virementdeFands = await prisma.virement.findMany({
+    //   where: {
+    //     beneficiaire: { in: ["confonda", "CONFONDA", "Confonda"] },
+    //   },
+    //   select: {
+    //     id: true,
+    //     designation: true,
+    //     date: true,
+    //     montant: true,
+    //     dateReglement: true,
+    //     beneficiaire: true,
+    //     obs: true,
+    //     banque: { select: { name: true } },
+    //     objet: true,
+    //     cause: true,
+    //     rtgs: true,
+    //     srbm: true,
+    //     instantane: true,
+    //     montantLettres: true,
+    //   },
+    //   orderBy: { date: 'desc' },
+    // });
 
     // Fetch fournisseurs and banques
     const fournisseurs = await prisma.fournisseur.findMany();
@@ -138,6 +131,7 @@ export const indexHis = async (req, res) => {
         numero: c.numero,
         dateEtablissement: c.dateEtablissement,
         montant: c.montant,
+        chantier : c.chantier?.nom || 'Aucun',
         dateEcheance: c.dateEcheance,
         validation: c.validation,
         beneficiaire: c.beneficiaire,
@@ -153,6 +147,8 @@ export const indexHis = async (req, res) => {
         numero: e.numero,
         dateEtablissement: e.dateEtablissement,
         montant: e.montant,
+        chantier : e.chantier?.nom || 'Aucun',
+
         dateEcheance: e.dateEcheance,
         validation: e.validation,
         beneficiaire: e.beneficiaire,
@@ -168,6 +164,8 @@ export const indexHis = async (req, res) => {
         numero: v.designation || 'Aucun',
         dateEtablissement: v.date,
         montant: v.montant,
+        chantier : v.chantier?.nom || 'Aucun',
+
         dateEcheance: v.date,
         validation: false,
         beneficiaire: v.beneficiaire,
@@ -186,6 +184,8 @@ export const indexHis = async (req, res) => {
         numero: 'Aucun',
         dateEtablissement: m.date,
         montant: m.montant,
+        chantier : m.chantier?.nom || 'Aucun',
+
         dateEcheance: m.date,
         validation: false,
         beneficiaire: m.beneficiaire,
@@ -204,12 +204,9 @@ export const indexHis = async (req, res) => {
       cheques,
       effets,
       virements,
-      from,
-      to,
       fournisseurs,
       banques,
       historique,
-      virementdeFands
     });
   } catch (error) {
     console.error(error);
