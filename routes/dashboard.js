@@ -18,7 +18,9 @@ import { addUser, listUsers } from '../controllers/usersController.js';
 // import { deleteClient, indexClients, postClient, updateClient } from '../controllers/clientController.js';
 import {  destroyChantier, destroyChantierDetails, indexChantiers, postChantier, postChantierItems, showChantierDetails, updateChantier } from '../controllers/chantierController.js';
 import { createUi, destroyClient, indexClient, postClient, showClient, updateClient, updateUiClient } from '../controllers/clientController.js';
-import { indexHis, updateHistoryBanque } from '../controllers/historiqueControlelr.js';
+import { deleteEncaissement, indexHis, saveEncaissement, updateHistoryBanque } from '../controllers/historiqueControlelr.js';
+import { deleteTelePai, indexTelePai, storeTelePai, updateTelePai } from '../controllers/telepay_prelevController.js';
+import { createEncaissement, indexEncaissement } from '../controllers/encaisementController.js';
 
 export const dashboardRouter = express.Router();
 dashboardRouter.use(isAuthenticated)
@@ -288,7 +290,16 @@ dashboardRouter.get('/dashboard', async (req, res) => {
         dashboardRouter.delete('/ventes/chantiers/:chantierId/items/:chantierItemId', destroyChantierDetails);
         dashboardRouter.delete('/ventes/clients/:id', destroyClient);
 
-
+        // TelePaiment / Prelevement 
+        dashboardRouter.get('/tresorerie/telpay_prelevement', indexTelePai);
         // Historique : 
         dashboardRouter.get('/tresorerie/historique', indexHis);
         dashboardRouter.post('/tresorerie/historique/banque', updateHistoryBanque);
+        dashboardRouter.post('/tresorerie/telePai/create', storeTelePai);
+        dashboardRouter.patch('/tresorerie/telePai/:id', updateTelePai);
+        dashboardRouter.delete('/tresorerie/telePai/:id', deleteTelePai);
+
+        // encaissement 
+        dashboardRouter.get('/tresorerie/encaissement', indexEncaissement);
+        dashboardRouter.post('/tresorerie/encaissement/create', createEncaissement);
+        dashboardRouter.delete('/tresorerie/encaissement/:id', deleteEncaissement);

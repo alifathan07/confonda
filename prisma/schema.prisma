@@ -126,6 +126,9 @@ model Fournisseur {
   prelevements Prelevement[]
   cheques      Cheque[]
   effets       Effet[]
+  telepaimentPrelevement TelepaimentPrelevement[]
+  
+
   payavenir Payavenir[]
   virements Virement[]
 
@@ -300,6 +303,8 @@ model Banque {
   recavenir Recavenir[] @relation("BanqueRecavenir")
   virements  Virement[] @relation("BanqueVirements")
   miseadis  Miseadis[] @relation("BanqueMiseadis")
+  encaissementRecu EncaissementRecu[] @relation("BanqueEncaissementRecu")
+  telepaimentPrelevement TelepaimentPrelevement[] @relation("BanqueTelepaimentPrelevement")
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 }
@@ -317,6 +322,7 @@ model Client {
   address        String?
   recavenir      Recavenir[]
   chantier       Chantier[] @relation("ClientChantier")
+  encaissementRecu EncaissementRecu[]
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
 }
@@ -329,6 +335,8 @@ model Chantier {
   natureContrat   String?
   numContrat      String?
   recavenir       Recavenir[] @relation("RecavenirChantier")
+  encaissementRecu EncaissementRecu[] @relation("EncaissementRecuChantier")
+  telepaimentPrelevement TelepaimentPrelevement[] @relation("TelepaimentPrelevementChantier")
 
   clientId        Int?
   client          Client?   @relation("ClientChantier", fields: [clientId], references: [id])
@@ -399,6 +407,51 @@ model DemandeProduit {
   demandeFournitureId Int
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
+}
+
+
+
+
+model TelepaimentPrelevement {
+  id                Int         @id @default(autoincrement())
+  dateEtablissement DateTime
+  banque            Banque      @relation("BanqueTelepaimentPrelevement", fields: [banqueId], references: [id])
+  banqueId          Int
+  montant           Float
+  chantier          Chantier?   @relation("TelepaimentPrelevementChantier", fields: [chantierId], references: [id])
+  chantierId        Int?
+  observation       String?
+  fournisseur       Fournisseur @relation(fields: [fournisseurId], references: [id])
+  fournisseurId     Int
+  type              String? 
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  
+}
+
+
+model EncaissementRecu {
+  id                Int         @id @default(autoincrement())
+  dateEtablissement DateTime
+  banque            Banque      @relation("BanqueEncaissementRecu", fields: [banqueId], references: [id])
+  banqueId          Int
+  montant           Float
+  chantier          Chantier?   @relation("EncaissementRecuChantier", fields: [chantierId], references: [id])
+  chantierId        Int?
+  client         Client @relation(fields: [clientId], references: [id])
+  clientId       Int
+  nDeFactureRG   String?
+  RG   String?
+  Ras_TVA    String?
+  Autres  String?
+  ResteAPayer String?
+  observation       String?
+  type              String? 
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  
 }
 
 

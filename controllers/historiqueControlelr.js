@@ -52,6 +52,9 @@ export const indexHis = async (req, res) => {
       orderBy: { dateEtablissement: 'desc' },
     });
 
+    // Fetch telepaimentPrelevement
+   
+
     // Fetch virements (excluding confonda)
     const virements = await prisma.virement.findMany({
       select: {
@@ -95,29 +98,19 @@ export const indexHis = async (req, res) => {
       orderBy: { date: 'desc' },
     });
 
-    // Virements de fonds (only confonda)
-    // const virementdeFands = await prisma.virement.findMany({
-    //   where: {
-    //     beneficiaire: { in: ["confonda", "CONFONDA", "Confonda"] },
-    //   },
-    //   select: {
-    //     id: true,
-    //     designation: true,
-    //     date: true,
-    //     montant: true,
-    //     dateReglement: true,
-    //     beneficiaire: true,
-    //     obs: true,
-    //     banque: { select: { name: true } },
-    //     objet: true,
-    //     cause: true,
-    //     rtgs: true,
-    //     srbm: true,
-    //     instantane: true,
-    //     montantLettres: true,
-    //   },
-    //   orderBy: { date: 'desc' },
-    // });
+    const telepaimentPrelevement = await prisma.telepaimentPrelevement.findMany({
+      select: {
+        id: true,
+        dateEtablissement: true,
+        montant: true,
+        chantier : {select: {nom: true}},
+        banque: { select: { name: true } },
+        fournisseur: { select: { name: true } },
+        observation: true,
+        type: true,
+      },
+      orderBy: { dateEtablissement: 'desc' },
+    });
 
     // Fetch fournisseurs and banques
     const fournisseurs = await prisma.fournisseur.findMany();
@@ -165,7 +158,6 @@ export const indexHis = async (req, res) => {
         dateEtablissement: v.date,
         montant: v.montant,
         chantier : v.chantier?.nom || 'Aucun',
-
         dateEcheance: v.date,
         validation: false,
         beneficiaire: v.beneficiaire,
@@ -185,7 +177,7 @@ export const indexHis = async (req, res) => {
         dateEtablissement: m.date,
         montant: m.montant,
         chantier : m.chantier?.nom || 'Aucun',
-
+        
         dateEcheance: m.date,
         validation: false,
         beneficiaire: m.beneficiaire,
@@ -194,11 +186,40 @@ export const indexHis = async (req, res) => {
         banque: m.banque?.name || 'Aucun',
         type: 'Mise à disposition',
       })),
+
+      // --- Telepaiment Prelevement ---
+      ...telepaimentPrelevement.map(t => ({
+        id: t.id,
+        numero: "Aucun",
+        dateEtablissement: t.dateEtablissement,
+        montant: t.montant,
+        chantier : t.chantier?.nom || 'Aucun',
+        dateEcheance: null,
+        beneficiaire: t.fournisseur?.name || 'Aucun',
+        obs: t.observation,
+        banque: t.banque?.name || 'Aucun',
+        type: t.type || 'télépaiment',
+      })),
     ];
 
     // Sort by dateEtablissement descending
     historique.sort((a, b) => new Date(b.dateEtablissement) - new Date(a.dateEtablissement));
-
+    const encaissements = await prisma.encaissementRecu.findMany({
+      orderBy: { dateEtablissement: 'desc' },
+      select: {
+        id: true,
+        dateEtablissement: true,
+        type : true,
+        montant: true,
+        client: { select: { name: true } },
+        chantier: { select: { nom: true } },
+        banque: { select: { name: true } },
+        observation: true,
+      },
+    });
+  
+    const clients = await prisma.client.findMany();
+    const chantiers = await prisma.chantier.findMany();
     // Render the template
     res.render('dashboard/tresorerie/historique/index', {
       cheques,
@@ -207,6 +228,9 @@ export const indexHis = async (req, res) => {
       fournisseurs,
       banques,
       historique,
+      encaissements,
+      clients,
+      chantiers,
     });
   } catch (error) {
     console.error(error);
@@ -263,3 +287,89 @@ export const updateHistoryBanque = async (req, res) => {
     res.status(500).json({ error: 'Erreur lors de la mise à jour de la situation bancaire.' });
   }
 };
+
+
+
+
+export const saveEncaissement = async (req, res) => {
+  try {
+    const {
+      id,
+      dateEtablissement,
+      banqueId,
+      chantierId,
+      clientId,
+      montant,
+      observation,
+      type,
+      nDeFactureRG,
+      RG,
+      Ras_TVA,
+      Autres,
+      ResteAPayer
+    } = req.body;
+
+    if (!dateEtablissement || !banqueId || !clientId || !montant) {
+      return res.status(400).json({ message: 'Champs obligatoires manquants' });
+    }
+
+    if (id) {
+      // Update existing encaissement
+      const updated = await prisma.encaissementRecu.update({
+        where: { id: Number(id) },
+        data: {
+          dateEtablissement: new Date(dateEtablissement),
+          banqueId: Number(banqueId),
+          chantierId: chantierId ? Number(chantierId) : null,
+          clientId: Number(clientId),
+          montant: parseFloat(montant),
+          observation,
+          type,
+          nDeFactureRG,
+          RG,
+          Ras_TVA,
+          Autres,
+          ResteAPayer
+        }
+      });
+      res.json({ message: 'Encaissement mis à jour avec succès', encaissement: updated });
+    } else {
+      // Create new encaissement
+      const newEncaissement = await prisma.encaissementRecu.create({
+        data: {
+          dateEtablissement: new Date(dateEtablissement),
+          banqueId: Number(banqueId),
+          chantierId: chantierId ? Number(chantierId) : null,
+          clientId: Number(clientId),
+          montant: parseFloat(montant),
+          observation,
+          type,
+          nDeFactureRG,
+          RG,
+          Ras_TVA,
+          Autres,
+          ResteAPayer
+        }
+      });
+      res.json({ message: 'Encaissement ajouté', encaissement: newEncaissement });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
+
+// Delete an encaissement
+export const deleteEncaissement = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ message: 'ID manquant' });
+
+    await prisma.encaissementRecu.delete({ where: { id: Number(id) } });
+    res.json({ message: 'Encaissement supprimé avec succès' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
+
