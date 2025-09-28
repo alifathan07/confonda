@@ -141,29 +141,48 @@
         <hr class="sidebar-divider">
 
         <!-- Nav Item - Payment Methods -->
-        <li class="nav-item">
-            <a class="nav-link py-3" href="/tresorerie">
-                <i class="fas fa-fw fa-credit-card" style="font-size: 17px;"></i>
-                <span>Trésorerie</span>
-            </a>
-        </li>
+        <% if (user && user.role === 'grandadmin' || user.role === 'admin') { %>
+            <li class="nav-item">
+                <a class="nav-link py-3" href="/tresorerie">
+                    <i class="fas fa-fw fa-credit-card" style="font-size: 17px;"></i>
+                    <span>Trésorerie</span>
+                </a>
+            </li>
+            <hr class="sidebar-divider">
+    
+            <li class="nav-item">
+                <a class="nav-link py-3" href="/achats">
+                    <i class="fas fa-fw fa-shopping-cart" style="font-size: 17px;"></i>
+                    <span>Achats</span>
+                </a>
+            </li>
+    
+            <hr class="sidebar-divider">
+    
+            <li class="nav-item">
+                <a class="nav-link py-3" href="/ventes">
+                    <i class="fas fa-fw fa-money-bill-alt" style="font-size: 17px;"></i>
+                    <span>Ventes</span>
+                </a>
+            </li>
+          <% } else if (user && user.role === 'user') { %>
+            <li class="nav-item">
+                <a class="nav-link py-3" href="/achats">
+                    <i class="fas fa-fw fa-shopping-cart" style="font-size: 17px;"></i>
+                    <span>Achats</span>
+                </a>
+            </li>
+          <% } %>
         <hr class="sidebar-divider">
 
+        <% if (user && user.role === 'grandadmin') { %>
         <li class="nav-item">
-            <a class="nav-link py-3" href="/achats">
-                <i class="fas fa-fw fa-shopping-cart" style="font-size: 17px;"></i>
-                <span>Achats</span>
+            <a class="nav-link py-3" href="/users">
+                <i class="fas fa-fw fa-users" style="font-size: 17px;"></i>
+                <span>Utilisateurs</span>
             </a>
         </li>
-
-        <hr class="sidebar-divider">
-
-        <li class="nav-item">
-            <a class="nav-link py-3" href="/ventes">
-                <i class="fas fa-fw fa-money-bill-alt" style="font-size: 17px;"></i>
-                <span>Ventes</span>
-            </a>
-        </li>
+        <% } %>
        
 
         <!-- Divider -->

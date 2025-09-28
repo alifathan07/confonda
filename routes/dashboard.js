@@ -1,5 +1,5 @@
 import express from 'express';
-import { isAuthenticated } from '../middlewares/auth.js';
+import { isAdmin, isAuthenticated } from '../middlewares/auth.js';
 import { create, update, show, deleteSupplier, importExel, upload, atess } from '../controllers/supplierController.js';
 import multer from 'multer';
 import ExcelJS from 'exceljs';
@@ -14,7 +14,7 @@ import { createRecavenir, deleteRecavenir, showRecavenir, updateRecavenir, updat
 import { createVirement, deleteVirement, generateVirementPDF, index, listBanquesVirements, postVirement, showUpdateVirement, suppliersList, updateVire } from '../controllers/virementController.js';
 import { createMiseadis, deleteMiseadis, generateMiseadisPDF, indexDis, listBanquesMiseadis, postMiseadis, showUpdateMiseadis, updateMis } from '../controllers/misediscontrollrt.js';
 import { createFourniture, postFourniture } from '../controllers/fournitureController.js';
-import { addUser, listUsers } from '../controllers/usersController.js';
+import { addUser, deleteUser, editUser, listUsers } from '../controllers/usersController.js';
 // import { deleteClient, indexClients, postClient, updateClient } from '../controllers/clientController.js';
 import {  destroyChantier, destroyChantierDetails, indexChantiers, postChantier, postChantierItems, showChantierDetails, updateChantier } from '../controllers/chantierController.js';
 import { createUi, destroyClient, indexClient, postClient, showClient, updateClient, updateUiClient } from '../controllers/clientController.js';
@@ -253,9 +253,10 @@ dashboardRouter.get('/dashboard', async (req, res) => {
 
 
          // < -----------Users  ----------------- >
-         dashboardRouter.get("/users", listUsers); // List all users
-       
-        dashboardRouter.post('/users/add', addUser);
+         dashboardRouter.get("/users", isAdmin, listUsers); // List all users
+         dashboardRouter.put("/users/edit", isAdmin, editUser); // Edit user
+        dashboardRouter.post('/users/add', isAdmin, addUser);
+        dashboardRouter.delete('/users/delete', isAdmin, deleteUser);
         
         // < -----------Ventes  ----------------- >
         dashboardRouter.get('/ventes', (req, res) => {
@@ -303,3 +304,5 @@ dashboardRouter.get('/dashboard', async (req, res) => {
         dashboardRouter.get('/tresorerie/encaissement', indexEncaissement);
         dashboardRouter.post('/tresorerie/encaissement/create', createEncaissement);
         dashboardRouter.delete('/tresorerie/encaissement/:id', deleteEncaissement);
+
+        //

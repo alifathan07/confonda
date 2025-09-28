@@ -18,13 +18,14 @@ model User {
   id        Int              @id @default(autoincrement())
   email     String           @unique
   password  String
-  name      String?
+  name      String @unique
 
   demandesCreated   DemandeFourniture[] @relation("DemandeRequestedBy")
   demandesValidated DemandeFourniture[] @relation("DemandeValidatedBy")
 
   chantier    Chantier @relation(fields: [chantierId], references: [id])
   chantierId  Int      // foreign key
+  role        String @default("grandadmin") // user, admin, grandadmin
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

@@ -23,30 +23,30 @@ export const register = async(req, res) => {
     }
 }
 export const login = async (req, res) => {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
     
 
     const user = await prisma.user.findUnique({
-        where: { email }
+        where: { name: username }
     });
     
 
     if (!user) {
         return res.status(401).render('auth/login.ejs', {
-            errors: { general: 'Invalid email or password' },
-            old: { email }
+            errors: { general: 'Invalid username or password' },
+            old: { username }
         });
     } else {
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (isPasswordValid) {
-            req.session.user = { id: user.id, name: user.name, email: user.email };
+            req.session.user = { id: user.id, name: user.name, email: user.email, role: user.role };
             req.session.save(() => {
                 return res.redirect('/dashboard');
             });
         } else {
             return res.status(401).render('auth/login.ejs', {
-                errors: { general: 'Invalid email or password' },
-                old: { email }
+                errors: { general: 'Invalid username or password' },
+                old: { username }
             });
         }
     }

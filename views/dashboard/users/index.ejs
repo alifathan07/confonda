@@ -183,6 +183,7 @@
                         <th>Nom</th>
                         <th>Email</th>
                         <th>Chantier</th>
+                        <th>Role</th>
                         <th class="text-center">Actions</th>
                       </tr>
                     </thead>
@@ -193,27 +194,20 @@
                               <td><%= user.name %></td>
                               <td><%= user.email %></td>
                               <td><%= user.chantier.nom %></td>
+                              <td><%= user.role %></td>
                               <td class="text-center">
                                 <button 
-                                  class="btn btn-sm btn-outline-info me-1 btn-view" 
-                                  data-id="<%= user.id %>" 
-                                  data-name="<%= user.name %>" 
-                                  data-email="<%= user.email %>" 
-                                  data-chantier="<%= user.chantier.nom %>"
-                                  data-bs-toggle="modal" 
-                                  data-bs-target="#viewUserModal">
-                                  <i class="fas fa-eye"></i>
-                                </button>
-                                <button 
-                                  class="btn btn-sm btn-outline-warning me-1 btn-edit" 
-                                  data-id="<%= user.id %>" 
-                                  data-name="<%= user.name %>" 
-                                  data-email="<%= user.email %>" 
-                                  data-chantier="<%= user.chantier.nom %>"
-                                  data-bs-toggle="modal" 
-                                  data-bs-target="#editUserModal">
-                                  <i class="fas fa-edit"></i>
-                                </button>
+                                class="btn btn-sm btn-outline-warning me-1 btn-edit" 
+                                data-id="<%= user.id %>" 
+                                data-name="<%= user.name %>" 
+                                data-email="<%= user.email %>" 
+                                data-password="<%= user.password %>" 
+                                data-chantier-id="<%= user.chantierId %>" 
+                                data-role="<%= user.role %>" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#editUserModal">
+                                <i class="fas fa-edit"></i>
+                              </button>
                                 <button 
                                   class="btn btn-sm btn-outline-danger btn-delete" 
                                   data-id="<%= user.id %>" 
@@ -227,7 +221,6 @@
                           <% } %>
                         <% }) %>
                       </tbody>
-                      
                   </table>
                 </div>
               </div>
@@ -264,10 +257,17 @@
                 <input type="email" name="email" class="form-control" required>
               </div>
               <div class="mb-3">
+                <label class="form-label">Role</label>
+                <select name="role" class="form-control" required>
+                  <option value="grandadmin">grandadmin</option>
+                  <option value="admin">admin</option>
+                  <option value="user">user</option>
+                </select>
+              </div>
+              <div class="mb-3">
                 <label class="form-label">Mot de passe</label>
                 <input type="password" name="password" class="form-control" required>
               </div>
-              
               <div class="mb-3">
                 <label class="form-label">Chantier</label>
                 <select name="chantierId" class="form-control" required>
@@ -284,58 +284,55 @@
         </div>
       </div>
   
-      <!-- View User Modal -->
-      <div class="modal fade" id="viewUserModal" tabindex="-1">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header bg-info text-white">
-              <h5 class="modal-title">User Details</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-              <p><strong>Name:</strong> <span id="viewName"></span></p>
-              <p><strong>Email:</strong> <span id="viewEmail"></span></p>
-              <p><strong>Chantier:</strong> <span id="viewChantier"></span></p>
-            </div>
-          </div>
-        </div>
-      </div>
-  
       <!-- Edit User Modal -->
       <div class="modal fade" id="editUserModal" tabindex="-1">
         <div class="modal-dialog">
-          <form action="/users/edit" method="POST" class="modal-content">
-            <input type="hidden" name="id" id="editId">
+          <div class="modal-content">
             <div class="modal-header bg-warning text-white">
               <h5 class="modal-title">Edit User</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label">Name</label>
-                <input type="text" name="name" id="editName" class="form-control" required>
+                <label class="form-label">Nom de l'utilisateur</label>
+                <input type="text" id="editName" class="form-control" required>
               </div>
               <div class="mb-3">
                 <label class="form-label">Email</label>
-                <input type="email" name="email" id="editEmail" class="form-control" required>
+                <input type="email" id="editEmail" class="form-control" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Mot de passe</label>
+                <input type="password" id="editPassword" class="form-control">
               </div>
               <div class="mb-3">
                 <label class="form-label">Chantier</label>
-                <input type="text" name="chantier" id="editChantier" class="form-control" required>
+                <select id="editChantier" class="form-control" required>
+                  <% chantiers.forEach(chantier => { %>
+                    <option value="<%= chantier.id %>"><%= chantier.nom %></option>
+                  <% }) %>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Role</label>
+                <select id="editRole" class="form-control" required>
+                  <option value="grandadmin">Grandadmin</option>
+                  <option value="admin">Admin</option>
+                  <option value="user">User</option>
+                </select>
               </div>
             </div>
             <div class="modal-footer">
-              <button type="submit" class="btn btn-warning">Update</button>
+              <button type="button" class="btn btn-warning" onclick="updateUser()">Update</button>
             </div>
-          </form>
+          </div>
         </div>
       </div>
   
       <!-- Delete User Modal -->
       <div class="modal fade" id="deleteUserModal" tabindex="-1">
         <div class="modal-dialog">
-          <form action="/users/delete" method="POST" class="modal-content">
-            <input type="hidden" name="id" id="deleteId">
+          <div class="modal-content">
             <div class="modal-header bg-danger text-white">
               <h5 class="modal-title">Confirm Delete</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -344,10 +341,10 @@
               <p>Are you sure you want to delete <strong id="deleteName"></strong>?</p>
             </div>
             <div class="modal-footer">
-              <button type="submit" class="btn btn-danger">Delete</button>
+              <button type="button" class="btn btn-danger" onclick="deleteUser()">Delete</button>
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
             </div>
-          </form>
+          </div>
         </div>
       </div>
   
@@ -356,28 +353,65 @@
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
-      // View user
-      $('.btn-view').on('click', function () {
-        $('#viewName').text($(this).data('name'));
-        $('#viewEmail').text($(this).data('email'));
-        $('#viewChantier').text($(this).data('chantier'));
-      });
-  
-      // Edit user
+      let currentEditId = null;
+
+      // Edit user modal population
       $('.btn-edit').on('click', function () {
-        $('#editId').val($(this).data('id'));
+        currentEditId = $(this).data('id');
         $('#editName').val($(this).data('name'));
         $('#editEmail').val($(this).data('email'));
-        $('#editChantier').val($(this).data('chantier'));
+        $('#editPassword').val(''); // leave empty for security
+        $('#editChantier').val($(this).data('chantier-id'));
+        $('#editRole').val($(this).data('role'));
       });
-  
-      // Delete user
+
+      // Delete user modal population
       $('.btn-delete').on('click', function () {
-        $('#deleteId').val($(this).data('id'));
+        currentEditId = $(this).data('id');
         $('#deleteName').text($(this).data('name'));
       });
+
+      // Update user via Axios
+      function updateUser() {
+        const userData = {
+          id: currentEditId,
+          name: $('#editName').val(),
+          email: $('#editEmail').val(),
+          password: $('#editPassword').val(),
+          chantierId: $('#editChantier').val(),
+          role: $('#editRole').val()
+        };
+
+        // Only include password if it's not empty
+        if (!userData.password) {
+          delete userData.password;
+        }
+
+        axios.put('/users/edit', userData)
+          .then(response => {
+            alert('User updated successfully!');
+            location.reload(); // Refresh page to show updated data
+          })
+          .catch(error => {
+            console.error('Error updating user:', error);
+            alert('Failed to update user. Please try again.');
+          });
+      }
+
+      // Delete user via Axios
+      function deleteUser() {
+        axios.delete('/users/delete', { data: { id: currentEditId } })
+          .then(response => {
+            alert('User deleted successfully!');
+            location.reload(); // Refresh page to show updated data
+          })
+          .catch(error => {
+            console.error('Error deleting user:', error);
+            alert('Failed to delete user. Please try again.');
+          });
+      }
     </script>
   </body>
-  
 </html>

@@ -15,7 +15,8 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.use(methodOverride('_method'));
+app.use(methodOverride("_method")); // must be before routers
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -38,7 +39,7 @@ const sessionStore = new MySQLStore({
 });
 app.set('trust proxy', 1);
 
-
+// 
 app.use(session({
     secret: 'phpvsnodejs', // secret key to sign the session ID
     resave: false,

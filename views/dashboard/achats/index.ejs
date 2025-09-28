@@ -213,6 +213,7 @@
             <!-- Page Heading -->
             <h1 class="h3 mb-4 text-gray-800">Achats</h1>
 
+            <% if (user.role === 'grandadmin' || user.role === 'admin') { %>
             <div class="achat-buttons d-flex flex-wrap justify-content-center gap-4">
               <a href="/achats/devis" class="achat-card shadow">
                 <div class="card-icon-wrapper">
@@ -245,7 +246,25 @@
                 <span class="card-title">Fournisseurs</span>
                 <small class="card-subtitle">Base fournisseurs</small>
               </a>
+              
+              <a href="/achats/caisse" class="achat-card shadow">
+                <div class="card-icon-wrapper">
+                  <i class="fas fa-truck"></i>
+                </div>
+                <span class="card-title">Caisse</span>
+                <small class="card-subtitle">Justif de caisse</small>
+              </a>
             </div>
+            <% } else if (user.role === 'user') { %>
+              <a href="/achats/caisse" class="achat-card shadow">
+                <div class="card-icon-wrapper">
+                  <i class="fas fa-truck"></i>
+                </div>
+                <span class="card-title">Caisse</span>
+                <small class="card-subtitle">Justif de caisse</small>
+              </a>
+            <% } %>
+           
 
           </div>
           <br><br>
