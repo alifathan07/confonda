@@ -256,13 +256,22 @@
               </a>
             </div>
             <% } else if (user.role === 'user') { %>
-              <a href="/achats/caisse" class="achat-card shadow">
-                <div class="card-icon-wrapper">
-                  <i class="fas fa-truck"></i>
-                </div>
-                <span class="card-title">Caisse</span>
-                <small class="card-subtitle">Justif de caisse</small>
-              </a>
+              <div class="achat-buttons d-flex flex-wrap justify-content-center gap-4">
+                <a href="/achats/demandeCaisse" class="achat-card shadow">
+                  <div class="card-icon-wrapper">
+                    <i class="fas fa-university"></i>
+                  </div>
+                  <span class="card-title">Caisse</span>
+                  <small class="card-subtitle">Justif de caisse</small>
+                </a>
+                <a href="/achats/demandeCaisse" class="achat-card shadow">
+                  <div class="card-icon-wrapper">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                  </div>
+                  <span class="card-title">Demande De Caisse</span>
+                  <small class="card-subtitle">Demande de caisse</small>
+                </a>
+              </div>
             <% } %>
            
 

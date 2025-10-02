@@ -190,7 +190,9 @@ export const getSituationBancaire = async (req, res) => {
           }
         },
         orderBy: {
-          dateEcheance: 'asc',
+          client: {
+            name: 'asc',
+          },
         },
       });
       const fournisseurs = await prisma.fournisseur.findMany({

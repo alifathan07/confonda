@@ -461,14 +461,22 @@
                   <option value="Impayé">Impayé</option>
                 </select>
               </div>
+              <!-- Replace single-select with checkbox dropdown for Suppliers -->
               <div class="form-group mr-2">
-                <label for="fournisseurFilterCheques" class="mr-2">Fournisseur :</label>
-                <select id="fournisseurFilterCheques" class="form-control">
-                  <option value="">Tous</option>
-                  <% fournisseurs.forEach(f => { %>
-                    <option value="<%= f.name %>"><%= f.name %></option>
-                  <% }) %>
-                </select>
+                <label class="mr-2">Fournisseur :</label>
+                <div class="dropdown d-inline-block">
+                  <button class="btn btn-info dropdown-toggle" type="button" id="supplierFilterBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Sélection
+                    <span class="badge badge-light ml-1" id="supplierSelectedCount">Tous</span>
+                  </button>
+                  <div class="dropdown-menu p-2" aria-labelledby="supplierFilterBtn" style="max-height: 300px; overflow:auto; min-width: 260px;">
+                    <div class="custom-control custom-checkbox mb-2">
+                      <input type="checkbox" class="custom-control-input" id="supplierSelectAll" checked>
+                      <label class="custom-control-label" for="supplierSelectAll"><strong>Tous</strong></label>
+                    </div>
+                    <div id="supplierList"></div>
+                  </div>
+                </div>
               </div>
               <div class="form-group mr-2">
                 <label for="banqueFilterCheques" class="mr-2">Banque :</label>
@@ -481,6 +489,8 @@
               </div>
               <button type="button" class="btn btn-secondary" id="resetDateBtn" aria-label="Annuler filtre" style="background-color: #6a5ae7;">Annuler filtre</button>
               <input type="hidden" name="from" value="01/01/2020">
+
+           
             </form>
           </div>
 
@@ -579,27 +589,40 @@
             <div class="card-header d-flex justify-content-between align-items-center">
               <h2>Recettes à venir</h2>
               <form class="form-inline">
-                <!-- Client Filter Dropdown -->
+                <!-- Client Filter Dropdown (Multi-select with search) -->
                 <div class="form-group mr-3">
-                  <label for="clientFilter" class="mr-2" style="color: white;">Client:</label>
-                  <select id="clientFilter" class="form-control">
-                    <option value="">Tous les clients</option>
-                    <% clients.forEach(client => { %>
-                      <option value="<%= client.name %>"><%= client.name %></option>
-                    <% }) %>
-                  </select>
+                  <label class="mr-2" style="color: white;">Client :</label>
+                  <div class="dropdown d-inline-block">
+                    <button class="btn btn-info dropdown-toggle" type="button" id="clientFilterBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      Sélection
+                      <span class="badge badge-light ml-1" id="clientSelectedCount">Tous</span>
+                    </button>
+                    <div class="dropdown-menu p-2" aria-labelledby="clientFilterBtn" style="max-height: 300px; overflow:auto; min-width: 260px;">
+                      <input type="text" class="form-control mb-2" id="clientSearch" placeholder="Rechercher...">
+                      <div class="custom-control custom-checkbox mb-2">
+                        <input type="checkbox" class="custom-control-input" id="clientSelectAll" checked>
+                        <label class="custom-control-label" for="clientSelectAll"><strong>Tous</strong></label>
+                      </div>
+                      <div id="clientList"></div>
+                    </div>
+                  </div>
                 </div>
+          
                 <!-- Chantier Filter Dropdown -->
                 <div class="form-group mr-3">
                   <label for="chantierFilter" class="mr-2" style="color: white;">Chantier:</label>
                   <select id="chantierFilter" class="form-control">
                     <option value="">Tous les chantiers</option>
-                   <% chantiers.forEach(chantier => { %>
+                    <% chantiers.forEach(function(chantier) { %>
                       <option value="<%= chantier.nom %>"><%= chantier.nom %></option>
-                   <% }) %>
+                    <% }) %>
                   </select>
                 </div>
-                <a href="/tresorerie/recettes_a_venir" class="btn" aria-label="Ajouter une recette" style="background-color: #6A5AE7; color: white;">Ajouter une recette</a>
+          
+                <a href="/tresorerie/recettes_a_venir" class="btn" style="background-color: #6A5AE7; color: white;">Ajouter une recette</a>
+                <button class="custom-btn btn-primary" style="background-color: #a30000; color: white;" onclick="downloadRecettesPDF()" aria-label="Télécharger PDF recettes">
+                  <i class="fas fa-file-pdf"></i> PDF Recettes à venir
+                </button>
               </form>
             </div>
           
@@ -621,29 +644,62 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <% recavenirs.forEach(c => { %>
-                        <tr class="recavenir-row" data-client="<%= c.client.name %>" data-banque="<%= c.banque.name ? c.banque.name : '-- Aucune --' %>" data-statut="<%= c.statut %>" data-chantier="<%= c.chantier.nom ? c.chantier.nom : '-- Aucun --' %>">
+                      <%
+                        const sortedRecettes = recavenirs.sort((a, b) => a.client.name.localeCompare(b.client.name));
+                        let currentClient = null;
+                        let clientTotal = 0;
+                      %>
+          
+                      <% sortedRecettes.forEach(function(c, index) { %>
+                        <% if (currentClient !== c.client.name) { 
+                             currentClient = c.client.name; 
+                             clientTotal = 0; %>
+                          <tr class="table-secondary font-weight-bold  " >
+                            <td colspan="7" style="background-color: #6A5AE7; color: white;">Client : <%= currentClient %></td>
+                          </tr>
+                        <% } %>
+          
+                        <% clientTotal += c.montant; %>
+          
+                        <tr class="recavenir-row" 
+                            data-client="<%= c.client.name %>" 
+                            data-banque="<%= c.banque?.name || '-- Aucune --' %>" 
+                            data-statut="<%= c.statut %>" 
+                            data-chantier="<%= c.chantier?.nom || '-- Aucun --' %>">
                           <td><%= c.client.name %></td>
                           <td><%= c.designation %></td>
-                          <td class="text-right"><%= c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %> </td>
+                          <td class="text-right">
+                            <%= c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
+                          </td>
                           <td><%= new Date(c.dateEcheance).toLocaleDateString('fr-FR') %></td>
                           <td>
                             <span class="badge badge-<%= c.statut === 'échu' ? 'warning' : c.statut === 'impayé' ? 'danger' : 'success' %>">
                               <%= c.statut %>
                             </span>
                           </td>
-                          <td><%= c.chantier.nom ? c.chantier.nom : '-- Aucun --' %></td>
-                          <td><%= c.banque.name ? c.banque.name : '-- Aucune --' %></td>
+                          <td><%= c.chantier?.nom || '-- Aucun --' %></td>
+                          <td><%= c.banque?.name || '-- Aucune --' %></td>
                         </tr>
+          
+                        <% if (sortedRecettes[index + 1]?.client.name !== currentClient) { %>
+                          <tr class="table-secondary font-weight-bold">
+                            <td colspan="2">Total <%= currentClient %></td>
+                            <td class="text-right">
+                              <%= clientTotal.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
+                            </td>
+                            <td colspan="4"></td>
+                          </tr>
+                        <% } %>
                       <% }) %>
                     </tbody>
+          
                     <tfoot>
                       <tr>
-                        <td colspan="2">Total</td>
+                        <td colspan="2">Total Général</td>
                         <td class="text-right" id="totalMontant">
                           <%= recavenirs.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
                         </td>
-                        <td colspan="3"></td>
+                        <td colspan="4"></td>
                       </tr>
                     </tfoot>
                   </table>
@@ -651,51 +707,7 @@
               <% } %>
             </div>
           </div>
-          <!-- <------ Filter Recettes a venir -------------> 
-          <script>
-            document.addEventListener('DOMContentLoaded', function () {
-              const clientFilter = document.getElementById('clientFilter');
-              const chantierFilter = document.getElementById('chantierFilter');
-              const tableRows = document.querySelectorAll('.recavenir-row');
-              const totalMontant = document.getElementById('totalMontant');
           
-              function updateTable() {
-                let total = 0;
-                const selectedClient = clientFilter.value;
-                const selectedChantier = chantierFilter.value;
-          
-                tableRows.forEach(row => {
-                  const client = row.getAttribute('data-client');
-                  const chantier = row.getAttribute('data-chantier');
-                  const montantText = row.querySelector('td:nth-child(3)').textContent.replace(/\s/g, '').replace(',', '.');
-                  const montant = parseFloat(montantText) || 0;
-          
-                  // Check if row matches the selected filters
-                  const clientMatch = !selectedClient || client === selectedClient;
-                  const chantierMatch = !selectedChantier || chantier === selectedChantier;
-          
-                  if (clientMatch && chantierMatch) {
-                    row.style.display = '';
-                    total += montant;
-                  } else {
-                    row.style.display = 'none';
-                  }
-                });
-          
-                // Update total
-                totalMontant.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
-              }
-          
-              // Add event listeners to filters
-              clientFilter.addEventListener('change', updateTable);
-              chantierFilter.addEventListener('change', updateTable);
-          
-              // Initial table update
-              updateTable();
-            });
-          </script>
-       <!-- <------ End Filter Recettes a venir -------------> 
-
 
           <!-- Banque Modal -->
           <div class="modal fade" id="banqueModal" tabindex="-1" role="dialog" aria-labelledby="banqueModalLabel" aria-hidden="true">
@@ -947,7 +959,7 @@
                     <tfoot>
                       <tr>
                         <td>Total</td>  
-                        <td class="text-right montant"><%= payavenirs.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %> </td>
+                        <td class="text-right montant" id="displayTotalPayavenirs"><%= payavenirs.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %> </td>
                         <td colspan="5"></td>
                       </tr>
                     </tfoot>
@@ -1121,7 +1133,7 @@
         </thead>
         <tbody>
           <% cheques.filter(c => c.validation).forEach((c, i) => { %>
-            <tr >
+            <tr class="cheque-row-valid" data-fournisseur="<%= c.beneficiaire %>" data-banque="<%= c.banque.name %>" data-statut="<%= c.statut %>" data-date="<%= new Date(c.dateEcheance).toISOString().split('T')[0] %>">
               <td><%= new Date(c.dateEtablissement).toLocaleDateString('fr-FR') %></td>
               <td><%= c.numero %></td>
               <td><%= c.banque.name %></td>
@@ -1191,7 +1203,7 @@
         </thead>
         <tbody>
           <% effets.filter(e => e.validation).forEach((e, i) => { %>
-            <tr>
+            <tr class="effet-row-valid" data-fournisseur="<%= e.beneficiaire %>" data-banque="<%= e.banque.name %>" data-statut="<%= e.statut %>" data-date="<%= new Date(e.dateEcheance).toISOString().split('T')[0] %>">
               <td><%= new Date(e.dateEtablissement).toLocaleDateString('fr-FR') %></td>
               <td><%= e.numero %></td>
               <td><%= e.banque.name %></td>
@@ -1235,7 +1247,6 @@
   </div>
 </div>
               <!-- Paiements à venir Validés -->
-              <!-- Paiements à venir Validés -->
               <div class="card mb-4 fade-in">
                 <div class="card-header bg-success text-white">
                   <h2>Paiements à venir Validés</h2>
@@ -1257,7 +1268,7 @@
                       </thead>
                       <tbody>
                         <% payavenirs.filter(p => p.validation).forEach((p, i) => { %>
-                          <tr>
+                          <tr class="payavenir-row-valid" data-fournisseur="<%= p.fournisseur.name %>" data-banque="<%= p.banque.name %>" data-statut="<%= p.statut %>" data-date="<%= new Date(p.dateEcheance).toISOString().split('T')[0] %>">
                             <td><%= p.designation %></td>
                             <td><%= p.banque.name %></td>
                             <td><%= p.fournisseur.name %></td>
@@ -1334,7 +1345,6 @@
 </body>
 
 
-</html>
 
 
 
@@ -1344,391 +1354,558 @@
 
 
 <script>
-
-// show / hide tables of validation 
-const toggleBtn = document.getElementById("toggleTablesBtn");
-  const toggleIcon = document.getElementById("toggleIcon");
-  const toggleText = document.getElementById("toggleText");
-  const tablesContainer = document.getElementById("tables-container");
-
-  toggleBtn.addEventListener("click", () => {
-    const isHidden = tablesContainer.classList.contains("hidden");
-
-    tablesContainer.classList.toggle("hidden");
-    toggleIcon.classList.toggle("fa-eye-slash", !isHidden);
-    toggleIcon.classList.toggle("fa-eye", isHidden);
-    toggleText.textContent = isHidden ? "Afficher" : "Masquer";
-  });
   document.addEventListener('DOMContentLoaded', () => {
-  const getNumber = id => parseFloat(document.getElementById(id)?.textContent.replace(/\s/g, '').replace(',', '.') || 0);
-  const chequetotal = document.querySelector('.chequetotal')
-  const effettotal = document.querySelector('.effettotal')
-  const paytotal = document.querySelector('.paytotal')
-  const grandTotal = parseFloat(chequetotal.textContent.replace(/\s/g, '').replace(',', '.')) + parseFloat(effettotal.textContent.replace(/\s/g, '').replace(',', '.')) + parseFloat(paytotal.textContent.replace(/\s/g, '').replace(',', '.'));
-  document.getElementById('grandTotalValide').textContent = grandTotal.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') + ' dirhams';
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-  // Get filter elements
+  // Filter elements
   const statutFilter = document.getElementById('statutFilterCheques');
-  const fournisseurFilter = document.getElementById('fournisseurFilterCheques');
   const banqueFilter = document.getElementById('banqueFilterCheques');
-  const dateFromFilter = document.getElementById('dateFilter');   // start date
-  const dateToFilter = document.getElementById('dateToFilter');   // end date
-  const resetButton = document.getElementById('resetFilters') || document.getElementById('resetDateBtn');
+  const dateFromFilter = document.getElementById('dateFilter');
+  const dateToFilter = document.getElementById('dateToFilter');
+  const resetButton = document.getElementById('resetDateBtn');
+  const supplierList = document.getElementById('supplierList');
+  const selectAllEl = document.getElementById('supplierSelectAll');
+  const countBadge = document.getElementById('supplierSelectedCount');
 
-  // Tables
+  // Table elements
   const chequesTable = document.getElementById('chequesTable');
   const effetsTable = document.getElementById('effetsTable');
   const payavenirsTable = document.getElementById('payavenirsTable');
+  const chequesValidesTable = document.querySelector('#tables-container #chequesTable');
+  const effetsValidesTable = document.querySelector('#tables-container #effetsTable');
+  const payavenirsValidesTable = document.getElementById('payavenirsValidesTable');
 
-  const chequesRows = chequesTable ? chequesTable.querySelectorAll('tbody tr.cheque-row') : [];
-  const effetsRows = effetsTable ? effetsTable.querySelectorAll('tbody tr.effet-row') : [];
-  const payavenirRows = payavenirsTable ? payavenirsTable.querySelectorAll('tbody tr.payavenir-row') : [];
+  // Row selectors
+  const chequesRows = chequesTable?.querySelectorAll('tbody tr.cheque-row') || [];
+  const effetsRows = effetsTable?.querySelectorAll('tbody tr.effet-row') || [];
+  const payavenirsRows = payavenirsTable?.querySelectorAll('tbody tr.payavenir-row') || [];
+  const chequesValidesRows = chequesValidesTable?.querySelectorAll('tbody tr.cheque-row-valid') || [];
+  const effetsValidesRows = effetsValidesTable?.querySelectorAll('tbody tr.effet-row-valid') || [];
+  const payavenirsValidesRows = payavenirsValidesTable?.querySelectorAll('tbody tr.payavenir-row-valid') || [];
 
-  // Totals
+  // Total elements
   const totalMontantCheques = document.getElementById('displayTotalCheques');
-const totalMontantEffets = document.getElementById('displayTotalEffets');
-const totalMontantGeneral = document.getElementById('displayTotalGeneral');
+  const totalMontantEffets = document.getElementById('displayTotalEffets');
+  const totalMontantPayavenirs = document.getElementById('displayTotalPayavenirs');
+  const totalMontantChequesValides = chequesValidesTable?.querySelector('.chequetotal');
+  const totalMontantEffetsValides = effetsValidesTable?.querySelector('.effettotal');
+  const totalMontantPayavenirsValides = payavenirsValidesTable?.querySelector('.paytotal');
+  const totalMontantGeneral = document.getElementById('displayTotalGeneralCard');
+  const totalMontantGeneralValide = document.getElementById('grandTotalValide');
 
-  // Parse French numbers
-  function parseFrenchNumber(value) {
+  // Utility functions
+  const parseFrenchNumber = (value) => {
     if (!value) return 0;
-    const clean = value.toString().replace(/\s/g, '').replace(',', '.');
-    return parseFloat(clean) || 0;
-  }
-  function formatFrenchNumber(value) {
-    return value.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return parseFloat(value.toString().replace(/\s/g, '').replace(',', '.')) || 0;
+  };
+
+  const formatFrenchNumber = (value) => {
+    return value.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
+  };
+
+  // Collect unique suppliers
+  const suppliers = Array.from(new Set(
+    [...chequesRows, ...effetsRows, ...payavenirsRows]
+      .map(r => r.getAttribute('data-fournisseur')?.trim())
+      .filter(Boolean)
+  )).sort((a, b) => a.localeCompare(b, 'fr'));
+
+  // Render supplier checkboxes
+  if (supplierList) {
+    supplierList.innerHTML = '';
+    suppliers.forEach((name, idx) => {
+      const id = `supplier-opt-${idx}`;
+      const wrap = document.createElement('div');
+      wrap.className = 'custom-control custom-checkbox mb-1';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.className = 'custom-control-input';
+      input.id = id;
+      input.value = name;
+      input.checked = true;
+      const label = document.createElement('label');
+      label.className = 'custom-control-label';
+      label.setAttribute('for', id);
+      label.textContent = name;
+      wrap.appendChild(input);
+      wrap.appendChild(label);
+      supplierList.appendChild(wrap);
+
+      input.addEventListener('change', () => {
+        applyFilters();
+        syncSelectAll();
+        updateBadge();
+      });
+    });
   }
 
-  const MIN_DATE = new Date("2020-01-01");
+  // Fallback dropdown toggle
+  const dropdownBtn = document.getElementById('supplierFilterBtn');
+  if (dropdownBtn) {
+    const menu = dropdownBtn.nextElementSibling;
+    dropdownBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropdownBtn.parentElement.classList.toggle('show');
+      if (menu && menu.classList) menu.classList.toggle('show');
+    });
+    document.addEventListener('click', () => {
+      dropdownBtn.parentElement.classList.remove('show');
+      if (menu && menu.classList) menu.classList.remove('show');
+    });
+  }
 
-  // Shared filter
-  function filterChequesAndEffetsRows() {
+  // Get selected suppliers
+  const getSelectedSuppliers = () => {
+    return Array.from(supplierList?.querySelectorAll('input[type="checkbox"]:checked') || [])
+      .map(cb => cb.value);
+  };
+
+  // Update supplier badge
+  const updateBadge = () => {
+    if (!countBadge) return;
+    const checkedCount = supplierList.querySelectorAll('input[type="checkbox"]:checked').length;
+    countBadge.textContent = checkedCount === suppliers.length ? 'Tous' : `${checkedCount}/${suppliers.length}`;
+  };
+
+  // Sync "Select All" checkbox
+  const syncSelectAll = () => {
+    if (!selectAllEl) return;
+    const boxes = supplierList.querySelectorAll('input[type="checkbox"]');
+    const total = boxes.length;
+    const checked = Array.from(boxes).filter(b => b.checked).length;
+    selectAllEl.indeterminate = checked > 0 && checked < total;
+    selectAllEl.checked = checked === total;
+  };
+
+  // Handle "Select All" toggle
+  selectAllEl?.addEventListener('change', () => {
+    const check = selectAllEl.checked;
+    supplierList.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = check);
+    selectAllEl.indeterminate = false;
+    updateBadge();
+    applyFilters();
+  });
+
+  // Apply all filters
+  const applyFilters = () => {
     const selectedStatut = statutFilter?.value.toLowerCase() || '';
-    const selectedFournisseur = fournisseurFilter?.value.toLowerCase() || '';
     const selectedBanque = banqueFilter?.value.toLowerCase() || '';
-    const fromDate = dateFromFilter?.value ? new Date(dateFromFilter.value) : MIN_DATE;
+    const selectedSuppliers = new Set(getSelectedSuppliers());
+    const allSuppliersSelected = selectedSuppliers.size === suppliers.length;
+    const fromDate = dateFromFilter?.value ? new Date(dateFromFilter.value) : new Date('2020-01-01');
     const toDate = dateToFilter?.value ? new Date(dateToFilter.value) : null;
 
-    // --- Filter cheques ---
-    let visibleChequeRows = 0;
-    chequesRows.forEach(row => {
-      const rowStatut = row.getAttribute('data-statut').toLowerCase();
-      const rowFournisseur = row.getAttribute('data-fournisseur').toLowerCase();
-      const rowBanque = row.getAttribute('data-banque').toLowerCase();
+    const filterRow = (row) => {
+      const rowStatut = row.getAttribute('data-statut')?.toLowerCase() || '';
+      const rowBanque = row.getAttribute('data-banque')?.toLowerCase() || '';
+      const rowFournisseur = row.getAttribute('data-fournisseur')?.trim() || '';
       const rowDate = new Date(row.getAttribute('data-date'));
+      const isValidated = row.querySelector('input[name="validation"], input[name="validationEffet"], input[name="validationPayavenir"]')?.checked;
 
-      const showStatut = !selectedStatut || rowStatut === selectedStatut;
-      const showFournisseur = !selectedFournisseur || rowFournisseur === selectedFournisseur;
-      const showBanque = !selectedBanque || rowBanque === selectedBanque;
-      const showDate = rowDate >= MIN_DATE && rowDate >= fromDate && (!toDate || rowDate <= toDate);
+      const statutMatch = !selectedStatut || rowStatut === selectedStatut;
+      const banqueMatch = !selectedBanque || rowBanque === selectedBanque;
+      const supplierMatch = allSuppliersSelected || selectedSuppliers.has(rowFournisseur);
+      const dateMatch = rowDate >= fromDate && (!toDate || rowDate <= toDate);
 
-      if (showStatut && showFournisseur && showBanque && showDate) {
-        row.style.display = '';
-        visibleChequeRows++;
-      } else {
-        row.style.display = 'none';
+      return statutMatch && banqueMatch && supplierMatch && dateMatch;
+    };
+
+    const tables = [
+      { rows: chequesRows, table: chequesTable, msgId: 'noChequeMsg', colspan: 9 },
+      { rows: effetsRows, table: effetsTable, msgId: 'noEffetMsg', colspan: 9 },
+      { rows: payavenirsRows, table: payavenirsTable, msgId: 'noPayavenirMsg', colspan: 7 },
+    ];
+
+    tables.forEach(({ rows, table, msgId, colspan }) => {
+      let visibleCount = 0;
+      rows.forEach(row => {
+        row.style.display = filterRow(row) ? '' : 'none';
+        if (row.style.display !== 'none') visibleCount++;
+      });
+
+      let msg = document.getElementById(msgId);
+      if (visibleCount === 0) {
+        if (!msg && table) {
+          msg = document.createElement('tr');
+          msg.id = msgId;
+          msg.innerHTML = `<td colspan="${colspan}" class="text-muted text-center">Aucun élément trouvé pour ce filtre.</td>`;
+          table.querySelector('tbody').appendChild(msg);
+        }
+      } else if (msg) {
+        msg.remove();
       }
     });
 
-    // Handle "no results"
-    let chequeMsg = document.getElementById('noChequeMsg');
-    if (visibleChequeRows === 0) {
-      if (!chequeMsg) {
-        chequeMsg = document.createElement('tr');
-        chequeMsg.id = 'noChequeMsg';
-        chequeMsg.innerHTML = `<td colspan="7" class="text-muted text-center">Aucun chèque trouvé pour ce filtre.</td>`;
-        chequesTable.querySelector('tbody').appendChild(chequeMsg);
-      }
-    } else if (chequeMsg) {
-      chequeMsg.remove();
-    }
+    const validatedTables = [
+      { rows: chequesValidesRows, table: chequesValidesTable, msgId: 'noChequeValideMsg', colspan: 9 },
+      { rows: effetsValidesRows, table: effetsValidesTable, msgId: 'noEffetValideMsg', colspan: 9 },
+      { rows: payavenirsValidesRows, table: payavenirsValidesTable, msgId: 'noPayavenirValideMsg', colspan: 8 },
+    ];
 
-    // --- Filter effets ---
-    let visibleEffetRows = 0;
-    effetsRows.forEach(row => {
-      const rowStatut = row.getAttribute('data-statut').toLowerCase();
-      const rowFournisseur = row.getAttribute('data-fournisseur').toLowerCase();
-      const rowBanque = row.getAttribute('data-banque').toLowerCase();
-      const rowDate = new Date(row.getAttribute('data-date'));
+    validatedTables.forEach(({ rows, table, msgId, colspan }) => {
+      let visibleCount = 0;
+      rows.forEach(row => {
+        const isValidated = row.querySelector('input[name="validation"], input[name="validationEffet"], input[name="validationPayavenir"]')?.checked;
+        row.style.display = filterRow(row) && isValidated ? '' : 'none';
+        if (row.style.display !== 'none') visibleCount++;
+      });
 
-      const showStatut = !selectedStatut || rowStatut === selectedStatut;
-      const showFournisseur = !selectedFournisseur || rowFournisseur === selectedFournisseur;
-      const showBanque = !selectedBanque || rowBanque === selectedBanque;
-      const showDate = rowDate >= MIN_DATE && rowDate >= fromDate && (!toDate || rowDate <= toDate);
-
-      if (showStatut && showFournisseur && showBanque && showDate) {
-        row.style.display = '';
-        visibleEffetRows++;
-      } else {
-        row.style.display = 'none';
+      let msg = document.getElementById(msgId);
+      if (visibleCount === 0) {
+        if (!msg && table) {
+          msg = document.createElement('tr');
+          msg.id = msgId;
+          msg.innerHTML = `<td colspan="${colspan}" class="text-muted text-center">Aucun élément validé trouvé pour ce filtre.</td>`;
+          table.querySelector('tbody').appendChild(msg);
+        }
+      } else if (msg) {
+        msg.remove();
       }
     });
 
-    let effetMsg = document.getElementById('noEffetMsg');
-    if (visibleEffetRows === 0) {
-      if (!effetMsg) {
-        effetMsg = document.createElement('tr');
-        effetMsg.id = 'noEffetMsg';
-        effetMsg.innerHTML = `<td colspan="6" class="text-muted text-center">Aucun effet trouvé pour ce filtre.</td>`;
-        effetsTable.querySelector('tbody').appendChild(effetMsg);
-      }
-    } else if (effetMsg) {
-      effetMsg.remove();
-    }
+    updateAllTotals();
+  };
 
-    // --- Filter payavenirs ---
-    let visiblePayavenirRows = 0;
-    payavenirRows.forEach(row => {
-      const rowStatut = row.getAttribute('data-statut').toLowerCase();
-      const rowFournisseur = row.getAttribute('data-fournisseur').toLowerCase();
-      const rowBanque = row.getAttribute('data-banque').toLowerCase();
-      const rowDate = new Date(row.getAttribute('data-date'));
+  // Update all totals
+  const updateAllTotals = () => {
+    let totalCheques = 0, totalEffets = 0, totalPayavenirs = 0;
+    let totalChequesValides = 0, totalEffetsValides = 0, totalPayavenirsValides = 0;
 
-      const showStatut = !selectedStatut || rowStatut === selectedStatut;
-      const showFournisseur = !selectedFournisseur || rowFournisseur === selectedFournisseur;
-      const showBanque = !selectedBanque || rowBanque === selectedBanque;
-      const showDate = rowDate >= MIN_DATE && rowDate >= fromDate && (!toDate || rowDate <= toDate);
-
-      if (showStatut && showFournisseur && showBanque && showDate) {
-        row.style.display = '';
-        visiblePayavenirRows++;
-      } else {
-        row.style.display = 'none';
-      }
-    });
-
-    let payavenirMsg = document.getElementById('noPayavenirMsg');
-    if (visiblePayavenirRows === 0) {
-      if (!payavenirMsg && payavenirsTable) {
-        payavenirMsg = document.createElement('tr');
-        payavenirMsg.id = 'noPayavenirMsg';
-        payavenirMsg.innerHTML = `<td colspan="7" class="text-muted text-center">Aucun paiement trouvé pour ce filtre.</td>`;
-        payavenirsTable.querySelector('tbody').appendChild(payavenirMsg);
-      }
-    } else if (payavenirMsg) {
-      payavenirMsg.remove();
-    }
-
-    // ✅ One function for all totals
-    updateDashboardTotals();
-  }
-
-  // --- Totals ---
-  function updateDashboardTotals() {
-    let totalCheques = 0;
-    let totalEffets = 0;
-    let totalPayavenirs = 0;
-
-    // Chèques visibles
     chequesRows.forEach(row => {
       if (row.style.display !== 'none') {
-        const montantCell = row.querySelector('.montant');
-        if (montantCell) totalCheques += parseFrenchNumber(montantCell.textContent);
+        const montant = parseFrenchNumber(row.querySelector('.montant')?.textContent);
+        totalCheques += montant;
       }
     });
 
-    // Effets visibles
     effetsRows.forEach(row => {
       if (row.style.display !== 'none') {
-        const montantCell = row.querySelector('.montant');
-        if (montantCell) totalEffets += parseFrenchNumber(montantCell.textContent);
+        const montant = parseFrenchNumber(row.querySelector('.montant')?.textContent);
+        totalEffets += montant;
       }
     });
 
-    // Payavenirs visibles
-    payavenirRows.forEach(row => {
+    payavenirsRows.forEach(row => {
       if (row.style.display !== 'none') {
-        const montantCell = row.querySelector('.montant');
-        if (montantCell) totalPayavenirs += parseFrenchNumber(montantCell.textContent);
+        const montant = parseFrenchNumber(row.querySelector('.montant')?.textContent);
+        totalPayavenirs += montant;
       }
     });
 
-    // Update footers
-    if (totalMontantCheques) totalMontantCheques.textContent = formatFrenchNumber(totalCheques.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ')) + ' ';
-    if (totalMontantEffets) totalMontantEffets.textContent = formatFrenchNumber(totalEffets.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ')) + ' ';
+    chequesValidesRows.forEach(row => {
+      if (row.style.display !== 'none') {
+        const montant = parseFrenchNumber(row.querySelector('.montant')?.textContent);
+        totalChequesValides += montant;
+      }
+    });
 
-    // Update general
-    if (totalMontantGeneral) totalMontantGeneral.textContent = formatFrenchNumber((totalCheques + totalEffets + totalPayavenirs).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ')) + ' ';
+    effetsValidesRows.forEach(row => {
+      if (row.style.display !== 'none') {
+        const montant = parseFrenchNumber(row.querySelector('.montant')?.textContent);
+        totalEffetsValides += montant;
+      }
+    });
 
-    // Update dashboard cards (if you have them)
+    payavenirsValidesRows.forEach(row => {
+      if (row.style.display !== 'none') {
+        const montant = parseFrenchNumber(row.querySelector('.montant')?.textContent);
+        totalPayavenirsValides += montant;
+      }
+    });
+
+    if (totalMontantCheques) totalMontantCheques.textContent = formatFrenchNumber(totalCheques);
+    if (totalMontantEffets) totalMontantEffets.textContent = formatFrenchNumber(totalEffets);
+    if (totalMontantPayavenirs) totalMontantPayavenirs.textContent = formatFrenchNumber(totalPayavenirs);
+
+    if (totalMontantChequesValides) totalMontantChequesValides.textContent = formatFrenchNumber(totalChequesValides);
+    if (totalMontantEffetsValides) totalMontantEffetsValides.textContent = formatFrenchNumber(totalEffetsValides);
+    if (totalMontantPayavenirsValides) totalMontantPayavenirsValides.textContent = formatFrenchNumber(totalPayavenirsValides);
+
     const chequesCard = document.getElementById('displayTotalChequesCard');
     const effetsCard = document.getElementById('displayTotalEffetsCard');
-    const generalCard = document.getElementById('displayTotalGeneralCard');
+    if (chequesCard) chequesCard.textContent = formatFrenchNumber(totalCheques);
+    if (effetsCard) effetsCard.textContent = formatFrenchNumber(totalEffets);
+    if (totalMontantGeneral) totalMontantGeneral.textContent = formatFrenchNumber(totalCheques + totalEffets + totalPayavenirs);
 
-    if (chequesCard) chequesCard.textContent = formatFrenchNumber(totalCheques.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ')) + ' ';
-    if (effetsCard) effetsCard.textContent = formatFrenchNumber(totalEffets.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ')) + ' ';
-    if (generalCard) generalCard.textContent = formatFrenchNumber((totalCheques + totalEffets + totalPayavenirs).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ')) + ' ';
-  }
+    if (totalMontantGeneralValide) {
+      const grandTotalValide = totalChequesValides + totalEffetsValides + totalPayavenirsValides;
+      totalMontantGeneralValide.textContent = formatFrenchNumber(grandTotalValide) + ' dirhams';
+    }
+  };
 
-  // Reset
-  function resetFilters() {
-    statutFilter.value = '';
-    fournisseurFilter.value = '';
-    banqueFilter.value = '';
+  // Reset filters
+  const resetFilters = () => {
+    if (statutFilter) statutFilter.value = '';
+    if (banqueFilter) banqueFilter.value = '';
     if (dateFromFilter) dateFromFilter.value = '2020-01-01';
     if (dateToFilter) dateToFilter.value = '';
-    filterChequesAndEffetsRows();
-  }
+    if (supplierList) {
+      supplierList.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+      syncSelectAll();
+      updateBadge();
+    }
+    applyFilters();
+  };
 
-  // Events
-  statutFilter?.addEventListener('change', filterChequesAndEffetsRows);
-  fournisseurFilter?.addEventListener('change', filterChequesAndEffetsRows);
-  banqueFilter?.addEventListener('change', filterChequesAndEffetsRows);
-  dateFromFilter?.addEventListener('change', filterChequesAndEffetsRows);
-  dateToFilter?.addEventListener('change', filterChequesAndEffetsRows);
+  // Add event listeners
+  statutFilter?.addEventListener('change', applyFilters);
+  banqueFilter?.addEventListener('change', applyFilters);
+  dateFromFilter?.addEventListener('change', applyFilters);
+  dateToFilter?.addEventListener('change', applyFilters);
   resetButton?.addEventListener('click', resetFilters);
 
-  // Initial run
-  filterChequesAndEffetsRows();
-});
-// cheques validation 
-document.addEventListener('DOMContentLoaded', () => {
-  const checkboxes = document.querySelectorAll('input[name="validation"]');
-
-  checkboxes.forEach(checkbox => {
-    checkbox.checked = checkbox.dataset.validation === "true"; 
-
-    checkbox.addEventListener('change', async (e) => {
-      const id = e.target.dataset.id;
-      const validation = e.target.checked;
+  // Handle validation checkboxes
+  const validationCheckboxes = document.querySelectorAll('input[name="validation"], input[name="validationEffet"], input[name="validationPayavenir"]');
+  validationCheckboxes.forEach(checkbox => {
+    checkbox.checked = checkbox.dataset.validation === "true" || checkbox.dataset.effetvalidation === "true" || checkbox.dataset.payavenirvalidation === "true";
+    checkbox.addEventListener('change', async () => {
+      const id = checkbox.getAttribute('data-id');
+      const isChecked = checkbox.checked;
+      const type = checkbox.name === 'validation' ? 'cheques' :
+                   checkbox.name === 'validationEffet' ? 'effets' : 'payavenirs';
+      const endpoint = `/tresorerie/${type}/${id}/validation`;
+      const bodyKey = type === 'cheques' ? 'validation' :
+                      type === 'effets' ? 'validationEffet' : 'validationPayavenir';
 
       try {
-        const response = await fetch(`/tresorerie/cheques/${id}/validation`, {
+        const response = await fetch(endpoint, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ validation }) // ⚡ envoie booléen
+          body: JSON.stringify({ [bodyKey]: isChecked })
         });
 
-        if (!response.ok){
+        if (!response.ok) {
           throw new Error('Erreur lors de la mise à jour');
-        }else{
-          window.location.reload();
-          console.log(`✅ Chèque ${id} updated: ${validation}`);
         }
-
-        
+        console.log(`✅ ${type} ${id} updated: ${isChecked}`);
+        window.location.reload();
       } catch (err) {
         console.error(err);
-        e.target.checked = !validation; // rollback
-        alert('Erreur lors de la mise à jour du chèque.');
+        checkbox.checked = !isChecked;
+        alert(`Erreur lors de la mise à jour du ${type === 'cheques' ? 'chèque' : type === 'effets' ? 'effet' : 'paiement'}.`);
       }
     });
   });
-});
 
-// effets validation 
-document.addEventListener('DOMContentLoaded', () => {
-  const efftesboxes = document.querySelectorAll('input[name="validationEffet"]');
+  // Toggle validated tables
+  const toggleTablesBtn = document.getElementById('toggleTablesBtn');
+  const toggleIcon = document.getElementById('toggleIcon');
+  const toggleText = document.getElementById('toggleText');
+  const tablesContainer = document.getElementById('tables-container');
 
-  efftesboxes.forEach(effteboxe => {
-    effteboxe.checked = effteboxe.dataset.effetvalidation === "true"; 
+  toggleTablesBtn?.addEventListener('click', () => {
+    const isHidden = tablesContainer.classList.contains('hidden');
+    tablesContainer.classList.toggle('hidden');
+    toggleIcon.className = isHidden ? 'fas fa-eye-slash me-1' : 'fas fa-eye me-1';
+    toggleText.textContent = isHidden ? 'Masquer' : 'Afficher';
+  });
 
-    effteboxe.addEventListener('change', async (e) => {
-      const id = e.target.dataset.id;
-      const validation = e.target.checked;
+  // Initial run
+  updateBadge();
+  applyFilters();
 
-      try {
-        const response = await fetch(`/tresorerie/effets/${id}/validation`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ validationEffet: validation }) // ⚡ spécifique aux effets
+  // New: Recettes à venir multi-select client filter
+  const clientList = document.getElementById('clientList');
+  const clientSelectAll = document.getElementById('clientSelectAll');
+  const clientCountBadge = document.getElementById('clientSelectedCount');
+  const clientSearch = document.getElementById('clientSearch');
+  const chantierFilter = document.getElementById('chantierFilter');
+  const recavenirsTable = document.getElementById('recavenirsTable');
+  const recavenirsRows = recavenirsTable?.querySelectorAll('tbody tr.recavenir-row') || [];
+  const totalMontantRecettes = document.getElementById('totalMontant');
+  const totalRecettesCard = document.getElementById('displayTotalChequesCard'); // Misnamed, but for recettes
+
+  // Collect unique clients
+  const clientsUnique = Array.from(new Set(
+    [...recavenirsRows]
+      .map(r => r.getAttribute('data-client')?.trim())
+      .filter(Boolean)
+  )).sort((a, b) => a.localeCompare(b, 'fr'));
+
+  // Render client checkboxes
+  if (clientList) {
+    clientList.innerHTML = '';
+    clientsUnique.forEach((name, idx) => {
+      const id = `client-opt-${idx}`;
+      const wrap = document.createElement('div');
+      wrap.className = 'custom-control custom-checkbox mb-1';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.className = 'custom-control-input';
+      input.id = id;
+      input.value = name;
+      input.checked = true;
+      const label = document.createElement('label');
+      label.className = 'custom-control-label';
+      label.setAttribute('for', id);
+      label.textContent = name;
+      wrap.appendChild(input);
+      wrap.appendChild(label);
+      clientList.appendChild(wrap);
+
+      input.addEventListener('change', () => {
+        updateRecettesTable();
+        syncClientSelectAll();
+        updateClientBadge();
       });
+    });
+  }
 
+  // Fallback dropdown toggle for clients
+  const clientDropdownBtn = document.getElementById('clientFilterBtn');
+  if (clientDropdownBtn) {
+    const clientMenu = clientDropdownBtn.nextElementSibling;
+    clientDropdownBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      clientDropdownBtn.parentElement.classList.toggle('show');
+      if (clientMenu && clientMenu.classList) clientMenu.classList.toggle('show');
+    });
+    document.addEventListener('click', () => {
+      clientDropdownBtn.parentElement.classList.remove('show');
+      if (clientMenu && clientMenu.classList) clientMenu.classList.remove('show');
+    });
+  }
 
-      if (!response.ok){
-          throw new Error('Erreur lors de la mise à jour');
-        }else{
-          window.location.reload();
-          console.log(`✅ Effet ${id} updated: ${validation}`);
-        }
-      } catch (err) {
-        console.error(err);
-        e.target.checked = !validation; // rollback
-        alert('Erreur lors de la mise à jour du chèque.');
-      }
+  // Get selected clients
+  const getSelectedClients = () => {
+    return Array.from(clientList?.querySelectorAll('input[type="checkbox"]:checked') || [])
+      .map(cb => cb.value);
+  };
+
+  // Update client badge
+  const updateClientBadge = () => {
+    if (!clientCountBadge) return;
+    const checkedCount = clientList.querySelectorAll('input[type="checkbox"]:checked').length;
+    clientCountBadge.textContent = checkedCount === clientsUnique.length ? 'Tous' : `${checkedCount}/${clientsUnique.length}`;
+  };
+
+  // Sync "Select All" checkbox for clients
+  const syncClientSelectAll = () => {
+    if (!clientSelectAll) return;
+    const boxes = clientList.querySelectorAll('input[type="checkbox"]');
+    const total = boxes.length;
+    const checked = Array.from(boxes).filter(b => b.checked).length;
+    clientSelectAll.indeterminate = checked > 0 && checked < total;
+    clientSelectAll.checked = checked === total;
+  };
+
+  // Handle "Select All" toggle for clients
+  clientSelectAll?.addEventListener('change', () => {
+    const check = clientSelectAll.checked;
+    clientList.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = check);
+    clientSelectAll.indeterminate = false;
+    updateClientBadge();
+    updateRecettesTable();
+  });
+
+  // Search functionality for clients
+  clientSearch?.addEventListener('keyup', () => {
+    const term = clientSearch.value.toLowerCase();
+    clientList.querySelectorAll('.custom-control').forEach(wrap => {
+      const labelText = wrap.querySelector('label').textContent.toLowerCase();
+      wrap.style.display = labelText.includes(term) ? '' : 'none';
     });
   });
-});
 
-// payavenirs validation 
-document.addEventListener('DOMContentLoaded', () => {
-  const payboxes = document.querySelectorAll('input[name="validationPayavenir"]');
+  // Update recettes table
+ // Update recettes table
+ const updateRecettesTable = () => {
+    const selectedClients = new Set(getSelectedClients());
+    const allClientsSelected = selectedClients.size === clientsUnique.length;
+    const selectedChantier = chantierFilter?.value || '';
 
-  payboxes.forEach(payboxe => {
-    payboxe.checked = payboxe.dataset.payavenirvalidation === "true";
+    let total = 0;
+    let visibleCount = 0;
 
+    // First pass: filter data rows and track which clients have visible rows
+    const visibleClientsSet = new Set();
+    recavenirsRows.forEach(row => {
+      const client = row.getAttribute('data-client')?.trim() || '';
+      const chantier = row.getAttribute('data-chantier')?.trim() || '';
+      const montantText = row.querySelector('td:nth-child(3)')?.textContent.replace(/\s/g, '').replace(',', '.') || '0';
+      const montant = parseFloat(montantText) || 0;
 
-    payboxe.addEventListener('change', async (e) => {
-      const id = e.target.dataset.id;
-      const validation = e.target.checked;
+      const clientMatch = allClientsSelected || selectedClients.has(client);
+      const chantierMatch = !selectedChantier || chantier === selectedChantier;
 
-      try {
-        const response = await fetch(`/tresorerie/payavenir/${id}/validation`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ validationPayavenir: validation }) // ⚡ spécifique aux effets
+      if (clientMatch && chantierMatch) {
+        row.style.display = '';
+        total += montant;
+        visibleCount++;
+        visibleClientsSet.add(client);
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    // Second pass: hide/show client headers and subtotal rows
+    if (recavenirsTable) {
+      const allRows = recavenirsTable.querySelectorAll('tbody tr');
+      allRows.forEach(row => {
+        // Check if this is a client header or subtotal row
+        if (row.classList.contains('table-secondary')) {
+          const cellText = row.querySelector('td')?.textContent.trim() || '';
+          
+          // Extract client name from header (format: "Client : ClientName") or subtotal (format: "Total ClientName")
+          let clientName = '';
+          if (cellText.startsWith('Client :')) {
+            clientName = cellText.replace('Client :', '').trim();
+          } else if (cellText.startsWith('Total ')) {
+            clientName = cellText.replace('Total ', '').trim();
+          }
+          
+          // Show/hide based on whether this client has visible rows
+          if (clientName && visibleClientsSet.has(clientName)) {
+            row.style.display = '';
+          } else if (clientName) {
+            row.style.display = 'none';
+          }
+        }
       });
+    }
 
+    if (totalMontantRecettes) totalMontantRecettes.textContent = formatFrenchNumber(total);
+    if (totalRecettesCard) totalRecettesCard.textContent = formatFrenchNumber(total);
 
-      if (!response.ok){
-          throw new Error('Erreur lors de la mise à jour');
-        }else{
-          window.location.reload();
-          console.log(`✅ Payavenir ${id} updated: ${validation}`);
-        }
-      } catch (err) {
-        console.error(err);
-        e.target.checked = !validation; // rollback
-        alert('Erreur lors de la mise à jour du chèque.');
+    let noRecetteMsg = document.getElementById('noRecetteMsg');
+    if (visibleCount === 0) {
+      if (!noRecetteMsg && recavenirsTable) {
+        noRecetteMsg = document.createElement('tr');
+        noRecetteMsg.id = 'noRecetteMsg';
+        noRecetteMsg.innerHTML = '<td colspan="7" class="text-muted text-center">Aucun élément trouvé pour ce filtre.</td>';
+        recavenirsTable.querySelector('tbody').appendChild(noRecetteMsg);
       }
-    });
-  });
+    } else if (noRecetteMsg) {
+      noRecetteMsg.remove();
+    }
+  };
+  // Add event listeners for recettes
+  chantierFilter?.addEventListener('change', updateRecettesTable);
+
+  // Initial run for recettes
+  updateClientBadge();
+  syncClientSelectAll();
+  updateRecettesTable();
+
 });
 
-
-// totoal generale des pay validés : 
-document.addEventListener('DOMContentLoaded', () => {
-  const totalCheques = parseFloat(
-    document.getElementById('displayTotalCheques')?.textContent.replace(/\s/g, '').replace(',', '.') || 0
-  );
-  const totalEffets = parseFloat(
-    document.getElementById('displayTotalEffets')?.textContent.replace(/\s/g, '').replace(',', '.') || 0
-  );
-  const totalPayavenirs = parseFloat(
-    document.getElementById('displayTotalPayavenirsValides')?.textContent.replace(/\s/g, '').replace(',', '.') || 0
-  );
-
-  const grandTotal = totalCheques + totalEffets + totalPayavenirs;
-
-  document.getElementById('grandTotal').textContent = grandTotal
-    .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    .replace(/\u202F/g, ' ') + ' dirhams';
-});
-
-
-
+// Restored original PDF download functions
 function downloadFullPagePDF() {
-  // Display loading message
   const loadingMsg = createLoadingMessage();
   document.body.appendChild(loadingMsg);
 
-  // Load jsPDF and autoTable plugin sequentially
   loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
     .then(() => loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js'))
     .then(() => generatePDF())
     .catch(error => handleError(error, loadingMsg))
     .finally(() => document.body.removeChild(loadingMsg));
 
-  // Helper function to create loading message
   function createLoadingMessage() {
     const div = document.createElement('div');
     div.innerHTML = '<div class="alert alert-info" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">Génération du PDF complet en cours...</div>';
     return div;
   }
 
-  // Helper function to load scripts dynamically
   function loadScript(src) {
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
@@ -1739,339 +1916,303 @@ function downloadFullPagePDF() {
     });
   }
 
-  // Helper function to format numbers in French format with space instead of '/'
   function formatFrenchNumber(value) {
     if (isNaN(value)) return '0,00';
     return value
       .toFixed(2)
-      .replace(/\B(?=(\d{3})+(?!\d))/g, ' ') // Use space as thousand separator
-      .replace('.', ','); // Use comma for decimal
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+      .replace('.', ',');
   }
 
-  // Helper function to parse French number strings
   function parseFrenchNumber(text) {
     if (!text) return 0;
-    // Remove any '/' and replace with space, then handle standard French format
     return parseFloat(text.replace(/[\/\s]/g, '').replace(',', '.')) || 0;
   }
 
-  // Helper function to add a section table with borders
-  // Helper function to add a section table with borders
-function addSectionTable(pdf, title, headers, data, yPosition, columnStyles, hasTotals = true, customOptions = {}) {
-  if (yPosition > 220) {
-    pdf.addPage();
-    yPosition = 20;
+  function addSectionTable(pdf, title, headers, data, yPosition, columnStyles, hasTotals = true, customOptions = {}) {
+    if (yPosition > 220) {
+      pdf.addPage();
+      yPosition = 20;
+    }
+
+    pdf.setFontSize(16);
+    pdf.text(title, 20, yPosition);
+    yPosition += 10;
+
+    if (data.length > 0) {
+      pdf.autoTable({
+        head: [headers],
+        body: data,
+        startY: yPosition,
+        theme: 'striped',
+        styles: {
+          fontSize: 10,
+          cellPadding: 2,
+          lineWidth: 0.2,
+          lineColor: [0, 0, 0],
+        },
+        headStyles: {
+          fillColor: [52, 144, 220],
+          textColor: 255,
+          fontStyle: 'bold',
+          lineWidth: 0.2,
+          lineColor: [0, 0, 0],
+        },
+        columnStyles,
+        ...customOptions,
+        didParseCell: (data) => {
+          if (hasTotals && data.row.index === data.table.body.length - 1) {
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fillColor = [240, 240, 240];
+            data.cell.styles.lineWidth = 0.2;
+            data.cell.styles.lineColor = [0, 0, 0];
+          }
+        },
+      });
+      return pdf.lastAutoTable.finalY + 20;
+    } else {
+      pdf.setFontSize(10);
+      pdf.text(`Aucun élément trouvé pour cette période.`, 20, yPosition);
+      return yPosition + 15;
+    }
   }
 
-  pdf.setFontSize(16);
-  pdf.text(title, 20, yPosition);
-  yPosition += 10;
-
-  if (data.length > 0) {
-    pdf.autoTable({
-      head: [headers],
-      body: data,
-      startY: yPosition,
-      theme: 'striped',
-      styles: {
-        fontSize: 10,
-        cellPadding: 2,
-        lineWidth: 0.2,
-        lineColor: [0, 0, 0],
-      },
-      headStyles: {
-        fillColor: [52, 144, 220], // default blue
-        textColor: 255,
-        fontStyle: 'bold',
-        lineWidth: 0.2,
-        lineColor: [0, 0, 0],
-      },
-      columnStyles,
-      ...customOptions, // ✅ merge extra options like green header
-      didParseCell: (data) => {
-        if (hasTotals && data.row.index === data.table.body.length - 1) {
-          data.cell.styles.fontStyle = 'bold';
-          data.cell.styles.fillColor = [240, 240, 240];
-          data.cell.styles.lineWidth = 0.2;
-          data.cell.styles.lineColor = [0, 0, 0];
-        }
-      },
-    });
-    return pdf.lastAutoTable.finalY + 20;
-  } else {
-    pdf.setFontSize(10);
-    pdf.text(`Aucun élément trouvé pour cette période.`, 20, yPosition);
-    return yPosition + 15;
-  }
-}
-
-  // Main function to generate the PDF
   function generatePDF() {
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('p', 'mm', 'a4');
 
-    // Add header and date
     pdf.setFontSize(20);
     pdf.text('Situation Bancaire Complète', 20, 20);
     pdf.setFontSize(12);
-
     pdf.text(`Généré le: ${new Date().toLocaleString('fr-FR')}`, 30, 30);
 
     let yPosition = 50;
 
-   // Section 1: Situation Bancaire
-const bankData = [];
-let totalPositive = 0,
-  totalNegative = 0,
-  totalDmlt = 0;
+    const bankData = [];
+    let totalPositive = 0, totalNegative = 0, totalDmlt = 0;
 
-document.querySelectorAll('#soldeTable tbody tr').forEach((row) => {
-  const cells = row.querySelectorAll('td');
-  if (cells.length >= 4) {
-    const bankName =
-      cells[0].textContent.trim() ||
-      cells[0].querySelector('strong')?.textContent.trim();
+    document.querySelectorAll('#soldeTable tbody tr').forEach((row) => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 4) {
+        const bankName = cells[0].textContent.trim() || cells[0].querySelector('strong')?.textContent.trim();
+        const positiveInput = cells[1].querySelector('input')?.value.trim();
+        const negativeInput = cells[2].querySelector('input')?.value.trim();
+        const dmltInput = cells[3].querySelector('input')?.value.trim();
 
-    const positiveInput = cells[1].querySelector('input')?.value.trim();
-    const negativeInput = cells[2].querySelector('input')?.value.trim();
-    const dmltInput = cells[3].querySelector('input')?.value.trim();
+        const positive = parseFrenchNumber(positiveInput);
+        const negative = parseFrenchNumber(negativeInput);
+        const dmlt = parseFrenchNumber(dmltInput);
 
-    const positive = parseFrenchNumber(positiveInput);
-    const negative = parseFrenchNumber(negativeInput);
-    const dmlt = parseFrenchNumber(dmltInput);
+        if (!isNaN(positive)) totalPositive += positive;
+        if (!isNaN(negative)) totalNegative += negative;
+        if (!isNaN(dmlt)) totalDmlt += dmlt;
 
-    if (!isNaN(positive)) totalPositive += positive;
-    if (!isNaN(negative)) totalNegative += negative;
-    if (!isNaN(dmlt)) totalDmlt += dmlt;
+        bankData.push([
+          bankName,
+          formatFrenchNumber(positive),
+          formatFrenchNumber(negative),
+          formatFrenchNumber(dmlt),
+        ]);
+      }
+    });
 
     bankData.push([
-      bankName,
-      formatFrenchNumber(positive),
-      formatFrenchNumber(negative),
-      formatFrenchNumber(dmlt),
+      'TOTAL',
+      totalPositive.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' '),
+      totalNegative.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' '),
+      totalDmlt.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' '),
     ]);
-  }
-});
 
-// Add totals to bankData
-bankData.push([
-  'TOTAL',
-  totalPositive.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' '),
-  totalNegative.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' '),
-  totalDmlt.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' '),
-]);
+    yPosition = addSectionTable(
+      pdf,
+      '1. Soldes Bancaires',
+      ['Banque', 'Solde positif', 'Solde négatif', 'Dette à moyen et long terme'],
+      bankData,
+      yPosition,
+      {
+        0: { halign: 'left' },
+        1: { halign: 'right' },
+        2: { halign: 'right' },
+        3: { halign: 'right' },
+      },
+      true,
+      { headStyles: { fillColor: [0, 128, 0], textColor: 255, halign: 'center' } }
+    );
 
-// Add table to PDF
-yPosition = addSectionTable(
-  pdf,
-  '1. Soldes Bancaires',
-  ['Banque', 'Solde positif', 'Solde négatif', 'Dette à moyen et long terme'],
-  bankData,
-  yPosition,
-  {
-    0: { halign: 'left' },
-    1: { halign: 'right' },
-    2: { halign: 'right' },
-    3: { halign: 'right' },
-  },
-  true,
-  { headStyles: { fillColor: [0, 128, 0], textColor: 255, halign: 'center' } } // ✅ green header
-);
+    const recetteData = [];
+    let totalRecette = 0;
 
-// Section 2 : Recettes à venir
-const recetteData = [];
-let totalRecette = 0;
+    document.querySelectorAll('#recavenirsTable tbody tr').forEach((row) => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 6) {
+        const client = cells[0].textContent.trim();
+        const designation = cells[1].textContent.trim();
+        const montantInput = cells[2].textContent.trim().replace(/\s/g, '').replace(',', '.');
+        const dateEcheance = cells[3].textContent.trim();
+        const statut = cells[4].textContent.trim();
+        const banque = cells[5].textContent.trim();
 
-document.querySelectorAll('#recavenirsTable tbody tr').forEach((row) => {
-  const cells = row.querySelectorAll('td');
-  if (cells.length >= 6) {
-    const client = cells[0].textContent.trim();
-    const designation = cells[1].textContent.trim();
-    const montantInput = cells[2].textContent.trim().replace(/\s/g, '').replace(',', '.');
-    const dateEcheance = cells[3].textContent.trim();
-    const statut = cells[4].textContent.trim();
-    const banque = cells[5].textContent.trim();
+        const montant = parseFrenchNumber(montantInput);
+        if (!isNaN(montant)) totalRecette += montant;
 
-    const montant = parseFrenchNumber(montantInput);
-    if (!isNaN(montant)) totalRecette += montant;
+        recetteData.push([
+          client,
+          designation,
+          formatFrenchNumber(montant),
+          dateEcheance,
+          statut,
+          banque
+        ]);
+      }
+    });
 
-    recetteData.push([
-      client,
-      designation,
-      formatFrenchNumber(montant),
-      dateEcheance,
-      statut,
-      banque
-    ]);
-  }
-});
+    recetteData.push(['TOTAL', '', formatFrenchNumber(totalRecette), '', '', '']);
 
-// Ligne de total
-recetteData.push([
-  'TOTAL',
-  '',
-  formatFrenchNumber(totalRecette),
-  '',
-  '',
-  ''
-]);
+    yPosition = addSectionTable(
+      pdf,
+      '2. Recettes à venir',
+      ['Client', 'Désignation', 'Montant', 'Date Échéance', 'Statut', 'Banque'],
+      recetteData,
+      yPosition,
+      {
+        0: { halign: 'left' },
+        1: { halign: 'left' },
+        2: { halign: 'right' },
+        3: { halign: 'center' },
+        4: { halign: 'center' },
+        5: { halign: 'left' }
+      },
+      true,
+      { headStyles: { fillColor: [0, 128, 0], textColor: 255, halign: 'center' } }
+    );
 
-// Ajout tableau au PDF
-yPosition = addSectionTable(
-  pdf,
-  '2. Recettes à venir',
-  ['Client', 'Désignation', 'Montant', 'Date Échéance', 'Statut', 'Banque'],
-  recetteData,
-  yPosition,
-  {
-    0: { halign: 'left' },
-    1: { halign: 'left' },
-    2: { halign: 'right' },
-    3: { halign: 'center' },
-    4: { halign: 'center' },
-    5: { halign: 'left' }
-  },
-  true, // hasTotals
-  { headStyles: { fillColor: [0, 128, 0], textColor: 255, halign: 'center' } } // <-- header vert
-);
+    const visibleCheques = [];
+    let chequesTotalAmount = 0;
 
-    
+    document.querySelectorAll('.cheque-row').forEach(row => {
+      if (row.style.display !== 'none') {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 8) {
+          const montantValue = parseFrenchNumber(cells[4].textContent.trim());
+          chequesTotalAmount += montantValue;
+          visibleCheques.push([
+            cells[1].textContent.trim(),
+            formatFrenchNumber(montantValue),
+            cells[5].textContent.trim(),
+            cells[3].textContent.trim(),
+            cells[2].textContent.trim(),
+            cells[6].textContent.trim(),
+            cells[7].querySelector('input')?.value || cells[7].textContent.trim(),
+          ]);
+        }
+      }
+    });
 
-// --- Section : Chèques en circulation ---
-const visibleCheques = [];
-let chequesTotalAmount = 0;
-
-document.querySelectorAll('.cheque-row').forEach(row => {
-  if (row.style.display !== 'none') {
-    const cells = row.querySelectorAll('td');
-    if (cells.length >= 8) { 
-      const montantValue = parseFrenchNumber(cells[4].textContent.trim()); // colonne Montant
-      chequesTotalAmount += montantValue;
-      visibleCheques.push([
-        cells[1].textContent.trim(), // Numéro
-        formatFrenchNumber(montantValue), // Montant
-        cells[5].textContent.trim(), // Date Échéance
-        cells[3].textContent.trim(), // Bénéficiaire
-        cells[2].textContent.trim(), // Banque
-        cells[6].textContent.trim(), // Statut
-        cells[7].querySelector('input')?.value || cells[7].textContent.trim(), // observation
-      ]);
+    if (visibleCheques.length > 0) {
+      visibleCheques.push(['TOTAL', formatFrenchNumber(chequesTotalAmount), '', '', '', '', '']);
     }
-  }
-});
 
-if (visibleCheques.length > 0) {
-  visibleCheques.push(['TOTAL', formatFrenchNumber(chequesTotalAmount), '', '', '', '']);
-}
+    yPosition = addSectionTable(
+      pdf,
+      '3. Chèques en circulation',
+      ['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut', 'Observation'],
+      visibleCheques,
+      yPosition,
+      {
+        0: { halign: 'left', cellWidth: 25 },
+        1: { halign: 'right', cellWidth: 25 },
+        2: { halign: 'center', cellWidth: 25 },
+        3: { halign: 'left', cellWidth: 30 },
+        4: { halign: 'left', cellWidth: 30 },
+        5: { halign: 'center', cellWidth: 25 },
+        6: { halign: 'left', cellWidth: 30 },
+      }
+    );
 
-yPosition = addSectionTable(
-  pdf,
-  '3. Chèques en circulation',
-  ['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut', 'Observation'],
-  visibleCheques,
-  yPosition,
-  {
-    0: { halign: 'left', cellWidth: 25 },
-    1: { halign: 'right', cellWidth: 25 },
-    2: { halign: 'center', cellWidth: 25 },
-    3: { halign: 'left', cellWidth: 30 },
-    4: { halign: 'left', cellWidth: 30 },
-    5: { halign: 'center', cellWidth: 25 },
-    6: { halign: 'left', cellWidth: 30 },
-  }
-);
+    const visibleEffets = [];
+    let effetsTotalAmount = 0;
 
+    document.querySelectorAll('.effet-row').forEach(row => {
+      if (row.style.display !== 'none') {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 8) {
+          const montantValue = parseFrenchNumber(cells[4].textContent.trim());
+          effetsTotalAmount += montantValue;
+          visibleEffets.push([
+            cells[1].textContent.trim(),
+            formatFrenchNumber(montantValue),
+            cells[5].textContent.trim(),
+            cells[3].textContent.trim(),
+            cells[2].textContent.trim(),
+            cells[6].textContent.trim(),
+            cells[7].querySelector('input')?.value || cells[7].textContent.trim(),
+          ]);
+        }
+      }
+    });
 
-// --- Section : Effets en circulation ---
-const visibleEffets = [];
-let effetsTotalAmount = 0;
-
-document.querySelectorAll('.effet-row').forEach(row => {
-  if (row.style.display !== 'none') {
-    const cells = row.querySelectorAll('td');
-    if (cells.length >= 7) {
-      const montantValue = parseFrenchNumber(cells[4].textContent.trim()); // colonne Montant
-      effetsTotalAmount += montantValue;
-      visibleEffets.push([
-        cells[1].textContent.trim(), // Numéro
-        formatFrenchNumber(montantValue), // Montant
-        cells[5].textContent.trim(), // Date Échéance
-        cells[3].textContent.trim(), // Bénéficiaire
-        cells[2].textContent.trim(), // Banque
-        cells[6].textContent.trim(), // Statut
-        cells[7].querySelector('input')?.value || cells[7].textContent.trim(), // observation
-        
-      ]);
+    if (visibleEffets.length > 0) {
+      visibleEffets.push(['TOTAL', formatFrenchNumber(effetsTotalAmount), '', '', '', '', '']);
     }
-  }
-});
 
-if (visibleEffets.length > 0) {
-  visibleEffets.push(['TOTAL', formatFrenchNumber(effetsTotalAmount), '', '', '', '']);
-}
+    yPosition = addSectionTable(
+      pdf,
+      '4. Effets en circulation',
+      ['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut', 'Observation'],
+      visibleEffets,
+      yPosition,
+      {
+        0: { halign: 'left', cellWidth: 25 },
+        1: { halign: 'right', cellWidth: 25 },
+        2: { halign: 'center', cellWidth: 25 },
+        3: { halign: 'left', cellWidth: 30 },
+        4: { halign: 'left', cellWidth: 30 },
+        5: { halign: 'center', cellWidth: 25 },
+        6: { halign: 'left', cellWidth: 30 },
+      }
+    );
 
-yPosition = addSectionTable(
-  pdf,
-  '4. Effets en circulation',
-  ['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut', 'Observation'],
-  visibleEffets,
-  yPosition,
-  {
-    0: { halign: 'left', cellWidth: 25 },
-    1: { halign: 'right', cellWidth: 25 },
-    2: { halign: 'center', cellWidth: 25 },
-    3: { halign: 'left', cellWidth: 30 },
-    4: { halign: 'left', cellWidth: 30 },
-    5: { halign: 'center', cellWidth: 25 },
-    6: { halign: 'left', cellWidth: 30 },
-  }
-);
+    const visiblePayavenirs = [];
+    let payavenirsTotalAmount = 0;
 
-    // Section 4: Paiements à venir
-   // --- Section : Paiements à venir ---
-const visiblePayavenirs = [];
-let payavenirsTotalAmount = 0;
+    document.querySelectorAll('.payavenir-row').forEach(row => {
+      if (row.style.display !== 'none') {
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 6) {
+          const montantValue = parseFrenchNumber(cells[3].textContent.trim());
+          payavenirsTotalAmount += montantValue;
+          visiblePayavenirs.push([
+            cells[0].textContent.trim(),
+            formatFrenchNumber(montantValue),
+            cells[4].textContent.trim(),
+            cells[2].textContent.trim(),
+            cells[1].textContent.trim(),
+            cells[5].textContent.trim(),
+          ]);
+        }
+      }
+    });
 
-document.querySelectorAll('.payavenir-row').forEach(row => {
-  if (row.style.display !== 'none') {
-    const cells = row.querySelectorAll('td');
-    if (cells.length >= 6) { 
-      const montantValue = parseFrenchNumber(cells[3].textContent.trim()); // colonne Montant
-      payavenirsTotalAmount += montantValue;
-      visiblePayavenirs.push([
-        cells[0].textContent.trim(),              // Désignation
-        formatFrenchNumber(montantValue),         // Montant
-        cells[4].textContent.trim(),              // Date Échéance
-        cells[2].textContent.trim(),              // Bénéficiaire
-        cells[1].textContent.trim(),              // Banque
-        cells[5].textContent.trim(),              // Statut
-      ]);
+    if (visiblePayavenirs.length > 0) {
+      visiblePayavenirs.push(['TOTAL', formatFrenchNumber(payavenirsTotalAmount), '', '', '', '']);
     }
-  }
-});
 
-if (visiblePayavenirs.length > 0) {
-  visiblePayavenirs.push(['TOTAL', formatFrenchNumber(payavenirsTotalAmount), '', '', '', '']);
-}
+    yPosition = addSectionTable(
+      pdf,
+      '5. Paiements à venir',
+      ['Désignation', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut'],
+      visiblePayavenirs,
+      yPosition,
+      {
+        0: { halign: 'left', cellWidth: 35 },
+        1: { halign: 'right', cellWidth: 25 },
+        2: { halign: 'center', cellWidth: 25 },
+        3: { halign: 'left', cellWidth: 30 },
+        4: { halign: 'left', cellWidth: 25 },
+        5: { halign: 'center', cellWidth: 20 },
+      }
+    );
 
-yPosition = addSectionTable(
-  pdf,
-  '5. Paiements à venir',
-  ['Désignation', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut'],
-  visiblePayavenirs,
-  yPosition,
-  {
-    0: { halign: 'left', cellWidth: 35 },   // Désignation
-    1: { halign: 'right', cellWidth: 25 },  // Montant
-    2: { halign: 'center', cellWidth: 25 }, // Date Échéance
-    3: { halign: 'left', cellWidth: 30 },   // Bénéficiaire
-    4: { halign: 'left', cellWidth: 25 },   // Banque
-    5: { halign: 'center', cellWidth: 20 }, // Statut
-  }
-);
-
-
-    // Section 5: Recap. Général
     if (yPosition > 220) {
       pdf.addPage();
       yPosition = 20;
@@ -2097,15 +2238,15 @@ yPosition = addSectionTable(
       styles: {
         fontSize: 12,
         cellPadding: 4,
-        lineWidth: 0.2, // Border thickness
-        lineColor: [0, 0, 0], // Black border color
+        lineWidth: 0.2,
+        lineColor: [0, 0, 0],
       },
       headStyles: {
         fillColor: [52, 144, 220],
         textColor: 255,
         fontStyle: 'bold',
-        lineWidth: 0.2, // Border for header
-        lineColor: [0, 0, 0], // Black border color
+        lineWidth: 0.2,
+        lineColor: [0, 0, 0],
       },
       columnStyles: {
         0: { halign: 'left', cellWidth: 80 },
@@ -2117,13 +2258,12 @@ yPosition = addSectionTable(
           data.cell.styles.fillColor = [76, 175, 80];
           data.cell.styles.textColor = 255;
           data.cell.styles.fontSize = 14;
-          data.cell.styles.lineWidth = 0.2; // Ensure border for total row
+          data.cell.styles.lineWidth = 0.2;
           data.cell.styles.lineColor = [0, 0, 0];
         }
       },
     });
 
-    // Add footer statistics
     const finalY = pdf.lastAutoTable.finalY + 15;
     pdf.setFontSize(10);
     pdf.text(`Nombre de chèques: ${visibleCheques.length > 0 ? visibleCheques.length - 1 : 0}`, 20, finalY);
@@ -2131,11 +2271,9 @@ yPosition = addSectionTable(
     pdf.text(`Nombre de paiements à venir: ${visiblePayavenirs.length > 0 ? visiblePayavenirs.length - 1 : 0}`, 20, finalY + 16);
     pdf.text(`Généré le: ${new Date().toLocaleString('fr-FR')}`, 20, finalY + 24);
 
-    // Save the PDF
     pdf.save(`situation-bancaire-complete-${new Date().toISOString().split('T')[0]}.pdf`);
   }
 
-  // Error handling function
   function handleError(error, loadingMsg) {
     console.error('Error generating complete PDF:', error);
     if (loadingMsg && document.body.contains(loadingMsg)) {
@@ -2145,14 +2283,11 @@ yPosition = addSectionTable(
   }
 }
 
-
 function downloadChequesPDF() {
-  // Show loading
   const loadingMsg = document.createElement('div');
   loadingMsg.innerHTML = '<div class="alert alert-info" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">Génération du PDF chèques...</div>';
   document.body.appendChild(loadingMsg);
 
-  // Load jsPDF and autoTable sequentially
   loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
     .then(() => loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js'))
     .then(() => generatePDF())
@@ -2187,14 +2322,12 @@ function downloadChequesPDF() {
 
   function generatePDF() {
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('l', 'mm', 'a4'); // Landscape
+    const pdf = new jsPDF('l', 'mm', 'a4');
 
-    // Title
     pdf.setFontSize(20);
     pdf.setTextColor(30, 30, 120);
     pdf.text('Chèques à payer', 20, 20);
 
-    // Date + time of generation
     const now = new Date();
     const formattedDate = now.toLocaleDateString('fr-FR');
     const formattedTime = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -2202,7 +2335,6 @@ function downloadChequesPDF() {
     pdf.setTextColor(80, 80, 80);
     pdf.text(`Généré le : ${formattedDate} à ${formattedTime}`, 20, 30);
 
-    // Collect data from table
     const chequeRows = document.querySelectorAll('.cheque-row');
     const data = [];
     let totalAmount = 0;
@@ -2215,24 +2347,22 @@ function downloadChequesPDF() {
           totalAmount += montantValue;
 
           data.push([
-            cells[1].textContent.trim(), // Numéro
-            formatFrenchNumber(montantValue), // Montant
-            cells[5].textContent.trim(), // Date Échéance
-            cells[3].textContent.trim(), // Bénéficiaire
-            cells[2].textContent.trim(), // Banque
-            cells[6].textContent.trim(), // Statut
-            cells[7].querySelector('input')?.value || cells[7].textContent.trim() // Observation
+            cells[1].textContent.trim(),
+            formatFrenchNumber(montantValue),
+            cells[5].textContent.trim(),
+            cells[3].textContent.trim(),
+            cells[2].textContent.trim(),
+            cells[6].textContent.trim(),
+            cells[7].querySelector('input')?.value || cells[7].textContent.trim()
           ]);
         }
       }
     });
 
-    // Add total row
     if (data.length > 0) {
       data.push(['TOTAL', formatFrenchNumber(totalAmount), '', '', '', '', '']);
     }
 
-    // Table
     pdf.autoTable({
       head: [['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut', 'Observation']],
       body: data,
@@ -2240,7 +2370,7 @@ function downloadChequesPDF() {
       theme: 'grid',
       headStyles: { fillColor: [52, 152, 219], textColor: 255, fontStyle: 'bold', fontSize: 11 },
       styles: { fontSize: 10, cellPadding: 3, lineColor: [230, 230, 230], lineWidth: 0.1 },
-      alternateRowStyles: { fillColor: [245, 245, 245] }, // striped effect
+      alternateRowStyles: { fillColor: [245, 245, 245] },
       columnStyles: {
         0: { halign: 'left', cellWidth: 25 },
         1: { halign: 'right', cellWidth: 30 },
@@ -2251,7 +2381,6 @@ function downloadChequesPDF() {
         6: { halign: 'left', cellWidth: 55 },
       },
       didParseCell: (tableData) => {
-        // Bold + gray background for TOTAL
         if (tableData.row.index === data.length - 1) {
           tableData.cell.styles.fontStyle = 'bold';
           tableData.cell.styles.fillColor = [230, 230, 230];
@@ -2264,12 +2393,10 @@ function downloadChequesPDF() {
 }
 
 function downloadEffetsPDF() {
-  // Show loading
   const loadingMsg = document.createElement('div');
   loadingMsg.innerHTML = '<div class="alert alert-info" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">Génération du PDF effets...</div>';
   document.body.appendChild(loadingMsg);
 
-  // Load jsPDF and autoTable sequentially
   loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
     .then(() => loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js'))
     .then(() => generatePDF())
@@ -2304,14 +2431,12 @@ function downloadEffetsPDF() {
 
   function generatePDF() {
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('l', 'mm', 'a4'); // Landscape like chèques
+    const pdf = new jsPDF('l', 'mm', 'a4');
 
-    // Title
     pdf.setFontSize(20);
     pdf.setTextColor(30, 30, 120);
     pdf.text('Effets à payer', 20, 20);
 
-    // Date + time of generation
     const now = new Date();
     const formattedDate = now.toLocaleDateString('fr-FR');
     const formattedTime = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
@@ -2319,7 +2444,6 @@ function downloadEffetsPDF() {
     pdf.setTextColor(80, 80, 80);
     pdf.text(`Généré le : ${formattedDate} à ${formattedTime}`, 20, 30);
 
-    // Collect data from table
     const effetRows = document.querySelectorAll('.effet-row');
     const data = [];
     let totalAmount = 0;
@@ -2332,24 +2456,22 @@ function downloadEffetsPDF() {
           totalAmount += montantValue;
 
           data.push([
-            cells[1].textContent.trim(), // Numéro
-            formatFrenchNumber(montantValue), // Montant
-            cells[5].textContent.trim(), // Date Échéance
-            cells[3].textContent.trim(), // Bénéficiaire
-            cells[2].textContent.trim(), // Banque
-            cells[6].textContent.trim(), // Statut
-            cells[7].querySelector('input')?.value || cells[7].textContent.trim() // Observation
+            cells[1].textContent.trim(),
+            formatFrenchNumber(montantValue),
+            cells[5].textContent.trim(),
+            cells[3].textContent.trim(),
+            cells[2].textContent.trim(),
+            cells[6].textContent.trim(),
+            cells[7].querySelector('input')?.value || cells[7].textContent.trim()
           ]);
         }
       }
     });
 
-    // Add total row
     if (data.length > 0) {
       data.push(['TOTAL', formatFrenchNumber(totalAmount), '', '', '', '', '']);
     }
 
-    // Table
     pdf.autoTable({
       head: [['Numéro', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut', 'Observation']],
       body: data,
@@ -2379,8 +2501,6 @@ function downloadEffetsPDF() {
   }
 }
 
-
-
 function downloadPayavenirsPDF() {
   const loadingMsg = document.createElement('div');
   loadingMsg.innerHTML = '<div class="alert alert-info" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">Génération du PDF paiements à venir...</div>';
@@ -2391,9 +2511,8 @@ function downloadPayavenirsPDF() {
   script.onload = function () {
     try {
       const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF('p', 'mm', 'a4'); // Portrait
+      const pdf = new jsPDF('p', 'mm', 'a4');
 
-      // Helpers
       function parseFrenchNumber(text) {
         if (!text) return 0;
         return parseFloat(text.replace(/\s/g, '').replace(',', '.')) || 0;
@@ -2406,18 +2525,15 @@ function downloadPayavenirsPDF() {
           .replace('.', ',');
       }
 
-      // Title
       pdf.setFontSize(16);
       pdf.setTextColor(0, 102, 204);
       pdf.text("Paiements à venir", 15, 20);
 
-      // Date
       pdf.setFontSize(10);
       pdf.setTextColor(0, 0, 0);
       const now = new Date();
       pdf.text("Date: " + now.toLocaleDateString('fr-FR'), 15, 28);
 
-      // Collect data
       const visiblePayavenirs = [];
       let totalAmount = 0;
       document.querySelectorAll('.payavenir-row').forEach(row => {
@@ -2427,26 +2543,23 @@ function downloadPayavenirsPDF() {
             const montantValue = parseFrenchNumber(cells[3].textContent.trim());
             totalAmount += montantValue;
             visiblePayavenirs.push([
-              cells[0].textContent.trim(), // Désignation
-              cells[1].textContent.trim(), // Banque
-              cells[2].textContent.trim(), // Bénéficiaire
-              formatFrenchNumber(montantValue), // Montant
-              cells[4].textContent.trim(), // Date Échéance
-              cells[5].textContent.trim()  // Statut
-              // Validation is ignored (checkbox)
+              cells[0].textContent.trim(),
+              cells[1].textContent.trim(),
+              cells[2].textContent.trim(),
+              formatFrenchNumber(montantValue),
+              cells[4].textContent.trim(),
+              cells[5].textContent.trim()
             ]);
           }
         }
       });
 
-      // Table headers
       const headers = ['Désignation', 'Banque', 'Bénéficiaire', 'Montant', 'Date Échéance', 'Statut'];
       const columnWidths = [35, 30, 40, 25, 30, 25];
       const startX = 15;
       const cellHeight = 8;
       let yPosition = 40;
 
-      // Headers
       pdf.setFontSize(8).setFont(undefined, 'bold').setTextColor(255, 255, 255);
       let currentX = startX;
       headers.forEach((header, i) => {
@@ -2457,14 +2570,11 @@ function downloadPayavenirsPDF() {
       });
       yPosition += cellHeight;
 
-      // Rows
       pdf.setFontSize(7).setFont(undefined, 'normal').setTextColor(0, 0, 0);
       visiblePayavenirs.forEach(row => {
-        if (yPosition > 270) { // page break
+        if (yPosition > 270) {
           pdf.addPage();
           yPosition = 20;
-
-          // redraw headers
           currentX = startX;
           pdf.setFont(undefined, 'bold').setTextColor(255, 255, 255);
           headers.forEach((header, i) => {
@@ -2488,12 +2598,10 @@ function downloadPayavenirsPDF() {
         yPosition += cellHeight;
       });
 
-      // Total
       yPosition += 10;
       pdf.setFont(undefined, 'bold').setFontSize(10);
       pdf.text(`Total: ${formatFrenchNumber(totalAmount)}`, startX, yPosition);
 
-      // Summary
       yPosition += 8;
       pdf.setFont(undefined, 'normal').setFontSize(8);
       pdf.text(`Nombre de paiements à venir: ${visiblePayavenirs.length}`, startX, yPosition);
@@ -2508,7 +2616,6 @@ function downloadPayavenirsPDF() {
   };
   document.head.appendChild(script);
 }
-
 function downloadRecettesPDF() {
   const loadingMsg = document.createElement('div');
   loadingMsg.innerHTML = '<div class="alert alert-info" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">Génération du PDF recettes...</div>';
@@ -2519,114 +2626,170 @@ function downloadRecettesPDF() {
   script.onload = function () {
     try {
       const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF('p', 'mm', 'a4'); // Portrait A4
+      const pdf = new jsPDF('l', 'mm', 'a4');
 
-      // Helpers (same as in payavenir)
+      // Number parsing & formatting
       function parseFrenchNumber(text) {
         if (!text) return 0;
         return parseFloat(text.replace(/\s/g, '').replace(',', '.')) || 0;
       }
       function formatFrenchNumber(value) {
         if (isNaN(value)) return '0,00';
-        return value
-          .toFixed(2)
-          .replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
-          .replace('.', ',');
+        return value.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ').replace('.', ',');
       }
 
       // Title
       pdf.setFontSize(16);
-      pdf.setTextColor(0, 102, 204);
-      pdf.text("Recettes à venir", 15, 20);
+      pdf.setFont(undefined, 'bold');
+      pdf.setTextColor(106, 90, 231);
+      pdf.text("Recettes à venir", 15, 15);
+      
+      pdf.setFontSize(9);
+      pdf.setFont(undefined, 'normal');
+      pdf.setTextColor(100, 100, 100);
+      pdf.text("Date: " + new Date().toLocaleDateString('fr-FR'), 15, 22);
 
-      // Date
-      pdf.setFontSize(10);
-      pdf.setTextColor(0, 0, 0);
-      const now = new Date();
-      pdf.text("Date: " + now.toLocaleDateString('fr-FR'), 15, 28);
+      // Group by client
+      const recettesByClient = {};
+      let grandTotal = 0;
 
-      // Collect data
-      const visibleRecettes = [];
-      let totalAmount = 0;
       document.querySelectorAll('.recavenir-row').forEach(row => {
         if (row.style.display !== 'none') {
           const cells = row.querySelectorAll('td');
-          if (cells.length >= 6) {
-            const montantValue = parseFrenchNumber(cells[2].textContent.trim());
-            totalAmount += montantValue;
-            visibleRecettes.push([
-              cells[0].textContent.trim(), // Client
-              cells[1].textContent.trim(), // Désignation
-              formatFrenchNumber(montantValue), // Montant
-              cells[3].textContent.trim(), // Date Échéance
-              cells[4].textContent.trim(), // Statut
-              cells[5].textContent.trim(), // Banque
-            ]);
+          if (cells.length >= 7) {
+            const client = cells[0].textContent.trim();
+            const montant = parseFrenchNumber(cells[2].textContent.trim());
+
+            if (!recettesByClient[client]) {
+              recettesByClient[client] = { rows: [], total: 0 };
+            }
+
+            recettesByClient[client].rows.push({
+              designation: cells[1].textContent.trim(),
+              montant: montant,
+              date: cells[3].textContent.trim(),
+              statut: cells[4].textContent.trim(),
+              chantier: cells[5].textContent.trim(),
+              banque: cells[6].textContent.trim()
+            });
+
+            recettesByClient[client].total += montant;
+            grandTotal += montant;
           }
         }
       });
 
-      // Table headers
-      const headers = ['Client', 'Désignation', 'Montant', 'Date Échéance', 'Statut', 'Banque'];
-      const columnWidths = [35, 40, 25, 25, 25, 35];
+      const colWidths = [60, 40, 30, 25, 30, 35];
       const startX = 15;
-      const cellHeight = 8;
-      let yPosition = 40;
+      let y = 30;
+      const totalWidth = colWidths.reduce((a,b) => a+b, 0);
+      const headers = ['Désignation', 'Montant', 'Date Échéance', 'Statut', 'Chantier', 'Banque'];
 
-      // Headers
-      pdf.setFontSize(8).setFont(undefined, 'bold').setTextColor(255, 255, 255);
-      let currentX = startX;
-      headers.forEach((header, i) => {
-        pdf.setFillColor(0, 102, 204);
-        pdf.rect(currentX, yPosition, columnWidths[i], cellHeight, 'F');
-        pdf.text(header, currentX + 1, yPosition + 5);
-        currentX += columnWidths[i];
-      });
-      yPosition += cellHeight;
+      // For each client
+      Object.keys(recettesByClient).sort().forEach(clientName => {
+        const clientData = recettesByClient[clientName];
 
-      // Rows
-      pdf.setFontSize(7).setFont(undefined, 'normal').setTextColor(0, 0, 0);
-      visibleRecettes.forEach(row => {
-        if (yPosition > 270) { // Page break
+        if (y > 170) {
           pdf.addPage();
-          yPosition = 20;
-
-          // redraw headers
-          currentX = startX;
-          pdf.setFont(undefined, 'bold').setTextColor(255, 255, 255);
-          headers.forEach((header, i) => {
-            pdf.setFillColor(0, 102, 204);
-            pdf.rect(currentX, yPosition, columnWidths[i], cellHeight, 'F');
-            pdf.text(header, currentX + 1, yPosition + 5);
-            currentX += columnWidths[i];
-          });
-          yPosition += cellHeight;
-          pdf.setFont(undefined, 'normal').setTextColor(0, 0, 0);
+          y = 15;
         }
 
-        currentX = startX;
-        row.forEach((cell, i) => {
-          const text = cell.toString();
-          const displayText = text.length > 25 ? text.substring(0, 25) + '...' : text;
-          pdf.rect(currentX, yPosition, columnWidths[i], cellHeight);
-          pdf.text(displayText, currentX + 1, yPosition + 5);
-          currentX += columnWidths[i];
+        // Client name row - draw background first, then text
+        pdf.setFillColor(106, 90, 231);
+        pdf.setDrawColor(106, 90, 231);
+        pdf.rect(startX, y, totalWidth, 8, 'F');
+        pdf.setFont(undefined, 'bold');
+        pdf.setFontSize(10);
+        pdf.setTextColor(255, 255, 255);
+        pdf.text(clientName, startX + 2, y + 5.5);
+        y += 8;
+
+        // Column headers - draw each cell separately
+        pdf.setFont(undefined, 'bold');
+        pdf.setFontSize(8);
+        pdf.setTextColor(0, 0, 0);
+        pdf.setDrawColor(200, 200, 200);
+        let x = startX;
+        headers.forEach((header, i) => {
+          pdf.setFillColor(245, 245, 245);
+          pdf.rect(x, y, colWidths[i], 6, 'FD');
+          pdf.setTextColor(0, 0, 0);
+          pdf.text(header, x + 2, y + 4);
+          x += colWidths[i];
         });
-        yPosition += cellHeight;
+        y += 6;
+
+        // Data rows
+        pdf.setFont(undefined, 'normal');
+        pdf.setFontSize(8);
+        clientData.rows.forEach(row => {
+          if (y > 185) {
+            pdf.addPage();
+            y = 15;
+
+            // Redraw headers on new page
+            pdf.setFont(undefined, 'bold');
+            pdf.setDrawColor(200, 200, 200);
+            let tempX = startX;
+            headers.forEach((header, i) => {
+              pdf.setFillColor(245, 245, 245);
+              pdf.rect(tempX, y, colWidths[i], 6, 'FD');
+              pdf.setTextColor(0, 0, 0);
+              pdf.text(header, tempX + 2, y + 4);
+              tempX += colWidths[i];
+            });
+            y += 6;
+            pdf.setFont(undefined, 'normal');
+          }
+
+          let x = startX;
+          const cells = [
+            row.designation.length > 40 ? row.designation.substring(0, 37) + '...' : row.designation,
+            formatFrenchNumber(row.montant),
+            row.date,
+            row.statut,
+            row.chantier.length > 18 ? row.chantier.substring(0, 15) + '...' : row.chantier,
+            row.banque.length > 20 ? row.banque.substring(0, 17) + '...' : row.banque
+          ];
+
+          pdf.setDrawColor(200, 200, 200);
+          cells.forEach((cellText, i) => {
+            // Draw white background for data cells
+            pdf.setFillColor(255, 255, 255);
+            pdf.rect(x, y, colWidths[i], 6, 'FD');
+            pdf.setTextColor(0, 0, 0);
+            pdf.text(cellText, x + 2, y + 4);
+            x += colWidths[i];
+          });
+
+          y += 6;
+        });
+
+        // Client subtotal
+        pdf.setFillColor(240, 240, 240);
+        pdf.setDrawColor(200, 200, 200);
+        pdf.rect(startX, y, totalWidth, 7, 'FD');
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(0, 0, 0);
+        pdf.text(`Total ${clientName}:`, startX + 2, y + 4.5);
+        pdf.text(formatFrenchNumber(clientData.total) + ' DH', startX + colWidths[0] + colWidths[1] - 2, y + 4.5, { align: 'right' });
+        y += 10;
+        pdf.setFont(undefined, 'normal');
       });
 
-      // Total
-      yPosition += 10;
-      pdf.setFont(undefined, 'bold').setFontSize(10);
-      pdf.text(`Total: ${formatFrenchNumber(totalAmount)}`, startX, yPosition);
+      // Grand total
+      y += 2;
+      pdf.setFillColor(106, 90, 231);
+      pdf.setDrawColor(106, 90, 231);
+      pdf.rect(startX, y, 120, 8, 'F');
+      pdf.setFontSize(11);
+      pdf.setFont(undefined, 'bold');
+      pdf.setTextColor(255, 255, 255);
+      pdf.text(`TOTAL GÉNÉRAL: ${formatFrenchNumber(grandTotal)} DH`, startX + 2, y + 5.5);
 
-      // Summary
-      yPosition += 8;
-      pdf.setFont(undefined, 'normal').setFontSize(8);
-      pdf.text(`Nombre de recettes à venir: ${visibleRecettes.length}`, startX, yPosition);
-
-      pdf.save(`recettes-a-venir-${now.toISOString().split('T')[0]}.pdf`);
+      pdf.save(`recettes-a-venir-${new Date().toISOString().split('T')[0]}.pdf`);
       document.body.removeChild(loadingMsg);
+
     } catch (error) {
       console.error("Erreur PDF:", error);
       document.body.removeChild(loadingMsg);
@@ -2635,7 +2798,6 @@ function downloadRecettesPDF() {
   };
   document.head.appendChild(script);
 }
-
 function deleteBanque(id) {
   fetch(`/tresorerie/banques/delete/${id}`, {
     method: 'DELETE',
@@ -2657,7 +2819,4 @@ function deleteBanque(id) {
     alert('Erreur lors de la suppression de la banque');
   });
 }
-
-
-
-  </script>
+</script>

@@ -21,6 +21,7 @@ import { createUi, destroyClient, indexClient, postClient, showClient, updateCli
 import { deleteEncaissement, indexHis, saveEncaissement, updateHistoryBanque } from '../controllers/historiqueControlelr.js';
 import { deleteTelePai, indexTelePai, storeTelePai, updateTelePai } from '../controllers/telepay_prelevController.js';
 import { createEncaissement, indexEncaissement } from '../controllers/encaisementController.js';
+import { indexDemandeCaisse } from '../controllers/demandecaisseController.js';
 
 export const dashboardRouter = express.Router();
 dashboardRouter.use(isAuthenticated)
@@ -305,4 +306,5 @@ dashboardRouter.get('/dashboard', async (req, res) => {
         dashboardRouter.post('/tresorerie/encaissement/create', createEncaissement);
         dashboardRouter.delete('/tresorerie/encaissement/:id', deleteEncaissement);
 
-        //
+        // Demande De Caisse 
+       dashboardRouter.get('/achats/demandeCaisse', indexDemandeCaisse);

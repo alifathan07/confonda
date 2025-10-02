@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Caisse</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .filters {
+            padding: 15px;
+            display: flex;
+            gap: 15px;
+            background: #f8f9fa;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        select, input {
+            padding: 8px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .section {
+            padding: 20px;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            display: inline-block;
+        }
+        .overview-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+        }
+        .overview-table th, .overview-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .overview-table th {
+            background: #667eea;
+            color: white;
+        }
+        .month-row:hover {
+            background: #f8f9fa;
+            cursor: pointer;
+        }
+        .disponible-positive { color: #28a745; }
+        .disponible-negative { color: #dc3545; }
+        .details-section {
+            display: none;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .details-table th {
+            background: #495057;
+            color: white;
+            padding: 10px;
+        }
+        .details-table td {
+            padding: 10px;
+            background: white;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background: #764ba2;
+        }
+        .admin-section {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏗️ Dashboard Caisse</h1>
+        </div>
+        <div class="filters">
+            <div class="filter-group">
+                <label for="chantier">Chantier</label>
+                <select id="chantier" onchange="filterData()">
+                    <option value="chantier1">Villa - Casablanca</option>
+                    <option value="chantier2">Immeuble - Rabat</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="year">Année</label>
+                <select id="year" onchange="filterData()">
+                    <option value="2024">2024</option>
+                    <option value="2025" selected>2025</option>
+                </select>
+            </div>
+        </div>
+        <div class="section admin-section">
+            <h3>⚙️ Administration</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="admin-month">Mois</label>
+                    <select id="admin-month"></select>
+                </div>
+                <div class="form-group">
+                    <label for="admin-allocation">Allocation (DH)</label>
+                    <input type="number" id="admin-allocation" placeholder="Ex: 50000">
+                </div>
+                <button class="btn" onclick="updateAllocation()">Mettre à jour</button>
+            </div>
+        </div>
+        <div class="section">
+            <h2 class="section-title">📊 Vue mensuelle</h2>
+            <table class="overview-table">
+                <thead>
+                    <tr>
+                        <th>Mois</th>
+                        <th>Ancien Solde</th>
+                        <th>Allocation</th>
+                        <th>Dépenses</th>
+                        <th>Disponible</th>
+                    </tr>
+                </thead>
+                <tbody id="overview-tbody"></tbody>
+            </table>
+        </div>
+        <div class="section">
+            <h2 class="section-title">➕ Ajouter dépense</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="expense-amount">Montant (DH)</label>
+                    <input type="number" id="expense-amount" placeholder="Ex: 5000">
+                </div>
+                <div class="form-group">
+                    <label for="expense-description">Description</label>
+                    <input type="text" id="expense-description" placeholder="Ex: Achat ciment">
+                </div>
+                <div class="form-group">
+                    <label for="expense-date">Date</label>
+                    <input type="date" id="expense-date">
+                </div>
+            </div>
+            <button class="btn" onclick="addExpense()">Ajouter</button>
+        </div>
+    </div>
+
+    <script>
+        let projectsData = {
+            chantier1: {
+                name: "Villa - Casablanca",
+                months: {
+                    "2025-09": {
+                        ancienSolde: 45000,
+                        allocation: 80000,
+                        expenses: [
+                            { id: 1, date: "2025-09-05", amount: 15000, description: "Ciment", justified: true },
+                            { id: 2, date: "2025-09-12", amount: 8500, description: "Grue", justified: true }
+                        ]
+                    },
+                    "2025-08": {
+                        ancienSolde: 30000,
+                        allocation: 75000,
+                        expenses: []
+                    }
+                }
+            },
+            chantier2: {
+                name: "Immeuble - Rabat",
+                months: {
+                    "2025-09": {
+                        ancienSolde: 120000,
+                        allocation: 150000,
+                        expenses: []
+                    }
+                }
+            }
+        };
+
+        let currentProject = 'chantier1';
+        let currentYear = '2025';
+        let nextExpenseId = 3;
+
+        function initializePage() {
+            document.getElementById('expense-date').value = new Date().toISOString().split('T')[0];
+            populateAdminMonths();
+            filterData();
+        }
+
+        function populateAdminMonths() {
+            const select = document.getElementById('admin-month');
+            select.innerHTML = '';
+            const months = Object.keys(projectsData[currentProject].months).sort().reverse();
+            months.forEach(month => {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = formatMonth(month);
+                select.appendChild(option);
+            });
+        }
+
+        function filterData() {
+            currentProject = document.getElementById('chantier').value;
+            currentYear = document.getElementById('year').value;
+            populateAdminMonths();
+            populateOverviewTable();
+        }
+
+        function populateOverviewTable() {
+            const tbody = document.getElementById('overview-tbody');
+            tbody.innerHTML = '';
+            const projectData = projectsData[currentProject];
+            if (!projectData || !projectData.months) return;
+
+            const filteredMonths = Object.keys(projectData.months)
+                .filter(month => month.startsWith(currentYear))
+                .sort().reverse();
+
+            filteredMonths.forEach(month => {
+                const monthData = projectsData[currentProject].months[month];
+                const totalExpenses = monthData.expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+                const disponible = (monthData.ancienSolde || 0) + (monthData.allocation || 0) - (totalExpenses || 0);
+
+                const row = document.createElement('tr');
+                row.className = 'month-row';
+                row.onclick = () => toggleMonthDetails(month);
+                row.innerHTML = `
+                    <td>▶ ${formatMonth(month)}</td>
+                    <td>${(monthData.ancienSolde || 0).toLocaleString()}</td>
+                    <td>${(monthData.allocation || 0).toLocaleString()}</td>
+                    <td>${(totalExpenses || 0).toLocaleString()}</td>
+                    <td class="${disponible >= 0 ? 'disponible-positive' : 'disponible-negative'}">${disponible.toLocaleString()}</td>
+                `;
+                tbody.appendChild(row);
+
+                const detailsRow = document.createElement('tr');
+                detailsRow.innerHTML = `
+                    <td colspan="5">
+                        <div class="details-section" id="details-${month}">
+                            <h4>Détails - ${formatMonth(month)}</h4>
+                            ${generateExpenseTable(month)}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(detailsRow);
+            });
+        }
+
+        function generateExpenseTable(month) {
+            const monthData = projectsData[currentProject].months[month];
+            if (!monthData.expenses?.length) return '<p>Aucune dépense.</p>';
+
+            let table = '<table class="details-table"><thead><tr><th>Date</th><th>Montant</th><th>Description</th></tr></thead><tbody>';
+            monthData.expenses.forEach(exp => {
+                table += `
+                    <tr>
+                        <td>${formatDate(exp.date)}</td>
+                        <td>${(exp.amount || 0).toLocaleString()}</td>
+                        <td>${exp.description}</td>
+                    </tr>`;
+            });
+            return table + '</tbody></table>';
+        }
+
+        function toggleMonthDetails(month) {
+            const details = document.getElementById(`details-${month}`);
+            const isVisible = details.style.display === 'block';
+            document.querySelectorAll('.details-section').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('.month-row').forEach(r => r.querySelector('td').innerHTML = r.querySelector('td').innerHTML.replace('▼', '▶'));
+            if (!isVisible) {
+                details.style.display = 'block';
+                document.querySelector(`#details-${month}`).parentElement.parentElement.querySelector('td').innerHTML = document.querySelector(`#details-${month}`).parentElement.parentElement.querySelector('td').innerHTML.replace('▶', '▼');
+            }
+        }
+
+        function addExpense() {
+            const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
+            const description = document.getElementById('expense-description').value.trim();
+            const date = document.getElementById('expense-date').value;
+
+            if (amount <= 0 || !description || !date) {
+                alert('Veuillez remplir tous les champs correctement.');
+                return;
+            }
+
+            const currentMonth = date.slice(0, 7);
+            if (!projectsData[currentProject].months[currentMonth]) {
+                const prevMonth = getPreviousMonth(currentMonth);
+                let ancienSolde = 0;
+                if (prevMonth && projectsData[currentProject].months[prevMonth]) {
+                    const prevData = projectsData[currentProject].months[prevMonth];
+                    const prevExpenses = prevData.expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+                    ancienSolde = (prevData.ancienSolde || 0) + (prevData.allocation || 0) - prevExpenses;
+                }
+                projectsData[currentProject].months[currentMonth] = {
+                    ancienSolde: ancienSolde,
+                    allocation: 50000,
+                    expenses: []
+                };
+            }
+
+            projectsData[currentProject].months[currentMonth].expenses.push({
+                id: nextExpenseId++,
+                date: date,
+                amount: amount,
+                description: description
+            });
+
+            document.getElementById('expense-amount').value = '';
+            document.getElementById('expense-description').value = '';
+            document.getElementById('expense-date').value = new Date().toISOString().split('T')[0];
+            populateOverviewTable();
+            alert('Dépense ajoutée !');
+        }
+
+        function updateAllocation() {
+            const month = document.getElementById('admin-month').value;
+            const newAllocation = parseFloat(document.getElementById('admin-allocation').value) || 0;
+            if (newAllocation <= 0) {
+                alert('Allocation invalide.');
+                return;
+            }
+            const currentAllocation = projectsData[currentProject].months[month].allocation || 0;
+            projectsData[currentProject].months[month].allocation = currentAllocation + newAllocation;
+            document.getElementById('admin-allocation').value = '';
+            populateOverviewTable();
+            alert(`Allocation mise à jour: ${projectsData[currentProject].months[month].allocation.toLocaleString()} DH`);
+        }
+
+        function getPreviousMonth(monthStr) {
+            const [year, month] = monthStr.split('-').map(Number);
+            const date = new Date(year, month - 2);
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        }
+
+        function formatMonth(monthStr) {
+            const [year, month] = monthStr.split('-');
+            const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+            return `${monthNames[parseInt(month) - 1]} ${year}`;
+        }
+
+        function formatDate(dateStr) {
+            return new Date(dateStr).toLocaleDateString('fr-FR');
+        }
+
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="demandes" />
+  <meta name="author" content="Confonda" />
+  <title>demandes</title>
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+  <style>
+    /* General Button Style */
+    .custom-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 15px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      text-transform: uppercase;
+    }
+
+    .custom-btn i {
+      font-size: 14px;
+    }
+
+    .custom-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-success.custom-btn {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .btn-success.custom-btn:hover {
+      background-color: #218838;
+    }
+
+    .btn-outline-success.custom-btn {
+      background-color: white;
+      color: #28a745;
+      border: 2px solid #28a745;
+    }
+
+    .btn-outline-success.custom-btn:hover {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .btn-secondary.custom-btn {
+      background-color: #6c757d;
+      color: white;
+    }
+
+    .btn-secondary.custom-btn:hover {
+      background-color: #5a6268;
+    }
+
+    .btn-primary.custom-btn {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .btn-primary.custom-btn:hover {
+      background-color: #0056b3;
+    }
+
+    .btn-warning.excel-save-btn {
+      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 6px;
+    }
+
+    .excel-delete-btn {
+      background-color: transparent;
+      color: #dc3545;
+      border: none;
+      padding: 6px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .excel-delete-btn:hover {
+      color: #bd2130;
+    }
+
+    .excel-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .excel-table th,
+    .excel-table td {
+      border: 1px solid #dee2e6;
+      padding: 8px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .excel-table thead th {
+      background-color: #f8f9fa;
+      font-weight: bold;
+    }
+
+    .excel-table tbody tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+
+    .excel-table tbody tr:hover {
+      background-color: #e9ecef;
+    }
+
+    .invalid-input {
+      border: 2px solid red !important;
+    }
+  </style>
+</head>
+<body id="page-top">
+  <div id="wrapper">
+    <%- include('../../../../layouts/sidebar') %>
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <%- include('../../../../layouts/topbar') %>
+        <div class="container-fluid">
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">Liste des Demandes de Caisse</h6>
+            </div>
+            <div class="card-body">
+              <div class="mb-4" style="display: flex; align-items: center; gap: 20px;">
+                <form id="excelUploadForm" enctype="multipart/form-data" method="POST" action="/tresorerie/effets/import" style="margin: 0;">
+                  <input type="file" id="excelFile" name="excelFile" accept=".xlsx,.xls" style="display:none;" hidden>
+                </form>
+                <a href="/tresorerie/demandes/banques" class="btn btn-primary custom-btn">Ajouter demande</a>
+                <button id="saveAllChanges" class="btn btn-primary custom-btn" title="Enregistrer toutes les modifications" hidden>
+                </button>
+                <button id="downloadPdfBtn" class="btn btn-success d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
+                  <i class="fas fa-file-pdf mr-2"></i> Télécharger PDF
+                </button>
+                <button id="downloadExcelBtn" class="btn btn-success d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
+                  <i class="fas fa-file-download mr-2"></i> Télécharger Excel
+                </button>
+                <span id="excelUploadMsg" style="font-size:15px; margin-left:10px;"></span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <input type="text" id="supplierSearch" class="form-control" placeholder="Rechercher par bénéficiaire" style="width: 200px;">
+                <select id="chantierFilter" class="form-control mr-2" style="font-size: 15px; width: 200px;">
+                  <option value="">-- Filtrer par chantier --</option>
+                  <% chantiers.forEach(chantier => { %>
+                    <option value="<%= chantier.nom %>"><%= chantier.nom ? chantier.nom : '-- Aucun --' %></option>
+                  <% }); %>
+                </select>
+                <div class="form-group mr-2">
+                  <label for="dateFilter" class="mr-2">Date :</label>
+                  <div class="input-group">
+                    <span class="input-group-text">Du</span>
+                    <input type="date" id="dateFilter" class="form-control">
+                    <span class="input-group-text">Au</span>
+                    <input type="date" id="dateToFilter" class="form-control">
+                  </div>
+                </div>
+                <button id="resetFilters" class="btn btn-secondary custom-btn" title="Réinitialiser les filtres">
+                  <i class="fas fa-undo mr-2"></i> Réinitialiser
+                </button>
+              </div>
+              <div class="table-responsive">
+                <% 
+                  function formatDateToDDMMYYYY(dateInput) {
+                      if (!dateInput) return '';
+                      const date = new Date(dateInput);
+                      if (isNaN(date)) return dateInput; 
+                      const day = String(date.getDate()).padStart(2, '0');
+                      const month = String(date.getMonth() + 1).padStart(2, '0');
+                      const year = date.getFullYear();
+                      return `${day}/${month}/${year}`;
+                  }
+                %>
+                <table id="editableTable" class="excel-table">
+                  <thead>
+                    <tr style="position: sticky; top: 0; background-color: white; z-index: 1;">
+                        <th draggable="true">Designation</th>
+                      <th draggable="true">Bénéficiaire</th>
+                      <th draggable="true">Montant</th>
+                      <th draggable="true">Date</th>
+                      <th draggable="true">Chantier</th>
+                      <th style="width: 120px;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% if (typeof demande === 'undefined' || !demande.length) { %>
+                      <tr>
+                        <td colspan="8" style="text-align: center;">Aucun demande disponible.</td>
+                      </tr>
+                    <% } else { %>
+                      <% demande.forEach(demande => { %>
+                        <tr data-id="<%= demande.id %>">
+                          <td contenteditable="true" data-name="beneficiaire"><%= demande.designation || '' %></td>
+                          <td contenteditable="true" data-name="banque"><%= demande.user.name || '' %></td>
+                          <td contenteditable="true" data-name="montant"><%= Number(demande.montant).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                          <td contenteditable="true" data-name="dateSaisie"><%= formatDateToDDMMYYYY(demande.date) %></td>
+                          <td contenteditable="true" data-name="chantier">nothinck</td>
+
+                          <td>
+                            <div class="btn-group" role="group">
+                              <button class="btn btn-danger btn-sm" title="Supprimer" onclick="supprimerdemande(<%= demande.id %>)">
+                                <i class="fas fa-trash-alt"></i>
+                              </button>
+                              <button type="button" class="btn btn-secondary btn-sm" onclick="downloadPDF(<%= demande.id %>)">
+                                <i class="fas fa-download"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    <% } %>
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colspan="2" style="text-align: right; font-weight: bold;">Total:</td>
+                      <td id="total" style="font-weight: bold;"></td>
+                      <td colspan="5"></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+      <script>
+        const { jsPDF } = window.jspdf;
+        const resetFilters = document.getElementById('resetFilters');
+      
+        // Debounce function to limit rapid PATCH requests
+        function debounce(func, wait) {
+          let timeout;
+          return function (...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+          };
+        }
+      
+        async function supprimerdemande(id) {
+          try {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce demande ?')) {
+              const res = await fetch(`/tresorerie/demandes/delete/${id}`, {
+                method: 'DELETE'
+              });
+              if (res.ok) {
+                alert('demande supprimé avec succès.');
+                location.reload();
+              } else {
+                alert('Erreur lors de la suppression du demande.');
+              }
+            }
+          } catch (error) {
+            console.error(error);
+            alert('Erreur réseau lors de la suppression.');
+          }
+        }
+      
+        async function downloadPDF(id) {
+          try {
+            const res = await fetch(`/tresorerie/demandes/banque/${id}/pdf`);
+            if (!res.ok) throw new Error('Erreur lors du téléchargement');
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `demande_${id}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+          } catch (err) {
+            console.error(err);
+            alert('Erreur lors du téléchargement du PDF');
+          }
+        }
+      
+        document.addEventListener("DOMContentLoaded", function () {
+          const uploadForm = document.getElementById('excelUploadForm');
+          const fileInput = document.getElementById('excelFile');
+          const msg = document.getElementById('excelUploadMsg');
+          const table = document.getElementById("editableTable");
+          const saveAllButton = document.getElementById('saveAllChanges');
+          const chantierFilter = document.getElementById('chantierFilter');
+          const dateFilter = document.getElementById('dateFilter');
+          const dateToFilter = document.getElementById('dateToFilter');
+          const supplierSearch = document.getElementById('supplierSearch');
+      
+          // Client-side function to format dates to dd/mm/yyyy
+          function formatDateToDDMMYYYY(dateInput) {
+            if (!dateInput) return '';
+            const date = new Date(dateInput);
+            if (isNaN(date)) return dateInput;
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+          }
+      
+          // Convert number to French words
+          const montantWordsCache = new Map();
+          function numberToFrenchWords(n) {
+            if (montantWordsCache.has(n)) return montantWordsCache.get(n);
+            let input = n;
+            if (typeof n === "string") n = n.replace(/\s/g, '').replace(',', '.');
+            n = Math.floor(Number(n));
+      
+            if (n === 0) {
+              montantWordsCache.set(input, "ZÉRO");
+              return "ZÉRO";
+            }
+      
+            const ones = ["", "UN", "DEUX", "TROIS", "QUATRE", "CINQ", "SIX", "SEPT", "HUIT", "NEUF"];
+            const teens = ["DIX", "ONZE", "DOUZE", "TREIZE", "QUATORZE", "QUINZE", "SEIZE", "DIX-SEPT", "DIX-HUIT", "DIX-NEUF"];
+            const tens = ["", "DIX", "VINGT", "TRENTE", "QUARANTE", "CINQUANTE", "SOIXANTE", "SOIXANTE", "QUATRE-VINGT", "QUATRE-VINGT"];
+            const scales = ["", "MILLE", "MILLION", "MILLIARD", "BILLION", "BILLIARD", "TRILLION"];
+      
+            function chunkNumber(num) {
+              let chunks = [];
+              while (num > 0) {
+                chunks.push(num % 1000);
+                num = Math.floor(num / 1000);
+              }
+              return chunks;
+            }
+      
+            function chunkToWords(chunk) {
+              let h = Math.floor(chunk / 100);
+              let t = Math.floor((chunk % 100) / 10);
+              let o = chunk % 10;
+              let str = "";
+      
+              if (h > 0) {
+                str += (h === 1 ? "CENT" : ones[h] + " CENT");
+                if (h > 1 && t === 0 && o === 0) str += "S";
+                if (t !== 0 || o !== 0) str += " ";
+              }
+      
+              let num2 = t * 10 + o;
+              if (num2 > 0) {
+                if (num2 < 10) {
+                  str += ones[num2];
+                } else if (num2 < 20) {
+                  str += teens[num2 - 10];
+                } else {
+                  let tenVal = t;
+                  let oneVal = o;
+                  if (tenVal === 7 || tenVal === 9) {
+                    let connector = "-";
+                    if (tenVal === 7 && oneVal === 1) connector = " ET ";
+                    str += tens[tenVal] + connector + teens[oneVal];
+                  } else if (tenVal === 8) {
+                    str += "QUATRE-VINGT" + (oneVal === 0 ? "S" : "-" + ones[oneVal]);
+                  } else if (oneVal === 1 && tenVal !== 8) {
+                    str += tens[tenVal] + "-ET-UN";
+                  } else if (oneVal > 0) {
+                    str += tens[tenVal] + "-" + ones[oneVal];
+                  } else {
+                    str += tens[tenVal];
+                  }
+                }
+              }
+      
+              return str.trim();
+            }
+      
+            let chunks = chunkNumber(n);
+            let words = [];
+      
+            for (let i = chunks.length - 1; i >= 0; i--) {
+              let chunk = chunks[i];
+              if (chunk === 0) continue;
+              let chunkWord = chunkToWords(chunk);
+              if (i > 0) {
+                if (i === 1 && chunk === 1) chunkWord = scales[i];
+                else chunkWord += " " + scales[i];
+                if (chunk > 1 && i > 1) chunkWord += "S";
+              }
+              words.push(chunkWord);
+            }
+      
+            let result = words.join(" ").replace(/\s+/g, ' ').trim();
+            montantWordsCache.set(input, result);
+            return result;
+          }
+      
+          function convertMontantToLettre(montant) {
+            if (!montant || isNaN(montant)) return null;
+            let parts = String(montant).split(".");
+            let integerPart = parts[0];
+            let decimalPart = parts[1] || "";
+            let text = numberToFrenchWords(integerPart) + " DIRHAMS";
+            if (decimalPart && parseInt(decimalPart, 10) > 0) {
+              decimalPart = decimalPart.padEnd(2, "0").slice(0, 2);
+              text += " " + numberToFrenchWords(decimalPart) + " CENTIMES";
+            }
+            return text;
+          }
+      
+          function convertDateToISO(dateStr) {
+            if (!dateStr || dateStr.trim() === '') {
+              return null;
+            }
+            const parts = dateStr.split('/');
+            if (parts.length !== 3) {
+              return null;
+            }
+            const [day, month, year] = parts.map(part => part.trim());
+            if (!day || !month || !year || isNaN(day) || isNaN(month) || isNaN(year)) {
+              return null;
+            }
+            const parsedDate = new Date(`${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+            if (isNaN(parsedDate)) {
+              return null;
+            }
+            return parsedDate.toISOString().split('T')[0];
+          }
+      
+          function sanitizeInput(input) {
+            const div = document.createElement('div');
+            div.textContent = input;
+            return div.innerHTML;
+          }
+      
+          function updateTotal() {
+            const rows = document.querySelectorAll("#editableTable tbody tr");
+            let total = 0;
+            rows.forEach(row => {
+              if (row.style.display !== "none") {
+                const montantCell = row.querySelector("td[data-name='montant']");
+                if (montantCell) {
+                  const value = parseFloat(montantCell.innerText.replace(/\s/g, '').replace(',', '.'));
+                  if (!isNaN(value)) total += value;
+                }
+              }
+            });
+            const totalCell = document.getElementById("total");
+            if (totalCell) {
+              totalCell.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+          }
+      
+          // Filtering function
+          function applyFilters() {
+            const chantierValue = chantierFilter.value;
+            const dateFromValue = dateFilter.value;
+            const dateToValue = dateToFilter.value;
+            const supplierValue = supplierSearch.value.toLowerCase().trim();
+            const rows = table.querySelectorAll("tbody tr");
+      
+            rows.forEach(row => {
+              if (!row.hasAttribute("data-id")) {
+                return;
+              }
+              let showRow = true;
+      
+              if (chantierValue) {
+                const chantierCell = row.querySelector("td[data-name='chantier'] select");
+                const chantierText = chantierCell ? chantierCell.options[chantierCell.selectedIndex].text : '';
+                showRow = showRow && (chantierText === chantierValue);
+              }
+      
+              if ((dateFromValue || dateToValue) && showRow) {
+                const dateSaisieCell = row.querySelector("td[data-name='dateSaisie']");
+                const dateSaisie = dateSaisieCell ? dateSaisieCell.innerText.trim() : '';
+      
+                if (dateSaisie) {
+                  const dateSaisieISO = convertDateToISO(dateSaisie);
+                  if (dateSaisieISO) {
+                    const saisieDate = new Date(dateSaisieISO);
+                    let dateMatch = true;
+                    if (dateFromValue) {
+                      const fromDate = new Date(dateFromValue);
+                      dateMatch = dateMatch && (saisieDate >= fromDate);
+                    }
+                    if (dateToValue) {
+                      const toDate = new Date(dateToValue);
+                      dateMatch = dateMatch && (saisieDate <= toDate);
+                    }
+                    showRow = showRow && dateMatch;
+                  } else {
+                    showRow = false;
+                  }
+                } else {
+                  showRow = false;
+                }
+              }
+      
+              if (supplierValue && showRow) {
+                const beneficiaireCell = row.querySelector("td[data-name='beneficiaire']");
+                const beneficiaireText = beneficiaireCell ? beneficiaireCell.innerText.toLowerCase() : '';
+                showRow = showRow && beneficiaireText.includes(supplierValue);
+              }
+      
+              row.style.display = showRow ? '' : 'none';
+            });
+      
+            updateTotal();
+          }
+      
+          // Reset filters
+          resetFilters.addEventListener('click', function () {
+            chantierFilter.value = "";
+            dateFilter.value = "";
+            dateToFilter.value = "";
+            if (supplierSearch) {
+              supplierSearch.value = "";
+            }
+            const rows = table.querySelectorAll("tbody tr");
+            rows.forEach(row => {
+              row.style.display = '';
+            });
+            updateTotal();
+          });
+      
+          // Auto-submit Excel upload form
+          fileInput.addEventListener('change', function () {
+            if (fileInput.files.length) {
+              uploadForm.requestSubmit();
+            }
+          });
+      
+          uploadForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (!fileInput.files.length) {
+              msg.textContent = 'Veuillez sélectionner un fichier Excel.';
+              msg.style.color = 'red';
+              return;
+            }
+            const formData = new FormData(uploadForm);
+            msg.textContent = 'Importation en cours...';
+            msg.style.color = '#1976d2';
+            fetch('/tresorerie/demandes/import', {
+              method: 'POST',
+              body: formData
+            })
+            .then(res => res.text())
+            .then(text => {
+              msg.textContent = text;
+              msg.style.color = 'green';
+              setTimeout(() => window.location.reload(), 1200);
+            })
+            .catch(() => {
+              msg.textContent = "Erreur lors de l'importation du fichier.";
+              msg.style.color = 'red';
+            });
+          });
+      
+          // Drag and drop columns
+          let dragSrcIdx = null;
+          function swapColumns(table, fromIdx, toIdx) {
+            const headerRow = table.tHead.rows[0];
+            if (fromIdx === toIdx || fromIdx >= headerRow.cells.length - 1 || toIdx >= headerRow.cells.length - 1) return;
+            headerRow.insertBefore(headerRow.children[fromIdx], headerRow.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
+            Array.from(table.tBodies[0].rows).forEach(row => {
+              row.insertBefore(row.children[fromIdx], row.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
+            });
+          }
+      
+          Array.from(table.tHead.rows[0].cells).forEach((th, idx) => {
+            if (idx < table.tHead.rows[0].cells.length - 1) {
+              th.draggable = true;
+              th.addEventListener('dragstart', function (e) {
+                dragSrcIdx = idx;
+                e.dataTransfer.effectAllowed = 'move';
+                th.classList.add('dragging');
+              });
+              th.addEventListener('dragend', function () {
+                dragSrcIdx = null;
+                th.classList.remove('dragging');
+                Array.from(table.tHead.rows[0].cells).forEach(cell => cell.classList.remove('drag-over'));
+              });
+              th.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                th.classList.add('drag-over');
+              });
+              th.addEventListener('dragleave', function () {
+                th.classList.remove('drag-over');
+              });
+              th.addEventListener('drop', function (e) {
+                e.preventDefault();
+                th.classList.remove('drag-over');
+                if (dragSrcIdx !== null && dragSrcIdx !== idx) {
+                  swapColumns(table, dragSrcIdx, idx);
+                }
+              });
+            }
+          });
+      
+          // Mark row as dirty on cell edit and trigger auto-update
+          const debouncedAutoUpdateRow = debounce(async (row) => {
+            const success = await autoUpdateRow(row);
+            if (success) {
+              updateTotal();
+            }
+          }, 500);
+      
+          table.addEventListener("input", function(e) {
+            const cell = e.target.closest("td[data-name]");
+            if (cell) {
+              const row = cell.parentElement;
+              row.setAttribute("data-dirty", "true");
+              row.classList.add("excel-dirty-row");
+              if (cell.getAttribute("data-name") === "montant") updateTotal();
+            }
+          });
+      
+          table.addEventListener("change", function(e) {
+            if (e.target.tagName === "SELECT" && e.target.getAttribute("data-name") === "chantier") {
+              const row = e.target.closest("tr");
+              row.setAttribute("data-dirty", "true");
+              row.classList.add("excel-dirty-row");
+            }
+          });
+      
+          document.addEventListener("click", async function(e) {
+            if (!table.contains(e.target)) {
+              const dirtyRows = table.querySelectorAll("tbody tr[data-dirty='true']");
+              for (const row of dirtyRows) {
+                await autoUpdateRow(row);
+              }
+            }
+          });
+      
+          async function autoUpdateRow(row) {
+            if (!row.getAttribute("data-dirty")) return true;
+            const cells = Array.from(row.querySelectorAll("td[data-name]"));
+            const data = {};
+            const id = row.getAttribute("data-id");
+      
+            let hasInvalidDate = false;
+      
+            cells.forEach(cell => {
+              const key = cell.getAttribute("data-name");
+              if (key === "chantier") {
+                const select = cell.querySelector("select[data-name='chantier']");
+                data[key] = select.value || null;
+              } else {
+                let value = sanitizeInput(cell.innerText.trim());
+                if (key === "montant") {
+                  value = parseFloat(value.replace(/\s/g, '').replace(',', '.'));
+                  if (isNaN(value)) return;
+                  data[key] = value;
+                  data.montantLettre = convertMontantToLettre(value);
+                } else if (['dateSaisie', 'dateReglement'].includes(key)) {
+                  value = convertDateToISO(value);
+                  if (key === 'dateSaisie' && !value) {
+                    hasInvalidDate = true;
+                    return;
+                  }
+                  data[key] = value || (key === 'dateReglement' ? null : undefined);
+                } else if (value !== '') {
+                  data[key] = value;
+                }
+              }
+            });
+      
+            if (hasInvalidDate) {
+              alert(`Erreur : La date de saisie est invalide ou vide pour la ligne avec ID ${id}. Veuillez entrer une date au format JJ/MM/AAAA.`);
+              return false;
+            }
+      
+            if (!id) {
+              alert(`Erreur : Aucun ID de demande trouvé pour la ligne.`);
+              return false;
+            }
+      
+            function getCaretPosition(el) {
+              const sel = window.getSelection();
+              if (!sel.rangeCount) return 0;
+              const range = sel.getRangeAt(0);
+              const preRange = range.cloneRange();
+              preRange.selectNodeContents(el);
+              preRange.setEnd(range.endContainer, range.endOffset);
+              return preRange.toString().length;
+            }
+      
+            function setCaretPosition(el, pos) {
+              const range = document.createRange();
+              const sel = window.getSelection();
+              const textLength = el.innerText.length;
+              const safePos = Math.min(pos, textLength);
+              range.selectNodeContents(el);
+              range.setStart(el.firstChild || el, safePos);
+              range.collapse(true);
+              sel.removeAllRanges();
+              sel.addRange(range);
+            }
+      
+            try {
+              const response = await fetch(`/tresorerie/demandes/update/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+              });
+              const result = await response.json();
+      
+              if (response.ok) {
+                row.removeAttribute("data-dirty");
+                row.classList.remove("excel-dirty-row");
+                const updateddemande = result.demande || {};
+      
+                cells.forEach(cell => {
+                  const key = cell.getAttribute("data-name");
+                  if (!(key in updateddemande) || updateddemande[key] === null || updateddemande[key] === undefined) return;
+      
+                  const isFocused = document.activeElement === cell;
+                  let caretPos = 0;
+                  if (isFocused) caretPos = getCaretPosition(cell);
+      
+                  if (key === "chantier") {
+                    const select = cell.querySelector("select[data-name='chantier']");
+                    select.value = updateddemande[key]?.id || updateddemande[key] || '';
+                  } else if (key === "montant") {
+                    cell.innerText = Number(updateddemande[key]).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  } else if (['dateSaisie', 'dateReglement'].includes(key)) {
+                    cell.innerText = updateddemande[key] ? formatDateToDDMMYYYY(updateddemande[key]) : '';
+                  } else {
+                    cell.innerText = updateddemande[key].toString().trim();
+                  }
+      
+                  if (isFocused) setCaretPosition(cell, caretPos);
+                });
+      
+                return true;
+              } else {
+                alert(`Erreur lors de la mise à jour de la ligne ${id}: ${result.message || 'Erreur inconnue'}`);
+                return false;
+              }
+            } catch (err) {
+              console.error("Error updating row", id, ":", err.message);
+              alert(`Erreur réseau lors de la mise à jour de la ligne ${id}: ${err.message}`);
+              return false;
+            }
+          }
+      
+          saveAllButton.addEventListener('click', async function () {
+            const dirtyRows = document.querySelectorAll("#editableTable tbody tr[data-dirty='true']");
+            if (dirtyRows.length === 0) {
+              alert("Aucune modification à enregistrer.");
+              return;
+            }
+      
+            let allSuccessful = true;
+            for (const row of dirtyRows) {
+              const success = await autoUpdateRow(row);
+              if (!success) {
+                allSuccessful = false;
+              }
+            }
+      
+            if (allSuccessful) {
+              updateTotal();
+              alert("Toutes les modifications ont été enregistrées avec succès.");
+            } else {
+              alert("Certaines modifications n'ont pas pu être enregistrées. Veuillez vérifier les erreurs.");
+            }
+          });
+      
+          // Filter event listeners
+          chantierFilter.addEventListener('change', applyFilters);
+          dateFilter.addEventListener('change', applyFilters);
+          dateToFilter.addEventListener('change', applyFilters);
+      
+          // Supplier search
+          if (supplierSearch) {
+            supplierSearch.addEventListener("input", function () {
+              applyFilters();
+            });
+          }
+      
+          // PDF Download
+          document.getElementById("downloadPdfBtn")?.addEventListener("click", function () {
+            const table = document.getElementById("editableTable");
+            const rows = table.querySelectorAll("tbody tr:not(:last-child)");
+            if (rows.length === 0) {
+              alert("Aucune donnée à exporter en PDF.");
+              return;
+            }
+      
+            try {
+              const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+              const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
+              const title = document.querySelector(".card-header h6").innerText;
+      
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(18);
+              doc.setTextColor(40, 40, 40);
+              doc.text(title, 10, 20);
+      
+              const tableData = [];
+              rows.forEach(row => {
+                if (row.style.display !== "none") {
+                  const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
+                    let value = "";
+                    const select = cell.querySelector("select");
+                    if (select) {
+                      value = select.options[select.selectedIndex].text;
+                    } else if (cell.innerText) {
+                      value = cell.innerText.trim();
+                    }
+      
+                    if (cell.dataset.name && ['dateSaisie', 'dateReglement'].includes(cell.dataset.name) && value) {
+                      if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                        const [year, month, day] = value.split('-');
+                        value = `${day}/${month}/${year}`;
+                      } else if (!value.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                        const date = new Date(value);
+                        if (!isNaN(date.getTime())) {
+                          const day = String(date.getDate()).padStart(2, '0');
+                          const month = String(date.getMonth() + 1).padStart(2, '0');
+                          const year = date.getFullYear();
+                          value = `${day}/${month}/${year}`;
+                        }
+                      }
+                    }
+      
+                    if (cell.dataset.name === "montant" && value) {
+                      let cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+                      const number = parseFloat(cleaned);
+                      if (!isNaN(number)) {
+                        const parts = number.toFixed(2).split('.');
+                        const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                        value = `${integerPart},${parts[1]}`;
+                      }
+                    }
+      
+                    return value || "";
+                  });
+                  tableData.push(rowData);
+                }
+              });
+      
+              doc.autoTable({
+                head: [headers],
+                body: tableData,
+                startY: 30,
+                theme: 'grid',
+                styles: {
+                  font: 'helvetica',
+                  fontSize: 8,
+                  textColor: [40, 40, 40],
+                  cellPadding: 2,
+                  lineColor: [200, 200, 200],
+                  lineWidth: 0.1,
+                  minCellHeight: 10,
+                  overflow: 'linebreak'
+                },
+                headStyles: {
+                  fillColor: [22, 160, 133],
+                  textColor: [255, 255, 255],
+                  fontSize: 7,
+                  fontStyle: 'bold',
+                  halign: 'center',
+                  cellPadding: 2
+                },
+                bodyStyles: {
+                  fillColor: [255, 255, 255]
+                },
+                alternateRowStyles: {
+                  fillColor: [245, 245, 245]
+                },
+                columnStyles: {
+                  0: { cellWidth: 28, halign: 'center' },
+                  1: { cellWidth: 28, halign: 'left' },
+                  2: { cellWidth: 28, halign: 'right' },
+                  3: { cellWidth: 28, halign: 'center' },
+                  4: { cellWidth: 28, halign: 'left' },
+                  5: { cellWidth: 28, halign: 'center' },
+                  6: { cellWidth: 28, halign: 'left' }
+                },
+                margin: { top: 30, left: 10, right: 10 },
+                tableWidth: 'wrap',
+                didDrawPage: function (data) {
+                  console.log('Table Width:', data.table.width);
+                  console.log('Page Width:', doc.internal.pageSize.width);
+                }
+              });
+      
+              const pageCount = doc.internal.getNumberOfPages();
+              for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(100);
+                doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
+              }
+      
+              let total = document.getElementById("total").innerText || "0";
+              total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+              const totalNumber = parseFloat(total);
+              if (!isNaN(totalNumber)) {
+                const parts = totalNumber.toFixed(2).split('.');
+                const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                total = `${integerPart},${parts[1]}`;
+              }
+      
+              const finalY = doc.lastAutoTable.finalY || 30;
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(12);
+              doc.setTextColor(22, 160, 133);
+              doc.text(`Total: ${total} MAD`, 10, finalY + 15);
+      
+              doc.save("liste_demande.pdf");
+            } catch (err) {
+              console.error("PDF generation error:", err);
+              alert("Erreur lors de la génération du PDF. Veuillez vérifier la console.");
+            }
+          });
+      
+          // Excel Download
+          document.getElementById("downloadExcelBtn")?.addEventListener("click", function () {
+            const table = document.getElementById("editableTable");
+            const rows = table.querySelectorAll("tbody tr:not(:last-child)");
+            let visibleRows = Array.from(rows).filter(row => row.style.display !== "none");
+      
+            if (visibleRows.length === 0) {
+              alert("Aucune donnée visible à exporter en Excel. Veuillez vérifier le filtre de recherche.");
+              return;
+            }
+      
+            try {
+              const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
+              const tableData = [];
+              let invalidData = null;
+      
+              visibleRows.forEach((row, rowIndex) => {
+                const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map((cell, colIndex) => {
+                  let value = "";
+                  const select = cell.querySelector("select");
+                  if (select) {
+                    value = select.options[select.selectedIndex].text.trim();
+                  } else if (cell.innerText) {
+                    value = cell.innerText.trim();
+                  }
+      
+                  if (cell.dataset.name === "montant" && value) {
+                    const cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+                    const number = parseFloat(cleaned);
+                    if (!isNaN(number)) {
+                      value = number;
+                    } else {
+                      invalidData = `Montant non numérique à la ligne ${rowIndex + 1}: "${value}"`;
+                    }
+                  }
+      
+                  if (cell.dataset.name && ['dateSaisie', 'dateReglement'].includes(cell.dataset.name) && value) {
+                    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+                      invalidData = `Format de date invalide à la ligne ${rowIndex + 1}, colonne ${cell.dataset.name}: "${value}"`;
+                    }
+                  }
+      
+                  return value || "";
+                });
+      
+                while (rowData.length < headers.length) rowData.push("");
+                tableData.push(rowData);
+              });
+      
+              if (invalidData) throw new Error(invalidData);
+      
+              let total = document.getElementById("total")?.innerText || "0";
+              total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+              const totalNumber = parseFloat(total);
+              const totalRow = ["Total", "", !isNaN(totalNumber) ? totalNumber : 0, "", "", "", ""];
+              tableData.push(totalRow);
+      
+              const wb = XLSX.utils.book_new();
+              const ws = XLSX.utils.aoa_to_sheet([headers, ...tableData], { skipHeader: false });
+      
+              ws['!cols'] = [
+                { wch: 18 },
+                { wch: 18 },
+                { wch: 15 },
+                { wch: 25 },
+                { wch: 25 },
+                { wch: 18 },
+                { wch: 23 }
+              ];
+      
+              headers.forEach((_, i) => {
+                const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
+                if (!ws[cellRef]) ws[cellRef] = { v: headers[i], t: 's' };
+                ws[cellRef].s = {
+                  font: { bold: true },
+                  fill: { fgColor: { rgb: "16A085" } },
+                  alignment: { horizontal: i === 2 ? 'right' : i === 3 || i === 5 ? 'center' : 'left' },
+                  border: {
+                    top: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    left: { style: 'thin' },
+                    right: { style: 'thin' }
+                  }
+                };
+              });
+      
+              tableData.forEach((row, rowIndex) => {
+                row.forEach((value, colIndex) => {
+                  const cellRef = XLSX.utils.encode_cell({ r: rowIndex + 1, c: colIndex });
+                  const isMontantColumn = colIndex === 2;
+      
+                  if (!ws[cellRef]) {
+                    ws[cellRef] = { 
+                      v: value || "", 
+                      t: isMontantColumn && typeof value === 'number' ? 'n' : 's' 
+                    };
+                  }
+      
+                  ws[cellRef].s = {
+                    fill: { fgColor: { rgb: rowIndex % 2 === 0 ? "FFFFFF" : "F5F5F5" } },
+                    alignment: { horizontal: isMontantColumn ? 'right' : colIndex === 3 || colIndex === 5 ? 'center' : 'left' },
+                    border: {
+                      top: { style: 'thin' },
+                      bottom: { style: 'thin' },
+                      left: { style: 'thin' },
+                      right: { style: 'thin' }
+                    }
+                  };
+      
+                  if (rowIndex === tableData.length - 1 && (colIndex === 0 || isMontantColumn)) {
+                    ws[cellRef].s.font = { bold: true };
+                  }
+                });
+              });
+      
+              XLSX.utils.book_append_sheet(wb, ws, "demandes");
+              XLSX.writeFile(wb, "liste_demande.xlsx");
+      
+            } catch (err) {
+              console.error("Excel generation error:", err);
+              alert(`Erreur lors de la génération du fichier Excel : ${err.message}`);
+            }
+          });
+      
+          // Initialize total and apply initial filters
+          applyFilters();
+        });
+      </script>
+      <script src="/vendor/jquery/jquery.min.js"></script>
+      <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+      <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+      <script src="/js/sb-admin-2.min.js"></script>
+      <script src="/vendor/datatables/jquery.dataTables.min.js"></script>
+      <script src="/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+      <script src="/js/demo/datatables-demo.js"></script>
+    </div>
+  </div>
+</body>
+</html>

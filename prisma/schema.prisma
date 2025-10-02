@@ -25,10 +25,40 @@ model User {
 
   chantier    Chantier @relation(fields: [chantierId], references: [id])
   chantierId  Int      // foreign key
+  demandeCaisse   DemandeCaisse[] 
   role        String @default("grandadmin") // user, admin, grandadmin
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+
+model DemandeCaisse {
+  id            Int      @id @default(autoincrement())
+  designation           String?
+  beneficiaire       String?   // beneficiaire
+  montant       Float?
+  date           DateTime?
+  user         User @relation(fields: [userId], references: [id])
+  userId       Int
+  itemsCaisse ItemCaisse[]
+ 
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+model ItemCaisse {
+  id            Int      @id @default(autoincrement())
+  designation   String
+  quantite      Int
+  unite         String?
+  prixUnitaire  Float
+  totalHt       Float
+
+  demandeCaisse   DemandeCaisse @relation(fields: [demandeCaisseId], references: [id])
+  demandeCaisseId Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
    
 
 
@@ -352,9 +382,47 @@ model Chantier {
   payavenir       Payavenir[] @relation("PayavenirChantier")
   virements       Virement[] @relation("VirementsChantier")
   miseadis        Miseadis[] @relation("MiseadisChantier")
+  caisse Caisse[] 
+
 
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
+}
+
+model Caisse {
+  id          Int       @id @default(autoincrement())
+  // Mois représenté sous forme "2025-09-01" (on prend le 1er jour du mois pour simplifier)
+  month       DateTime  
+  ancienSolde Decimal   @default(0)
+  allocation  Decimal   @default(0)
+  // Calcul du disponible se fait au backend, pas stocké (ou tu peux le stocker en cache si tu veux)
+
+  // Relation
+  chantier    Chantier  @relation(fields: [chantierId], references: [id])
+  chantierId  Int
+
+  // Dépenses liées à ce mois
+  expenses    Expense[]
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([chantierId, month]) // Un seul enregistrement par chantier + mois
+}
+
+model Expense {
+  id          Int       @id @default(autoincrement())
+  description String
+  amount      Decimal   @default(0)
+  date        DateTime  // Date exacte de la dépense
+  justified   Boolean   @default(false) // si un justificatif est fourni (optionnel)
+
+  // Relation
+  caisse      Caisse    @relation(fields: [caisseId], references: [id])
+  caisseId    Int
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model ChantierItem {
