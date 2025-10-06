@@ -135,42 +135,7 @@
               <h6 class="m-0 font-weight-bold text-primary">Liste des Demandes de Caisse</h6>
             </div>
             <div class="card-body">
-              <div class="mb-4" style="display: flex; align-items: center; gap: 20px;">
-                <form id="excelUploadForm" enctype="multipart/form-data" method="POST" action="/tresorerie/effets/import" style="margin: 0;">
-                  <input type="file" id="excelFile" name="excelFile" accept=".xlsx,.xls" style="display:none;" hidden>
-                </form>
-                <a href="/tresorerie/demandes/banques" class="btn btn-primary custom-btn">Ajouter demande</a>
-                <button id="saveAllChanges" class="btn btn-primary custom-btn" title="Enregistrer toutes les modifications" hidden>
-                </button>
-                <button id="downloadPdfBtn" class="btn btn-success d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
-                  <i class="fas fa-file-pdf mr-2"></i> Télécharger PDF
-                </button>
-                <button id="downloadExcelBtn" class="btn btn-success d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
-                  <i class="fas fa-file-download mr-2"></i> Télécharger Excel
-                </button>
-                <span id="excelUploadMsg" style="font-size:15px; margin-left:10px;"></span>
-              </div>
-              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                <input type="text" id="supplierSearch" class="form-control" placeholder="Rechercher par bénéficiaire" style="width: 200px;">
-                <select id="chantierFilter" class="form-control mr-2" style="font-size: 15px; width: 200px;">
-                  <option value="">-- Filtrer par chantier --</option>
-                  <% chantiers.forEach(chantier => { %>
-                    <option value="<%= chantier.nom %>"><%= chantier.nom ? chantier.nom : '-- Aucun --' %></option>
-                  <% }); %>
-                </select>
-                <div class="form-group mr-2">
-                  <label for="dateFilter" class="mr-2">Date :</label>
-                  <div class="input-group">
-                    <span class="input-group-text">Du</span>
-                    <input type="date" id="dateFilter" class="form-control">
-                    <span class="input-group-text">Au</span>
-                    <input type="date" id="dateToFilter" class="form-control">
-                  </div>
-                </div>
-                <button id="resetFilters" class="btn btn-secondary custom-btn" title="Réinitialiser les filtres">
-                  <i class="fas fa-undo mr-2"></i> Réinitialiser
-                </button>
-              </div>
+            
               <div class="table-responsive">
                 <% 
                   function formatDateToDDMMYYYY(dateInput) {
@@ -186,49 +151,93 @@
                 <table id="editableTable" class="excel-table">
                   <thead>
                     <tr style="position: sticky; top: 0; background-color: white; z-index: 1;">
-                        <th draggable="true">Designation</th>
-                      <th draggable="true">Bénéficiaire</th>
-                      <th draggable="true">Montant</th>
-                      <th draggable="true">Date</th>
+                        <th draggable="true">Numéro</th>
+                        <th draggable="true">Date Demande</th>
+                      <th draggable="true">Caisse Du Mois </th>
+                      <th draggable="true">Demandeur</th>
                       <th draggable="true">Chantier</th>
+                      <th draggable="true">Montant Demandé </th>
+                     <th draggable="true" >Status</th>
                       <th style="width: 120px;">Actions</th>
+
                     </tr>
                   </thead>
                   <tbody>
-                    <% if (typeof demande === 'undefined' || !demande.length) { %>
+                    <% if (!demande || demande.length === 0) { %>
                       <tr>
-                        <td colspan="8" style="text-align: center;">Aucun demande disponible.</td>
+                        <td colspan="8" style="text-align: center;">Aucune demande disponible.</td>
                       </tr>
                     <% } else { %>
-                      <% demande.forEach(demande => { %>
-                        <tr data-id="<%= demande.id %>">
-                          <td contenteditable="true" data-name="beneficiaire"><%= demande.designation || '' %></td>
-                          <td contenteditable="true" data-name="banque"><%= demande.user.name || '' %></td>
-                          <td contenteditable="true" data-name="montant"><%= Number(demande.montant).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
-                          <td contenteditable="true" data-name="dateSaisie"><%= formatDateToDDMMYYYY(demande.date) %></td>
-                          <td contenteditable="true" data-name="chantier">nothinck</td>
-
-                          <td>
-                            <div class="btn-group" role="group">
-                              <button class="btn btn-danger btn-sm" title="Supprimer" onclick="supprimerdemande(<%= demande.id %>)">
-                                <i class="fas fa-trash-alt"></i>
-                              </button>
-                              <button type="button" class="btn btn-secondary btn-sm" onclick="downloadPDF(<%= demande.id %>)">
-                                <i class="fas fa-download"></i>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      <% }) %>
+                  
+                      <% demande.forEach(d => { %>
+                        <% if (user.role === 'admin' || user.role === 'grandadmin' || d.userId === user.id) { %>
+                          <tr data-id="<%= d.id %>">
+                            <td contenteditable="true" data-name="numero"><%= d.numero || '' %></td>
+                            <td contenteditable="true" data-name="dateSaisie"><%= formatDateToDDMMYYYY(d.dateDemande) %></td>
+                            <td contenteditable="true" data-name="designation"><%= d.designation || '' %></td>
+                            <td contenteditable="true" data-name="demandeur"><%= d.user?.name || '' %></td>
+                            <td contenteditable="true" data-name="chantier"><%= d.chantier?.nom || '' %></td>
+                            <td contenteditable="true" data-name="montant">
+                              <%= Number(d.montantTotal || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                            </td>
+                  
+                            <% if (user.role === 'user' || user.role === 'grandadmin') { %>
+                              <td data-name="status" style="text-align:center; padding:6px;">
+                                <span style="
+                                  display:inline-block;
+                                  min-width:100px;
+                                  text-align:center;
+                                  padding:6px 12px;
+                                  border-radius:20px;
+                                  font-weight:600;
+                                  font-size:0.9rem;
+                                  box-shadow:0 2px 4px rgba(0,0,0,0.1);
+                                  transition: all 0.2s ease;
+                                  <% if (d.status === 'Versée') { %>
+                                    background-color:#C6E2B5;
+                                    color:#256029;
+                                  <% } else if (d.status === 'Annulée') { %>
+                                    background-color:#FFD6D6;
+                                    color:#B71C1C;
+                                  <% } else if (d.status === 'En Attente') { %>
+                                    background-color:#FFF3CD;
+                                    color:#856404;
+                                  <% } else { %>
+                                    background-color:#F8F9FA;
+                                    color:#6C757D;
+                                  <% } %>
+                                ">
+                                  <%= d.status || '—' %>
+                                </span>
+                              </td>
+                            <% } %>
+                  
+                            <% if (user.role === 'admin') { %>
+                              <td>
+                                <select class="form-control" data-name="status" onchange="updateStatus(<%= d.id %>, this.value)">
+                                  <option value="" <% if (!d.status) { %> selected <% } %>>Sélectionner</option>
+                                  <option value="Versée" <% if (d.status === 'Versée') { %> selected <% } %>>Versée</option>
+                                  <option value="Annulée" <% if (d.status === 'Annulée') { %> selected <% } %>>Annulée</option>
+                                  <option value="En Attente" <% if (d.status === 'En Attente') { %> selected <% } %>>En Attente</option>
+                                </select>
+                              </td>
+                            <% } %>
+                  
+                            <td>
+                              <div class="btn-group" role="group">
+                                <a href="/achats/demandes/caisse/<%= d.id %>" class="btn btn-info btn-sm" style="width: 100px;">
+                                  <i class="fas fa-eye"></i> Voir
+                                </a>
+                              </div>
+                            </td>
+                          </tr>
+                        <% } %>
+                      <% }); %>
+                  
                     <% } %>
                   </tbody>
-                  <tfoot>
-                    <tr>
-                      <td colspan="2" style="text-align: right; font-weight: bold;">Total:</td>
-                      <td id="total" style="font-weight: bold;"></td>
-                      <td colspan="5"></td>
-                    </tr>
-                  </tfoot>
+                  
+                 
                 </table>
               </div>
             </div>
@@ -289,6 +298,29 @@
             alert('Erreur lors du téléchargement du PDF');
           }
         }
+      
+
+        async function updateStatus(id, status) {
+          try {
+            const res = await fetch(`/achats/demandes/caisse/updateStatus/${id}`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ status })
+            });
+            if (res.ok) {
+              alert('Status mis à jour avec succès.');
+              location.reload();
+            } else {
+              alert('Erreur lors de la mise à jour du status.');
+            }
+          } catch (error) {
+            console.error(error);
+            alert('Erreur réseau lors de la mise à jour du status.');
+          }
+        }
+      
       
         document.addEventListener("DOMContentLoaded", function () {
           const uploadForm = document.getElementById('excelUploadForm');

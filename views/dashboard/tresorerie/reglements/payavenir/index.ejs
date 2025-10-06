@@ -101,7 +101,7 @@
         <div class="container-fluid">
           <div class="card shadow mb-4">
             <div class="card-header py-3">
-              <h6 class="m-0 font-weight-bold text-primary">Liste des payements à venir</h6>
+              <h6 class="m-0 font-weight-bold text-primary">Liste des règlements prioritaires</h6>
             </div>
             <div class="card-body">
               <div class="mb-4" style="display: flex; align-items: center; gap: 20px;">
@@ -796,94 +796,96 @@
 
     // PDF download
     document.getElementById("downloadPdfBtn")?.addEventListener("click", function () {
-      try {
-        const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-        const table = document.getElementById("editableTable");
-        const rows = table.querySelectorAll("tbody tr:not(:last-child)");
-        const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
-        const title = document.querySelector(".card-header h6").innerText;
+  try {
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
+    const table = document.getElementById("editableTable");
+    const rows = table.querySelectorAll("tbody tr:not(:last-child)");
+    const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
+    const title = document.querySelector(".card-header h6").innerText;
 
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(18);
-        doc.setTextColor(40, 40, 40);
-        doc.text(title, 10, 20);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(40, 40, 40);
+    doc.text(title, 10, 20);
 
-        const tableData = [];
-        rows.forEach(row => {
-          if (row.style.display !== "none") {
-            const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
-              let value = "";
-              const select = cell.querySelector("select");
-              const span = cell.querySelector("span");
-              if (select) {
-                const selectedOption = select.options[select.selectedIndex];
-                value = selectedOption ? selectedOption.textContent : "";
-              } else if (span) {
-                value = span.textContent.trim();
-                if (cell.dataset.name === "chantier" && value === '-- Sélectionner un chantier --') {
-                  value = '';
-                }
-              } else if (cell.innerText) {
-                value = cell.innerText.trim();
-              }
-              if (cell.dataset.name === "montant" && value) {
-                let cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-                const number = parseFloat(cleaned);
-                if (!isNaN(number)) {
-                  const parts = number.toFixed(2).split('.');
-                  const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-                  value = `${integerPart},${parts[1]}`;
-                }
-              }
-              return value || "";
-            });
-            tableData.push(rowData);
+    const tableData = [];
+    rows.forEach(row => {
+      if (row.style.display !== "none") {
+        const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
+          let value = "";
+          const select = cell.querySelector("select");
+          const span = cell.querySelector("span");
+          if (select) {
+            const selectedOption = select.options[select.selectedIndex];
+            value = selectedOption ? selectedOption.textContent : "";
+          } else if (span) {
+            value = span.textContent.trim();
+            if (cell.dataset.name === "chantier" && value === '-- Sélectionner un chantier --') {
+              value = '';
+            }
+          } else if (cell.innerText) {
+            value = cell.innerText.trim();
           }
+          if (cell.dataset.name === "montant" && value) {
+            let cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+            const number = parseFloat(cleaned);
+            if (!isNaN(number)) {
+              const parts = number.toFixed(2).split('.');
+              const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+              value = `${integerPart},${parts[1]}`;
+            }
+          }
+          return value || "";
         });
-
-        doc.autoTable({
-          head: [headers],
-          body: tableData,
-          startY: 30,
-          theme: 'grid',
-          styles: { font: 'helvetica', fontSize: 8, textColor: [40, 40, 40], cellPadding: 2, lineColor: [200, 200, 200], lineWidth: 0.1, minCellHeight: 10, overflow: 'linebreak' },
-          headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255], fontSize: 7, fontStyle: 'bold', halign: 'center', cellPadding: 2 },
-          bodyStyles: { fillColor: [255, 255, 255] },
-          alternateRowStyles: { fillColor: [245, 245, 245] },
-          columnStyles: { 0: { cellWidth: 28, halign: 'center' }, 1: { cellWidth: 28, halign: 'left' }, 2: { cellWidth: 28, halign: 'left' }, 3: { cellWidth: 28, halign: 'left' }, 4: { cellWidth: 28, halign: 'right' }, 5: { cellWidth: 28, halign: 'center' }, 6: { cellWidth: 28, halign: 'center' }, 7: { cellWidth: 28, halign: 'left' } },
-          margin: { top: 30, left: 10, right: 10 },
-          tableWidth: 'wrap'
-        });
-
-        const pageCount = doc.internal.getNumberOfPages();
-        for (let i = 1; i <= pageCount; i++) {
-          doc.setPage(i);
-          doc.setFontSize(8);
-          doc.setTextColor(100);
-          doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
-        }
-
-        let total = document.getElementById("total").innerText || "0";
-        total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-        const totalNumber = parseFloat(total);
-        if (!isNaN(totalNumber)) {
-          const parts = totalNumber.toFixed(2).split('.');
-          const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-          total = `${integerPart},${parts[1]}`;
-        }
-
-        const finalY = doc.lastAutoTable.finalY || 30;
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.setTextColor(22, 160, 133);
-        doc.text(`Total: ${total} MAD`, 10, finalY + 15);
-        doc.save("liste_payements.pdf");
-      } catch (err) {
-        console.error("PDF generation error:", err);
-        alert("Erreur lors de la génération du PDF.");
+        tableData.push(rowData);
       }
     });
 
+    doc.autoTable({
+      head: [headers],
+      body: tableData,
+      startY: 30,
+      theme: 'grid',
+      styles: { font: 'helvetica', fontSize: 7, textColor: [40, 40, 40], cellPadding: 1.5, lineColor: [200, 200, 200], lineWidth: 0.1, minCellHeight: 10, overflow: 'linebreak', valign: 'middle' },
+      headStyles: { fillColor: [22, 160, 133], textColor: [255, 255, 255], fontSize: 6, fontStyle: 'bold', halign: 'center', cellPadding: 1.5, valign: 'middle' },
+      bodyStyles: { fillColor: [255, 255, 255] },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      columnStyles: { 0: { cellWidth: 25, halign: 'left' }, 1: { cellWidth: 40, halign: 'left', overflow: 'linebreak' }, 2: { cellWidth: 25, halign: 'right' }, 3: { cellWidth: 25, halign: 'center' }, 4: { cellWidth: 20, halign: 'center' }, 5: { cellWidth: 20, halign: 'left' }, 6: { cellWidth: 25, halign: 'center' }, 7: { cellWidth: 87, halign: 'left', overflow: 'linebreak' } },
+      margin: { top: 30, left: 10, right: 10 },
+      didDrawPage: function (data) {
+        console.log('Table Width:', data.table.width);
+        console.log('Page Width:', doc.internal.pageSize.width);
+      }
+    });
+
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(100);
+      doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
+    }
+
+    let total = document.getElementById("total").innerText || "0";
+    total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+    const totalNumber = parseFloat(total);
+    if (!isNaN(totalNumber)) {
+      const parts = totalNumber.toFixed(2).split('.');
+      const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+      total = `${integerPart},${parts[1]}`;
+    }
+
+    const finalY = doc.lastAutoTable.finalY || 30;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(22, 160, 133);
+    doc.text(`Total: ${total} MAD`, 10, finalY + 15);
+    doc.save("liste_payements.pdf");
+  } catch (err) {
+    console.error("PDF generation error:", err);
+    alert("Erreur lors de la génération du PDF.");
+  }
+});
     // Initialize
     applyFilters();
     updateTotal();

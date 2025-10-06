@@ -638,7 +638,7 @@
                                   ? c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') 
                                   : '' %>
                           </td>
-                          <td><%= c.chantier.nom %></td>
+                          <td><%= c.chantier ? c.chantier.nom : "Aucun" %></td>
                           <td><%= c.observation %></td>
                         </tr>
                       <% }) %>

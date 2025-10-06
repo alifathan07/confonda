@@ -21,7 +21,8 @@ import { createUi, destroyClient, indexClient, postClient, showClient, updateCli
 import { deleteEncaissement, indexHis, saveEncaissement, updateHistoryBanque } from '../controllers/historiqueControlelr.js';
 import { deleteTelePai, indexTelePai, storeTelePai, updateTelePai } from '../controllers/telepay_prelevController.js';
 import { createEncaissement, indexEncaissement } from '../controllers/encaisementController.js';
-import { indexDemandeCaisse } from '../controllers/demandecaisseController.js';
+import { addCaisseItem, createDemandeCaisse, deleteDemandeCaisseItem, indexDemandeCaisse, storeDemandeCaisse, updateDemandeCaisseItem, updateDemandeCaisseItemValidation, updateDemandeCaisseStatut, viewDemandeCaisse } from '../controllers/demandecaisseController.js';
+import { createJustifCaisse, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteRecette, listJustifCaisse, saveAllData, viewJustifCaisse } from '../controllers/justifecaisseController.js';
 
 export const dashboardRouter = express.Router();
 dashboardRouter.use(isAuthenticated)
@@ -308,3 +309,33 @@ dashboardRouter.get('/dashboard', async (req, res) => {
 
         // Demande De Caisse 
        dashboardRouter.get('/achats/demandeCaisse', indexDemandeCaisse);
+       dashboardRouter.get('/achats/create/demandeCaisse', createDemandeCaisse);
+       dashboardRouter.post('/achat/demandes/caisse', storeDemandeCaisse);
+       
+       dashboardRouter.get('/achats/demandes/caisse/:id', viewDemandeCaisse);
+       // routes/achats.js
+       dashboardRouter.delete("/demandes/caisse/items/:id", deleteDemandeCaisseItem);
+       dashboardRouter.put("/demandes/caisse/items/:id", updateDemandeCaisseItem);
+       dashboardRouter.post("/demandes/caisse/:id", addCaisseItem);
+       dashboardRouter.patch("/achats/demandes/caisse/updateStatus/:id", updateDemandeCaisseStatut);
+       dashboardRouter.patch("/achats/demandes/caisse/updateValidation/:id", updateDemandeCaisseItemValidation);
+
+       // justification caisse
+       // Render create page
+       dashboardRouter.get("/achats/caisse/justifecaisse/create", createJustifCaisse);
+
+        // List justifications
+        dashboardRouter.get("/achats/caisse/justifecaisse", listJustifCaisse);
+
+        // View details
+        dashboardRouter.get("/achats/caisse/justifecaisse/:id", viewJustifCaisse);
+
+        // Handle recettes
+        dashboardRouter.post("/achats/caisse/justification/recettes", createOrUpdateRecettes);
+        dashboardRouter.delete("/achats/caisse/justification/recettes/:id", deleteRecette);
+
+        // Handle depenses
+        dashboardRouter.post("/achats/caisse/justification/depenses", createOrUpdateDepenses);
+        dashboardRouter.delete("/achats/caisse/justification/depenses/:id", deleteDepense);
+        dashboardRouter.post("/achats/caisse/justification/save-all", saveAllData);
+    

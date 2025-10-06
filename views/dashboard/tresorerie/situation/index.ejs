@@ -899,10 +899,10 @@
 }
 
         </style>
-          <!-- Paiements à venir -->
+          <!-- Règlements prioritaires -->
           <div class="card mb-4 fade-in">
             <div class="card-header d-flex justify-content-between">
-              <h2>Paiements à venir</h2>
+              <h2>Règlements prioritaires</h2>
               <form class="form-inline" >
                 <a href="/tresorerie/payavenir" class="btn" aria-label="Ajouter un paiement" style="background-color: #6A5AE7; color: white;">Ajouter un paiement</a>
               </form>
@@ -984,7 +984,7 @@
                   <div class="stats-card">
                     <i class="fas fa-money-check-alt stats-icon"></i>
                     <div class="stats-number" id="displayTotalChequesCard">
-                      <%= cheques.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %> 
+                      <%= cheques.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
                     </div>
                     <div class="stats-label">Total Chèques</div>
                   </div>
@@ -1006,7 +1006,7 @@
                     <div class="stats-number">
                       <%= payavenirs.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %> 
                     </div>
-                    <div class="stats-label">Total Paiements à venir</div>
+                    <div class="stats-label">Total Règlements prioritaires</div>
                   </div>
                 </div>
           
@@ -1053,16 +1053,98 @@
                   <div class="stats-card">
                     <i class="fas fa-file-invoice stats-icon"></i>
 
-                    <div class="stats-number" id="displayTotalChequesCard">
+                    <div class="stats-number" id="displayTotalRecavenirsCard">
                       <%= recavenirs.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %> 
                     </div>
                     <div class="stats-label">Total Recettes à venir</div>
                   </div>
                 </div>
+
+
+                <div class="col-md-3 col-sm-6 p-2">
+                  <div class="stats-card">
+                    <i class="fas fa-balance-scale stats-icon"></i>
+
+                    <div class="stats-number" id="displayTotalSoldeRecavenirsCard">
+                      <%= (banques.reduce((acc, b) => acc + (b.positive || 0), 0) + recavenirs.reduce((acc, c) => acc + c.montant, 0)).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
+                    </div>
+                    <div class="stats-label">Total Solde positif et Recettes à venir</div>
+                  </div>
+                </div>
+               
                 
               </div>
             </div>
           </div>
+          <!-- Difference Financière Section - Pro Circular Style -->
+<div class="card mb-4 shadow-lg rounded-xl border-0 p-4">
+  <div class="card-header bg-primary text-white rounded-top-xl p-3 d-flex justify-content-between align-items-center">
+    <h2 class="mb-0 fs-5 fw-bold">Différence Financière</h2>
+    <input type="date" class="form-control form-control-sm" 
+      value="<%= to || new Date().toISOString().split('T')[0] %>" 
+      style="width: auto;" disabled>
+  </div>
+
+  <div class="card-body bg-light rounded-bottom-xl d-flex justify-content-center align-items-center flex-column p-5">
+    <% 
+      const difference = banques.reduce((acc, b) => acc + (b.positive || 0), 0) 
+        + recavenirs.reduce((acc, c) => acc + c.montant, 0) 
+        - (cheques.reduce((acc, c) => acc + c.montant, 0) 
+        + effets.reduce((acc, e) => acc + e.montant, 0) 
+        + payavenirs.reduce((acc, c) => acc + c.montant, 0));
+      const formattedDifference = difference.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
+      const circleColor = difference >= 0 ? '#28a745' : '#dc3545';
+    %>
+
+    <!-- Circular Display -->
+    <div class="difference-circle" style="--circle-color: <%= circleColor %>;">
+      <div class="difference-value fs-3 fw-bold">
+        <%= formattedDifference %> MAD
+      </div>
+    </div>
+
+    <div class="text-muted small mt-3 text-center">
+      Différence (Solde Positif + Recettes à venir − Total Général)
+    </div>
+  </div>
+</div>
+
+<style>
+  .difference-circle {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border: 8px solid var(--circle-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+  }
+
+  .difference-circle:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  }
+
+  .difference-value {
+    text-align: center;
+    color: var(--circle-color);
+  }
+
+  .card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+  }
+</style>
+
+
+
 
           
           
@@ -1087,7 +1169,7 @@
               </button>
           
               <button class="custom-btn btn-info" onclick="downloadPayavenirsPDF()" aria-label="Télécharger PDF paiements">
-                <i class="fas fa-hand-holding-usd"></i> PDF Paiements à venir
+                <i class="fas fa-hand-holding-usd"></i> PDF Règlements prioritaires
               </button>
           
               <button class="custom-btn btn-primary" onclick="downloadRecettesPDF()" aria-label="Télécharger PDF recettes">
@@ -1245,10 +1327,10 @@
     </div>
   </div>
 </div>
-              <!-- Paiements à venir Validés -->
+              <!-- Règlements prioritaires Validés -->
               <div class="card mb-4 fade-in">
                 <div class="card-header bg-success text-white">
-                  <h2>Paiements à venir Validés</h2>
+                  <h2>Règlements prioritaires Validés</h2>
                 </div>
                 <div class="card-body">
                   <div class="table-responsive">
@@ -1620,6 +1702,7 @@
     if (totalMontantPayavenirsValides) totalMontantPayavenirsValides.textContent = formatFrenchNumber(totalPayavenirsValides);
 
     const chequesCard = document.getElementById('displayTotalChequesCard');
+    const recavenirsCard = document.getElementById('displayTotalRecavenirsCard');
     const effetsCard = document.getElementById('displayTotalEffetsCard');
     if (chequesCard) chequesCard.textContent = formatFrenchNumber(totalCheques);
     if (effetsCard) effetsCard.textContent = formatFrenchNumber(totalEffets);
@@ -1711,7 +1794,7 @@
   const recavenirsTable = document.getElementById('recavenirsTable');
   const recavenirsRows = recavenirsTable?.querySelectorAll('tbody tr.recavenir-row') || [];
   const totalMontantRecettes = document.getElementById('totalMontant');
-  const totalRecettesCard = document.getElementById('displayTotalChequesCard'); // Misnamed, but for recettes
+  const totalRecettesCard = document.getElementById('displayTotalRecavenirsCard'); // Misnamed, but for recettes
 
   // Collect unique clients
   const clientsUnique = Array.from(new Set(
@@ -2198,7 +2281,7 @@ function downloadFullPagePDF() {
 
     yPosition = addSectionTable(
       pdf,
-      '5. Paiements à venir',
+      '5. Règlements prioritaires',
       ['Désignation', 'Montant', 'Date Échéance', 'Bénéficiaire', 'Banque', 'Statut'],
       visiblePayavenirs,
       yPosition,
@@ -2225,7 +2308,7 @@ function downloadFullPagePDF() {
     const summaryData = [
       ['Total Chèques', formatFrenchNumber(chequesTotalAmount)],
       ['Total Effets', formatFrenchNumber(effetsTotalAmount)],
-      ['Total Paiements à venir', formatFrenchNumber(payavenirsTotalAmount)],
+      ['Total Règlements prioritaires', formatFrenchNumber(payavenirsTotalAmount)],
       ['TOTAL GÉNÉRAL', formatFrenchNumber(generalTotal)],
     ];
 
@@ -2267,7 +2350,7 @@ function downloadFullPagePDF() {
     pdf.setFontSize(10);
     pdf.text(`Nombre de chèques: ${visibleCheques.length > 0 ? visibleCheques.length - 1 : 0}`, 20, finalY);
     pdf.text(`Nombre d'effets: ${visibleEffets.length > 0 ? visibleEffets.length - 1 : 0}`, 20, finalY + 8);
-    pdf.text(`Nombre de paiements à venir: ${visiblePayavenirs.length > 0 ? visiblePayavenirs.length - 1 : 0}`, 20, finalY + 16);
+    pdf.text(`Nombre de Règlements prioritaires: ${visiblePayavenirs.length > 0 ? visiblePayavenirs.length - 1 : 0}`, 20, finalY + 16);
     pdf.text(`Généré le: ${new Date().toLocaleString('fr-FR')}`, 20, finalY + 24);
 
     pdf.save(`situation-bancaire-complete-${new Date().toISOString().split('T')[0]}.pdf`);
@@ -2502,7 +2585,7 @@ function downloadEffetsPDF() {
 
 function downloadPayavenirsPDF() {
   const loadingMsg = document.createElement('div');
-  loadingMsg.innerHTML = '<div class="alert alert-info" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">Génération du PDF paiements à venir...</div>';
+  loadingMsg.innerHTML = '<div class="alert alert-info" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">Génération du PDF Règlements prioritaires...</div>';
   document.body.appendChild(loadingMsg);
 
   const script = document.createElement('script');
@@ -2526,7 +2609,7 @@ function downloadPayavenirsPDF() {
 
       pdf.setFontSize(16);
       pdf.setTextColor(0, 102, 204);
-      pdf.text("Paiements à venir", 15, 20);
+      pdf.text("Règlements prioritaires", 15, 20);
 
       pdf.setFontSize(10);
       pdf.setTextColor(0, 0, 0);
@@ -2603,56 +2686,85 @@ function downloadPayavenirsPDF() {
 
       yPosition += 8;
       pdf.setFont(undefined, 'normal').setFontSize(8);
-      pdf.text(`Nombre de paiements à venir: ${visiblePayavenirs.length}`, startX, yPosition);
+      pdf.text(`Nombre de Règlements prioritaires: ${visiblePayavenirs.length}`, startX, yPosition);
 
       pdf.save(`paiements-a-venir-${now.toISOString().split('T')[0]}.pdf`);
       document.body.removeChild(loadingMsg);
     } catch (error) {
       console.error("Erreur PDF:", error);
       document.body.removeChild(loadingMsg);
-      alert("Erreur lors de la génération du PDF des paiements à venir");
+      alert("Erreur lors de la génération du PDF des Règlements prioritaires");
     }
   };
   document.head.appendChild(script);
 }
 function downloadRecettesPDF() {
+  // Create loading message
   const loadingMsg = document.createElement('div');
   loadingMsg.innerHTML = '<div class="alert alert-info" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">Génération du PDF recettes...</div>';
   document.body.appendChild(loadingMsg);
 
-  const script = document.createElement('script');
-  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-  script.onload = function () {
+  // Check if jsPDF is already loaded to avoid redundant script loading
+  if (window.jspdf) {
+    generatePDF(window.jspdf);
+  } else {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    script.onload = () => generatePDF(window.jspdf);
+    script.onerror = () => {
+      document.body.removeChild(loadingMsg);
+      alert('Erreur: Impossible de charger la bibliothèque jsPDF.');
+    };
+    document.head.appendChild(script);
+  }
+
+  function generatePDF({ jsPDF }) {
     try {
-      const { jsPDF } = window.jspdf;
       const pdf = new jsPDF('l', 'mm', 'a4');
+      const pageHeight = pdf.internal.pageSize.height;
+      const margin = 15;
+      const lineHeight = 6;
 
       // Number parsing & formatting
       function parseFrenchNumber(text) {
         if (!text) return 0;
         return parseFloat(text.replace(/\s/g, '').replace(',', '.')) || 0;
       }
+
       function formatFrenchNumber(value) {
         if (isNaN(value)) return '0,00';
         return value.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ').replace('.', ',');
       }
 
-      // Title
+      // Title and Date
       pdf.setFontSize(16);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont('helvetica', 'bold');
       pdf.setTextColor(106, 90, 231);
-      pdf.text("Recettes à venir", 15, 15);
-      
+      pdf.text('Recettes à venir', margin, 20);
+
       pdf.setFontSize(9);
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(100, 100, 100);
-      pdf.text("Date: " + new Date().toLocaleDateString('fr-FR'), 15, 22);
+      pdf.text(`Date: ${new Date().toLocaleDateString('fr-FR')}`, margin, 50 + 7);
+
+      // Load logo (using a relative URL or data URL)
+      const logoUrl = '/img/logo-4.png'; // Update to your actual path
+      try {
+        pdf.addImage(logoUrl, 'PNG', 50, 1, 30, 20); // Adjust width/height as needed
+      } catch (imgError) {
+        console.warn('Erreur lors du chargement du logo:', imgError);
+      }
 
       // Group by client
       const recettesByClient = {};
       let grandTotal = 0;
 
-      document.querySelectorAll('.recavenir-row').forEach(row => {
+      const rows = document.querySelectorAll('.recavenir-row');
+      if (rows.length === 0) {
+        throw new Error('Aucune donnée de recettes trouvée.');
+      }
+
+      rows.forEach(row => {
         if (row.style.display !== 'none') {
           const cells = row.querySelectorAll('td');
           if (cells.length >= 7) {
@@ -2669,7 +2781,7 @@ function downloadRecettesPDF() {
               date: cells[3].textContent.trim(),
               statut: cells[4].textContent.trim(),
               chantier: cells[5].textContent.trim(),
-              banque: cells[6].textContent.trim()
+              banque: cells[6].textContent.trim(),
             });
 
             recettesByClient[client].total += montant;
@@ -2679,124 +2791,124 @@ function downloadRecettesPDF() {
       });
 
       const colWidths = [60, 40, 30, 25, 30, 35];
-      const startX = 15;
-      let y = 30;
-      const totalWidth = colWidths.reduce((a,b) => a+b, 0);
+      const startX = margin;
+      let y = margin + 15;
+      const totalWidth = colWidths.reduce((a, b) => a + b, 0);
       const headers = ['Désignation', 'Montant', 'Date Échéance', 'Statut', 'Chantier', 'Banque'];
 
       // For each client
       Object.keys(recettesByClient).sort().forEach(clientName => {
         const clientData = recettesByClient[clientName];
 
-        if (y > 170) {
+        if (y + 20 > pageHeight - margin) {
           pdf.addPage();
-          y = 15;
+          y = margin;
         }
 
-        // Client name row - draw background first, then text
+        // Client name row
         pdf.setFillColor(106, 90, 231);
         pdf.setDrawColor(106, 90, 231);
         pdf.rect(startX, y, totalWidth, 8, 'F');
-        pdf.setFont(undefined, 'bold');
+        pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(10);
         pdf.setTextColor(255, 255, 255);
         pdf.text(clientName, startX + 2, y + 5.5);
         y += 8;
 
-        // Column headers - draw each cell separately
-        pdf.setFont(undefined, 'bold');
+        // Column headers
+        pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(8);
         pdf.setTextColor(0, 0, 0);
-        pdf.setDrawColor(200, 200, 200);
         let x = startX;
         headers.forEach((header, i) => {
           pdf.setFillColor(245, 245, 245);
-          pdf.rect(x, y, colWidths[i], 6, 'FD');
-          pdf.setTextColor(0, 0, 0);
+          pdf.rect(x, y, colWidths[i], lineHeight, 'FD');
           pdf.text(header, x + 2, y + 4);
           x += colWidths[i];
         });
-        y += 6;
+        y += lineHeight;
 
         // Data rows
-        pdf.setFont(undefined, 'normal');
-        pdf.setFontSize(8);
+        pdf.setFont('helvetica', 'normal');
         clientData.rows.forEach(row => {
-          if (y > 185) {
+          if (y + lineHeight > pageHeight - margin) {
             pdf.addPage();
-            y = 15;
+            y = margin;
 
             // Redraw headers on new page
-            pdf.setFont(undefined, 'bold');
-            pdf.setDrawColor(200, 200, 200);
+            pdf.setFont('helvetica', 'bold');
             let tempX = startX;
             headers.forEach((header, i) => {
               pdf.setFillColor(245, 245, 245);
-              pdf.rect(tempX, y, colWidths[i], 6, 'FD');
+              pdf.rect(tempX, y, colWidths[i], lineHeight, 'FD');
               pdf.setTextColor(0, 0, 0);
               pdf.text(header, tempX + 2, y + 4);
               tempX += colWidths[i];
             });
-            y += 6;
-            pdf.setFont(undefined, 'normal');
+            y += lineHeight;
+            pdf.setFont('helvetica', 'normal');
           }
 
           let x = startX;
           const cells = [
-            row.designation.length > 40 ? row.designation.substring(0, 37) + '...' : row.designation,
+            row.designation,
             formatFrenchNumber(row.montant),
             row.date,
             row.statut,
-            row.chantier.length > 18 ? row.chantier.substring(0, 15) + '...' : row.chantier,
-            row.banque.length > 20 ? row.banque.substring(0, 17) + '...' : row.banque
+            row.chantier,
+            row.banque,
           ];
 
-          pdf.setDrawColor(200, 200, 200);
+          // Handle long text with auto-splitting
           cells.forEach((cellText, i) => {
-            // Draw white background for data cells
             pdf.setFillColor(255, 255, 255);
-            pdf.rect(x, y, colWidths[i], 6, 'FD');
+            pdf.rect(x, y, colWidths[i], lineHeight, 'FD');
             pdf.setTextColor(0, 0, 0);
-            pdf.text(cellText, x + 2, y + 4);
+            const textWidth = colWidths[i] - 4; // Account for padding
+            const splitText = pdf.splitTextToSize(cellText, textWidth);
+            pdf.text(splitText[0] + (splitText.length > 1 ? '...' : ''), x + 2, y + 4);
             x += colWidths[i];
           });
 
-          y += 6;
+          y += lineHeight;
         });
 
         // Client subtotal
         pdf.setFillColor(240, 240, 240);
         pdf.setDrawColor(200, 200, 200);
         pdf.rect(startX, y, totalWidth, 7, 'FD');
-        pdf.setFont(undefined, 'bold');
+        pdf.setFont('helvetica', 'bold');
         pdf.setTextColor(0, 0, 0);
         pdf.text(`Total ${clientName}:`, startX + 2, y + 4.5);
         pdf.text(formatFrenchNumber(clientData.total) + ' DH', startX + colWidths[0] + colWidths[1] - 2, y + 4.5, { align: 'right' });
         y += 10;
-        pdf.setFont(undefined, 'normal');
+        pdf.setFont('helvetica', 'normal');
       });
 
       // Grand total
       y += 2;
+      if (y + 10 > pageHeight - margin) {
+        pdf.addPage();
+        y = margin;
+      }
       pdf.setFillColor(106, 90, 231);
       pdf.setDrawColor(106, 90, 231);
       pdf.rect(startX, y, 120, 8, 'F');
       pdf.setFontSize(11);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont('helvetica', 'bold');
       pdf.setTextColor(255, 255, 255);
       pdf.text(`TOTAL GÉNÉRAL: ${formatFrenchNumber(grandTotal)} DH`, startX + 2, y + 5.5);
 
       pdf.save(`recettes-a-venir-${new Date().toISOString().split('T')[0]}.pdf`);
       document.body.removeChild(loadingMsg);
-
     } catch (error) {
-      console.error("Erreur PDF:", error);
+      console.error('Erreur PDF:', error);
       document.body.removeChild(loadingMsg);
-      alert("Erreur lors de la génération du PDF des recettes à venir");
+      alert('Erreur lors de la génération du PDF des recettes à venir: ' + error.message);
     }
-  };
-  document.head.appendChild(script);
+  }
 }
+
 function deleteBanque(id) {
   fetch(`/tresorerie/banques/delete/${id}`, {
     method: 'DELETE',

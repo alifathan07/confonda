@@ -980,142 +980,142 @@
   // Download the Excel file
   XLSX.writeFile(wb, "liste_recettes_a_venir.xlsx");
 });
-  document.getElementById("downloadPdfBtn")?.addEventListener("click", function () {
-    try {
-      const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-      const table = document.getElementById("editableTable");
-      const rows = table.querySelectorAll("tbody tr:not(:last-child)");
-      const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
-      const title = document.querySelector(".card-header h6").innerText;
+document.getElementById("downloadPdfBtn")?.addEventListener("click", function () {
+  try {
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
+    const table = document.getElementById("editableTable");
+    const rows = table.querySelectorAll("tbody tr:not(:last-child)");
+    const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
+    const title = document.querySelector(".card-header h6").innerText;
 
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(18);
-      doc.setTextColor(40, 40, 40);
-      doc.text(title, 10, 20);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(40, 40, 40);
+    doc.text(title, 10, 20);
 
-      const tableData = [];
-      rows.forEach(row => {
-        if (row.style.display !== "none") {
-          const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
-            let value = "";
-            const select = cell.querySelector("select");
-            if (select) {
-              value = select.options[select.selectedIndex]?.text || select.value;
-            } else if (cell.innerText) {
-              value = cell.innerText.trim();
-            }
+    const tableData = [];
+    rows.forEach(row => {
+      if (row.style.display !== "none") {
+        const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
+          let value = "";
+          const select = cell.querySelector("select");
+          if (select) {
+            value = select.options[select.selectedIndex]?.text || select.value;
+          } else if (cell.innerText) {
+            value = cell.innerText.trim();
+          }
 
-            if (cell.dataset.name && ['dateEtablissement', 'dateEcheance', 'dateReglement'].includes(cell.dataset.name) && value) {
-              if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                const [year, month, day] = value.split('-');
+          if (cell.dataset.name && ['dateEtablissement', 'dateEcheance', 'dateReglement'].includes(cell.dataset.name) && value) {
+            if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+              const [year, month, day] = value.split('-');
+              value = `${day}/${month}/${year}`;
+            } else if (!value.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+              const date = new Date(value);
+              if (!isNaN(date.getTime())) {
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
                 value = `${day}/${month}/${year}`;
-              } else if (!value.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-                const date = new Date(value);
-                if (!isNaN(date.getTime())) {
-                  const day = String(date.getDate()).padStart(2, '0');
-                  const month = String(date.getMonth() + 1).padStart(2, '0');
-                  const year = date.getFullYear();
-                  value = `${day}/${month}/${year}`;
-                }
               }
             }
+          }
 
-            if (cell.dataset.name === "montant" && value) {
-              let cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-              const number = parseFloat(cleaned);
-              if (!isNaN(number)) {
-                const parts = number.toFixed(2).split('.');
-                const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-                value = `${integerPart},${parts[1]}`;
-              }
+          if (cell.dataset.name === "montant" && value) {
+            let cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+            const number = parseFloat(cleaned);
+            if (!isNaN(number)) {
+              const parts = number.toFixed(2).split('.');
+              const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+              value = `${integerPart},${parts[1]}`;
             }
+          }
 
-            return value || "";
-          });
-          tableData.push(rowData);
-        }
-      });
-
-      doc.autoTable({
-        head: [headers],
-        body: tableData,
-        startY: 30,
-        theme: 'grid',
-        styles: {
-          font: 'helvetica',
-          fontSize: 8,
-          textColor: [40, 40, 40],
-          cellPadding: 2,
-          lineColor: [200, 200, 200],
-          lineWidth: 0.1,
-          minCellHeight: 10,
-          overflow: 'linebreak'
-        },
-        headStyles: {
-          fillColor: [22, 160, 133],
-          textColor: [255, 255, 255],
-          fontSize: 7,
-          fontStyle: 'bold',
-          halign: 'center',
-          cellPadding: 2
-        },
-        bodyStyles: {
-          fillColor: [255, 255, 255]
-        },
-        alternateRowStyles: {
-          fillColor: [245, 245, 245]
-        },
-        columnStyles: {
-          0: { cellWidth: 24, halign: 'center' },
-          1: { cellWidth: 24, halign: 'left' },
-          2: { cellWidth: 27, halign: 'left' },
-          3: { cellWidth: 24, halign: 'left' },
-          4: { cellWidth: 24, halign: 'right' },
-          5: { cellWidth: 24, halign: 'center' },
-          6: { cellWidth: 24, halign: 'left' },
-          7: { cellWidth: 24, halign: 'center' },
-          8: { cellWidth: 24, halign: 'left' },
-          9: { cellWidth: 24, halign: 'left', overflow: 'linebreak' }
-        },
-        margin: { top: 30, left: 10, right: 10 },
-        tableWidth: 'wrap',
-        didDrawPage: function (data) {
-          console.log('Table Width:', data.table.width);
-          console.log('Page Width:', doc.internal.pageSize.width);
-        }
-      });
-
-      const pageCount = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(100);
-        doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
+          return value || "";
+        });
+        tableData.push(rowData);
       }
+    });
 
-      let total = document.getElementById("total").innerText || "0";
-      total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-      const totalNumber = parseFloat(total);
-      if (!isNaN(totalNumber)) {
-        const parts = totalNumber.toFixed(2).split('.');
-        const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-        total = `${integerPart},${parts[1]}`;
+    doc.autoTable({
+      head: [headers],
+      body: tableData,
+      startY: 30,
+      theme: 'grid',
+      styles: {
+        font: 'helvetica',
+        fontSize: 7,
+        textColor: [40, 40, 40],
+        cellPadding: 1.5,
+        lineColor: [200, 200, 200],
+        lineWidth: 0.1,
+        minCellHeight: 10,
+        overflow: 'linebreak',
+        valign: 'middle' // Helps with multi-line text alignment
+      },
+      headStyles: {
+        fillColor: [22, 160, 133],
+        textColor: [255, 255, 255],
+        fontSize: 6,
+        fontStyle: 'bold',
+        halign: 'center',
+        cellPadding: 1.5,
+        valign: 'middle'
+      },
+      bodyStyles: {
+        fillColor: [255, 255, 255]
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245]
+      },
+      columnStyles: {
+        0: { cellWidth: 20, halign: 'left' },    // Client
+        1: { cellWidth: 40, halign: 'left', overflow: 'linebreak' },  // Designation
+        2: { cellWidth: 25, halign: 'right' },   // Montant
+        3: { cellWidth: 25, halign: 'center' },  // Date d'échéance
+        4: { cellWidth: 20, halign: 'center' },  // Statut
+        5: { cellWidth: 20, halign: 'left' },    // Banque
+        6: { cellWidth: 25, halign: 'center' },  // Date de règlement
+        7: { cellWidth: 45, halign: 'left', overflow: 'linebreak' },  // Observation
+        8: { cellWidth: 35, halign: 'left', overflow: 'linebreak' }   // Chantier
+      },
+      margin: { top: 30, left: 10, right: 10 },
+      didDrawPage: function (data) {
+        console.log('Table Width:', data.table.width);
+        console.log('Page Width:', doc.internal.pageSize.width);
       }
+    });
 
-      const finalY = doc.lastAutoTable.finalY || 30;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.setTextColor(22, 160, 133);
-      doc.text(`Total: ${total} MAD`, 10, finalY + 15);
-
-      doc.save("liste_recettes_a_venir.pdf");
-    } catch (err) {
-      console.error("PDF generation error:", err);
-      alert("Erreur lors de la génération du PDF. Veuillez vérifier la console.");
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(100);
+      doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
     }
-  });
 
-  // Initialize
+    let total = document.getElementById("total").innerText || "0";
+    total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+    const totalNumber = parseFloat(total);
+    if (!isNaN(totalNumber)) {
+      const parts = totalNumber.toFixed(2).split('.');
+      const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+      total = `${integerPart},${parts[1]}`;
+    }
+
+    const finalY = doc.lastAutoTable.finalY || 30;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(22, 160, 133);
+    doc.text(`Total: ${total} MAD`, 10, finalY + 15);
+
+    doc.save("liste_recettes_a_venir.pdf");
+  } catch (err) {
+    console.error("PDF generation error:", err);
+    alert("Erreur lors de la génération du PDF. Veuillez vérifier la console.");
+  }
+});
+
+// Initialize
   updateTotal();
 });
 </script>

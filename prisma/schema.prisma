@@ -23,6 +23,8 @@ model User {
   demandesCreated   DemandeFourniture[] @relation("DemandeRequestedBy")
   demandesValidated DemandeFourniture[] @relation("DemandeValidatedBy")
 
+  JustifCaisse JustifCaisse[]
+
   chantier    Chantier @relation(fields: [chantierId], references: [id])
   chantierId  Int      // foreign key
   demandeCaisse   DemandeCaisse[] 
@@ -33,31 +35,106 @@ model User {
 
 
 model DemandeCaisse {
-  id            Int      @id @default(autoincrement())
-  designation           String?
-  beneficiaire       String?   // beneficiaire
-  montant       Float?
-  date           DateTime?
-  user         User @relation(fields: [userId], references: [id])
-  userId       Int
-  itemsCaisse ItemCaisse[]
- 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-model ItemCaisse {
-  id            Int      @id @default(autoincrement())
-  designation   String
-  quantite      Int
-  unite         String?
-  prixUnitaire  Float
-  totalHt       Float
+  id          Int           @id @default(autoincrement())
+  designation String?       /// e.g. "Caisse Mois ..."
+  numero      Int?
+  montantTotal     Float?      
+  dateDemande DateTime?
+  demandeur String?
 
-  demandeCaisse   DemandeCaisse @relation(fields: [demandeCaisseId], references: [id])
-  demandeCaisseId Int
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  // Relations
+  userId      Int
+  user        User          @relation(fields: [userId], references: [id])
+
+  chantierId  Int?
+  chantier    Chantier?     @relation(fields: [chantierId], references: [id])
+  status String @default("En Attente") // Versée , Annulée , En Attente
+
+  items       ItemCaisse[]  
+  
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // ✅ numero unique per user
+  @@unique([userId, numero])
 }
+
+model ItemCaisse {
+  id              Int            @id @default(autoincrement())
+  dateCaisse      DateTime?
+  designation     String?
+  montant         Float?       
+  imputation      String?
+  validation String @default("En cours") // En cours , Refusée , Validée
+  responsable String?
+  demandeCaisseId Int?
+  validepar String?
+  demandeCaisse   DemandeCaisse?  @relation(fields: [demandeCaisseId], references: [id])
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+
+
+model JustifCaisse {
+  id             Int           @id @default(autoincrement())
+  mois           Int            // 1-12
+  annee          Int
+  designation    String?        // e.g. "Justification Caisse Mars 2025"
+  soldePrecedent Float?         @default(0)
+  totalRecettes  Float?         @default(0)
+  totalDepenses  Float?         @default(0)
+  soldeFinal     Float?         @default(0)
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  // Relations
+  userId         Int
+  user           User           @relation(fields: [userId], references: [id])
+
+  // Relations
+  chantierId     Int?
+  chantier       Chantier?      @relation(fields: [chantierId], references: [id])
+
+    
+
+  // Demandes de caisse versées du mois précédent
+
+  recettes       RecetteCaisse[]
+  depenses       DepenseCaisse[]
+}
+
+model RecetteCaisse {
+  id              Int           @id @default(autoincrement())
+  source          String?       // Ex: "Demande Caisse #12 - Mars"
+  montant         Float?
+  dateRecette     DateTime?     @default(now())
+
+  justifCaisseId  Int
+  justifCaisse    JustifCaisse  @relation(fields: [justifCaisseId], references: [id])
+
+  
+}
+
+model DepenseCaisse {
+  id              Int           @id @default(autoincrement())
+  natureDepense   String?
+  montantJustifie         Float?
+  montantNonJustifie         Float?
+  observation     String?
+  dateDepense     DateTime?     @default(now())
+  numeroPiece          String?
+  imputation String?
+
+
+  justifCaisseId  Int
+  justifCaisse    JustifCaisse  @relation(fields: [justifCaisseId], references: [id])
+}
+
+
 
    
 
@@ -374,7 +451,10 @@ model Chantier {
 
   // Relations
   users           User[]
+  demandeCaisse   DemandeCaisse[] 
+
   demandes        DemandeFourniture[]
+  JustifCaisse JustifCaisse[]
   items           ChantierItem[]   // 🔥 chantier has many invoice-like items
 
   cheques         Cheque[]   @relation("ChequesChantier")
@@ -402,7 +482,6 @@ model Caisse {
   chantierId  Int
 
   // Dépenses liées à ce mois
-  expenses    Expense[]
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -410,20 +489,7 @@ model Caisse {
   @@unique([chantierId, month]) // Un seul enregistrement par chantier + mois
 }
 
-model Expense {
-  id          Int       @id @default(autoincrement())
-  description String
-  amount      Decimal   @default(0)
-  date        DateTime  // Date exacte de la dépense
-  justified   Boolean   @default(false) // si un justificatif est fourni (optionnel)
 
-  // Relation
-  caisse      Caisse    @relation(fields: [caisseId], references: [id])
-  caisseId    Int
-
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-}
 
 model ChantierItem {
   id            Int     @id @default(autoincrement())

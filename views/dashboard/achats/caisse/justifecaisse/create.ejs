@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="Justification Caisse Dashboard" />
+  <title><%= user.name || 'Utilisateur' %> - Justification Caisse</title>
+
+  <!-- Fonts & Icons -->
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css?family=Nunito:400,600,700,900" rel="stylesheet" />
+
+  <!-- Theme CSS -->
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+
+  <style>
+    .card-header { font-weight: 600; font-size: 1.1rem; }
+    .demande-info p { margin-bottom: 0.4rem; }
+    .badge { font-size: 0.85rem; padding: 0.4em 0.7em; }
+    .table th { background: #f8f9fc; }
+    .page-title { font-weight: 700; color: #4e73df; }
+    .summary-card { background: #f8f9fc; padding: 15px; border-radius: 5px; }
+    .summary-card p { margin: 0.5rem 0; }
+    .save-all-btn { margin-bottom: 20px; }
+    .error-text { color: red; font-size: 0.9rem; }
+  </style>
+</head>
+<body id="page-top">
+  <div id="wrapper">
+    <!-- Sidebar -->
+    <%- include('../../../../layouts/sidebar') %>
+
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <!-- Topbar -->
+        <%- include('../../../../layouts/topbar') %>
+
+        <div class="container-fluid">
+          <!-- Page Header -->
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 page-title"><i class="fas fa-cash-register"></i> Justification Caisse</h1>
+            <div>
+              <button class="btn btn-success btn-sm save-all-btn" id="saveAllBtn" onclick="saveAllData()" disabled>
+                <i class="fas fa-save"></i> Enregistrer Tout
+              </button>
+              <a href="/achats/caisse/justifecaisse" class="btn btn-primary btn-sm">
+                <i class="fas fa-list"></i> Liste des Justifications
+              </a>
+              <a href="/achats/demandeCaisse" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i> Retour
+              </a>
+            </div>
+          </div>
+
+          <!-- Justification Info -->
+          <div class="row">
+            <div class="col-lg-12">
+              <div class="card shadow mb-4">
+                <div class="card-header">Justification</div>
+                <div class="card-body demande-info" style="display: flex; align-items: center; gap: 20px; padding: 20px;">
+                  <p style="margin: 0;"><strong>RESPONSABLE CAISSE :</strong> <%= user.name || 'Non défini' %></p>
+                  <% if (!user.name) { %>
+                    <p class="error-text">Erreur : Nom de l'utilisateur non défini</p>
+                  <% } %>
+                  <p style="margin: 0;"><strong>Chantier :</strong> <%= chantier.nom || 'Non défini' %></p>
+                  <% if (!chantier.nom) { %>
+                    <p class="error-text">Erreur : Chantier non défini</p>
+                  <% } %>
+                  <input type="hidden" name="responsable" value="<%= user.name || '' %>" />
+                  <input type="hidden" name="chantier" value="<%= chantier.nom || '' %>" />
+                  <div class="form-group" style="margin: 0;">
+                    <label for="mois" style="margin-right: 10px;"><strong>SITUATION DE CAISSE :</strong></label>
+                    <select name="designation" id="mois" class="form-control" style="width: 200px; display: inline-block;" required>
+                      <option value="">Sélectionner un mois</option>
+                      <% const year = new Date().getFullYear(); %>
+                      <% const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']; %>
+                      <% months.forEach((m, i) => { %>
+                        <option value="<%= `${m}-${year}` %>" <%= justifCaisse && justifCaisse.designation && justifCaisse.designation.includes(m) ? 'selected' : '' %>>
+                          <%= `${m}-${year}` %>
+                        </option>
+                      <% }); %>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Summary -->
+          <div class="row">
+            <div class="col-lg-12">
+              <div class="card shadow mb-4">
+                <div class="card-header">Résumé</div>
+                <div class="card-body summary-card">
+                  <p><strong>Soldé Précédent :</strong> <%= justifCaisse.soldePrecedent ? justifCaisse.soldePrecedent.toFixed(2) : '0.00' %> DH</p>
+                  <p><strong>Total Recettes :</strong> <%= justifCaisse.totalRecettes ? justifCaisse.totalRecettes.toFixed(2) : '0.00' %> DH</p>
+                  <p><strong>Total Dépenses Justifiées :</strong> <%= justifCaisse.depenses ? justifCaisse.depenses.reduce((sum, d) => sum + (d.montantJustifie || 0), 0).toFixed(2) : '0.00' %> DH</p>
+                  <p><strong>Total Dépenses Non Justifiées :</strong> <%= justifCaisse.depenses ? justifCaisse.depenses.reduce((sum, d) => sum + (d.montantNonJustifie || 0), 0).toFixed(2) : '0.00' %> DH</p>
+                  <p><strong>Soldé Final :</strong> <%= justifCaisse.soldeFinal ? justifCaisse.soldeFinal.toFixed(2) : '0.00' %> DH</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recettes -->
+          <div id="recettes" class="card shadow mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h2 class="card-title">RECETTES</h2>
+              <div>
+                <button class="btn btn-primary btn-sm" onclick="addNewRecetteRow()">
+                  <i class="fas fa-plus"></i> Ajouter
+                </button>
+                <button class="btn btn-success btn-sm" id="saveRecettesBtn" onclick="saveAllRecetteItems()">Enregistrer</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <table class="table table-hover" id="recetteTable">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Origine Caisse</th>
+                    <th>Montant</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>-</td>
+                    <td>Soldé Précédent</td>
+                    <td><%= justifCaisse.soldePrecedent ? justifCaisse.soldePrecedent.toFixed(2) : '0.00' %> DH</td>
+                    <td>-</td>
+                  </tr>
+                  <% if (user.recettes && user.recettes.length > 0) { %>
+                    <% user.recettes.forEach(d => { %>
+                      <tr data-id="<%= d._id || '' %>">
+                        <td><%= d.dateRecette ? new Date(d.dateRecette).toLocaleDateString('fr-FR') : '' %></td>
+                        <td><%= d.source %></td>
+                        <td><%= d.montant ? d.montant.toFixed(2) : '0.00' %> DH</td>
+                        <td>
+                          <button class="btn btn-danger btn-sm" onclick="deleteRecetteItem(this)">Supprimer</button>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Dépenses -->
+          <div id="depenses" class="card shadow mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h2 class="card-title">DÉPENSES</h2>
+              <div>
+                <button class="btn btn-primary btn-sm" onclick="addNewDepenseRow()">
+                  <i class="fas fa-plus"></i> Ajouter
+                </button>
+                <button class="btn btn-success btn-sm" id="saveDepensesBtn" onclick="saveAllDepenseItems()">Enregistrer</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <table class="table table-hover" id="depenseTable">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Numéro de Pièce</th>
+                    <th>Imputation</th>
+                    <th>Nature Dépense</th>
+                    <th>Montant Justifié</th>
+                    <th>Montant Non Justifié</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (user.depenses && user.depenses.length > 0) { %>
+                    <% user.depenses.forEach(d => { %>
+                      <tr data-id="<%= d._id || '' %>">
+                        <td><input type="date" name="dateDepense" value="<%= d.date ? new Date(d.date).toISOString().split('T')[0] : '' %>" class="form-control" required /></td>
+                        <td><input type="text" name="numeroPiece" value="<%= d.numeroDuPiece || '' %>" class="form-control" /></td>
+                        <td><input type="text" name="imputation" value="<%= d.imputation || '' %>" class="form-control" /></td>
+                        <td><input type="text" name="natureDepense" value="<%= d.natureDepense || '' %>" class="form-control" required /></td>
+                        <td><input type="number" name="montantJustifie" value="<%= d.justifier || '0' %>" step="0.01" class="form-control" required /></td>
+                        <td><input type="number" name="montantNonJustifie" value="<%= d.nonJustifier || '0' %>" step="0.01" class="form-control" required /></td>
+                        <td>
+                          <button class="btn btn-danger btn-sm" onclick="deleteDepenseItem(this)">Supprimer</button>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Enable/disable save buttons based on month selection
+      const moisSelect = document.querySelector('#mois');
+      const saveAllBtn = document.querySelector('#saveAllBtn');
+      const saveRecettesBtn = document.querySelector('#saveRecettesBtn');
+      const saveDepensesBtn = document.querySelector('#saveDepensesBtn');
+
+      function updateSaveButtons() {
+        const isMonthSelected = !!moisSelect.value;
+        saveAllBtn.disabled = !isMonthSelected;
+        saveRecettesBtn.disabled = !isMonthSelected;
+        saveDepensesBtn.disabled = !isMonthSelected;
+      }
+
+      moisSelect.addEventListener('change', updateSaveButtons);
+      updateSaveButtons(); // Initial check
+
+      // Shared remove row for new rows (client-side only)
+      function removeRow(button) {
+        button.closest('tr').remove();
+      }
+
+      // Add new recette row
+      function addNewRecetteRow() {
+        const tableBody = document.querySelector('#recetteTable tbody');
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+          <td><input type="date" name="dateRecette" value="${new Date().toISOString().split('T')[0]}" class="form-control" required /></td>
+          <td><input type="text" name="source" class="form-control" required /></td>
+          <td><input type="number" name="montant" step="0.01" class="form-control" required /></td>
+          <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">Supprimer</button></td>
+        `;
+        tableBody.appendChild(newRow);
+      }
+
+      // Save all recette items
+      function saveAllRecetteItems() {
+        const rows = document.querySelectorAll('#recetteTable tbody tr');
+        const items = [];
+
+        let valid = true;
+        rows.forEach(row => {
+          const dateRecetteInput = row.querySelector('input[name="dateRecette"]');
+          const sourceInput = row.querySelector('input[name="source"]');
+          const montantInput = row.querySelector('input[name="montant"]');
+
+          if (dateRecetteInput && sourceInput && montantInput) {
+            const dateRecette = dateRecetteInput.value;
+            const source = sourceInput.value;
+            const montant = parseFloat(montantInput.value);
+
+            if (!dateRecette || !source || isNaN(montant) || montant <= 0) {
+              valid = false;
+              return;
+            }
+
+            items.push({ dateRecette, source, montant });
+          }
+        });
+
+        const responsable = document.querySelector('input[name="responsable"]').value;
+        const chantier = document.querySelector('input[name="chantier"]').value;
+        const designation = document.querySelector('#mois').value;
+
+        console.log("Saving recettes:", { responsable, chantier, designation, items });
+
+        if (!responsable || !chantier || !designation) {
+          const missingFields = [];
+          if (!responsable) missingFields.push("responsable");
+          if (!chantier) missingFields.push("chantier");
+          if (!designation) missingFields.push("mois");
+          alert(`Erreur : Les champs suivants sont manquants : ${missingFields.join(", ")}.`);
+          return;
+        }
+
+        if (!valid) {
+          alert('Veuillez remplir correctement tous les champs des recettes (date, source, montant positif).');
+          return;
+        }
+
+        if (items.length === 0) {
+          alert('Veuillez ajouter au moins une recette valide.');
+          return;
+        }
+
+        fetch('/achats/caisse/justification/recettes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ responsable, chantier, designation, items })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              alert('Recettes enregistrées avec succès.');
+              window.location.reload();
+            } else {
+              alert('Erreur : ' + (data.error || 'Erreur inconnue.'));
+            }
+          })
+          .catch(err => {
+            console.error('Fetch error:', err);
+            alert('Erreur réseau : ' + err.message);
+          });
+      }
+
+      // Delete recette item
+      function deleteRecetteItem(button) {
+        if (confirm('Supprimer cette recette ?')) {
+          const row = button.closest('tr');
+          const id = row.dataset.id;
+          if (id) {
+            fetch(`/achats/caisse/justification/recettes/${id}`, {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' }
+            })
+              .then(res => res.json())
+              .then(data => {
+                if (data.success) {
+                  row.remove();
+                  alert('Recette supprimée avec succès.');
+                } else {
+                  alert('Erreur lors de la suppression.');
+                }
+              })
+              .catch(err => alert('Erreur réseau : ' + err.message));
+          }
+        }
+      }
+
+      // Add new depense row
+      function addNewDepenseRow() {
+        const tableBody = document.querySelector('#depenseTable tbody');
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+          <td><input type="date" name="dateDepense" value="${new Date().toISOString().split('T')[0]}" class="form-control" required /></td>
+          <td><input type="text" name="numeroPiece" class="form-control" /></td>
+          <td><input type="text" name="imputation" class="form-control" /></td>
+          <td><input type="text" name="natureDepense" class="form-control" required /></td>
+          <td><input type="number" name="montantJustifie" value="0" step="0.01" class="form-control" required /></td>
+          <td><input type="number" name="montantNonJustifie" value="0" step="0.01" class="form-control" required /></td>
+          <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">Supprimer</button></td>
+        `;
+        tableBody.appendChild(newRow);
+      }
+
+      // Save all depense items
+      function saveAllDepenseItems() {
+        const rows = document.querySelectorAll('#depenseTable tbody tr');
+        const items = [];
+
+        let valid = true;
+        rows.forEach(row => {
+          const inputs = row.querySelectorAll('input');
+          if (inputs.length === 6) {
+            const depense = {
+              date: inputs[0].value,
+              numeroPiece: inputs[1].value,
+              imputation: inputs[2].value,
+              natureDepense: inputs[3].value,
+              montantJustifie: parseFloat(inputs[4].value) || 0,
+              montantNonJustifie: parseFloat(inputs[5].value) || 0,
+            };
+            const id = row.dataset.id || null;
+            if (id) depense._id = id;
+
+            if (!depense.date || !depense.natureDepense || (depense.montantJustifie === 0 && depense.montantNonJustifie === 0)) {
+              valid = false;
+              return;
+            }
+
+            items.push(depense);
+          }
+        });
+
+        const responsable = document.querySelector('input[name="responsable"]').value;
+        const chantier = document.querySelector('input[name="chantier"]').value;
+        const designation = document.querySelector('#mois').value;
+
+        console.log("Saving dépenses:", { responsable, chantier, designation, items });
+
+        if (!responsable || !chantier || !designation) {
+          const missingFields = [];
+          if (!responsable) missingFields.push("responsable");
+          if (!chantier) missingFields.push("chantier");
+          if (!designation) missingFields.push("mois");
+          alert(`Erreur : Les champs suivants sont manquants : ${missingFields.join(", ")}.`);
+          return;
+        }
+
+        if (!valid) {
+          alert('Veuillez remplir correctement tous les champs des dépenses (date, nature, et au moins un montant).');
+          return;
+        }
+
+        if (items.length === 0) {
+          alert('Veuillez ajouter au moins une dépense valide.');
+          return;
+        }
+
+        fetch('/achats/caisse/justification/depenses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ responsable, chantier, designation, items })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              alert('Dépenses enregistrées avec succès.');
+              window.location.reload();
+            } else {
+              alert('Erreur : ' + (data.error || 'Erreur inconnue.'));
+            }
+          })
+          .catch(err => {
+            console.error('Fetch error:', err);
+            alert('Erreur réseau : ' + err.message);
+          });
+      }
+
+      // Delete depense item
+      function deleteDepenseItem(button) {
+        if (confirm('Supprimer cette dépense ?')) {
+          const row = button.closest('tr');
+          const id = row.dataset.id;
+          if (id) {
+            fetch(`/achats/caisse/justification/depenses/${id}`, {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' }
+            })
+              .then(res => res.json())
+              .then(data => {
+                if (data.success) {
+                  row.remove();
+                  alert('Dépense supprimée avec succès.');
+                } else {
+                  alert('Erreur lors de la suppression.');
+                }
+              })
+              .catch(err => alert('Erreur réseau : ' + err.message));
+          } else {
+            row.remove();
+          }
+        }
+      }
+
+      // Save all data (recettes + dépenses)
+      function saveAllData() {
+        const recetteRows = document.querySelectorAll('#recetteTable tbody tr');
+        const depenseRows = document.querySelectorAll('#depenseTable tbody tr');
+        const recetteItems = [];
+        const depenseItems = [];
+
+        let valid = true;
+
+        // Collect recettes
+        recetteRows.forEach(row => {
+          const dateRecetteInput = row.querySelector('input[name="dateRecette"]');
+          const sourceInput = row.querySelector('input[name="source"]');
+          const montantInput = row.querySelector('input[name="montant"]');
+
+          if (dateRecetteInput && sourceInput && montantInput) {
+            const dateRecette = dateRecetteInput.value;
+            const source = sourceInput.value;
+            const montant = parseFloat(montantInput.value);
+
+            if (!dateRecette || !source || isNaN(montant) || montant <= 0) {
+              valid = false;
+              return;
+            }
+
+            recetteItems.push({ dateRecette, source, montant });
+          }
+        });
+
+        // Collect dépenses
+        depenseRows.forEach(row => {
+          const inputs = row.querySelectorAll('input');
+          if (inputs.length === 6) {
+            const depense = {
+              date: inputs[0].value,
+              numeroPiece: inputs[1].value,
+              imputation: inputs[2].value,
+              natureDepense: inputs[3].value,
+              montantJustifie: parseFloat(inputs[4].value) || 0,
+              montantNonJustifie: parseFloat(inputs[5].value) || 0,
+            };
+            const id = row.dataset.id || null;
+            if (id) depense._id = id;
+
+            if (!depense.date || !depense.natureDepense || (depense.montantJustifie === 0 && depense.montantNonJustifie === 0)) {
+              valid = false;
+              return;
+            }
+
+            depenseItems.push(depense);
+          }
+        });
+
+        const responsable = document.querySelector('input[name="responsable"]').value;
+        const chantier = document.querySelector('input[name="chantier"]').value;
+        const designation = document.querySelector('#mois').value;
+
+        console.log("Saving all data:", { responsable, chantier, designation, recettes: recetteItems, depenses: depenseItems });
+
+        if (!responsable || !chantier || !designation) {
+          const missingFields = [];
+          if (!responsable) missingFields.push("responsable");
+          if (!chantier) missingFields.push("chantier");
+          if (!designation) missingFields.push("mois");
+          alert(`Erreur : Les champs suivants sont manquants : ${missingFields.join(", ")}.`);
+          return;
+        }
+
+        if (!valid) {
+          alert('Veuillez remplir correctement tous les champs des recettes et dépenses.');
+          return;
+        }
+
+        if (recetteItems.length === 0 && depenseItems.length === 0) {
+          alert('Veuillez ajouter au moins une recette ou une dépense.');
+          return;
+        }
+
+        fetch('/achats/caisse/justification/save-all', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ responsable, chantier, designation, recettes: recetteItems, depenses: depenseItems })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              alert('Justification enregistrée avec succès.');
+              window.location.reload();
+            } else {
+              alert('Erreur : ' + (data.error || 'Erreur inconnue.'));
+            }
+          })
+          .catch(err => {
+            console.error('Fetch error:', err);
+            alert('Erreur réseau : ' + err.message);
+          });
+      }
+    </script>
+</body>
+</html>
