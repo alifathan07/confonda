@@ -1079,7 +1079,7 @@
           <!-- Difference Financière Section - Pro Circular Style -->
 <div class="card mb-4 shadow-lg rounded-xl border-0 p-4">
   <div class="card-header bg-primary text-white rounded-top-xl p-3 d-flex justify-content-between align-items-center">
-    <h2 class="mb-0 fs-5 fw-bold">Différence Financière</h2>
+    <h2 class="mb-0 fs-5 fw-bold">Ecart</h2>
     <input type="date" class="form-control form-control-sm" 
       value="<%= to || new Date().toISOString().split('T')[0] %>" 
       style="width: auto;" disabled>
@@ -1104,7 +1104,7 @@
     </div>
 
     <div class="text-muted small mt-3 text-center">
-      Différence (Solde Positif + Recettes à venir − Total Général)
+      Ecart (Solde Positif + Recettes à venir − Total Général Des Paiements à Effectuer)
     </div>
   </div>
 </div>
@@ -1112,8 +1112,9 @@
 <style>
   .difference-circle {
     position: relative;
-    width: 150px;
-    height: 150px;
+    width: 170px;
+    height: 170px;
+    padding: 5px;
     border-radius: 50%;
     border: 8px solid var(--circle-color);
     display: flex;
