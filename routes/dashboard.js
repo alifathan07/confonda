@@ -20,7 +20,7 @@ import {  destroyChantier, destroyChantierDetails, indexChantiers, postChantier,
 import { createUi, destroyClient, indexClient, postClient, showClient, updateClient, updateUiClient } from '../controllers/clientController.js';
 import { deleteEncaissement, indexHis, saveEncaissement, updateHistoryBanque } from '../controllers/historiqueControlelr.js';
 import { deleteTelePai, indexTelePai, storeTelePai, updateTelePai } from '../controllers/telepay_prelevController.js';
-import { createEncaissement, indexEncaissement } from '../controllers/encaisementController.js';
+import { createEncaissement, indexEncaissement, updateEncaissement } from '../controllers/encaisementController.js';
 import { addCaisseItem, createDemandeCaisse, deleteDemandeCaisseItem, indexDemandeCaisse, storeDemandeCaisse, updateDemandeCaisseItem, updateDemandeCaisseItemValidation, updateDemandeCaisseStatut, viewDemandeCaisse } from '../controllers/demandecaisseController.js';
 import { createJustifCaisse, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteRecette, listJustifCaisse, saveAllData, viewJustifCaisse } from '../controllers/justifecaisseController.js';
 
@@ -306,6 +306,7 @@ dashboardRouter.get('/dashboard', async (req, res) => {
         dashboardRouter.get('/tresorerie/encaissement', indexEncaissement);
         dashboardRouter.post('/tresorerie/encaissement/create', createEncaissement);
         dashboardRouter.delete('/tresorerie/encaissement/:id', deleteEncaissement);
+        dashboardRouter.patch("/tresorerie/encaissement/:id", updateEncaissement)
 
         // Demande De Caisse 
        dashboardRouter.get('/achats/demandeCaisse', indexDemandeCaisse);

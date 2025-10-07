@@ -113,6 +113,101 @@ export const createEncaissement = async (req, res) => {
   };
   
 
+
+  export const updateEncaissement = async (req, res) => {
+   
+
+   let {
+        dateEtablissement,
+        type,
+        banque,
+        beneficiaire,
+        montant,
+        chantierId,
+        nDeFactureRG,
+        RG,
+        Ras_TVA,
+        Autres,
+        ResteAPayer,
+      } = req.body;
+
+  
+      // Debug logs
+      console.log("Received data:", req.body);
+      console.log("chantierId:", chantierId, "type:", typeof chantierId);
+  
+      // --- Find or create Client ---
+      let existClient = await prisma.client.findFirst({
+        where: { name: beneficiaire },
+      });
+  
+      if (!existClient) {
+        existClient = await prisma.client.create({
+          data: {
+            name: beneficiaire,
+            ice: Math.floor(Math.random() * 1_000_000).toString(),
+            identifFiscal: Math.floor(Math.random() * 1_000_000).toString(),
+            email: "",
+            contact: "",
+            telContact: "",
+            telClient: "",
+            address: "",
+          },
+        });
+      }
+  
+      // --- Find or create Banque ---
+      console.log(`🏦 Looking for banque: ${banque}`);
+      let existBanque = await prisma.banque.findFirst({
+        where: { name: banque },
+      });
+  
+      if (!existBanque) {
+        existBanque = await prisma.banque.create({
+          data: {
+            name: banque,
+            rib: 123456789,
+            agence: "Default Agence",
+            solde: 0,
+            dateSolde: new Date(),
+            positive: 0,
+            negative: 0,
+            dmlt: 0,
+          },
+        });
+      }
+      const id = req.params.id
+   
+  
+      // --- update Encaissement ---
+       const encaissement = await prisma.encaissementRecu.update({
+        where: {
+            id: parseInt(id)
+        },
+        data: {
+          dateEtablissement: dateEtablissement
+            ? new Date(dateEtablissement)
+            : null,
+          type,
+          montant: montant ? parseFloat(montant) : null,
+          nDeFactureRG: nDeFactureRG || "",
+          RG: RG || "",
+          Ras_TVA: Ras_TVA || "",
+          Autres: Autres || "",
+          ResteAPayer: ResteAPayer || "",
+          banque: { connect: { id: Number(existBanque.id) } },
+          client: { connect: { id: Number(existClient.id) } },
+          chantier: chantierId
+            ? { connect: { id: Number(chantierId) } }
+            : undefined,
+        },
+      });
+  
+      console.log("✅ Encaissement Updated:", encaissement);
+      res.status(200).json({ message: "Encaissement Updated successfully" });
+  };
+  
+
   
 
 
