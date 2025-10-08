@@ -92,7 +92,9 @@ export const createOrUpdateRecettes = async (req, res) => {
       where: { userId: user.id, chantierId: chantierRecord.id, mois, annee },
     });
 
+    let isNew = false;
     if (!justifCaisse) {
+      isNew = true;
       const soldePrecedent = await getPreviousSolde(user.id, chantierRecord.id, mois, annee);
       justifCaisse = await prisma.justifCaisse.create({
         data: {
@@ -141,7 +143,12 @@ export const createOrUpdateRecettes = async (req, res) => {
       },
     });
 
-    res.json({ success: true });
+    // Return success with justifCaisse ID and isNew flag
+    res.json({ 
+      success: true, 
+      justifId: justifCaisse.id, 
+      isNew 
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, error: error.message });
@@ -363,54 +370,54 @@ export const deleteDepense = async (req, res) => {
 };
 
 // List justifications (for list view)
-export const listJustifCaisse = async (req, res) => {
-  try {
-    const user = req.session.user;
-    const justifications = await prisma.justifCaisse.findMany({
-      where: { userId: user.id },
-      select: {
-        id: true,
-        mois: true,
-        annee: true,
-        designation: true,
-      },
-      orderBy: [
-        { annee: "desc" },
-        { mois: "desc" },
-      ],
-    });
+// export const listJustifCaisse = async (req, res) => {
+//   try {
+//     const user = req.session.user;
+//     const justifications = await prisma.justifCaisse.findMany({
+//       where: { userId: user.id },
+//       select: {
+//         id: true,
+//         mois: true,
+//         annee: true,
+//         designation: true,
+//       },
+//       orderBy: [
+//         { annee: "desc" },
+//         { mois: "desc" },
+//       ],
+//     });
 
-    const months = [
-      "Janvier",
-      "Février",
-      "Mars",
-      "Avril",
-      "Mai",
-      "Juin",
-      "Juillet",
-      "Août",
-      "Septembre",
-      "Octobre",
-      "Novembre",
-      "Décembre",
-    ];
+//     const months = [
+//       "Janvier",
+//       "Février",
+//       "Mars",
+//       "Avril",
+//       "Mai",
+//       "Juin",
+//       "Juillet",
+//       "Août",
+//       "Septembre",
+//       "Octobre",
+//       "Novembre",
+//       "Décembre",
+//     ];
 
-    const formattedJustifications = justifications.map((j) => ({
-      id: j.id,
-      mois: months[j.mois - 1],
-      annee: j.annee,
-      display: `${months[j.mois - 1]} ${j.annee}`,
-    }));
+//     const formattedJustifications = justifications.map((j) => ({
+//       id: j.id,
+//       mois: months[j.mois - 1],
+//       annee: j.annee,
+//       display: `${months[j.mois - 1]} ${j.annee}`,
+//     }));
 
-    res.render("dashboard/achats/caisse/justifecaisse/list", {
-      user,
-      justifications: formattedJustifications,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).render("error", { error: "Erreur lors du chargement des justifications" });
-  }
-};
+//     res.render("dashboard/achats/caisse/justifecaisse/list", {
+//       user,
+//       justifications: formattedJustifications,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).render("error", { error: "Erreur lors du chargement des justifications" });
+//   }
+// };
 
 // View details of a justification
 export const viewJustifCaisse = async (req, res) => {
@@ -584,3 +591,32 @@ export const saveAllData = async (req, res) => {
       res.status(500).json({ success: false, error: error.message });
     }
   };
+
+  // fetch all justife 
+  export const getAllJustifCaisse = async (req, res) => {
+    try {
+      const justifCaisse = await prisma.justifCaisse.findMany({
+        where: { userId: req.session.user.id },
+        select: {
+          id: true,
+          mois: true,
+          annee: true,
+          designation: true,
+          soldePrecedent: true,
+          soldeFinal: true,
+          totalDepenses: true,
+          totalRecettes: true,
+        },
+        orderBy: [
+          { annee: "desc" },
+          { mois: "desc" },
+        ],
+      });
+      res.render("dashboard/achats/caisse/justifecaisse/index", {
+        justifCaisse
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+};

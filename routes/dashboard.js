@@ -22,7 +22,7 @@ import { deleteEncaissement, indexHis, saveEncaissement, updateHistoryBanque } f
 import { deleteTelePai, indexTelePai, storeTelePai, updateTelePai } from '../controllers/telepay_prelevController.js';
 import { createEncaissement, indexEncaissement, updateEncaissement } from '../controllers/encaisementController.js';
 import { addCaisseItem, createDemandeCaisse, deleteDemandeCaisseItem, indexDemandeCaisse, storeDemandeCaisse, updateDemandeCaisseItem, updateDemandeCaisseItemValidation, updateDemandeCaisseStatut, viewDemandeCaisse } from '../controllers/demandecaisseController.js';
-import { createJustifCaisse, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteRecette, listJustifCaisse, saveAllData, viewJustifCaisse } from '../controllers/justifecaisseController.js';
+import { createJustifCaisse, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteRecette, getAllJustifCaisse, saveAllData, viewJustifCaisse } from '../controllers/justifecaisseController.js';
 
 export const dashboardRouter = express.Router();
 dashboardRouter.use(isAuthenticated)
@@ -326,7 +326,6 @@ dashboardRouter.get('/dashboard', async (req, res) => {
        dashboardRouter.get("/achats/caisse/justifecaisse/create", createJustifCaisse);
 
         // List justifications
-        dashboardRouter.get("/achats/caisse/justifecaisse", listJustifCaisse);
 
         // View details
         dashboardRouter.get("/achats/caisse/justifecaisse/:id", viewJustifCaisse);
@@ -339,4 +338,5 @@ dashboardRouter.get('/dashboard', async (req, res) => {
         dashboardRouter.post("/achats/caisse/justification/depenses", createOrUpdateDepenses);
         dashboardRouter.delete("/achats/caisse/justification/depenses/:id", deleteDepense);
         dashboardRouter.post("/achats/caisse/justification/save-all", saveAllData);
+        dashboardRouter.get("/achats/caisse/justifecaisse", getAllJustifCaisse);
     
