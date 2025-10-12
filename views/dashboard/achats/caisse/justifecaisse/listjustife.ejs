@@ -108,7 +108,7 @@
                 </button>
                 <button id="downloadExcelBtn" class="btn btn-success custom-btn mr-2" hidden>
                  </button>
-                 
+                 <input type="text" name="userId" id="userId" value="<%= userId %>" hidden>
                   <% if (!lastDesignation) { %>
                     <a href="/achats/caisse/admin/create/<%= userId %>" class="btn btn-danger custom-btn" style="border-radius: 0">
                       <i class="fas fa-exclamation-triangle"></i> Ajouter 
@@ -323,7 +323,8 @@
 
         async function addJustife() {
   try {
-    const response = await fetch('/achats/add/justifeAuto', {
+    const userId = document.getElementById('userId').value;
+    const response = await fetch(`/achats/add/justifeAutoAdmin/${userId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({}), // nothing needed

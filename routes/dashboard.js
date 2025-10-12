@@ -22,7 +22,7 @@ import { deleteEncaissement, indexHis, saveEncaissement, updateHistoryBanque } f
 import { deleteTelePai, indexTelePai, storeTelePai, updateTelePai } from '../controllers/telepay_prelevController.js';
 import { createEncaissement, indexEncaissement, updateEncaissement } from '../controllers/encaisementController.js';
 import { addCaisseItem, createDemandeCaisse, deleteDemandeCaisseItem, indexDemandeCaisse, storeDemandeCaisse, updateDemandeCaisseItem, updateDemandeCaisseItemValidation, updateDemandeCaisseStatut, viewDemandeCaisse } from '../controllers/demandecaisseController.js';
-import { addJustifCaisse, adminUserList, createJustifCaisse, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteJustifeCaisse, deleteRecette, getAllJustifCaisse, justifeCaisseListUser, saveAllData, saveRecettesAdmin, viewJustifCaisse, viewJustifCaisseAdmin } from '../controllers/justifecaisseController.js';
+import { addJustifCaisse, addJustifCaisseAdminAuto, adminUserList, createJustifCaisse, createJustifCaisseAdmin, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteJustifeCaisse, deleteRecette, getAllJustifCaisse, justifeCaisseListUser, saveAllData, saveRecettesAdmin, viewJustifCaisse, viewJustifCaisseAdmin } from '../controllers/justifecaisseController.js';
 
 export const dashboardRouter = express.Router();
 dashboardRouter.use(isAuthenticated)
@@ -340,10 +340,11 @@ dashboardRouter.get('/dashboard', async (req, res) => {
         dashboardRouter.post("/achats/caisse/justification/save-all", saveAllData);
         dashboardRouter.get("/achats/caisse/justifecaisse", getAllJustifCaisse);
         dashboardRouter.post('/achats/add/justifeAuto', addJustifCaisse);
+        dashboardRouter.post('/achats/add/justifeAutoAdmin/:userId', addJustifCaisseAdminAuto);
         dashboardRouter.delete('/achats/caisse/justifecaisse/:id', deleteJustifeCaisse);
         dashboardRouter.get('/achats/caisse/admin',isAdmin, adminUserList);
         dashboardRouter.get('/achats/caisse/admin/:id',isAdmin,  justifeCaisseListUser);
-        dashboardRouter.get('/achats/caisse/admin/create/:userId',isAdmin,  createJustifCaisse);
+        dashboardRouter.get('/achats/caisse/admin/create/:userId',isAdmin,  createJustifCaisseAdmin);
         // dashboardRouter.get('/achats/caisse/admin/:userId/:id', isAdmin, createJustifCaisseAdmin);
         dashboardRouter.get('/achats/caisse/admin/:userId/:id', isAdmin, viewJustifCaisseAdmin);
         // dashboardRouter.get('/achats/caisse/admin/:userId/:id', isAdmin, updateJustifCaisseAdmin);

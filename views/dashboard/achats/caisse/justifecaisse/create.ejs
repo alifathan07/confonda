@@ -103,7 +103,6 @@
           <th>Date</th>
           <th>Origine Caisse</th>
           <th>Montant</th>
-          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -111,24 +110,15 @@
           <% user.recettes.forEach(d => { %>
             <tr data-id="<%= d._id || '' %>">
               <td>
-                <input type="date" name="dateRecette" class="form-control"
-                       value="<%= d.dateRecette ? new Date(d.dateRecette).toISOString().split('T')[0] : '' %>"/>
+                <%= d.dateRecette ? new Date(d.dateRecette).toISOString().split('T')[0] : '' %>
               </td>
               <td>
-                <input type="text" name="source" class="form-control"
-                       value="<%= d.source || '' %>"/>
+                <%= d.source || '' %>
               </td>
               <td>
-                <input type="number" name="montant" class="form-control" step="0.01" min="0.01"
-                       value="<%= d.montant ? d.montant.toFixed(2) : '0.00' %>"/>
+                <%= d.montant ? d.montant.toFixed(2) : '0.00' %>
               </td>
-              <td>
-              <% if (d.userId === user.id) { %>
-                <button class="btn btn-danger btn-sm" onclick="deleteRecetteItem(this)">Supprimer</button>
-              <% } %>
-            
-               
-              </td>
+              
             </tr>
           <% }) %>
         <% } else { %>
@@ -137,6 +127,7 @@
           </tr>
         <% } %>
       </tbody>
+      
     </table>
   </div>
 </div>

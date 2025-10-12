@@ -46,8 +46,7 @@
           <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 page-title"><i class="fas fa-cash-register"></i> Justification Caisse - <%= user.name || 'Utilisateur' %></h1>
             <div>
-              <button class="btn btn-warning btn-sm edit-btn" id="editBtn" onclick="toggleEditMode()">Activer l'édition</button>
-              <a href="/achats/caisse/justifecaisse" class="btn btn-primary btn-sm">
+              <a href="/achats/caisse/admin" class="btn btn-primary btn-sm">
                 <i class="fas fa-list"></i> Retour
               </a>
             </div>
@@ -72,11 +71,11 @@
                   <input type="hidden" name="justifId" value="<%= justifCaisse.id || '' %>" />
                   <div class="form-group" style="margin: 0;">
                     <label for="mois" style="margin-right: 10px;"><strong>SITUATION DE CAISSE :</strong></label>
-                    <select name="designation" id="mois" class="form-control" style="width: 200px; display: inline-block;" disabled>
+                    <select name="designation" id="mois" class="form-control" style="width: 200px; display: inline-block;">
                       <% const year = new Date().getFullYear(); %>
                       <% const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']; %>
                       <% months.forEach((m, i) => { %>
-                        <option value="<%= `${m}-${year}` %>" <%= justifCaisse && justifCaisse.designation === `${m}-${year}` ? 'selected' : '' %>>
+                        <option value="<%= `${m}-${year}` %>" <%= designation === `${m}-${year}` ? 'selected' : '' %>>
                           <%= `${m}-${year}` %>
                         </option>
                       <% }); %>
@@ -88,14 +87,24 @@
           </div>
 
           <!-- Recettes Table -->
-          <div id="recettes" class="card shadow mb-4 readonly">
+          <div id="recettes" class="card shadow mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
               <h2 class="card-title">Caisse Reçue</h2>
+              <div class="d-flex justify-content-end mb-3">
+                <% if (!justifCaisse.id) { %>
+                  <label for="soldePrecedent" class="me-2">Solde Précédent</label>
+                  <input type="number" id="soldePrecedent" name="soldePrecedent" class="form-control" step="0.01" min="0.01" value="0.00" />
+                <% } else { %>
+                  <label for="soldePrecedent" class="me-2">Solde Précédent</label>
+                  <input type="number" id="soldePrecedent" name="soldePrecedent" class="form-control readonly" step="0.01" min="0.01" value="<%= justifCaisse.soldePrecedent ? justifCaisse.soldePrecedent.toFixed(2) : '0.00' %>" readonly />
+                <% } %>
+              </div>
+           
               <div>
-                <button class="btn btn-primary btn-sm" id="addRecetteBtn" onclick="addNewRecetteRow()" disabled>
+                <button class="btn btn-primary btn-sm" id="addRecetteBtn" onclick="addNewRecetteRow()">
                   <i class="fas fa-plus"></i> Ajouter Recette
                 </button>
-                <button class="btn btn-success btn-sm" id="saveRecettesBtn" onclick="saveAllRecetteItems()" >Enregistrer Recette</button>
+                <button class="btn btn-success btn-sm" id="saveRecettesBtn" onclick="saveAllRecetteItems()">Enregistrer Recette</button>
               </div>
             </div>
             <div class="card-body">
@@ -111,22 +120,21 @@
                 <tbody>
                   <% if (user.recettes && user.recettes.length > 0) { %>
                     <% user.recettes.forEach(d => { %>
-                      <input type="hidden" id="recetteId" value="<%= d._id || '' %>"></input>
                       <tr data-id="<%= d._id || '' %>">
                         <td>
                           <input type="date" name="dateRecette" class="form-control"
-                                 value="<%= d.dateRecette ? new Date(d.dateRecette).toISOString().split('T')[0] : '' %>" readonly />
+                                 value="<%= d.dateRecette ? new Date(d.dateRecette).toISOString().split('T')[0] : '' %>" />
                         </td>
                         <td>
                           <input type="text" name="source" class="form-control"
-                                 value="<%= d.source || '' %>" readonly />
+                                 value="<%= d.source || '' %>" />
                         </td>
                         <td>
                           <input type="number" name="montant" class="form-control" step="0.01" min="0.01"
-                                 value="<%= d.montant ? d.montant.toFixed(2) : '0.00' %>" readonly />
+                                 value="<%= d.montant ? d.montant.toFixed(2) : '0.00' %>" />
                         </td>
                         <td>
-                          <button class="btn btn-danger btn-sm" onclick="deleteRecetteItem(this)" disabled>Supprimer</button>
+                          <button class="btn btn-danger btn-sm" onclick="deleteRecetteItem(this)">Supprimer</button>
                         </td>
                       </tr>
                     <% }) %>
@@ -141,17 +149,19 @@
           </div>
 
           <!-- Dépenses Table -->
-          <div id="depenses" class="card shadow mb-4 readonly">
+          <div id="depenses" class="card shadow mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
               <h2 class="card-title">DÉPENSES</h2>
               <span class="badge bg-primary ms-1 text-white d-flex justify-content-center" style="font-size: 15px;">
                 Solde Précédent : <%= justifCaisse.soldePrecedent ? justifCaisse.soldePrecedent.toFixed(2) : '0.00' %> DH
               </span>
               <div>
-                <button class="btn btn-primary btn-sm" id="addDepenseBtn" onclick="addNewDepenseRow()" disabled>
+                <button class="btn btn-primary btn-sm" id="addDepenseBtn" style="display: none;">
                   <i class="fas fa-plus"></i> Ajouter Dépense
                 </button>
-                <button class="btn btn-success btn-sm" id="saveDepensesBtn" onclick="saveAllDepenseItems()" disabled>Enregistrer Dépense</button>
+                <button class="btn btn-success btn-sm" id="saveDepensesBtn" style="display: none;">
+                  Enregistrer Dépense
+                </button>
               </div>
             </div>
             <div class="card-body">
@@ -164,38 +174,32 @@
                     <th>Nature Dépense</th>
                     <th>Montant Justifié</th>
                     <th>Montant Non Justifié</th>
-                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (user.depenses && user.depenses.length > 0) { %>
                     <% user.depenses.forEach(d => { %>
                       <tr data-id="<%= d._id || '' %>">
-                        <td><input type="date" name="dateDepense" value="<%= d.date ? new Date(d.date).toISOString().split('T')[0] : '' %>" class="form-control" readonly /></td>
-                        <td><input type="text" name="numeroPiece" value="<%= d.numeroDuPiece || '' %>" class="form-control" readonly /></td>
-                        <td><input type="text" name="imputation" value="<%= d.imputation || '' %>" class="form-control" readonly /></td>
-                        <td><input type="text" name="natureDepense" value="<%= d.natureDepense || '' %>" class="form-control" readonly /></td>
-                        <td><input type="number" name="montantJustifie" value="<%= d.justifier ? d.justifier.toFixed(2) : '0.00' %>" step="0.01" min="0" class="form-control" readonly /></td>
-                        <td><input type="number" name="montantNonJustifie" value="<%= d.nonJustifier ? d.nonJustifier.toFixed(2) : '0.00' %>" step="0.01" min="0" class="form-control" readonly /></td>
-                        <td>
-                          <button class="btn btn-danger btn-sm" onclick="deleteDepenseItem(this)" disabled>
-                            <i class="fas fa-trash"></i> Supprimer
-                          </button>
-                        </td>
+                        <td><%= d.date ? new Date(d.date).toLocaleDateString('fr-FR') : '-' %></td>
+                        <td><%= d.numeroDuPiece || '-' %></td>
+                        <td><%= d.imputation || '-' %></td>
+                        <td><%= d.natureDepense || '-' %></td>
+                        <td><%= d.justifier ? d.justifier.toFixed(2) : '0.00' %> DH</td>
+                        <td><%= d.nonJustifier ? d.nonJustifier.toFixed(2) : '0.00' %> DH</td>
                       </tr>
                     <% }) %>
                   <% } else { %>
                     <tr class="no-data">
-                      <td colspan="7" class="text-center">Aucune dépense enregistrée.</td>
+                      <td colspan="6" class="text-center">Aucune dépense enregistrée.</td>
                     </tr>
                   <% } %>
                 </tbody>
               </table>
             </div>
           </div>
-
+          
           <!-- Save All Button -->
-          <button class="btn btn-success btn-md save-all-btn" id="saveAllBtn" onclick="saveAllData()" disabled>
+          <button class="btn btn-success btn-md save-all-btn" id="saveAllBtn" onclick="saveAllData()">
             <i class="fas fa-save"></i> Enregistrer Tout
           </button>
 
@@ -219,7 +223,7 @@
                     <div class="p-4 bg-light rounded-4">
                       <div class="text-muted mb-2" style="font-size: 1rem; font-weight: 500;">Total Recettes</div>
                       <div class="fw-bold text-primary" style="font-size: 1.5rem; letter-spacing: 0.05rem;">
-                        <%= user.recettes ? user.recettes.reduce((sum, r) => sum + (r.montant || 0), 0).toFixed(2) : '0.00' %> DH
+                        <%= justifCaisse.totalRecettes ? justifCaisse.totalRecettes.toFixed(2) : '0.00' %> DH
                       </div>
                     </div>
                   </div>
@@ -227,7 +231,7 @@
                     <div class="p-4 bg-light rounded-4">
                       <div class="text-muted mb-2" style="font-size: 1rem; font-weight: 500;">Dépenses Justifiées</div>
                       <div class="fw-bold text-warning" style="font-size: 1.5rem; letter-spacing: 0.05rem;">
-                        <%= user.depenses ? user.depenses.reduce((sum, d) => sum + (d.justifier || 0), 0).toFixed(2) : '0.00' %> DH
+                        <%= justifCaisse.totalDepenses ? justifCaisse.totalDepenses.toFixed(2) : '0.00' %> DH
                       </div>
                     </div>
                   </div>
@@ -235,7 +239,7 @@
                     <div class="p-4 bg-light rounded-4">
                       <div class="text-muted mb-2" style="font-size: 1rem; font-weight: 500;">Dépenses Non Justifiées</div>
                       <div class="fw-bold text-danger" style="font-size: 1.5rem; letter-spacing: 0.05rem;">
-                        <%= user.depenses ? user.depenses.reduce((sum, d) => sum + (d.nonJustifier || 0), 0).toFixed(2) : '0.00' %> DH
+                        <%= justifCaisse.depenses ? justifCaisse.depenses.reduce((sum, d) => sum + (d.montantNonJustifie || 0), 0).toFixed(2) : '0.00' %> DH
                       </div>
                     </div>
                   </div>
@@ -255,47 +259,22 @@
     </div>
 
     <script>
-      // Toggle edit mode
-      function toggleEditMode() {
-        const editBtn = document.querySelector('#editBtn');
-        const isEditing = editBtn.textContent.includes('Activer');
-        const inputs = document.querySelectorAll('#recettes input, #depenses input, #mois');
-        const buttons = document.querySelectorAll('#addRecetteBtn, #saveRecettesBtn, #addDepenseBtn, #saveDepensesBtn, #saveAllBtn, #recettes button, #depenses button');
+      // Determine if it's a new justification
+      const isNewJustification = !document.querySelector('input[name="justifId"]').value;
 
-        if (isEditing) {
-          inputs.forEach(input => input.removeAttribute('readonly'));
-          inputs.forEach(input => input.classList.remove('readonly'));
-          buttons.forEach(button => button.removeAttribute('disabled'));
-          document.querySelector('#mois').removeAttribute('disabled');
-          editBtn.textContent = 'Désactiver l\'édition';
-          editBtn.classList.remove('btn-warning');
-          editBtn.classList.add('btn-secondary');
-        } else {
-          inputs.forEach(input => input.setAttribute('readonly', 'readonly'));
-          inputs.forEach(input => input.classList.add('readonly'));
-          buttons.forEach(button => button.setAttribute('disabled', 'disabled'));
-          document.querySelector('#mois').setAttribute('disabled', 'disabled');
-          editBtn.textContent = 'Activer l\'édition';
-          editBtn.classList.remove('btn-secondary');
-          editBtn.classList.add('btn-warning');
-        }
-        updateSaveButtons();
-      }
-
-      // Enable/disable save buttons based on month selection and edit mode
-      const moisSelect = document.querySelector('#mois');
-      const saveAllBtn = document.querySelector('#saveAllBtn');
-      const saveRecettesBtn = document.querySelector('#saveRecettesBtn');
-      const saveDepensesBtn = document.querySelector('#saveDepensesBtn');
-
+      // Enable save buttons based on month selection
       function updateSaveButtons() {
+        const moisSelect = document.querySelector('#mois');
+        const saveAllBtn = document.querySelector('#saveAllBtn');
+        const saveRecettesBtn = document.querySelector('#saveRecettesBtn');
+        const saveDepensesBtn = document.querySelector('#saveDepensesBtn');
         const isMonthSelected = !!moisSelect.value;
-        const isEditing = !document.querySelector('#recettes').classList.contains('readonly');
-        saveAllBtn.disabled = !isMonthSelected || !isEditing;
-        saveDepensesBtn.disabled = !isMonthSelected || !isEditing;
+        saveAllBtn.disabled = !isMonthSelected;
+        saveRecettesBtn.disabled = !isMonthSelected;
+        saveDepensesBtn.disabled = !isMonthSelected;
       }
 
-      moisSelect.addEventListener('change', updateSaveButtons);
+      document.querySelector('#mois').addEventListener('change', updateSaveButtons);
       updateSaveButtons();
 
       // Add new recette row
@@ -312,9 +291,17 @@
     <td><button class="btn btn-danger btn-sm" onclick="deleteRecetteItem(this)">Supprimer</button></td>
   `;
   tbody.appendChild(newRow);
-}
 
-function saveAllRecetteItems() {
+  // Ensure soldePrecedent is editable if no justifCaisse exists
+  const soldePrecedentInput = document.querySelector('#soldePrecedent');
+  const justifId = document.querySelector('input[name="justifId"]')?.value?.trim();
+  if (!justifId) {
+    soldePrecedentInput.removeAttribute('readonly');
+    soldePrecedentInput.classList.remove('readonly');
+  }
+}
+      // Save all recette items
+      function saveAllRecetteItems() {
   const rows = document.querySelectorAll('#recetteTable tbody tr');
   const items = [];
   let valid = true;
@@ -356,21 +343,26 @@ function saveAllRecetteItems() {
   const userId = document.querySelector('input[name="userId"]')?.value?.trim();
   const chantier = document.querySelector('input[name="chantier"]')?.value?.trim();
   const designation = document.querySelector('#mois')?.value?.trim();
-  const justifId = document.querySelector('input[name="justifId"]')?.value?.trim() || new URLSearchParams(window.location.search).get('id');
+  const justifId = document.querySelector('input[name="justifId"]')?.value?.trim() || null;
+  const soldePrecedentInput = document.querySelector('#soldePrecedent')?.value?.trim();
+  const soldePrecedent = soldePrecedentInput ? parseFloat(soldePrecedentInput) : null;
 
-  if (!responsable || !userId || !chantier || !designation || !justifId) {
+  if (!responsable || !userId || !chantier || !designation) {
     const missingFields = [];
     if (!responsable) missingFields.push('responsable');
     if (!userId) missingFields.push('userId');
     if (!chantier) missingFields.push('chantier');
     if (!designation) missingFields.push('mois');
-    if (!justifId) missingFields.push('justifId');
     errorMessages.push(`Champs manquants: ${missingFields.join(', ')}`);
     valid = false;
   }
 
+  if (!justifId && (soldePrecedent === null || isNaN(soldePrecedent) || soldePrecedent < 0)) {
+    errorMessages.push('Solde Précédent manquant ou invalide pour la première justification');
+    valid = false;
+  }
+
   if (!valid) {
-    console.error('Validation errors:', errorMessages);
     alert(`Erreurs détectées pour la justification de ${responsable || 'l\'utilisateur'}:\n${errorMessages.join('\n')}`);
     return;
   }
@@ -380,23 +372,18 @@ function saveAllRecetteItems() {
     return;
   }
 
-  fetch(`/achats/caisse/admin/${userId}/${justifId}/recettes`, {
+  const id = window.location.pathname.split('/').pop();
+  const payload = { userId, responsable, chantier, designation, justifId, items };
+  if (!justifId) {
+    payload.soldePrecedent = soldePrecedent;
+  }
+
+  fetch(`/achats/caisse/admin/${userId}/${id}/recettes`, {
     method: 'POST',
-    headers: { 
-      'Content-Type': 'application/json',
-      // Add CSRF token if required, e.g.:
-      // 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
-    },
-    body: JSON.stringify({ userId, responsable, chantier, designation, justifId, items }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
   })
     .then(res => {
-      const contentType = res.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        return res.text().then(text => {
-          console.error('Non-JSON response:', text);
-          throw new Error('Réponse du serveur non-JSON, probablement une erreur ou une redirection.');
-        });
-      }
       if (!res.ok) {
         return res.json().then(data => {
           throw new Error(data.error || `Erreur HTTP ${res.status}`);
@@ -407,7 +394,11 @@ function saveAllRecetteItems() {
     .then(data => {
       if (data.success) {
         alert('Recettes enregistrées avec succès.');
-        window.location.reload();
+        if (isNewJustification && data.justifId) {
+          window.location.href = `/achats/caisse/admin/${userId}/${data.justifId}`;
+        } else {
+          window.location.reload();
+        }
       } else {
         alert(`Erreur: ${data.error || 'Erreur inconnue.'}`);
       }
@@ -417,17 +408,16 @@ function saveAllRecetteItems() {
       alert(`Erreur: ${err.message}`);
     });
 }
-// Delete recette item
+      // Delete recette item
       function deleteRecetteItem(button) {
         if (confirm('Supprimer cette recette ?')) {
           const row = button.closest('tr');
           const id = row.dataset.id;
-          const urlParams = new URLSearchParams(window.location.search);
-          const justifId = document.getElementById('recetteId').value;
           const userId = document.querySelector('input[name="userId"]')?.value?.trim();
+          const justifId = document.querySelector('input[name="justifId"]')?.value?.trim();
 
           if (id && justifId && userId) {
-            fetch(`/achats/caisse/admin/${userId}/${justifId}/recettes/${id}`, {
+            fetch(`/achats/caisse/justification/recettes/${id}`, {
               method: 'DELETE',
               headers: { 'Content-Type': 'application/json' },
             })
@@ -521,7 +511,7 @@ function saveAllRecetteItems() {
               return;
             }
 
-            const depense = {
+            items.push({
               _id: row.dataset.id || null,
               dateDepense: date,
               numeroPiece,
@@ -529,8 +519,7 @@ function saveAllRecetteItems() {
               natureDepense,
               montantJustifie,
               montantNonJustifie,
-            };
-            items.push(depense);
+            });
           }
         });
 
@@ -538,16 +527,14 @@ function saveAllRecetteItems() {
         const userId = document.querySelector('input[name="userId"]')?.value?.trim();
         const chantier = document.querySelector('input[name="chantier"]')?.value?.trim();
         const designation = document.querySelector('#mois')?.value?.trim();
-        const urlParams = new URLSearchParams(window.location.search);
-        const justifId = urlParams.get('id');
+        const justifId = document.querySelector('input[name="justifId"]')?.value?.trim() || null;
 
-        if (!responsable || !userId || !chantier || !designation || !justifId) {
+        if (!responsable || !userId || !chantier || !designation) {
           const missingFields = [];
           if (!responsable) missingFields.push('responsable');
           if (!userId) missingFields.push('userId');
           if (!chantier) missingFields.push('chantier');
           if (!designation) missingFields.push('mois');
-          if (!justifId) missingFields.push('justifId');
           errorMessages.push(`Champs manquants: ${missingFields.join(', ')}`);
           valid = false;
         }
@@ -562,10 +549,11 @@ function saveAllRecetteItems() {
           return;
         }
 
-        fetch(`/achats/caisse/admin/${userId}/${justifId}/depenses`, {
+        const id = window.location.pathname.split('/').pop();
+        fetch(`/achats/caisse/admin/${userId}/${id}/depenses`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, responsable, chantier, designation, items }),
+          body: JSON.stringify({ userId, responsable, chantier, designation, justifId, items }),
         })
           .then(res => {
             if (!res.ok) {
@@ -578,7 +566,11 @@ function saveAllRecetteItems() {
           .then(data => {
             if (data.success) {
               alert('Dépenses enregistrées avec succès.');
-              window.location.reload();
+              if (isNewJustification && data.justifId) {
+                window.location.href = `/achats/caisse/admin/${userId}/${data.justifId}`;
+              } else {
+                window.location.reload();
+              }
             } else {
               alert(`Erreur: ${data.error || 'Erreur inconnue.'}`);
             }
@@ -594,12 +586,11 @@ function saveAllRecetteItems() {
         if (confirm('Supprimer cette dépense ?')) {
           const row = button.closest('tr');
           const id = row.dataset.id;
-          const urlParams = new URLSearchParams(window.location.search);
-          const justifId = urlParams.get('id');
           const userId = document.querySelector('input[name="userId"]')?.value?.trim();
+          const justifId = document.querySelector('input[name="justifId"]')?.value?.trim();
 
           if (id && justifId && userId) {
-            fetch(`/achats/caisse/admin/${userId}/${justifId}/depenses/${id}`, {
+            fetch(`/achats/caisse/justification/depenses/${id}`, {
               method: 'DELETE',
               headers: { 'Content-Type': 'application/json' },
             })
@@ -637,7 +628,7 @@ function saveAllRecetteItems() {
         }
       }
 
-      // Save all data (recettes + dépenses)
+      // Save all data (recettes + depenses)
       function saveAllData() {
         const recetteRows = document.querySelectorAll('#recetteTable tbody tr');
         const depenseRows = document.querySelectorAll('#depenseTable tbody tr');
@@ -679,7 +670,7 @@ function saveAllRecetteItems() {
           });
         });
 
-        // Collect dépenses
+        // Collect depenses
         depenseRows.forEach((row, index) => {
           const inputs = row.querySelectorAll('input');
           if (inputs.length === 6) {
@@ -722,16 +713,14 @@ function saveAllRecetteItems() {
         const userId = document.querySelector('input[name="userId"]')?.value?.trim();
         const chantier = document.querySelector('input[name="chantier"]')?.value?.trim();
         const designation = document.querySelector('#mois')?.value?.trim();
-        const urlParams = new URLSearchParams(window.location.search);
-        const justifId = urlParams.get('id');
+        const justifId = document.querySelector('input[name="justifId"]')?.value?.trim() || null;
 
-        if (!responsable || !userId || !chantier || !designation || !justifId) {
+        if (!responsable || !userId || !chantier || !designation) {
           const missingFields = [];
           if (!responsable) missingFields.push('responsable');
           if (!userId) missingFields.push('userId');
           if (!chantier) missingFields.push('chantier');
           if (!designation) missingFields.push('mois');
-          if (!justifId) missingFields.push('justifId');
           errorMessages.push(`Champs manquants: ${missingFields.join(', ')}`);
           valid = false;
         }
@@ -746,7 +735,8 @@ function saveAllRecetteItems() {
           return;
         }
 
-        fetch(`/achats/caisse/admin/${userId}/${justifId}/save-all`, {
+        const id = window.location.pathname.split('/').pop();
+        fetch(`/achats/caisse/admin/${userId}/${id}/save-all`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId, responsable, chantier, designation, recettes: recetteItems, depenses: depenseItems }),
@@ -762,7 +752,11 @@ function saveAllRecetteItems() {
           .then(data => {
             if (data.success) {
               alert('Justification enregistrée avec succès.');
-              window.location.reload();
+              if (isNewJustification && data.justifId) {
+                window.location.href = `/achats/caisse/admin/${userId}/${data.justifId}`;
+              } else {
+                window.location.reload();
+              }
             } else {
               alert(`Erreur: ${data.error || 'Erreur inconnue.'}`);
             }
