@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="justifCaisses" />
+  <meta name="author" content="Confonda" />
+  <title>justifCaisses</title>
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+  <style>
+    .custom-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 15px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      text-transform: uppercase;
+    }
+    .custom-btn i {
+      font-size: 14px;
+    }
+    .custom-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .btn-success.custom-btn {
+      background-color: #28a745;
+      color: white;
+    }
+    .btn-success.custom-btn:hover {
+      background-color: #218838;
+    }
+    .btn-primary.custom-btn {
+      background-color: #007bff;
+      color: white;
+    }
+    .btn-primary.custom-btn:hover {
+      background-color: #0056b3;
+    }
+    .btn-danger.custom-btn {
+      background-color: #dc3545;
+      color: white;
+    }
+    .btn-danger.custom-btn:hover {
+      background-color: #bd2130;
+    }
+    .excel-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .excel-table th,
+    .excel-table td {
+      border: 1px solid #dee2e6;
+      padding: 8px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .excel-table thead th {
+      background-color: #f8f9fa;
+      font-weight: bold;
+    }
+    .excel-table tbody tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+    .excel-table tbody tr:hover {
+      background-color: #e9ecef;
+    }
+    .excel-dirty-row {
+      background-color: #fff3cd !important;
+    }
+    .invalid-input {
+      border: 2px solid red !important;
+    }
+    .loading::after {
+      content: '\f110';
+      font-family: 'Font Awesome 5 Free';
+      animation: spin 1s linear infinite;
+      margin-left: 8px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body id="page-top">
+  <div id="wrapper">
+    <%- include('../../../../layouts/sidebar') %>
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <%- include('../../../../layouts/topbar') %>
+        <div class="container-fluid">
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">Liste des Chef De Chantier</h6>
+            </div>
+            <div class="card-body">
+                <table class="excel-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Nom</th>
+                      <th>Email</th>
+                      <th>Chantier</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% if (users.length === 0) { %>
+                      <tr><td colspan="5">Aucun utilisateur trouvé</td></tr>
+                    <% } else { %>
+                      <% users.forEach((user, index) => { %>
+                        <tr>
+                          <td><%= index + 1 %></td>
+                          <td>
+                            <a href="/achats/caisse/admin/<%= user.id %>" class="text-primary font-weight-bold">
+                              <%= user.name %>
+                            </a>
+                          </td>
+                          <td><%= user.email %></td>
+                          <td><%= user.chantier.nom %></td>
+                          <td>
+                            <a href="/achats/caisse/admin/<%= user.id %>"  class="btn btn-sm btn-primary custom-btn">
+                              <i class="fas fa-eye"></i> Voir
+                            </a>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
+              
+          </div>
+        </div>
+      </div>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+      <script src="/vendor/jquery/jquery.min.js"></script>
+      <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+      <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+      <script src="/js/sb-admin-2.min.js"></script>
+    </div>
+  </div>
+</body>
+</html>

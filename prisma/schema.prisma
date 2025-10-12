@@ -112,7 +112,7 @@ model RecetteCaisse {
   source          String?       // Ex: "Demande Caisse #12 - Mars"
   montant         Float?
   dateRecette     DateTime?     @default(now())
-
+  userId         Int
   justifCaisseId  Int
   justifCaisse    JustifCaisse  @relation(fields: [justifCaisseId], references: [id])
 

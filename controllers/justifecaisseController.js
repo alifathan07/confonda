@@ -17,119 +17,277 @@ const getPreviousSolde = async (userId, chantierId, mois, annee) => {
 
 // Render create page
 export const createJustifCaisse = async (req, res) => {
-    try {
-      const user = req.session.user;
-      if (!user || !user.name || !user.chantierId) {
-        console.error("User session invalid:", req.session.user);
-        return res.status(403).render("error", { error: "Utilisateur non authentifié ou données manquantes" });
-      }
-  
-      const chantier = await prisma.chantier.findUnique({ where: { id: user.chantierId } });
-      if (!chantier || !chantier.nom) {
-        console.error("Chantier not found for ID:", user.chantierId);
-        return res.status(404).render("error", { error: "Chantier non trouvé" });
-      }
-  
-      const defaultJustifCaisse = {
-        soldePrecedent: 0,
-        totalRecettes: 0,
-        totalDepenses: 0,
-        soldeFinal: 0,
-        depenses: [],
-        designation: "",
-      };
-  
-      console.log("Rendering create.ejs with:", { user, chantier, justifCaisse: defaultJustifCaisse });
-  
-      res.render("dashboard/achats/caisse/justifecaisse/create", {
-        user: { ...user, recettes: [], depenses: [] },
-        chantier,
-        justifCaisse: defaultJustifCaisse,
-      });
-    } catch (error) {
-      console.error("Error in createJustifCaisse:", error);
-      res.status(500).render("error", { error: "Erreur lors du chargement de la page" });
+  try {
+    const user = req.session.user;
+    if (!user || !user.name || !user.chantierId) {
+      console.error("User session invalid:", req.session.user);
+      return res
+        .status(403)
+        .render("error", { error: "Utilisateur non authentifié ou données manquantes" });
     }
-  };
+
+    const lastJustif = await prisma.justifCaisse.findFirst({
+      where: { userId: user.id, chantierId: user.chantierId },
+      orderBy: { id: "desc" },
+      select: { designation: true },
+    });
+
+    const months = [
+      "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+      "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+    ];
+
+    let nextMonth, nextYear;
+
+    if (lastJustif && lastJustif.designation) {
+      const designationText = lastJustif.designation.trim();
+
+      // Try to find the month name in the text
+      const foundMonth = months.find(m => designationText.includes(m));
+      const yearMatch = designationText.match(/\b(20\d{2})\b/); // match "2025", "2024", etc.
+
+      if (!foundMonth || !yearMatch) {
+        throw new Error(`Invalid designation format: ${designationText}`);
+      }
+
+      const prevMonthIndex = months.indexOf(foundMonth);
+      const prevYear = parseInt(yearMatch[1], 10);
+
+      const newMonthIndex = (prevMonthIndex + 1) % 12;
+      nextMonth = months[newMonthIndex];
+      nextYear = newMonthIndex === 0 ? prevYear + 1 : prevYear;
+    } else {
+      // No previous record → use current date
+      const now = new Date();
+      nextMonth = months[now.getMonth()];
+      nextYear = now.getFullYear();
+    }
+
+    const designation = `${nextMonth}-${nextYear}`;
+
+    const chantier = await prisma.chantier.findUnique({
+      where: { id: user.chantierId },
+    });
+
+    if (!chantier) {
+      console.error("Chantier not found for ID:", user.chantierId);
+      return res.status(404).render("error", { error: "Chantier non trouvé" });
+    }
+
+    const defaultJustifCaisse = {
+      soldePrecedent: 0,
+      totalRecettes: 0,
+      totalDepenses: 0,
+      soldeFinal: 0,
+      depenses: [],
+      designation: `${nextMonth}-${nextYear}`,
+    };
+
+    console.log("Rendering createJustifCaisse with:", { designation });
+
+    res.render("dashboard/achats/caisse/justifecaisse/create", {
+      user: { ...user, role: user.role ,  recettes: [], depenses: [] },
+      chantier,
+      justifCaisse: defaultJustifCaisse,
+      designation,
+    });
+  } catch (error) {
+    console.error("Error in createJustifCaisse:", error);
+
+    // fallback if your "error.ejs" doesn't exist
+    if (res.render) {
+      try {
+        res.status(500).render("error", { error: "Erreur lors du chargement de la page" });
+      } catch {
+        res.status(500).send("Erreur lors du chargement de la page");
+      }
+    } else {
+      res.status(500).send("Erreur lors du chargement de la page");
+    }
+  }
+};
+
+
+export const addJustifCaisse = async (req, res) => {
+  try {
+    const user = req.session.user;
+    if (!user) {
+      return res.status(403).json({ success: false, error: "Utilisateur non authentifié" });
+    }
+
+    const chantier = user.chantierId;
+
+    // Get the last JustifCaisse for this chantier
+    const last = await prisma.justifCaisse.findFirst({
+      where: { chantierId: chantier },
+      orderBy: [{ annee: 'desc' }, { mois: 'desc' }],
+    });
+
+    let nextMois, nextAnnee;
+    if (last) {
+      nextMois = last.mois + 1;
+      nextAnnee = last.annee;
+      if (nextMois > 12) {
+        nextMois = 1;
+        nextAnnee++;
+      }
+    } else {
+      // Default if none exist
+      const now = new Date();
+      nextMois = now.getMonth() + 1;
+      nextAnnee = now.getFullYear();
+    }
+
+    const moisStr = [
+      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+    ][nextMois - 1];
+
+    const designation = `Justification Caisse ${moisStr} ${nextAnnee}`;
+
+    // Calculate previous solde
+    const soldePrecedent = await getPreviousSolde(user.id, chantier, nextMois, nextAnnee);
+
+    // Create the new record
+    const justifCaisse = await prisma.justifCaisse.create({
+      data: {
+        mois: nextMois,
+        annee: nextAnnee,
+        designation,
+        soldePrecedent,
+        userId: user.id,
+        chantierId: chantier,
+      },
+    });
+
+    res.json({ success: true, justifCaisse });
+  } catch (error) {
+    console.error("Error adding JustifCaisse:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+
+
 // Create/Update recettes
 export const createOrUpdateRecettes = async (req, res) => {
   try {
-    const { responsable, chantier, designation, items } = req.body;
+    console.log('Session data:', req.session); // Debug session
     const user = req.session.user;
-    if (!user || user.name !== responsable) {
-      return res.status(403).json({ success: false, error: "Utilisateur non autorisé" });
+
+    // Validate user session and userId
+    if (!user || !user.id || !user.name) {
+      console.error('Invalid user session:', {
+        sessionUser: user,
+        sessionExists: !!req.session,
+        userProperties: user ? Object.keys(user) : null
+      });
+      return res.status(403).json({ success: false, error: 'Utilisateur non authentifié ou ID manquant' });
     }
 
-    const chantierRecord = await prisma.chantier.findFirst({ where: { nom: chantier } });
+    const { responsable, chantier, designation, items } = req.body;
+
+    // Validate responsable
+    if (user.name !== responsable) {
+      console.error('Unauthorized user:', { sessionUserName: user.name, responsable });
+      return res.status(403).json({ success: false, error: 'Utilisateur non autorisé' });
+    }
+
+    // Validate chantier
+    const chantierRecord = await prisma.chantier.findFirst({
+      where: { nom: chantier },
+    });
     if (!chantierRecord) {
-      return res.status(400).json({ success: false, error: "Chantier invalide" });
+      console.error('Invalid chantier:', chantier);
+      return res.status(400).json({ success: false, error: 'Chantier invalide' });
     }
 
-    // Parse designation (e.g., "Mars-2025" -> mois: 3, annee: 2025)
-    const [moisStr, anneeStr] = designation.split("-");
+    // Parse designation
+    const [moisStr, anneeStr] = designation.split('-');
     const moisIndex = [
-      "Janvier",
-      "Février",
-      "Mars",
-      "Avril",
-      "Mai",
-      "Juin",
-      "Juillet",
-      "Août",
-      "Septembre",
-      "Octobre",
-      "Novembre",
-      "Décembre",
+      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
     ].indexOf(moisStr);
-    if (moisIndex === -1) {
-      return res.status(400).json({ success: false, error: "Mois invalide" });
+
+    if (moisIndex === -1 || !anneeStr || isNaN(parseInt(anneeStr)) || anneeStr.length !== 4) {
+      console.error('Invalid designation:', designation);
+      return res.status(400).json({ success: false, error: 'Designation invalide' });
     }
+
     const mois = moisIndex + 1;
     const annee = parseInt(anneeStr);
 
     // Get or create JustifCaisse
     let justifCaisse = await prisma.justifCaisse.findFirst({
-      where: { userId: user.id, chantierId: chantierRecord.id, mois, annee },
+      where: {
+        userId: user.id,
+        chantierId: chantierRecord.id,
+        mois,
+        annee,
+      },
     });
 
     let isNew = false;
     if (!justifCaisse) {
-      isNew = true;
       const soldePrecedent = await getPreviousSolde(user.id, chantierRecord.id, mois, annee);
       justifCaisse = await prisma.justifCaisse.create({
         data: {
           mois,
           annee,
-          designation: `Justification Caisse ${moisStr} ${annee}`,
+          designation: `${moisStr}-${annee}`,
           soldePrecedent,
           userId: user.id,
           chantierId: chantierRecord.id,
         },
       });
+      isNew = true;
     }
 
-    // Create recettes
-    await prisma.recetteCaisse.createMany({
-      data: items.map((item) => ({
-        source: item.source,
-        montant: parseFloat(item.montant),
-        dateRecette: new Date(item.dateRecette),
+    // Process recettes
+    for (const item of items) {
+      const dateRecette = new Date(item.dateRecette);
+      if (isNaN(dateRecette.getTime())) {
+        return res.status(400).json({ success: false, error: `Date de recette invalide pour ${item.source}` });
+      }
+
+      const montant = parseFloat(item.montant);
+      if (isNaN(montant) || montant <= 0) {
+        return res.status(400).json({ success: false, error: `Montant invalide pour ${item.source}` });
+      }
+
+      if (!item.source || item.source.trim() === '') {
+        return res.status(400).json({ success: false, error: `Source manquante pour ${item.source}` });
+      }
+
+      const data = {
+        source: item.source.trim(),
+        userId: user.id,
+        montant,
+        dateRecette,
         justifCaisseId: justifCaisse.id,
-      })),
-    });
+      };
+
+      if (item._id) {
+        await prisma.recetteCaisse.update({
+          where: { id: parseInt(item._id) },
+          data,
+        });
+      } else {
+        await prisma.recetteCaisse.create({ data });
+      }
+    }
 
     // Update totals
     const totalRecettes = await prisma.recetteCaisse.aggregate({
       _sum: { montant: true },
       where: { justifCaisseId: justifCaisse.id },
     });
+
     const totalDepenses = await prisma.depenseCaisse.aggregate({
-      _sum: {
-        montantJustifie: true,
-        montantNonJustifie: true,
-      },
+      _sum: { montantJustifie: true, montantNonJustifie: true },
       where: { justifCaisseId: justifCaisse.id },
     });
+
     const totalDepensesValue =
       (totalDepenses._sum.montantJustifie ?? 0) +
       (totalDepenses._sum.montantNonJustifie ?? 0);
@@ -139,21 +297,24 @@ export const createOrUpdateRecettes = async (req, res) => {
       data: {
         totalRecettes: totalRecettes._sum.montant ?? 0,
         totalDepenses: totalDepensesValue,
-        soldeFinal: justifCaisse.soldePrecedent + (totalRecettes._sum.montant ?? 0) - totalDepensesValue,
+        soldeFinal:
+          justifCaisse.soldePrecedent +
+          (totalRecettes._sum.montant ?? 0) -
+          totalDepensesValue,
       },
     });
 
-    // Return success with justifCaisse ID and isNew flag
-    res.json({ 
-      success: true, 
-      justifId: justifCaisse.id, 
-      isNew 
+    res.json({
+      success: true,
+      justifId: justifCaisse.id,
+      isNew,
     });
   } catch (error) {
-    console.error(error);
+    console.error('Error in createOrUpdateRecettes:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
 
 // Delete recette
 export const deleteRecette = async (req, res) => {
@@ -161,7 +322,8 @@ export const deleteRecette = async (req, res) => {
     const { id } = req.params;
     const user = req.session.user;
     const recette = await prisma.recetteCaisse.findUnique({ where: { id: parseInt(id) } });
-    if (!recette || recette.justifCaisse.userId !== user.id) {
+    const justifCaisseFound = await prisma.justifCaisse.findUnique({ where: { id: recette.justifCaisseId } });
+    if (!recette || justifCaisseFound.userId !== user.id) {
       return res.status(403).json({ success: false, error: "Non autorisé" });
     }
 
@@ -420,54 +582,7 @@ export const deleteDepense = async (req, res) => {
 // };
 
 // View details of a justification
-export const viewJustifCaisse = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const user = req.session.user;
-    const justifCaisse = await prisma.justifCaisse.findUnique({
-      where: { id: parseInt(id) },
-      include: {
-        user: { select: { name: true } },
-        chantier: { select: { nom: true } },
-        recettes: true,
-        depenses: true,
-      },
-    });
 
-    if (!justifCaisse || justifCaisse.userId !== user.id) {
-      return res.status(403).render("error", { error: "Accès non autorisé" });
-    }
-
-    // Format for frontend (match create page)
-    const formattedRecettes = justifCaisse.recettes.map((r) => ({
-      _id: r.id,
-      dateRecette: r.dateRecette,
-      source: r.source,
-      montant: r.montant,
-    }));
-
-    const formattedDepenses = justifCaisse.depenses.map((d) => ({
-      _id: d.id,
-      date: d.dateDepense,
-      numeroDuPiece: d.numeroPiece,
-      imputation: d.imputation,
-      montant: (d.montantJustifie ?? 0) + (d.montantNonJustifie ?? 0),
-      natureDepense: d.natureDepense,
-      justifier: d.montantJustifie,
-      nonJustifier: d.montantNonJustifie,
-    }));
-    
-
-    res.render("dashboard/achats/caisse/justifecaisse/create", {
-      user: { ...user, recettes: formattedRecettes, depenses: formattedDepenses },
-      justifCaisse,
-      chantier: justifCaisse.chantier,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).render("error", { error: "Erreur lors du chargement des détails" });
-  }
-};
 
 
 // Add to justifCaisseController.js
@@ -485,7 +600,20 @@ export const saveAllData = async (req, res) => {
       }
   
       // Parse designation (e.g., "Mars-2025" -> mois: 3, annee: 2025)
-      const [moisStr, anneeStr] = designation.split("-");
+      let moisStr = designation.split("-")[0];
+      let anneeStr = designation.split("-")[1];
+      
+      if (!moisStr || !anneeStr) {
+        const latestJustifCaisse = await prisma.justifCaisse.findFirst({
+          where: { userId: user.id },
+          orderBy: { createdAt: 'desc' },
+        });
+        if (latestJustifCaisse) {
+          moisStr = latestJustifCaisse.designation.split("-")[0];
+          anneeStr = latestJustifCaisse.designation.split("-")[1];
+        }
+      }
+      
       const moisIndex = [
         "Janvier",
         "Février",
@@ -503,8 +631,10 @@ export const saveAllData = async (req, res) => {
       if (moisIndex === -1) {
         return res.status(400).json({ success: false, error: "Mois invalide" });
       }
+      
       const mois = moisIndex + 1;
       const annee = parseInt(anneeStr);
+     
   
       // Get or create JustifCaisse
       let justifCaisse = await prisma.justifCaisse.findFirst({
@@ -593,7 +723,7 @@ export const saveAllData = async (req, res) => {
   };
 
   // fetch all justife 
-  export const getAllJustifCaisse = async (req, res) => {
+export const getAllJustifCaisse = async (req, res) => {
     try {
       const justifCaisse = await prisma.justifCaisse.findMany({
         where: { userId: req.session.user.id },
@@ -612,11 +742,396 @@ export const saveAllData = async (req, res) => {
           { mois: "desc" },
         ],
       });
+      const lastDesignation =  await prisma.justifCaisse.findFirst({
+        where: { userId: req.session.user.id },
+        select: {
+          designation: true,
+        },
+        orderBy: [
+          { annee: "desc" },
+          { mois: "desc" },
+        ],
+      });
       res.render("dashboard/achats/caisse/justifecaisse/index", {
-        justifCaisse
+        justifCaisse,
+        lastDesignation
       });
     } catch (error) {
       console.error(error);
       res.status(500).json({ success: false, error: error.message });
     }
 };
+
+export const deleteJustifeCaisse = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await prisma.justifCaisse.delete({ where: { id: parseInt(id) } });
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+}
+
+
+
+
+
+export const adminUserList = async (req, res) => {
+    try {
+        const users = await prisma.user.findMany({
+          where: {
+            role: "user",
+          },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                chantier : true
+            },
+        });
+        res.render("dashboard/achats/caisse/justifecaisse/userlist", {
+            users,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+}
+
+export const justifeCaisseListUser = async (req, res) => {
+    try {
+      const userId = req.params.id;
+        const justifCaisse = await prisma.justifCaisse.findMany({
+          where: {
+            userId: parseInt(userId),
+          },
+            select: {
+                id: true,
+                mois: true,
+                annee: true,
+                designation: true,
+                soldePrecedent: true,
+                soldeFinal: true,
+                totalDepenses: true,
+                totalRecettes: true,
+            },
+            orderBy: [
+              { annee: "desc" },
+              { mois: "desc" },
+            ],
+        });
+        const lastDesignation =  await prisma.justifCaisse.findFirst({
+          where: { userId: req.session.user.id },
+          select: {
+            designation: true,
+          },
+          orderBy: [
+            { annee: "desc" },
+            { mois: "desc" },
+          ],
+        });
+        res.render("dashboard/achats/caisse/justifecaisse/listjustife", {
+            justifCaisse,
+            userId,
+            lastDesignation
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+}
+
+
+
+// ✅ Controller
+export const createJustifCaisseAdmin = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Fetch the user
+    const userRecord = await prisma.user.findUnique({
+      where: { id: parseInt(userId) },
+    });
+
+    if (!userRecord || !userRecord.name || !userRecord.chantierId) {
+      console.error("User invalid or missing data:", userRecord);
+      return res
+        .status(403)
+        .render("error", { error: "Utilisateur non authentifié ou données manquantes" });
+    }
+
+    // Find the last Justif for this user and chantier
+    const lastJustif = await prisma.justifCaisse.findFirst({
+      where: {
+        userId: parseInt(userId),
+        chantierId: userRecord.chantierId,
+      },
+      orderBy: { id: "desc" },
+      select: { designation: true },
+    });
+
+    const months = [
+      "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+      "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
+    ];
+
+    let nextMonth, nextYear;
+
+    if (lastJustif && lastJustif.designation) {
+      const designationText = lastJustif.designation.trim();
+
+      const foundMonth = months.find(m => designationText.includes(m));
+      const yearMatch = designationText.match(/\b(20\d{2})\b/);
+
+      if (!foundMonth || !yearMatch) {
+        throw new Error(`Invalid designation format: ${designationText}`);
+      }
+
+      const prevMonthIndex = months.indexOf(foundMonth);
+      const prevYear = parseInt(yearMatch[1], 10);
+
+      const newMonthIndex = (prevMonthIndex + 1) % 12;
+      nextMonth = months[newMonthIndex];
+      nextYear = newMonthIndex === 0 ? prevYear + 1 : prevYear;
+    } else {
+      const now = new Date();
+      nextMonth = months[now.getMonth()];
+      nextYear = now.getFullYear();
+    }
+
+    const designation = `${nextMonth}-${nextYear}`;
+
+    // Fetch chantier
+    const chantier = await prisma.chantier.findUnique({
+      where: { id: userRecord.chantierId },
+    });
+
+    if (!chantier) {
+      console.error("Chantier not found for ID:", userRecord.chantierId);
+      return res.status(404).render("error", { error: "Chantier non trouvé" });
+    }
+
+    const defaultJustifCaisse = {
+      soldePrecedent: 0,
+      totalRecettes: 0,
+      totalDepenses: 0,
+      soldeFinal: 0,
+      depenses: [],
+      designation,
+    };
+
+    console.log("Rendering createJustifCaisseAdmin with:", { designation });
+
+    res.render("dashboard/achats/caisse/justifecaisse/create", {
+      user: { ...userRecord, recettes: [], depenses: [] },
+      chantier,
+      justifCaisse: defaultJustifCaisse,
+      designation,
+    });
+  } catch (error) {
+    console.error("Error in createJustifCaisseAdmin:", error);
+    try {
+      res.status(500).render("error", { error: "Erreur lors du chargement de la page" });
+    } catch {
+      res.status(500).send("Erreur lors du chargement de la page");
+    }
+  }
+};
+
+
+
+
+
+export const viewJustifCaisse = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = req.session.user;
+    const justifCaisse = await prisma.justifCaisse.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        user: { select: { name: true } },
+        chantier: { select: { nom: true } },
+        recettes: true,
+        depenses: true,
+      },
+    });
+
+    if (!justifCaisse || justifCaisse.userId !== user.id) {
+      return res.status(403).render("error", { error: "Accès non autorisé" });
+    }
+
+    // Format for frontend (match create page)
+    const formattedRecettes = justifCaisse.recettes.map((r) => ({
+      _id: r.id,
+      dateRecette: r.dateRecette,
+      source: r.source,
+      montant: r.montant,
+      userId: r.userId,
+    }));
+
+    const formattedDepenses = justifCaisse.depenses.map((d) => ({
+      _id: d.id,
+      date: d.dateDepense,
+      numeroDuPiece: d.numeroPiece,
+      imputation: d.imputation,
+      montant: (d.montantJustifie ?? 0) + (d.montantNonJustifie ?? 0),
+      natureDepense: d.natureDepense,
+      justifier: d.montantJustifie,
+      nonJustifier: d.montantNonJustifie,
+    }));
+    
+
+    res.render("dashboard/achats/caisse/justifecaisse/create", {
+      user: { ...user, recettes: formattedRecettes, depenses: formattedDepenses },
+      justifCaisse,
+      chantier: justifCaisse.chantier,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).render("error", { error: "Erreur lors du chargement des détails" });
+  }
+};
+export const viewJustifCaisseAdmin = async (req, res) => {
+  try {
+    const { id, userId } = req.params;
+    const admin = req.session.user; // Admin currently logged in
+    const user = await prisma.user.findUnique({ where: { id: parseInt(userId) } });
+    // Verify if admin
+    if (admin.role !== "admin") {
+      return res.status(403).render("error", { error: "Accès refusé — réservé à l’administrateur." });
+    }
+
+    // Get Justif Caisse record
+    const justifCaisse = await prisma.justifCaisse.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        user: { select: { name: true } },
+        chantier: { select: { nom: true } },
+        recettes: true,
+        depenses: true,
+      },
+    });
+
+    if (!justifCaisse) {
+      return res.status(404).render("error", { error: "Justification non trouvée" });
+    }
+
+    // Format for frontend
+    const formattedRecettes = justifCaisse.recettes.map((r) => ({
+      _id: r.id,
+      dateRecette: r.dateRecette,
+      source: r.source,
+      montant: r.montant,
+      userId: r.userId,
+    }));
+
+    const formattedDepenses = justifCaisse.depenses.map((d) => ({
+      _id: d.id,
+      date: d.dateDepense,
+      numeroDuPiece: d.numeroPiece,
+      imputation: d.imputation,
+      montant: (d.montantJustifie ?? 0) + (d.montantNonJustifie ?? 0),
+      natureDepense: d.natureDepense,
+      justifier: d.montantJustifie,
+      nonJustifier: d.montantNonJustifie,
+    }));
+
+    // Render same page as user but with admin data
+    res.render("dashboard/achats/caisse/justifecaisse/adminpart", {
+      user: { ...user, recettes: formattedRecettes, depenses: formattedDepenses },
+      justifCaisse,
+      chantier: justifCaisse.chantier,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).render("error", { error: "Erreur lors du chargement des détails" });
+  }
+};
+
+export const saveRecettesAdmin = async (req, res) => {
+  try {
+    const { userId, id } = req.params; // id is justifCaisseId from URL
+    const { responsable, chantier, designation, items, justifId } = req.body;
+    const admin = req.session.user;
+
+    // Verify admin role
+    if (admin.role !== 'admin') {
+      return res.status(403).json({ success: false, error: 'Accès refusé — réservé à l’administrateur.' });
+    }
+
+    // Validate userId
+    const user = await prisma.user.findUnique({ where: { id: parseInt(userId) } });
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Utilisateur non trouvé.' });
+    }
+
+    // Validate justifId matches URL id
+    if (parseInt(justifId) !== parseInt(id)) {
+      return res.status(400).json({ success: false, error: 'justifId ne correspond pas à l’ID dans l’URL.' });
+    }
+
+    const justifCaisse = await prisma.justifCaisse.findUnique({
+      where: { id: parseInt(id), userId: parseInt(userId) },
+    });
+    if (!justifCaisse) {
+      return res.status(404).json({ success: false, error: 'Justification non trouvée.' });
+    }
+
+    // Validate required fields
+    if (!responsable || !chantier || !designation || !items || !Array.isArray(items)) {
+      return res.status(400).json({ success: false, error: 'Données manquantes ou invalides.' });
+    }
+
+    // Update or create recettes
+    for (const item of items) {
+      const { _id, dateRecette, source, montant } = item;
+      if (_id) {
+        // Update existing recette
+        await prisma.recetteCaisse.update({
+          where: { id: parseInt(_id), justifCaisseId: parseInt(justifId) },
+          data: { dateRecette: new Date(dateRecette), source, montant: parseFloat(montant) },
+        });
+      } else {
+        // Create new recette
+        await prisma.recetteCaisse.create({
+          data: {
+            userId: parseInt(admin.id),
+            dateRecette: new Date(dateRecette),
+            source,
+            montant: parseFloat(montant),
+            justifCaisseId: parseInt(justifId),
+          },
+        });
+      }
+    }
+
+    // Update justifCaisse designation
+    await prisma.justifCaisse.update({
+      where: { id: parseInt(justifId) }, // Fixed to use req.params.id
+      data: { designation },
+    });
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Error in saveRecettesAdmin:', error);
+    return res.status(500).json({ success: false, error: 'Erreur lors de l’enregistrement des recettes.' });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

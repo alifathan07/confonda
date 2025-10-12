@@ -1,5 +1,5 @@
 import express from 'express';
-import { isAdmin, isAuthenticated } from '../middlewares/auth.js';
+import { isGrandAdmin, isAuthenticated, isAdmin } from '../middlewares/auth.js';
 import { create, update, show, deleteSupplier, importExel, upload, atess } from '../controllers/supplierController.js';
 import multer from 'multer';
 import ExcelJS from 'exceljs';
@@ -22,7 +22,7 @@ import { deleteEncaissement, indexHis, saveEncaissement, updateHistoryBanque } f
 import { deleteTelePai, indexTelePai, storeTelePai, updateTelePai } from '../controllers/telepay_prelevController.js';
 import { createEncaissement, indexEncaissement, updateEncaissement } from '../controllers/encaisementController.js';
 import { addCaisseItem, createDemandeCaisse, deleteDemandeCaisseItem, indexDemandeCaisse, storeDemandeCaisse, updateDemandeCaisseItem, updateDemandeCaisseItemValidation, updateDemandeCaisseStatut, viewDemandeCaisse } from '../controllers/demandecaisseController.js';
-import { createJustifCaisse, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteRecette, getAllJustifCaisse, saveAllData, viewJustifCaisse } from '../controllers/justifecaisseController.js';
+import { addJustifCaisse, adminUserList, createJustifCaisse, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteJustifeCaisse, deleteRecette, getAllJustifCaisse, justifeCaisseListUser, saveAllData, saveRecettesAdmin, viewJustifCaisse, viewJustifCaisseAdmin } from '../controllers/justifecaisseController.js';
 
 export const dashboardRouter = express.Router();
 dashboardRouter.use(isAuthenticated)
@@ -255,10 +255,10 @@ dashboardRouter.get('/dashboard', async (req, res) => {
 
 
          // < -----------Users  ----------------- >
-         dashboardRouter.get("/users", isAdmin, listUsers); // List all users
-         dashboardRouter.put("/users/edit", isAdmin, editUser); // Edit user
-        dashboardRouter.post('/users/add', isAdmin, addUser);
-        dashboardRouter.delete('/users/delete', isAdmin, deleteUser);
+         dashboardRouter.get("/users", isGrandAdmin, listUsers); // List all users
+         dashboardRouter.put("/users/edit", isGrandAdmin, editUser); // Edit user
+        dashboardRouter.post('/users/add', isGrandAdmin, addUser);
+        dashboardRouter.delete('/users/delete', isGrandAdmin, deleteUser);
         
         // < -----------Ventes  ----------------- >
         dashboardRouter.get('/ventes', (req, res) => {
@@ -339,4 +339,13 @@ dashboardRouter.get('/dashboard', async (req, res) => {
         dashboardRouter.delete("/achats/caisse/justification/depenses/:id", deleteDepense);
         dashboardRouter.post("/achats/caisse/justification/save-all", saveAllData);
         dashboardRouter.get("/achats/caisse/justifecaisse", getAllJustifCaisse);
-    
+        dashboardRouter.post('/achats/add/justifeAuto', addJustifCaisse);
+        dashboardRouter.delete('/achats/caisse/justifecaisse/:id', deleteJustifeCaisse);
+        dashboardRouter.get('/achats/caisse/admin',isAdmin, adminUserList);
+        dashboardRouter.get('/achats/caisse/admin/:id',isAdmin,  justifeCaisseListUser);
+        dashboardRouter.get('/achats/caisse/admin/create/:userId',isAdmin,  createJustifCaisse);
+        // dashboardRouter.get('/achats/caisse/admin/:userId/:id', isAdmin, createJustifCaisseAdmin);
+        dashboardRouter.get('/achats/caisse/admin/:userId/:id', isAdmin, viewJustifCaisseAdmin);
+        // dashboardRouter.get('/achats/caisse/admin/:userId/:id', isAdmin, updateJustifCaisseAdmin);
+        dashboardRouter.post('/achats/caisse/admin/:userId/:id/recettes', isAdmin, saveRecettesAdmin);
+      

@@ -223,4 +223,9 @@ Tasks :
         - list Virement
         - list miseadisposition
         - consolidation 
-        - achat prevusionel 
+        - achat prevusionel
+
+ 
+
+
+        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

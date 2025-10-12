@@ -42,11 +42,15 @@
           <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 page-title"><i class="fas fa-cash-register"></i> Justification Caisse</h1>
             <div>
-             
+              <button class="btn btn-success btn-sm save-all-btn" id="saveAllBtn" onclick="saveAllData()" disabled>
+                <i class="fas fa-save"></i> Enregistrer Tout
+              </button>
               <a href="/achats/caisse/justifecaisse" class="btn btn-primary btn-sm">
-                <i class="fas fa-list"></i> Retour
+                <i class="fas fa-list"></i> Liste des Justifications
               </a>
-              
+              <a href="/achats/demandeCaisse" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i> Retour
+              </a>
             </div>
           </div>
 
@@ -54,6 +58,7 @@
           <div class="row">
             <div class="col-lg-12">
               <div class="card shadow mb-4">
+                <div class="card-header">Justification</div>
                 <div class="card-body demande-info" style="display: flex; align-items: center; gap: 20px; padding: 20px;">
                   <p style="margin: 0;"><strong>RESPONSABLE CAISSE :</strong> <%= user.name || 'Non défini' %></p>
                   <% if (!user.name) { %>
@@ -67,8 +72,8 @@
                   <input type="hidden" name="chantier" value="<%= chantier.nom || '' %>" />
                   <div class="form-group" style="margin: 0;">
                     <label for="mois" style="margin-right: 10px;"><strong>SITUATION DE CAISSE :</strong></label>
-                    <select name="designation" id="mois" class="form-control" style="width: 200px; display: inline-block;" <% if (justifCaisse && justifCaisse.depenses && justifCaisse.depenses.length > 0) { %> disabled <% } %> >
-                     
+                    <select name="designation" id="mois" class="form-control" style="width: 200px; display: inline-block;" required>
+                      <option value="">Sélectionner un mois</option>
                       <% const year = new Date().getFullYear(); %>
                       <% const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']; %>
                       <% months.forEach((m, i) => { %>
@@ -83,80 +88,116 @@
             </div>
           </div>
 
+          <div id="summary" class="card shadow mb-4">
+            <!-- Simple Modern Summary -->
+            <div class="row">
+              <div class="col-lg-12">
+                <div class="card shadow-sm border-0 rounded-4">
+                  <div class="card-header bg-primary text-white py-3">
+                    <h4 class="mb-0">Résumé</h4>
+                  </div>
+                  <div class="card-body p-5">
+                    <div class="row text-center text-md-start g-4">
+                      <div class="col-md-3">
+                        <div class="p-4 bg-light rounded-4">
+                          <div class="text-muted mb-2" style="font-size: 1rem; font-weight: 500;">Soldé Précédent</div>
+                          <div class="fw-bold text-success" style="font-size: 1.5rem; letter-spacing: 0.05rem;">
+                            <%= justifCaisse.soldePrecedent ? justifCaisse.soldePrecedent.toFixed(2) : '0.00' %> DH
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-3">
+                        <div class="p-4 bg-light rounded-4">
+                          <div class="text-muted mb-2" style="font-size: 1rem; font-weight: 500;">Total Recettes</div>
+                          <div class="fw-bold text-primary" style="font-size: 1.5rem; letter-spacing: 0.05rem;">
+                            <%= justifCaisse.totalRecettes ? justifCaisse.totalRecettes.toFixed(2) : '0.00' %> DH
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-3">
+                        <div class="p-4 bg-light rounded-4">
+                          <div class="text-muted mb-2" style="font-size: 1rem; font-weight: 500;">Dépenses Justifiées</div>
+                          <div class="fw-bold text-warning" style="font-size: 1.5rem; letter-spacing: 0.05rem;">
+                            <%= justifCaisse.depenses ? justifCaisse.depenses.reduce((sum, d) => sum + (d.montantJustifie || 0), 0).toFixed(2) : '0.00' %> DH
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-3">
+                        <div class="p-4 bg-light rounded-4">
+                          <div class="text-muted mb-2" style="font-size: 1rem; font-weight: 500;">Dépenses Non Justifiées</div>
+                          <div class="fw-bold text-danger" style="font-size: 1.5rem; letter-spacing: 0.05rem;">
+                            <%= justifCaisse.depenses ? justifCaisse.depenses.reduce((sum, d) => sum + (d.montantNonJustifie || 0), 0).toFixed(2) : '0.00' %> DH
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <hr class="my-5">
+                    <div class="text-center">
+                      <div class="text-muted mb-2" style="font-size: 1.1rem; font-weight: 500;">Soldé Final</div>
+                      <div class="fw-bold text-info" style="font-size: 1.75rem; letter-spacing: 0.05rem;">
+                        <%= justifCaisse.soldeFinal ? justifCaisse.soldeFinal.toFixed(2) : '0.00' %> DH
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <!-- Recettes -->
-         <!-- Recettes Table -->
-<div id="recettes" class="card shadow mb-4">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <h2 class="card-title">Caisse Reçue</h2>
-    <div>
-      <button class="btn btn-primary btn-sm" onclick="addNewRecetteRow()">
-        <i class="fas fa-plus"></i> Ajouter Recette
-      </button>
-      <button class="btn btn-success btn-sm" id="saveRecettesBtn" onclick="saveAllRecetteItems()">Enregistrer Recette</button>
-    </div>
-  </div>
-  <div class="card-body">
-    <table class="table table-hover" id="recetteTable">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Origine Caisse</th>
-          <th>Montant</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% if (user.recettes && user.recettes.length > 0) { %>
-          <% user.recettes.forEach(d => { %>
-            <tr data-id="<%= d._id || '' %>">
-              <td>
-                <input type="date" name="dateRecette" class="form-control"
-                       value="<%= d.dateRecette ? new Date(d.dateRecette).toISOString().split('T')[0] : '' %>"/>
-              </td>
-              <td>
-                <input type="text" name="source" class="form-control"
-                       value="<%= d.source || '' %>"/>
-              </td>
-              <td>
-                <input type="number" name="montant" class="form-control" step="0.01" min="0.01"
-                       value="<%= d.montant ? d.montant.toFixed(2) : '0.00' %>"/>
-              </td>
-              <td>
-              <% if (d.userId === user.id) { %>
-                <button class="btn btn-danger btn-sm" onclick="deleteRecetteItem(this)">Supprimer</button>
-              <% } %>
-            
-               
-              </td>
-            </tr>
-          <% }) %>
-        <% } else { %>
-          <tr class="no-data">
-            <td colspan="4" class="text-center">Aucune recette enregistrée.</td>
-          </tr>
-        <% } %>
-      </tbody>
-    </table>
-  </div>
-</div>
-
+          <div id="recettes" class="card shadow mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h2 class="card-title">RECETTES</h2>
+              <div>
+                <button class="btn btn-primary btn-sm" onclick="addNewRecetteRow()">
+                  <i class="fas fa-plus"></i> Ajouter
+                </button>
+                <button class="btn btn-success btn-sm" id="saveRecettesBtn" onclick="saveAllRecetteItems()">Enregistrer</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <table class="table table-hover" id="recetteTable">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Origine Caisse</th>
+                    <th>Montant</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>-</td>
+                    <td>Soldé Précédent</td>
+                    <td><%= justifCaisse.soldePrecedent ? justifCaisse.soldePrecedent.toFixed(2) : '0.00' %> DH</td>
+                    <td>-</td>
+                  </tr>
+                  <% if (user.recettes && user.recettes.length > 0) { %>
+                    <% user.recettes.forEach(d => { %>
+                      <tr data-id="<%= d._id || '' %>">
+                        <td><%= d.dateRecette ? new Date(d.dateRecette).toLocaleDateString('fr-FR') : '' %></td>
+                        <td><%= d.source %></td>
+                        <td><%= d.montant ? d.montant.toFixed(2) : '0.00' %> DH</td>
+                        <td>
+                          <button class="btn btn-danger btn-sm" onclick="deleteRecetteItem(this)">Supprimer</button>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
 
           <!-- Dépenses -->
           <div id="depenses" class="card shadow mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
-              <h2 class="card-title">DÉPENSES 
-              
-
-              </h2>
-              <span class="badge bg-primary ms-1 text-white d-flex justify-content-center" style="font-size: 15px;">
-                Solde Précédent : <%= justifCaisse.soldePrecedent ? justifCaisse.soldePrecedent.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00' %> DH
-              </span>
+              <h2 class="card-title">DÉPENSES</h2>
               <div>
                 <button class="btn btn-primary btn-sm" onclick="addNewDepenseRow()">
-                  <i class="fas fa-plus"></i> Ajouter Dépense
+                  <i class="fas fa-plus"></i> Ajouter
                 </button>
-                <button class="btn btn-success btn-sm" id="saveDepensesBtn" onclick="saveAllDepenseItems()">Enregistrer Dépense</button>
+                <button class="btn btn-success btn-sm" id="saveDepensesBtn" onclick="saveAllDepenseItems()">Enregistrer</button>
               </div>
             </div>
             <div class="card-body">
@@ -177,99 +218,24 @@
                     <% user.depenses.forEach(d => { %>
                       <tr data-id="<%= d._id || '' %>">
                         <td><input type="date" name="dateDepense" value="<%= d.date ? new Date(d.date).toISOString().split('T')[0] : '' %>" class="form-control" required /></td>
-                        <td><input type="text" name="numeroPiece" value="<%= d.numeroDuPiece || 'sss' %>" class="form-control" /></td>
+                        <td><input type="text" name="numeroPiece" value="<%= d.numeroDuPiece || '' %>" class="form-control" /></td>
                         <td><input type="text" name="imputation" value="<%= d.imputation || '' %>" class="form-control" /></td>
                         <td><input type="text" name="natureDepense" value="<%= d.natureDepense || '' %>" class="form-control" required /></td>
                         <td><input type="number" name="montantJustifie" value="<%= d.justifier || '0' %>" step="0.01" class="form-control" required /></td>
                         <td><input type="number" name="montantNonJustifie" value="<%= d.nonJustifier || '0' %>" step="0.01" class="form-control" required /></td>
                         <td>
-                          <div class="d-flex justify-content-end">
-                            <button class="btn btn-success btn-sm me-2" onclick="saveAllDepenseItems()">
-                              <i class="fas fa-save"></i>
-                            </button>
-                            <button class="btn btn-primary btn-sm me-2" onclick="addNewDepenseRow()">
-                              <i class="fas fa-plus"></i>
-                            </button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteDepenseItem(this)">
-                              <i class="fas fa-trash"></i>
-                            </button>
-                          </div>
+                          <button class="btn btn-danger btn-sm" onclick="deleteDepenseItem(this)">Supprimer</button>
                         </td>
                       </tr>
                     <% }) %>
                   <% } %>
                 </tbody>
               </table>
-              
-            </div>
-           
-          </div><button class="btn btn-success btn-md save-all-btn" id="saveAllBtn" onclick="saveAllData()" >
-          <i class="fas fa-save"></i> Enregistrer Tout
-        </button>
-        </div>
-        
-        <div id="summary" class="card shadow mb-4">
-          <!-- Simple Modern Summary -->
-          <div class="row">
-            <div class="col-lg-12">
-              <div class="card shadow-sm border-0 rounded-4">
-                <div class="card-header bg-primary text-white py-3">
-                  <h4 class="mb-0">Résumé</h4>
-                </div>
-                <div class="card-body p-5">
-                  <div class="row text-center text-md-start g-4">
-                    <div class="col-md-3">
-                      <div class="p-4 bg-light rounded-4">
-                        <div class="text-muted mb-2" style="font-size: 1rem; font-weight: 500;">Soldé Précédent</div>
-                        <div class="fw-bold text-success" style="font-size: 1.5rem; letter-spacing: 0.05rem;">
-                          <%= justifCaisse.soldePrecedent ? justifCaisse.soldePrecedent.toFixed(2) : '0.00' %> DH
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-3">
-                      <div class="p-4 bg-light rounded-4">
-                        <div class="text-muted mb-2" style="font-size: 1rem; font-weight: 500;">Total Recettes</div>
-                        <div class="fw-bold text-primary" style="font-size: 1.5rem; letter-spacing: 0.05rem;">
-                          <%= justifCaisse.totalRecettes ? justifCaisse.totalRecettes.toFixed(2) : '0.00' %> DH
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-3">
-                      <div class="p-4 bg-light rounded-4">
-                        <div class="text-muted mb-2" style="font-size: 1rem; font-weight: 500;">Dépenses Justifiées</div>
-                        <div class="fw-bold text-warning" style="font-size: 1.5rem; letter-spacing: 0.05rem;">
-                          <%= justifCaisse.depenses ? justifCaisse.depenses.reduce((sum, d) => sum + (d.montantJustifie || 0), 0).toFixed(2) : '0.00' %> DH
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-3">
-                      <div class="p-4 bg-light rounded-4">
-                        <div class="text-muted mb-2" style="font-size: 1rem; font-weight: 500;">Dépenses Non Justifiées</div>
-                        <div class="fw-bold text-danger" style="font-size: 1.5rem; letter-spacing: 0.05rem;">
-                          <%= justifCaisse.depenses ? justifCaisse.depenses.reduce((sum, d) => sum + (d.montantNonJustifie || 0), 0).toFixed(2) : '0.00' %> DH
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <hr class="my-5">
-                  <div class="text-center">
-                    <div class="text-muted mb-2" style="font-size: 1.1rem; font-weight: 500;">Soldé Final</div>
-                    <div class="fw-bold text-info" style="font-size: 1.75rem; letter-spacing: 0.05rem;">
-                      <%= justifCaisse.soldeFinal ? justifCaisse.soldeFinal.toFixed(2) : '0.00' %> DH
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-
-
-    <br><br>
-    
-    
 
     <script>
       // Enable/disable save buttons based on month selection
@@ -294,139 +260,90 @@
       }
     
       // Add new recette row
-      // Add new recette row
-// Add new editable row
-function addNewRecetteRow() {
-  const tbody = document.querySelector('#recetteTable tbody');
-  const placeholder = tbody.querySelector('.no-data');
-  if (placeholder) placeholder.remove(); // remove "no data" row if exists
-
-  const newRow = document.createElement('tr');
-  newRow.innerHTML = `
-    <td><input type="date" name="dateRecette" class="form-control" value="<%= new Date().toISOString().split('T')[0] %>" required></td>
-    <td><input type="number" name="justifId" value="${justifId}" hidden  /></td>
-    <td><input type="text" name="source" class="form-control" required></td>
-    <td><input type="number" name="montant" step="0.01" min="0.01" class="form-control" required></td>
-    <td><button class="btn btn-danger btn-sm" onclick="deleteRecetteItem(this)">Supprimer</button></td>
-  `;
-  tbody.appendChild(newRow);
-}
-
-// Delete row
-
-// Save all recettes
-function saveAllRecetteItems() {
-  const rows = document.querySelectorAll('#recetteTable tbody tr');
-  const items = [];
-  let valid = true;
-  let errorMessages = [];
-
-  // Collect recette items
-  rows.forEach((row, index) => {
-    const dateInput = row.querySelector('input[name="dateRecette"]')?.value;
-    const sourceInput = row.querySelector('input[name="source"]')?.value?.trim();
-    const montantInput = row.querySelector('input[name="montant"]')?.value?.trim();
-
-    // Skip completely empty rows
-    if (!dateInput && !sourceInput && !montantInput) return;
-
-    // Validate inputs
-    if (!dateInput) {
-      errorMessages.push(`Ligne ${index + 1}: Date manquante`);
-      valid = false;
-      return;
-    }
-    if (!sourceInput) {
-      errorMessages.push(`Ligne ${index + 1}: Source manquante`);
-      valid = false;
-      return;
-    }
-    const montant = parseFloat(montantInput);
-    if (isNaN(montant) || montant <= 0) {
-      errorMessages.push(`Ligne ${index + 1}: Montant invalide ou non positif`);
-      valid = false;
-      return;
-    }
-
-    // Add recette object
-    items.push({
-      _id: row.dataset.id || null, // null for new rows
-      dateRecette: dateInput,
-      source: sourceInput,
-      montant,
-    });
-  });
-
-  // Collect form metadata
-  const responsable = document.querySelector('input[name="responsable"]')?.value?.trim();
-  const userId = document.querySelector('input[name="userId"]')?.value?.trim(); // Added for debugging
-  const chantier = document.querySelector('input[name="chantier"]')?.value?.trim();
-  const designation = document.querySelector('#mois')?.value?.trim();
-
-  // Validate metadata
-  if (!responsable || !chantier || !designation) {
-    const missingFields = [];
-    if (!responsable) missingFields.push('responsable');
-    if (!chantier) missingFields.push('chantier');
-    if (!designation) missingFields.push('mois');
-    errorMessages.push(`Champs manquants: ${missingFields.join(', ')}`);
-    valid = false;
-  }
-
-  // Debug: Log the payload to inspect values
-  console.log('Recettes payload:', { userId, responsable, chantier, designation, items });
-
-  // Stop if validation fails
-  if (!valid) {
-    alert(`Erreurs détectées:\n${errorMessages.join('\n')}`);
-    return;
-  }
-
-  // Stop if no valid items
-  if (items.length === 0) {
-    alert('Veuillez ajouter au moins une recette valide.');
-    return;
-  }
-
-  // Determine the correct endpoint
-  const urlParams = new URLSearchParams(window.location.search);
-  const justifId = urlParams.get('id');
-  const url = justifId && !isNaN(parseInt(justifId)) ? `/achats/caisse/justification/save-all` : `/achats/caisse/justification/recettes`;
-
-  // Send request
-  fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId, responsable, chantier, designation, items }), // Include userId
-  })
-    .then(res => {
-      if (!res.ok) {
-        return res.json().then(data => {
-          throw new Error(data.error || `Erreur HTTP ${res.status}`);
+      function addNewRecetteRow() {
+        const tableBody = document.querySelector('#recetteTable tbody');
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+          <td><input type="date" name="dateRecette" value="${new Date().toISOString().split('T')[0]}" class="form-control" required /></td>
+          <td><input type="text" name="source" class="form-control" required /></td>
+          <td><input type="number" name="montant" step="0.01" class="form-control" required /></td>
+          <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">Supprimer</button></td>
+        `;
+        tableBody.appendChild(newRow);
+      }
+    
+      // Save all recette items
+      function saveAllRecetteItems() {
+        const rows = document.querySelectorAll('#recetteTable tbody tr');
+        const items = [];
+    
+        let valid = true;
+        rows.forEach(row => {
+          const dateRecetteInput = row.querySelector('input[name="dateRecette"]');
+          const sourceInput = row.querySelector('input[name="source"]');
+          const montantInput = row.querySelector('input[name="montant"]');
+    
+          if (dateRecetteInput && sourceInput && montantInput) {
+            const dateRecette = dateRecetteInput.value;
+            const source = sourceInput.value;
+            const montant = parseFloat(montantInput.value);
+            
+    
+            if (!dateRecette || !source || isNaN(montant) || montant <= 0) {
+              valid = false;
+              return;
+            }
+    
+            items.push({ dateRecette, source, montant });
+          }
         });
-      }
-      return res.json();
-    })
-    .then(data => {
-      if (data.success) {
-        alert('Recettes enregistrées avec succès.');
-        if (data.isNew && data.justifId) {
-          setTimeout(() => {
-            window.location.href = `/achats/caisse/justifecaisse/${data.justifId}`;
-          }, 1000);
-        } else {
-          window.location.reload();
+    
+        const responsable = document.querySelector('input[name="responsable"]').value;
+        const chantier = document.querySelector('input[name="chantier"]').value;
+        const designation = document.querySelector('#mois').value;
+    
+        console.log("Saving recettes:", { responsable, chantier, designation, items });
+    
+        if (!responsable || !chantier || !designation) {
+          const missingFields = [];
+          if (!responsable) missingFields.push("responsable");
+          if (!chantier) missingFields.push("chantier");
+          if (!designation) missingFields.push("mois");
+          alert(`Erreur : Les champs suivants sont manquants : ${missingFields.join(", ")}.`);
+          return;
         }
-      } else {
-        alert(`Erreur: ${data.error || 'Erreur inconnue.'}`);
+    
+        if (!valid) {
+          alert('Veuillez remplir correctement tous les champs des recettes (date, source, montant positif).');
+          return;
+        }
+    
+        if (items.length === 0) {
+          alert('Veuillez ajouter au moins une recette valide.');
+          return;
+        }
+    
+        fetch('/achats/caisse/justification/recettes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ responsable, chantier, designation, items })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              alert('Recettes enregistrées avec succès.');
+              window.location.reload();
+            } else {
+              alert('Erreur : ' + (data.error || 'Erreur inconnue.'));
+            }
+          })
+          .catch(err => {
+            console.error('Fetch error:', err);
+            alert('Erreur réseau : ' + err.message);
+          });
       }
-    })
-    .catch(err => {
-      console.error('Fetch error:', err);
-      alert(`Erreur: ${err.message}`);
-    });
-}
-// Delete recette item
+    
+      // Delete recette item
       function deleteRecetteItem(button) {
         if (confirm('Supprimer cette recette ?')) {
           const row = button.closest('tr');
@@ -436,14 +353,7 @@ function saveAllRecetteItems() {
               method: 'DELETE',
               headers: { 'Content-Type': 'application/json' }
             })
-              .then(res => {
-                if (!res.ok) {
-                  return res.text().then(text => {
-                    throw new Error(`HTTP error ${res.status}: ${text}`);
-                  });
-                }
-                return res.json();
-              })
+              .then(res => res.json())
               .then(data => {
                 if (data.success) {
                   row.remove();
@@ -452,12 +362,7 @@ function saveAllRecetteItems() {
                   alert('Erreur lors de la suppression.');
                 }
               })
-              .catch(err => {
-                console.error('Fetch error:', err);
-                alert('Erreur réseau : ' + err.message);
-              });
-          } else {
-            row.remove();
+              .catch(err => alert('Erreur réseau : ' + err.message));
           }
         }
       }
@@ -473,19 +378,7 @@ function saveAllRecetteItems() {
           <td><input type="text" name="natureDepense" class="form-control" required /></td>
           <td><input type="number" name="montantJustifie" value="0" step="0.01" class="form-control" required /></td>
           <td><input type="number" name="montantNonJustifie" value="0" step="0.01" class="form-control" required /></td>
-            <td>
-                          <div class="d-flex justify-content-end">
-                            <button class="btn btn-success btn-sm me-2" id="saveDepensesBtn" onclick="saveAllDepenseItems()">
-                              <i class="fas fa-save"></i> 
-                            </button>
-                            <button class="btn btn-primary btn-sm me-2" onclick="addNewDepenseRow()">
-                              <i class="fas fa-plus"></i> 
-                            </button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteDepenseItem(this)">
-                              <i class="fas fa-trash"></i> 
-                            </button>
-                          </div>
-                        </td>
+          <td><button class="btn btn-danger btn-sm" onclick="removeRow(this)">Supprimer</button></td>
         `;
         tableBody.appendChild(newRow);
       }
@@ -590,7 +483,7 @@ function saveAllRecetteItems() {
         }
       }
     
-      // Save all data (recettes + dépenses)
+      // Save all data (recettes + dépenses) - UPDATED FOR REDIRECT
       function saveAllData() {
         const recetteRows = document.querySelectorAll('#recetteTable tbody tr');
         const depenseRows = document.querySelectorAll('#depenseTable tbody tr');
@@ -609,16 +502,13 @@ function saveAllRecetteItems() {
             const dateRecette = dateRecetteInput.value;
             const source = sourceInput.value;
             const montant = parseFloat(montantInput.value);
-            const id = row.dataset.id || null;
     
             if (!dateRecette || !source || isNaN(montant) || montant <= 0) {
               valid = false;
               return;
             }
     
-            const item = { dateRecette, source, montant };
-            if (id) item._id = id;
-            recetteItems.push(item);
+            recetteItems.push({ dateRecette, source, montant });
           }
         });
     
@@ -671,33 +561,21 @@ function saveAllRecetteItems() {
           return;
         }
     
-        // Check if editing an existing justification
-        const urlParams = new URLSearchParams(window.location.search);
-        const justifId = urlParams.get('id');
-        const url = justifId ? '/achats/caisse/justification/save-all' : '/achats/caisse/justification/save-all';
-        const method = 'POST';
-    
-        fetch(url, {
-          method,
+        fetch('/achats/caisse/justification/save-all', {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ responsable, chantier, designation, recettes: recetteItems, depenses: depenseItems })
         })
-          .then(res => {
-            if (!res.ok) {
-              return res.text().then(text => {
-                throw new Error(`HTTP error ${res.status}: ${text}`);
-              });
-            }
-            return res.json();
-          })
+          .then(res => res.json())
           .then(data => {
             if (data.success) {
               alert('Justification enregistrée avec succès.');
+              // Redirect to new justification view if it's a new creation
               if (data.isNew && data.justifId) {
-                // Redirect to update page for the new justification
+                // Brief delay to show alert, then redirect
                 setTimeout(() => {
                   window.location.href = `/achats/caisse/justifecaisse/${data.justifId}`;
-                }, 1000);
+                }, 1000); // Adjust delay if needed
               } else {
                 window.location.reload();
               }
@@ -708,8 +586,6 @@ function saveAllRecetteItems() {
           .catch(err => {
             console.error('Fetch error:', err);
             alert('Erreur réseau : ' + err.message);
-            // Log the response for debugging
-            console.log('Raw response causing error:', err.message);
           });
       }
     </script>
