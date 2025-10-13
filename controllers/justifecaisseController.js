@@ -1037,7 +1037,7 @@ export const viewJustifCaisseAdmin = async (req, res) => {
     const admin = req.session.user;
 
     // Verify if admin
-    if (admin.role !== "admin" || admin.role !== "grandadmin") {
+    if (!["admin", "grandadmin"].includes(admin.role)) {
       return res.status(403).render("error", { error: "Accès refusé — réservé à l’administrateur." });
     }
 
