@@ -302,13 +302,17 @@ dashboardRouter.get('/dashboard', async (req, res) => {
         dashboardRouter.patch('/tresorerie/telePai/:id', updateTelePai);
         dashboardRouter.delete('/tresorerie/telePai/:id', deleteTelePai);
 
-        // encaissement 
+        // encaissement /achats'
         dashboardRouter.get('/tresorerie/encaissement', indexEncaissement);
         dashboardRouter.post('/tresorerie/encaissement/create', createEncaissement);
         dashboardRouter.delete('/tresorerie/encaissement/:id', deleteEncaissement);
         dashboardRouter.patch("/tresorerie/encaissement/:id", updateEncaissement)
 
         // Demande De Caisse 
+        //caisse Routes
+        dashboardRouter.get('/achats/caisse', (req, res) =>{
+          res.render('dashboard/achats/caisse/index');
+        });
        dashboardRouter.get('/achats/demandeCaisse', indexDemandeCaisse);
        dashboardRouter.get('/achats/create/demandeCaisse', createDemandeCaisse);
        dashboardRouter.post('/achat/demandes/caisse', storeDemandeCaisse);

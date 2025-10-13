@@ -14,7 +14,7 @@ export const redirectIfLoggedIn = (req, res, next) =>{
 }
 
 export const isAdmin = (req, res, next) => {
-  if (req.session.user && req.session.user.role === 'admin') {
+  if (req.session.user && req.session.user.role === 'admin' || req.session.user.role === 'grandadmin') {
       next();
   } else {
       res.redirect('/dashboard');
