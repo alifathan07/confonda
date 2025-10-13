@@ -1,5 +1,5 @@
 import express from 'express';
-import { isGrandAdmin, isAuthenticated, isAdmin } from '../middlewares/auth.js';
+import { isGrandAdmin, isAuthenticated, isAdmin, isUser } from '../middlewares/auth.js';
 import { create, update, show, deleteSupplier, importExel, upload, atess } from '../controllers/supplierController.js';
 import multer from 'multer';
 import ExcelJS from 'exceljs';
@@ -33,7 +33,7 @@ dashboardRouter.use((req, res, next) => {
     
     next();
 });
-dashboardRouter.get('/dashboard', async (req, res) => {
+dashboardRouter.get('/dashboard' , isAdmin, async (req, res) => {
     try {
       // Fetch all banks
       const banques = await prisma.banque.findMany({
