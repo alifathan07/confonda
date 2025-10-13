@@ -579,9 +579,10 @@ export const deleteDepense = async (req, res) => {
     const { id } = req.params;
     const user = req.session.user;
     const depense = await prisma.depenseCaisse.findUnique({ where: { id: parseInt(id) } });
-    if (!depense || depense.justifCaisse.userId !== user.id) {
-      return res.status(403).json({ success: false, error: "Non autorisé" });
-    }
+    const Depence_justifCaisse = await prisma.justifCaisse.findUnique({ where: { id: depense.justifCaisseId } });
+    if (!depense || Depence_justifCaisse.userId !== user.id) {
+      return res.status(403).json({ success: false, error: 'Accès refusé — vous n\'êtes pas autorisé à supprimer cette dépense.' });
+    } 
 
     await prisma.depenseCaisse.delete({ where: { id: parseInt(id) } });
 
