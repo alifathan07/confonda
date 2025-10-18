@@ -215,6 +215,13 @@
 
             <% if (user.role === 'grandadmin' || user.role === 'admin') { %>
             <div class="achat-buttons d-flex flex-wrap justify-content-center gap-4">
+              <a href="/achats/caisse" class="achat-card shadow">
+                <div class="card-icon-wrapper">
+                  <i class="fas fa-money-bill-alt"></i>
+                </div>
+                <span class="card-title">Caisse</span>
+                <small class="card-subtitle">Les operations De Caisse </small>
+              </a>
               <a href="/achats/devis" class="achat-card shadow">
                 <div class="card-icon-wrapper">
                   <i class="fas fa-file-invoice-dollar"></i>
@@ -247,13 +254,7 @@
                 <small class="card-subtitle">Base fournisseurs</small>
               </a>
               
-              <a href="/achats/caisse" class="achat-card shadow">
-                <div class="card-icon-wrapper">
-                  <i class="fas fa-money-bill-alt"></i>
-                </div>
-                <span class="card-title">Caisse</span>
-                <small class="card-subtitle">Les operations De Caisse </small>
-              </a>
+             
             </div>
             <% } else if (user.role === 'user') { %>
               <div class="achat-buttons d-flex flex-wrap justify-content-center gap-4">

@@ -70,16 +70,32 @@
                   <input type="hidden" name="userId" value="<%= user.id || '' %>" />
                   <input type="hidden" name="justifId" value="<%= justifCaisse.id || '' %>" />
                   <div class="form-group" style="margin: 0;">
-                    <label for="mois" style="margin-right: 10px;"><strong>SITUATION DE CAISSE :</strong></label>
-                    <select name="designation" id="mois" class="form-control" style="width: 200px; display: inline-block;">
-                      <% const year = new Date().getFullYear(); %>
-                      <% const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']; %>
-                      <% months.forEach((m, i) => { %>
-                        <option value="<%= `${m}-${year}` %>" <%= designation === `${m}-${year}` ? 'selected' : '' %>>
-                          <%= `${m}-${year}` %>
-                        </option>
-                      <% }); %>
-                    </select>
+                    <% if (justifCaisse && justifCaisse.id) { %>
+                      <p><strong>SITUATION DE CAISSE :</strong> <%= justifCaisse.designation || '' %></p>
+                      <select name="designation" id="mois" class="form-control" style="width: 200px; display: inline-block;" hidden>
+                        
+                        <% const year = new Date().getFullYear(); %>
+                        <% const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']; %>
+                        <% months.forEach((m, i) => { %>
+                          <option value="<%= `${m}-${year}` %>" <%= justifCaisse && justifCaisse.designation && justifCaisse.designation.includes(m) ? 'selected' : '' %>>
+                            <%= `${m}-${year}` %>
+                          </option>
+                        <% }); %>
+                      </select>
+                    <% } else { %>
+                      <label for="mois" style="margin-right: 10px;"><strong>SITUATION DE CAISSE :</strong></label>
+
+                      <select name="designation" id="mois" class="form-control" style="width: 200px; display: inline-block;">
+                        
+                        <% const year = new Date().getFullYear(); %>
+                        <% const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']; %>
+                        <% months.forEach((m, i) => { %>
+                          <option value="<%= `${m}-${year}` %>" <%= justifCaisse && justifCaisse.designation && justifCaisse.designation.includes(m) ? 'selected' : '' %>>
+                            <%= `${m}-${year}` %>
+                          </option>
+                        <% }); %>
+                      </select>
+                    <% } %>
                   </div>
                 </div>
               </div>
@@ -94,9 +110,8 @@
                 <% if (!justifCaisse.id) { %>
                   <label for="soldePrecedent" class="me-2">Solde Précédent</label>
                   <input type="number" id="soldePrecedent" name="soldePrecedent" class="form-control" step="0.01" min="0.01" value="0.00" />
-                <% } else { %>
-                  <label for="soldePrecedent" class="me-2">Solde Précédent</label>
-                  <input type="number" id="soldePrecedent" name="soldePrecedent" class="form-control readonly" step="0.01" min="0.01" value="<%= justifCaisse.soldePrecedent ? justifCaisse.soldePrecedent.toFixed(2) : '0.00' %>" readonly />
+                
+                 
                 <% } %>
               </div>
            
@@ -148,7 +163,6 @@
             </div>
           </div>
 
-          <!-- Dépenses Table -->
           <div id="depenses" class="card shadow mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
               <h2 class="card-title">DÉPENSES</h2>
@@ -159,12 +173,14 @@
                 <button class="btn btn-primary btn-sm" id="addDepenseBtn" style="display: none;">
                   <i class="fas fa-plus"></i> Ajouter Dépense
                 </button>
-                <button class="btn btn-success btn-sm" id="saveDepensesBtn" style="display: none;">
-                  Enregistrer Dépense
+                <button class="btn btn-success btn-sm" id="validBtn" onclick="validePar()">
+                  <i class="fas fa-check-circle"></i> Validé
                 </button>
               </div>
             </div>
             <div class="card-body">
+              <!-- Add hidden input for justifId -->
+              <input type="hidden" name="justifId" value="<%= justifCaisse._id %>">
               <table class="table table-hover" id="depenseTable">
                 <thead>
                   <tr>
@@ -174,29 +190,140 @@
                     <th>Nature Dépense</th>
                     <th>Montant Justifié</th>
                     <th>Montant Non Justifié</th>
+                    <th>Validation</th>
+                    <th>Validé par</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (user.depenses && user.depenses.length > 0) { %>
                     <% user.depenses.forEach(d => { %>
-                      <tr data-id="<%= d._id || '' %>">
+                      <tr data-id="<%= d._id %>">
                         <td><%= d.date ? new Date(d.date).toLocaleDateString('fr-FR') : '-' %></td>
                         <td><%= d.numeroDuPiece || '-' %></td>
                         <td><%= d.imputation || '-' %></td>
                         <td><%= d.natureDepense || '-' %></td>
                         <td><%= d.justifier ? d.justifier.toFixed(2) : '0.00' %> DH</td>
                         <td><%= d.nonJustifier ? d.nonJustifier.toFixed(2) : '0.00' %> DH</td>
+                        <td>
+                          <div class="form-check form-check-inline">
+                            <input type="checkbox" class="form-check-input validation-checkbox"
+                                   id="validation-<%= d._id %>"
+                                   name="validation" data-id="<%= d._id %>"
+                                   <%= d.validation === true  ? 'checked' : '' %>>
+                            <label class="form-check-label" for="validation-<%= d._id %>"></label>
+                          </div>
+                        </td>
+                        <td><%= d.validerPar || '-' %></td>
                       </tr>
                     <% }) %>
                   <% } else { %>
                     <tr class="no-data">
-                      <td colspan="6" class="text-center">Aucune dépense enregistrée.</td>
+                      <td colspan="8" class="text-center">Aucune dépense enregistrée.</td>
                     </tr>
                   <% } %>
                 </tbody>
               </table>
             </div>
           </div>
+          
+          <script>
+          document.addEventListener('change', function (e) {
+            if (e.target.classList.contains('validation-checkbox')) {
+              const depenseId = e.target.dataset.id;
+              const validation = e.target.checked;
+              const previousState = validation; // Store for error handling
+          
+              // Show loading state
+              e.target.disabled = true;
+              e.target.nextElementSibling.style.opacity = '0.5'; // Dim label
+          
+              // Send validation and clear validerPar if unchecked
+              fetch(`/achats/caisse/justification/depenses/${depenseId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                  validation,
+                  validerPar: validation ? undefined : null // Clear validerPar if unchecked
+                }),
+              })
+                .then(res => res.json())
+                .then(data => {
+                  if (data.success) {
+                    alert(`Validation ${validation ? 'activée' : 'désactivée'} avec succès.`);
+                    
+                    
+                    // Update the 'Validé par' column
+                    const row = e.target.closest('tr');
+                    const validerParCell = row.querySelector('td:last-child');
+                    validerParCell.textContent = data.validerPar || '-';
+                    window.location.reload();
+                  } else {
+                    alert('Erreur : ' + (data.error || 'Erreur inconnue.'));
+                    e.target.checked = !previousState; // Revert checkbox on error
+                  }
+                })
+                .catch(err => {
+                  console.error('Fetch error:', err);
+                  alert('Erreur réseau : ' + err.message);
+                  e.target.checked = !previousState; // Revert checkbox on error
+                })
+                .finally(() => {
+                  // Re-enable checkbox and restore label
+                  e.target.disabled = false;
+                  e.target.nextElementSibling.style.opacity = '1';
+                });
+            }
+          });
+          
+          async function validePar() {
+            // Extract justifId from input
+            const justifIdInput = document.querySelector('input[name="justifId"]');
+            const justifId = justifIdInput?.value.trim() || null;
+            if (!justifId) {
+              alert('Erreur : Identifiant de justification manquant.');
+              return;
+            }
+          
+            try {
+              // Disable button during request
+              const validBtn = document.getElementById('validBtn');
+              validBtn.disabled = true;
+              validBtn.style.opacity = '0.5';
+          
+              // Send PATCH request with justifId in the URL
+              // /achats/caisse/justification/valider/:justifId
+              const response = await fetch(`/achats/caisse/justification/valider/${justifId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({}), // Empty body since justifId is in the URL
+              });
+          
+              // Check if response is JSON
+              const contentType = response.headers.get('content-type');
+              if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('Non-JSON response:', text);
+                throw new Error(`Réponse non-JSON reçue (statut ${response.status}): ${text.slice(0, 100)}...`);
+              }
+          
+              const data = await response.json();
+              if (data.success) {
+                // Update all rows in the table
+               
+                window.location.reload();
+              } else {
+                alert('Erreur : ' + (data.error || 'Erreur inconnue.'));
+              }
+            } catch (err) {
+              console.error('Fetch error:', err);
+              alert(`Erreur réseau : ${err.message}`);
+            } finally {
+              // Re-enable button
+              validBtn.disabled = false;
+              validBtn.style.opacity = '1';
+            }
+          }
+          </script>
           
           <!-- Save All Button -->
           <button class="btn btn-success btn-md save-all-btn" id="saveAllBtn" onclick="saveAllData()">
@@ -231,7 +358,8 @@
                     <div class="p-4 bg-light rounded-4">
                       <div class="text-muted mb-2" style="font-size: 1rem; font-weight: 500;">Dépenses Justifiées</div>
                       <div class="fw-bold text-warning" style="font-size: 1.5rem; letter-spacing: 0.05rem;">
-                        <%= justifCaisse.totalDepenses ? justifCaisse.totalDepenses.toFixed(2) : '0.00' %> DH
+                        <%= justifCaisse.depenses ? justifCaisse.depenses.filter(d => d.validation).reduce((sum, d) => sum + (d.montantJustifie || 0), 0).toFixed(2) : '0.00' %> DH
+
                       </div>
                     </div>
                   </div>
@@ -239,7 +367,7 @@
                     <div class="p-4 bg-light rounded-4">
                       <div class="text-muted mb-2" style="font-size: 1rem; font-weight: 500;">Dépenses Non Justifiées</div>
                       <div class="fw-bold text-danger" style="font-size: 1.5rem; letter-spacing: 0.05rem;">
-                        <%= justifCaisse.depenses ? justifCaisse.depenses.reduce((sum, d) => sum + (d.montantNonJustifie || 0), 0).toFixed(2) : '0.00' %> DH
+                        <%= justifCaisse.depenses ? justifCaisse.depenses.filter(d => d.validation).reduce((sum, d) => sum + (d.montantNonJustifie || 0), 0).toFixed(2) : '0.00' %> DH
                       </div>
                     </div>
                   </div>
@@ -259,6 +387,26 @@
     </div>
 
     <script>
+
+
+
+      
+        //   const response = await fetch(`/achats/caisse/justification/depenses/${id}`, {
+        //     method: 'POST',
+        //     headers: { 'Content-Type': 'application/json' },
+        //   });
+        //   if (!response.ok) {
+        //     throw new Error(`HTTP error! status: ${response.status}`);
+        //   }
+        //   const data = await response.json();
+        //   if (data.success) {
+        //     alert('Validation de la dépense mise à jour avec succès.');
+        //     window.location.reload();
+        //   } else {
+        //     alert(`Erreur: ${data.error || 'Erreur inconnue.'}`);
+        //   }
+        // }
+      
       // Determine if it's a new justification
       const isNewJustification = !document.querySelector('input[name="justifId"]').value;
 
@@ -301,6 +449,7 @@
   }
 }
       // Save all recette items
+   
       function saveAllRecetteItems() {
   const rows = document.querySelectorAll('#recetteTable tbody tr');
   const items = [];
@@ -455,180 +604,10 @@
         }
       }
 
-      // Add new depense row
-      function addNewDepenseRow() {
-        const tbody = document.querySelector('#depenseTable tbody');
-        const placeholder = tbody.querySelector('.no-data');
-        if (placeholder) placeholder.remove();
+     
+     
 
-        const newRow = document.createElement('tr');
-        newRow.innerHTML = `
-          <td><input type="date" name="dateDepense" value="${new Date().toISOString().split('T')[0]}" class="form-control" required /></td>
-          <td><input type="text" name="numeroPiece" class="form-control" /></td>
-          <td><input type="text" name="imputation" class="form-control" /></td>
-          <td><input type="text" name="natureDepense" class="form-control" required /></td>
-          <td><input type="number" name="montantJustifie" value="0.00" step="0.01" min="0" class="form-control" required /></td>
-          <td><input type="number" name="montantNonJustifie" value="0.00" step="0.01" min="0" class="form-control" required /></td>
-          <td>
-            <button class="btn btn-danger btn-sm" onclick="deleteDepenseItem(this)">
-              <i class="fas fa-trash"></i> Supprimer
-            </button>
-          </td>
-        `;
-        tbody.appendChild(newRow);
-      }
-
-      // Save all depense items
-      function saveAllDepenseItems() {
-        const rows = document.querySelectorAll('#depenseTable tbody tr');
-        const items = [];
-        let valid = true;
-        let errorMessages = [];
-
-        rows.forEach((row, index) => {
-          const inputs = row.querySelectorAll('input');
-          if (inputs.length === 6) {
-            const date = inputs[0].value;
-            const numeroPiece = inputs[1].value?.trim();
-            const imputation = inputs[2].value?.trim();
-            const natureDepense = inputs[3].value?.trim();
-            const montantJustifie = parseFloat(inputs[4].value) || 0;
-            const montantNonJustifie = parseFloat(inputs[5].value) || 0;
-
-            if (!date) {
-              errorMessages.push(`Ligne ${index + 1}: Date manquante`);
-              valid = false;
-              return;
-            }
-            if (!natureDepense) {
-              errorMessages.push(`Ligne ${index + 1}: Nature de dépense manquante`);
-              valid = false;
-              return;
-            }
-            if (montantJustifie === 0 && montantNonJustifie === 0) {
-              errorMessages.push(`Ligne ${index + 1}: Au moins un montant (justifié ou non justifié) doit être supérieur à 0`);
-              valid = false;
-              return;
-            }
-
-            items.push({
-              _id: row.dataset.id || null,
-              dateDepense: date,
-              numeroPiece,
-              imputation,
-              natureDepense,
-              montantJustifie,
-              montantNonJustifie,
-            });
-          }
-        });
-
-        const responsable = document.querySelector('input[name="responsable"]')?.value?.trim();
-        const userId = document.querySelector('input[name="userId"]')?.value?.trim();
-        const chantier = document.querySelector('input[name="chantier"]')?.value?.trim();
-        const designation = document.querySelector('#mois')?.value?.trim();
-        const justifId = document.querySelector('input[name="justifId"]')?.value?.trim() || null;
-
-        if (!responsable || !userId || !chantier || !designation) {
-          const missingFields = [];
-          if (!responsable) missingFields.push('responsable');
-          if (!userId) missingFields.push('userId');
-          if (!chantier) missingFields.push('chantier');
-          if (!designation) missingFields.push('mois');
-          errorMessages.push(`Champs manquants: ${missingFields.join(', ')}`);
-          valid = false;
-        }
-
-        if (!valid) {
-          alert(`Erreurs détectées pour la justification de ${responsable || 'l\'utilisateur'}:\n${errorMessages.join('\n')}`);
-          return;
-        }
-
-        if (items.length === 0) {
-          alert('Veuillez ajouter au moins une dépense valide.');
-          return;
-        }
-
-        const id = window.location.pathname.split('/').pop();
-        fetch(`/achats/caisse/admin/${userId}/${id}/depenses`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, responsable, chantier, designation, justifId, items }),
-        })
-          .then(res => {
-            if (!res.ok) {
-              return res.json().then(data => {
-                throw new Error(data.error || `Erreur HTTP ${res.status}`);
-              });
-            }
-            return res.json();
-          })
-          .then(data => {
-            if (data.success) {
-              alert('Dépenses enregistrées avec succès.');
-              if (isNewJustification && data.justifId) {
-                window.location.href = `/achats/caisse/admin/${userId}/${data.justifId}`;
-              } else {
-                window.location.reload();
-              }
-            } else {
-              alert(`Erreur: ${data.error || 'Erreur inconnue.'}`);
-            }
-          })
-          .catch(err => {
-            console.error('Fetch error:', err);
-            alert(`Erreur: ${err.message}`);
-          });
-      }
-
-      // Delete depense item
-      function deleteDepenseItem(button) {
-        if (confirm('Supprimer cette dépense ?')) {
-          const row = button.closest('tr');
-          const id = row.dataset.id;
-          const userId = document.querySelector('input[name="userId"]')?.value?.trim();
-          const justifId = document.querySelector('input[name="justifId"]')?.value?.trim();
-
-          if (id && justifId && userId) {
-            fetch(`/achats/caisse/justification/depenses/${id}`, {
-              method: 'DELETE',
-              headers: { 'Content-Type': 'application/json' },
-            })
-              .then(res => {
-                if (!res.ok) {
-                  return res.json().then(data => {
-                    throw new Error(data.error || `HTTP error ${res.status}`);
-                  });
-                }
-                return res.json();
-              })
-              .then(data => {
-                if (data.success) {
-                  row.remove();
-                  alert('Dépense supprimée avec succès.');
-                  if (!document.querySelector('#depenseTable tbody tr')) {
-                    const tbody = document.querySelector('#depenseTable tbody');
-                    tbody.innerHTML = '<tr class="no-data"><td colspan="7" class="text-center">Aucune dépense enregistrée.</td></tr>';
-                  }
-                } else {
-                  alert(`Erreur: ${data.error || 'Erreur lors de la suppression.'}`);
-                }
-              })
-              .catch(err => {
-                console.error('Fetch error:', err);
-                alert(`Erreur réseau: ${err.message}`);
-              });
-          } else {
-            row.remove();
-            if (!document.querySelector('#depenseTable tbody tr')) {
-              const tbody = document.querySelector('#depenseTable tbody');
-              tbody.innerHTML = '<tr class="no-data"><td colspan="7" class="text-center">Aucune dépense enregistrée.</td></tr>';
-            }
-          }
-        }
-      }
-
-      // Save all data (recettes + depenses)
+// Save all data (recettes + depenses)
       function saveAllData() {
         const recetteRows = document.querySelectorAll('#recetteTable tbody tr');
         const depenseRows = document.querySelectorAll('#depenseTable tbody tr');
@@ -766,6 +745,7 @@
             alert(`Erreur: ${err.message}`);
           });
       }
+    
     </script>
 </body>
 </html>

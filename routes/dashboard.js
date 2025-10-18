@@ -22,7 +22,7 @@ import { deleteEncaissement, indexHis, saveEncaissement, updateHistoryBanque } f
 import { deleteTelePai, indexTelePai, storeTelePai, updateTelePai } from '../controllers/telepay_prelevController.js';
 import { createEncaissement, indexEncaissement, updateEncaissement } from '../controllers/encaisementController.js';
 import { addCaisseItem, createDemandeCaisse, deleteDemandeCaisseItem, indexDemandeCaisse, storeDemandeCaisse, updateDemandeCaisseItem, updateDemandeCaisseItemValidation, updateDemandeCaisseStatut, viewDemandeCaisse } from '../controllers/demandecaisseController.js';
-import { addJustifCaisse, addJustifCaisseAdminAuto, adminUserList, createJustifCaisse, createJustifCaisseAdmin, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteJustifeCaisse, deleteRecette, getAllJustifCaisse, justifeCaisseListUser, saveAllData, saveRecettesAdmin, viewJustifCaisse, viewJustifCaisseAdmin } from '../controllers/justifecaisseController.js';
+import { addJustifCaisse, addJustifCaisseAdminAuto, adminUserList, createJustifCaisse, createJustifCaisseAdmin, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteJustifeCaisse, deleteRecette, getAllJustifCaisse, justifeCaisseListUser, saveAllData, saveRecettesAdmin, updateDepenceValidation, validateAllDepenses, viewJustifCaisse, viewJustifCaisseAdmin } from '../controllers/justifecaisseController.js';
 
 export const dashboardRouter = express.Router();
 dashboardRouter.use(isAuthenticated)
@@ -353,4 +353,9 @@ dashboardRouter.get('/dashboard' , isAdmin, async (req, res) => {
         dashboardRouter.get('/achats/caisse/admin/:userId/:id', isAdmin, viewJustifCaisseAdmin);
         // dashboardRouter.get('/achats/caisse/admin/:userId/:id', isAdmin, updateJustifCaisseAdmin);
         dashboardRouter.post('/achats/caisse/admin/:userId/:id/recettes', isAdmin, saveRecettesAdmin);
+
+
+        dashboardRouter.patch('/achats/caisse/justification/depenses/:id', updateDepenceValidation);
+        dashboardRouter.post('/achats/caisse/justification/valider/:justifId', validateAllDepenses);
+
       

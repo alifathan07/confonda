@@ -59,7 +59,7 @@
                     <input type="hidden" name="chantier" value="<%= user.chantier.nom %>" />
                     <div class="form-group" style="margin: 0;">
                       <label for="mois" style="margin-right: 10px;"><strong>Mois :</strong></label>
-                      <select name="designation" id="mois" class="form-control" style="width: 200px; display: inline-block;">
+                      <select name="designation" id="mois" class="form-control" style="width: 200px; display: inline-block; background-color: #17A673; color : white">
                         <option value="">Sélectionner un mois</option>
                         <% const year = new Date().getFullYear(); %>
                         <% const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']; %>
@@ -76,11 +76,7 @@
             <!-- Demandes -->
             <div id="demandes" class="card shadow mb-4">
               <div class="card-header d-flex justify-content-between align-items-center">
-                <button class="btn btn-success btn-lg" onclick="addNewRow()">
-                    <i class="fas fa-plus"></i> Ajouter
-                  </button>
-                <button class="btn btn-success" onclick="saveAllItems()">Enregistrer Demande</button>
-
+               
                 
               </div>
               <div class="card-body">
@@ -154,8 +150,26 @@
                           </div>
                         </div>
                       <% }) %>
+
+                      
                     
                     <% } %>
+                    <td><input type="date" name="dateCaisse" value="<%= today %>" class="form-control" required /></td>
+                    <td><input type="text" class="form-control" name="designationItem" required /></td>
+                    <td><input type="number" step="0.01" class="form-control" name="montant" required /></td>
+                    <td><input type="text" class="form-control" name="imputation" placeholder="Optionnel" /></td>
+                    <td>
+                      <button class="btn btn-primary btn-sm" onclick="addNewRow()">
+                        <i class="fas fa-plus"></i>
+                      </button>
+                      <button class="btn btn-primary btn-sm" onclick="saveAllItems()">
+                        <i class="fas fa-save"></i>
+                        Enregistrer
+                      </button>
+                      <button class="btn btn-danger btn-sm" onclick="removeRow(this)">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </td>
                   </tbody>
                 </table>
               </div>
@@ -166,126 +180,127 @@
     </div>
   
     <script>
-        function addNewRow() {
-          const tableBody = document.querySelector('#demandeTable tbody');
-          const newRow = document.createElement('tr');
-          newRow.innerHTML = `
-            <td><input type="date" name="dateCaisse" value="${new Date().toISOString().split('T')[0]}" class="form-control" required /></td>
-            <td><input type="text" class="form-control" name="designationItem" required /></td>
-            <td><input type="number" step="0.01" class="form-control" name="montant" required /></td>
-            <td><input type="text" class="form-control" name="imputation" required /></td>
-            <td>
+      function addNewRow() {
+        const tableBody = document.querySelector('#demandeTable tbody');
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+          <td><input type="date" name="dateCaisse" value="${new Date().toISOString().split('T')[0]}" class="form-control" required /></td>
+          <td><input type="text" class="form-control" name="designationItem" required /></td>
+          <td><input type="number" step="0.01" class="form-control" name="montant" required /></td>
+          <td><input type="text" class="form-control" name="imputation" placeholder="Optionnel" /></td>
+          <td>
             <button class="btn btn-primary btn-sm" onclick="addNewRow()">
-                <i class="fas fa-plus"></i>
-              </button>
-                
-              <button class="btn btn-danger btn-sm" onclick="removeRow(this)">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          `;
-          tableBody.appendChild(newRow);
+              <i class="fas fa-plus"></i>
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="saveAllItems()">
+              <i class="fas fa-save"></i>
+              Enregistrer
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="removeRow(this)">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        `;
+        tableBody.appendChild(newRow);
+      }
+    
+      function saveNewRow(button) {
+        const row = button.closest('tr');
+        const dateCaisse = row.querySelector('input[name="dateCaisse"]').value;
+        const designationItem = row.querySelector('input[name="designationItem"]').value;
+        const montant = row.querySelector('input[name="montant"]').value;
+        const imputation = row.querySelector('input[name="imputation"]').value.trim();
+    
+        if (!dateCaisse || !designationItem || !montant) {
+          alert('Veuillez remplir les champs obligatoires : date, désignation et montant.');
+          return;
         }
-      
-        function saveNewRow(button) {
-          const row = button.closest('tr');
-          const dateCaisse = row.querySelector('input[name="dateCaisse"]').value;
-          const designationItem = row.querySelector('input[name="designationItem"]').value;
-          const montant = row.querySelector('input[name="montant"]').value;
-          const imputation = row.querySelector('input[name="imputation"]').value;
-      
-          if (!dateCaisse || !designationItem || !montant || !imputation) {
-            alert('Veuillez remplir tous les champs de la ligne.');
-            return;
-          }
-      
-          if (parseFloat(montant) <= 0) {
-            alert('Le montant doit être un nombre positif.');
-            return;
-          }
-      
-          // Optionally, send this single row to the backend if needed
-          alert('Ligne enregistrée localement. Cliquez sur "Enregistrer Demande" pour soumettre toutes les lignes.');
+    
+        if (parseFloat(montant) <= 0) {
+          alert('Le montant doit être un nombre positif.');
+          return;
         }
-      
-        function saveAllItems() {
-          const rows = document.querySelectorAll('#demandeTable tbody tr');
-          const items = [];
-      
-          // Collect data from input rows only (new rows, not existing demands)
-          rows.forEach(row => {
-            const dateCaisseInput = row.querySelector('input[name="dateCaisse"]');
-            const designationInput = row.querySelector('input[name="designationItem"]');
-            const montantInput = row.querySelector('input[name="montant"]');
-            const imputationInput = row.querySelector('input[name="imputation"]');
-      
-            // Only process rows with input fields (new rows)
-            if (dateCaisseInput && designationInput && montantInput && imputationInput) {
-              const dateCaisse = dateCaisseInput.value;
-              const designationItem = designationInput.value;
-              const montant = parseFloat(montantInput.value);
-              const imputation = imputationInput.value;
-      
-              // Validate row
-              if (!dateCaisse || !designationItem || isNaN(montant) || montant <= 0 || !imputation) {
-                return; // Skip invalid rows
-              }
-      
-              items.push({
-                dateCaisse,
-                designation: designationItem,
-                montant,
-                imputation
-              });
+    
+        alert('Ligne enregistrée localement. Cliquez sur "Enregistrer Demande" pour soumettre toutes les lignes.');
+      }
+    
+      function saveAllItems() {
+        const rows = document.querySelectorAll('#demandeTable tbody tr');
+        const items = [];
+    
+        rows.forEach(row => {
+          const dateCaisseInput = row.querySelector('input[name="dateCaisse"]');
+          const designationInput = row.querySelector('input[name="designationItem"]');
+          const montantInput = row.querySelector('input[name="montant"]');
+          const imputationInput = row.querySelector('input[name="imputation"]');
+    
+          if (dateCaisseInput && designationInput && montantInput && imputationInput) {
+            const dateCaisse = dateCaisseInput.value;
+            const designationItem = designationInput.value;
+            const montant = parseFloat(montantInput.value);
+            const imputation = imputationInput.value.trim();
+    
+            if (!dateCaisse || !designationItem || isNaN(montant) || montant <= 0) {
+              alert('Erreur dans une ligne : Veuillez remplir les champs obligatoires (date, désignation, montant positif).');
+              return; // Arrête la soumission si une ligne est invalide
             }
-          });
-      
-          const demandeur = document.querySelector('input[name="demandeur"]').value;
-          const chantier = document.querySelector('input[name="chantier"]').value;
-          const designationMois = document.querySelector('#mois').value;
-      
-          // Validate required fields
-          if (!demandeur || !chantier) {
-            alert('Erreur : Demandeur ou chantier manquant.');
-            return;
+    
+            const item = {
+              dateCaisse,
+              designation: designationItem,
+              montant
+            };
+    
+            if (imputation !== '') {
+              item.imputation = imputation;
+            }
+    
+            items.push(item);
           }
-      
-          if (!designationMois) {
-            alert('Veuillez sélectionner un mois.');
-            return;
-          }
-      
-          if (items.length === 0) {
-            alert('Veuillez ajouter au moins une ligne valide.');
-            return;
-          }
-      
-          // Send data to backend
-          fetch('/achat/demandes/caisse', { // Corrected URL to match typical routing
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ demandeur, chantier, designation: designationMois, items })
+        });
+    
+        const demandeur = document.querySelector('input[name="demandeur"]').value;
+        const chantier = document.querySelector('input[name="chantier"]').value;
+        const designationMois = document.querySelector('#mois').value;
+    
+        if (!demandeur || !chantier) {
+          alert('Erreur : Demandeur ou chantier manquant.');
+          return;
+        }
+    
+        if (!designationMois) {
+          alert('Veuillez sélectionner un mois.');
+          return;
+        }
+    
+        if (items.length === 0) {
+          alert('Veuillez ajouter au moins une ligne valide.');
+          return;
+        }
+    
+        fetch('/achat/demandes/caisse', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ demandeur, chantier, designation: designationMois, items })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              const id = data.id;
+              window.location.href = `/achats/demandes/caisse/${id}`;
+            } else {
+              alert('Erreur : ' + (data.error || 'Erreur inconnue lors de l\'enregistrement.'));
+            }
           })
-            .then(res => res.json())
-            .then(data => {
-              if (data.success) {
-                const  id  = data.id;
-                window.location.href = `/achats/demandes/caisse/${id}`;
-                
-              } else {
-                
-                alert('Erreur : ' + (data.error || 'Erreur inconnue lors de l\'enregistrement.'));
-              }
-            })
-            .catch(err => {
-              console.error('Fetch error:', err);
-              alert('Erreur réseau : ' + err.message);
-            });
-        }
-      
-        function removeRow(button) {
-          button.closest('tr').remove();
-        }
-      </script>
+          .catch(err => {
+            console.error('Fetch error:', err);
+            alert('Erreur réseau : ' + err.message);
+          });
+      }
+    
+      function removeRow(button) {
+        button.closest('tr').remove();
+      }
+    </script>
   </body>
 </html>

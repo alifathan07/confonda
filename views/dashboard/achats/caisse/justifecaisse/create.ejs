@@ -66,17 +66,31 @@
                   <input type="hidden" name="responsable" value="<%= user.name || '' %>" />
                   <input type="hidden" name="chantier" value="<%= chantier.nom || '' %>" />
                   <div class="form-group" style="margin: 0;">
-                    <label for="mois" style="margin-right: 10px;"><strong>SITUATION DE CAISSE :</strong></label>
-                    <select name="designation" id="mois" class="form-control" style="width: 200px; display: inline-block;" <% if (justifCaisse && justifCaisse.depenses && justifCaisse.depenses.length > 0) { %> disabled <% } %> >
-                     
-                      <% const year = new Date().getFullYear(); %>
-                      <% const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']; %>
-                      <% months.forEach((m, i) => { %>
-                        <option value="<%= `${m}-${year}` %>" <%= justifCaisse && justifCaisse.designation && justifCaisse.designation.includes(m) ? 'selected' : '' %>>
-                          <%= `${m}-${year}` %>
-                        </option>
-                      <% }); %>
-                    </select>
+                    <% if (justifCaisse && justifCaisse.id) { %>
+                      <select name="designation" id="mois" class="form-control" style="width: 200px; display: inline-block;" disabled>
+                        
+                        <% const year = new Date().getFullYear(); %>
+                        <% const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']; %>
+                        <% months.forEach((m, i) => { %>
+                          <option value="<%= `${m}-${year}` %>" <%= justifCaisse && justifCaisse.designation && justifCaisse.designation.includes(m) ? 'selected' : '' %>>
+                            <%= `${m}-${year}` %>
+                          </option>
+                        <% }); %>
+                      </select>
+                    <% } else { %>
+                      <label for="mois" style="margin-right: 10px;"><strong>SITUATION DE CAISSE :</strong></label>
+
+                      <select name="designation" id="mois" class="form-control" style="width: 200px; display: inline-block;">
+                        
+                        <% const year = new Date().getFullYear(); %>
+                        <% const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']; %>
+                        <% months.forEach((m, i) => { %>
+                          <option value="<%= `${m}-${year}` %>" <%= justifCaisse && justifCaisse.designation && justifCaisse.designation.includes(m) ? 'selected' : '' %>>
+                            <%= `${m}-${year}` %>
+                          </option>
+                        <% }); %>
+                      </select>
+                    <% } %>
                   </div>
                 </div>
               </div>
@@ -160,6 +174,9 @@
                     <th>Nature Dépense</th>
                     <th>Montant Justifié</th>
                     <th>Montant Non Justifié</th>
+                   
+                    <th>Validation</th>
+                    <th>Verifié Par</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -167,29 +184,66 @@
                   <% if (user.depenses && user.depenses.length > 0) { %>
                     <% user.depenses.forEach(d => { %>
                       <tr data-id="<%= d._id || '' %>">
-                        <td><input type="date" name="dateDepense" value="<%= d.date ? new Date(d.date).toISOString().split('T')[0] : '' %>" class="form-control" required /></td>
-                        <td><input type="text" name="numeroPiece" value="<%= d.numeroDuPiece || 'sss' %>" class="form-control" /></td>
-                        <td><input type="text" name="imputation" value="<%= d.imputation || '' %>" class="form-control" /></td>
-                        <td><input type="text" name="natureDepense" value="<%= d.natureDepense || '' %>" class="form-control" required /></td>
-                        <td><input type="number" name="montantJustifie" value="<%= d.justifier || '0' %>" step="0.01" class="form-control" required /></td>
-                        <td><input type="number" name="montantNonJustifie" value="<%= d.nonJustifier || '0' %>" step="0.01" class="form-control" required /></td>
+                        <% if (d.validerPar === null) { %>
+                          <!-- Editable version (not validated yet) -->
+                          <td>
+                            <input type="date" name="dateDepense" 
+                                   value="<%= d.date ? new Date(d.date).toISOString().split('T')[0] : '' %>" 
+                                   class="form-control" required />
+                          </td>
+                          <td><input type="text" name="numeroPiece" value="<%= d.numeroDuPiece || '' %>" class="form-control" /></td>
+                          <td><input type="text" name="imputation" value="<%= d.imputation || '' %>" class="form-control" /></td>
+                          <td><input type="text" name="natureDepense" value="<%= d.natureDepense || '' %>" class="form-control" required /></td>
+                          <td><input type="number" name="montantJustifie" value="<%= d.justifier || 0 %>" step="0.01" class="form-control" required /></td>
+                          <td><input type="number" name="montantNonJustifie" value="<%= d.nonJustifier || 0 %>" step="0.01" class="form-control" required /></td>
+                        <% } else { %>
+                          <!-- Read-only version (validated) -->
+                          <td><%= d.date ? new Date(d.date).toLocaleDateString('fr-FR') : '' %></td>
+                          <td><%= d.numeroDuPiece || '' %></td>
+                          <td><%= d.imputation || '' %></td>
+                          <td><%= d.natureDepense || '' %></td>
+                          <td><%= d.justifier || 0 %></td>
+                          <td><%= d.nonJustifier || 0 %></td>
+                        <% } %>
+                        
+                
                         <td>
-                          <div class="d-flex justify-content-end">
-                            <button class="btn btn-success btn-sm me-2" onclick="saveAllDepenseItems()">
-                              <i class="fas fa-save"></i>
-                            </button>
-                            <button class="btn btn-primary btn-sm me-2" onclick="addNewDepenseRow()">
-                              <i class="fas fa-plus"></i>
-                            </button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteDepenseItem(this)">
-                              <i class="fas fa-trash"></i>
-                            </button>
-                          </div>
+                          <% if (d.validation && d.validerPar !== null) { %>
+                            <span class="badge bg-success text-white">Validé</span>
+                          <% } else { %>
+                            <span class="badge bg-danger text-white">Non validé</span>
+                          <% } %>
+                        </td>
+                
+                        <td><%= d.validerPar || 'Non défini' %></td>
+                
+                        <td>
+                          <% if (d.validerPar === null) { %>
+                            <div class="d-flex justify-content-end">
+                              <button class="btn btn-success btn-sm me-2" onclick="saveAllDepenseItems()">
+                                <i class="fas fa-save"></i>
+                              </button>
+                              <button class="btn btn-primary btn-sm me-2" onclick="addNewDepenseRow()">
+                                <i class="fas fa-plus"></i>
+                              </button>
+                              <button class="btn btn-danger btn-sm" onclick="deleteDepenseItem(this)">
+                                <i class="fas fa-trash"></i>
+                              </button>
+                            </div>
+                          <% } else { %>
+                            <span class="text-muted">Lecture seule</span>
+                          <% } %>
                         </td>
                       </tr>
                     <% }) %>
+                  <% } else { %>
+                    <tr>
+                     
+                    </tr>
                   <% } %>
                 </tbody>
+                
+                
               </table>
               
             </div>
@@ -229,7 +283,8 @@
                       <div class="p-4 bg-light rounded-4">
                         <div class="text-muted mb-2" style="font-size: 1rem; font-weight: 500;">Dépenses Justifiées</div>
                         <div class="fw-bold text-warning" style="font-size: 1.5rem; letter-spacing: 0.05rem;">
-                          <%= justifCaisse.depenses ? justifCaisse.depenses.reduce((sum, d) => sum + (d.montantJustifie || 0), 0).toFixed(2) : '0.00' %> DH
+                          <%= justifCaisse.depenses ? justifCaisse.depenses.filter(d => d.validation).reduce((sum, d) => sum + (d.montantJustifie || 0), 0).toFixed(2) : '0.00' %> DH
+  
                         </div>
                       </div>
                     </div>
@@ -237,7 +292,7 @@
                       <div class="p-4 bg-light rounded-4">
                         <div class="text-muted mb-2" style="font-size: 1rem; font-weight: 500;">Dépenses Non Justifiées</div>
                         <div class="fw-bold text-danger" style="font-size: 1.5rem; letter-spacing: 0.05rem;">
-                          <%= justifCaisse.depenses ? justifCaisse.depenses.reduce((sum, d) => sum + (d.montantNonJustifie || 0), 0).toFixed(2) : '0.00' %> DH
+                          <%= justifCaisse.depenses ? justifCaisse.depenses.filter(d => d.validation).reduce((sum, d) => sum + (d.montantNonJustifie || 0), 0).toFixed(2) : '0.00' %> DH
                         </div>
                       </div>
                     </div>
@@ -355,6 +410,7 @@ function saveAllRecetteItems() {
       dateRecette: dateInput,
       source: sourceInput,
       montant,
+      validation: 1,
     });
   });
 

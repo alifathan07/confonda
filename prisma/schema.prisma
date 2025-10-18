@@ -41,7 +41,7 @@ model DemandeCaisse {
   montantTotal     Float?      
   dateDemande DateTime?
   demandeur String?
-
+  color String?
   // Relations
   userId      Int
   user        User          @relation(fields: [userId], references: [id])
@@ -88,6 +88,7 @@ model JustifCaisse {
   totalDepenses  Float?         @default(0)
   soldeFinal     Float?         @default(0)
 
+
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
@@ -132,6 +133,8 @@ model DepenseCaisse {
 
   justifCaisseId  Int
   justifCaisse    JustifCaisse  @relation(fields: [justifCaisseId], references: [id])
+   validation           Boolean?  @default(true)
+  validerPar String?
 }
 
 

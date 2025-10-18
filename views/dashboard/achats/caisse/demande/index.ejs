@@ -178,7 +178,7 @@
                   
                       <% demande.forEach(d => { %>
                         <% if (user.role === 'admin' || user.role === 'grandadmin' || d.userId === user.id) { %>
-                          <tr data-id="<%= d.id %>">
+                          <tr data-id="<%= d.id %>" style="<%= d.color === 'green' ? 'background-color: #c6efc5;' : '' %> <%= d.color === 'blue' ? 'background-color: #f49797 ; color : white' : '' %> <%= d.color === 'gray' ? 'background-color: #f5f5f5;' : '' %> ">
                             <td contenteditable="true" data-name="numero"><%= d.numero || '' %></td>
                             <td contenteditable="true" data-name="dateSaisie"><%= formatDateToDDMMYYYY(d.dateDemande) %></td>
                             <td contenteditable="true" data-name="designation"><%= d.designation || '' %></td>

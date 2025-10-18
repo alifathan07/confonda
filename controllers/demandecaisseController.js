@@ -31,10 +31,11 @@ export const createDemandeCaisse = async(req , res) => {
             chantier: true
         }
     })
+    const today = new Date().toISOString().split('T')[0];
     
     
  
-    res.render('dashboard/achats/caisse/demande/create' , { user  } )
+    res.render('dashboard/achats/caisse/demande/create' , { user , today } )
 }
   export const storeDemandeCaisse = async (req, res) => {
       try {
@@ -63,7 +64,7 @@ export const createDemandeCaisse = async(req , res) => {
     
         // Validate items
         for (const [index, item] of items.entries()) {
-          if (!item.dateCaisse || !item.designation || !item.montant || !item.imputation) {
+          if (!item.dateCaisse || !item.designation || !item.montant ) {
             console.error(`Invalid item at index ${index}:`, item);
             return res.status(400).json({ success: false, error: `Tous les champs des items doivent être remplis (item ${index + 1}).` });
           }
@@ -97,6 +98,7 @@ export const createDemandeCaisse = async(req , res) => {
             demandeur: demandeur || null,
             user: { connect: { id: req.session.user.id } },
             chantier: { connect: { id: req.session.user.chantierId } },
+            color: 'blue',
             items: {
               create: items.map((item, index) => {
                 console.log(`Creating item ${index}:`, item);
@@ -221,7 +223,7 @@ export const viewDemandeCaisse = async (req, res) => {
           dateCaisse: new Date(req.body.dateCaisse),
           designation: req.body.designation,
           montant: parseFloat(req.body.montant),
-          imputation: req.body.imputation,
+          imputation: req.body.imputation || null,
           demandeCaisse: { connect: { id: demandeCaisseId } },
         },
       });
@@ -251,7 +253,7 @@ export const viewDemandeCaisse = async (req, res) => {
     try {
       const demandeCaisse = await prisma.demandeCaisse.update({
         where: { id: parseInt(id) },
-        data: { status },
+        data: { status, color : "gray" },
       });
       res.json({ success: true, demandeCaisse });
     } catch (error) {
@@ -288,7 +290,10 @@ export const viewDemandeCaisse = async (req, res) => {
       // Update the demandeCaisse total
       const demandeCaisse = await prisma.demandeCaisse.update({
         where: { id: item.demandeCaisseId },
-        data: { montantTotal: total },
+        data: { 
+          montantTotal: total, 
+          color: validation === 'Refusée' || validation === 'Validée' ?  'green'  : 'blue'
+        },
       });
   
       res.json({ success: true, item, montantTotal: total });
