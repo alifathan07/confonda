@@ -145,7 +145,10 @@
                         <tr data-id="<%= d.id %>">
                           <td contenteditable="true" data-name="mois"><%= d.mois || '' %></td>
                           <td contenteditable="true" data-name="annee"><%= d.annee || '' %></td>
-                          <td contenteditable="true" data-name="designation"><%= d.designation || '' %></td>
+                          <% const words = d.designation.split(' ');
+                          const lastTwoWords = words.slice(-2).join(' ');
+                          const designation = `${lastTwoWords}`; %>
+                          <td contenteditable="true" data-name="designation"><%= designation || '' %></td>
                           <td contenteditable="true" data-name="soldePrecedent">
                             <%= Number(d.soldePrecedent || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
                           </td>
@@ -165,10 +168,16 @@
                               <a href="/achats/caisse/admin/<%= userId %>/<%= d.id %>" class="btn btn-info btn-sm">
                                 <i class="fas fa-eye"></i> Détails
                               </a>
-                              <button type="button" class="btn btn-danger btn-sm" onclick="supprimerjustifCaisse(<%= d.id %>)">
+                              <!-- <button type="button" class="btn btn-danger btn-sm" onclick="supprimerjustifCaisse(<%= d.id %>)">
                                 <i class="fas fa-trash"></i> Supprimer
-                              </button>
-                            
+                              </button> -->
+                              <a href="/achats/caisse/justification/recettes/<%= d.id %>/pdf" class="btn btn-primary btn-sm">
+                                <i class="fas fa-file-pdf"></i> PDF
+                              </a>
+                              <a href="/achats/caisse/justification/recettes/<%= d.id %>/excel" class="btn btn-success btn-sm">
+                                <i class="fas fa-file-excel"></i> Excel
+                              </a>
+                              
                             </div>
                           </td>
                         </tr>

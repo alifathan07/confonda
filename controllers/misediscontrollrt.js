@@ -284,3 +284,17 @@ export const listBanquesMiseadis = async (req, res) => {
 
     res.render('dashboard/tresorerie/reglements/miseadis/banques', {banques});
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,5 +1,11 @@
-import prisma from "../db.js";
-
+import prisma from "../db.js"
+import PDFDocument from "pdfkit";
+import fs from "fs";
+import path, { parse } from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+import ExcelJS from 'exceljs';
 // Helper: Get previous month's soldé
 const getPreviousSolde = async (userId, chantierId, mois, annee) => {
   let prevMois = mois - 1;
@@ -102,7 +108,7 @@ export const createJustifCaisse = async (req, res) => {
       nextMonth = months[now.getMonth()];
       nextYear = now.getFullYear();
     }
-    const designation = `Justification Caisse ${nextMonth} ${nextYear}`;
+    const designation = `Justif.Caisse ${nextMonth} ${nextYear}`;
 
     const chantier = await prisma.chantier.findUnique({
       where: { id: user.chantierId },
@@ -1334,3 +1340,458 @@ export const validateAllDepenses = async (req, res) => {
     res.status(500).json({ success: false, error: 'Erreur lors de la validation des dépenses.' });
   }
 };
+
+
+
+
+
+
+
+
+
+
+export const generateJustifCaissePDF = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = req.session.user;
+
+    if (!user) return res.status(403).json({ success: false, error: "Utilisateur non authentifié" });
+
+    const justifCaisse = await prisma.justifCaisse.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        recettes: true,
+        depenses: true,
+        user: { select: { name: true } },
+        chantier: { select: { nom: true } },
+      },
+    });
+
+    if (!justifCaisse) return res.status(404).json({ success: false, error: "Justification non trouvée" });
+
+    if (justifCaisse.userId !== user.id && !["admin", "grandadmin"].includes(user.role))
+      return res.status(403).json({ success: false, error: "Accès refusé" });
+    const words = justifCaisse.designation.split(' ');
+    const lastTwoWords = words.slice(-2).join(' ');
+    const COLORS = {
+      PRIMARY: '#A52A2A',
+      SECONDARY: '#333333',
+      BACKGROUND: '#FAFAFA',
+      TABLE_HEADER: '#F2F2F2',
+      WHITE: '#FFFFFF',
+      BORDER: '#E0E0E0',
+      MUTED: '#7A7A7A',
+      LIGHT_GRAY: '#F9F9F9',
+    };
+
+    const FONTS = {
+      REGULAR: 'Helvetica',
+      BOLD: 'Helvetica-Bold',
+      ITALIC: 'Helvetica-Oblique',
+    };
+
+    const SIZES = {
+      TITLE: 22,
+      SUBTITLE: 13,
+      BODY: 10,
+      SMALL: 8,
+      MARGIN: 50,
+      PAGE_WIDTH: 595,
+      PAGE_HEIGHT: 842,
+      FOOTER_HEIGHT: 70,
+      ROW_HEIGHT: 28,
+    };
+
+    // Spacing constants for consistent layout
+    const SPACING = {
+      LOGO_TO_TITLE: 12,
+      TITLE_TO_META: 30,
+      META_LINE_HEIGHT: 18,
+      META_TO_INFO: 25,
+      INFO_BOX_HEIGHT: 85,
+      INFO_BOX_PADDING: 14,
+      INFO_LINE_HEIGHT: 22,
+      INFO_TO_TABLE: 35,
+      TABLE_TITLE_TO_HEADER: 22,
+      TABLE_HEADER_HEIGHT: 30,
+      TABLE_BOTTOM_MARGIN: 30,
+    };
+
+    const { PAGE_WIDTH, PAGE_HEIGHT, FOOTER_HEIGHT, MARGIN, ROW_HEIGHT } = SIZES;
+    const footerY = PAGE_HEIGHT - FOOTER_HEIGHT;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=JustifCaisse-${justifCaisse.designation}.pdf`
+    );
+
+    const doc = new PDFDocument({ margin: 0, size: 'A4' });
+    doc.pipe(res);
+
+    const drawLine = (x1, y1, x2, y2, color = COLORS.BORDER) =>
+      doc.strokeColor(color).lineWidth(1).moveTo(x1, y1).lineTo(x2, y2).stroke();
+
+    // ========== HEADER SECTION ==========
+    let currentY = MARGIN;
+    
+    // Logo
+    const logoSize = 160;
+    const logoPath = path.join(__dirname, '../public/img/logo-4.png');
+    if (fs.existsSync(logoPath)) {
+      doc.image(logoPath, (PAGE_WIDTH - logoSize) / 2, currentY, { width: logoSize });
+    }
+    currentY += logoSize + SPACING.LOGO_TO_TITLE;
+
+    // Title
+    doc.font(FONTS.BOLD)
+      .fontSize(SIZES.TITLE)
+      .fillColor(COLORS.PRIMARY)
+      .text('JUSTIFICATIFS DE CAISSE', 0, currentY, { align: 'center', width: PAGE_WIDTH });
+    
+    currentY += SIZES.TITLE + SPACING.TITLE_TO_META;
+
+    // ===== METADATA GRID =====
+    const gridColWidth = (PAGE_WIDTH - 2 * MARGIN - 80) / 3;
+    const metaStartX = MARGIN + 40;
+
+    doc.font(FONTS.BOLD).fontSize(SIZES.BODY).fillColor('#444')
+       .text('Chantier:', metaStartX, currentY, { width: gridColWidth, continued: true })
+       .font(FONTS.REGULAR).text(` ${justifCaisse.chantier?.nom || '-'}`, { width: gridColWidth });
+
+    doc.font(FONTS.BOLD)
+       .text('Responsable :', metaStartX + gridColWidth, currentY, { width: gridColWidth, continued: true })
+       .font(FONTS.REGULAR).text(` ${justifCaisse.user?.name || '-'}`, { width: gridColWidth });
+
+    doc.font(FONTS.BOLD)
+       .text('Mois:', metaStartX + 2 * gridColWidth, currentY, { width: gridColWidth, continued: true })
+       .font(FONTS.REGULAR).text(` ${lastTwoWords || '-'}`, { width: gridColWidth });
+
+    currentY += SPACING.META_LINE_HEIGHT + SPACING.META_TO_INFO;
+
+    // ===== INFO BOX =====
+    const infoBoxHeight = SPACING.INFO_BOX_HEIGHT;
+    doc.rect(MARGIN, currentY, PAGE_WIDTH - 2 * MARGIN, infoBoxHeight)
+       .fillAndStroke(COLORS.WHITE, COLORS.BORDER);
+
+    const infoPadding = SPACING.INFO_BOX_PADDING;
+    const col1X = MARGIN + infoPadding;
+    const col2X = PAGE_WIDTH / 2 + infoPadding;
+    const infoTextY = currentY + infoPadding;
+
+    // First row of info
+    doc.font(FONTS.BOLD).fontSize(SIZES.BODY).fillColor('#444')
+       .text('Total Recettes:', col1X, infoTextY, { continued: true })
+       .font(FONTS.REGULAR).text(` ${Number(justifCaisse.totalRecettes ?? 0).toFixed(2)} MAD`);
+
+    doc.font(FONTS.BOLD)
+       .text('Total Dépenses:', col2X, infoTextY, { continued: true })
+       .font(FONTS.REGULAR).text(` ${Number(justifCaisse.totalDepenses ?? 0).toFixed(2)} MAD`);
+
+    // Second row of info
+    const secondRowY = infoTextY + SPACING.INFO_LINE_HEIGHT;
+    doc.font(FONTS.BOLD)
+       .text('Solde Précédent:', col1X, secondRowY, { continued: true })
+       .font(FONTS.REGULAR).text(` ${Number(justifCaisse.soldePrecedent ?? 0).toFixed(2)} MAD`);
+
+    doc.font(FONTS.BOLD)
+       .text('Solde Final:', col2X, secondRowY, { continued: true })
+       .font(FONTS.REGULAR).text(` ${Number(justifCaisse.soldeFinal ?? 0).toFixed(2)} MAD`);
+
+    currentY += infoBoxHeight + SPACING.INFO_TO_TABLE;
+
+    // ===== CENTERED TABLE FUNCTION =====
+    const drawCenteredTable = (items, title, startY, columns) => {
+      const colWidths = columns.map(c => c.width);
+      const tableWidth = colWidths.reduce((a, b) => a + b, 0);
+      const tableX = (PAGE_WIDTH - tableWidth) / 2;
+
+      // Table title
+      doc.font(FONTS.BOLD).fontSize(SIZES.SUBTITLE).fillColor(COLORS.PRIMARY)
+         .text(title, 0, startY, { align: 'center', width: PAGE_WIDTH });
+
+      let y = startY + SPACING.TABLE_TITLE_TO_HEADER;
+
+      // Header row
+      doc.rect(tableX, y, tableWidth, SPACING.TABLE_HEADER_HEIGHT)
+         .fillAndStroke('#F5F5F5', COLORS.BORDER);
+      
+      let x = tableX;
+      columns.forEach((col, i) => {
+        doc.font(FONTS.BOLD).fontSize(SIZES.BODY).fillColor('#444')
+           .text(col.header, x + 6, y + 9, { 
+             width: colWidths[i] - 12, 
+             align: col.align || 'left' 
+           });
+        if (i > 0) drawLine(x, y, x, y + SPACING.TABLE_HEADER_HEIGHT);
+        x += colWidths[i];
+      });
+      y += SPACING.TABLE_HEADER_HEIGHT;
+
+      // Data rows
+      items.forEach((item, idx) => {
+        const bgColor = idx % 2 === 0 ? COLORS.WHITE : COLORS.LIGHT_GRAY;
+        doc.rect(tableX, y, tableWidth, ROW_HEIGHT).fillAndStroke(bgColor, COLORS.BORDER);
+
+        x = tableX;
+        columns.forEach((col, j) => {
+          const text = col.getText(item);
+          doc.font(FONTS.REGULAR).fontSize(SIZES.BODY).fillColor('#444')
+             .text(text, x + 6, y + 9, { 
+               width: colWidths[j] - 12, 
+               align: col.align || 'left' 
+             });
+          if (j > 0) drawLine(x, y, x, y + ROW_HEIGHT);
+          x += colWidths[j];
+        });
+        y += ROW_HEIGHT;
+      });
+
+      // Totals row
+      const totalCols = columns.filter(c => c.total);
+      if (totalCols.length > 0) {
+        const totalRowHeight = ROW_HEIGHT + 2;
+        doc.rect(tableX, y, tableWidth, totalRowHeight).fillAndStroke('#F5F5F5', COLORS.BORDER);
+        
+        x = tableX;
+        columns.forEach((col, j) => {
+          if (col.total) {
+            const sum = items.reduce((acc, it) => 
+              acc + Number(col.sum ? col.sum(it) : 0), 0
+            );
+            doc.font(FONTS.BOLD).fontSize(SIZES.BODY).fillColor('#444')
+               .text(sum.toFixed(2), x + 6, y + 9, { 
+                 width: colWidths[j] - 12, 
+                 align: col.align || 'right' 
+               });
+          } else if (j === 0) {
+            doc.font(FONTS.BOLD).fontSize(SIZES.BODY).fillColor('#444')
+               .text('TOTAL', x + 6, y + 9, { 
+                 width: colWidths[j] - 12, 
+                 align: 'left' 
+               });
+          }
+          if (j > 0) drawLine(x, y, x, y + totalRowHeight);
+          x += colWidths[j];
+        });
+        y += totalRowHeight;
+      }
+
+      return y + SPACING.TABLE_BOTTOM_MARGIN;
+    };
+
+    // ===== DÉPENSES TABLE =====
+    const depensesColumns = [
+      { 
+        header: 'Date', 
+        width: 75, 
+        getText: d => new Date(d.dateDepense).toLocaleDateString('fr-FR') 
+      },
+
+       { 
+        header: 'N° Piece', 
+        width: 55, 
+        getText: d => d.numeroPiece || '-', 
+  
+      },
+      { 
+        header: 'Nature de la Dépense', 
+        width: 200, 
+        getText: d => d.natureDepense || '-' 
+      },
+       { 
+        header: 'Imputation', 
+        width: 75, 
+        getText: d => d.imputation || '-', 
+    
+      },
+     
+      { 
+        header: 'Justifié', 
+        width: 75, 
+        getText: d => Number(d.montantJustifie ?? 0).toFixed(2), 
+        align: 'right', 
+        total: true, 
+        sum: d => Number(d.montantJustifie ?? 0) 
+      },
+      { 
+        header: 'Non Justifié', 
+        width: 75, 
+        getText: d => Number(d.montantNonJustifie ?? 0).toFixed(2), 
+        align: 'right', 
+        total: true, 
+        sum: d => Number(d.montantNonJustifie ?? 0) 
+      },
+      
+    ];
+
+    currentY = drawCenteredTable(
+      justifCaisse.depenses || [], 
+      'Dépenses', 
+      currentY, 
+      depensesColumns
+    );
+
+    // ===== FOOTER =====
+    doc.rect(0, footerY, PAGE_WIDTH, FOOTER_HEIGHT).fill(COLORS.PRIMARY);
+    const footerTextY = footerY + (FOOTER_HEIGHT - 40) / 2;
+    
+    doc.font(FONTS.REGULAR).fontSize(SIZES.SMALL).fillColor(COLORS.WHITE)
+       .text(
+         '82, angle Bd Abdelmoumen et rue Soumaya Imm. Shahrazad III, 2ème étage Casablanca', 
+         0, 
+         footerTextY, 
+         { align: 'center', width: PAGE_WIDTH }
+       )
+       .text(
+         'Tél: 0522-23-39-70 | Fax: 0522-23-42-60 | Capital: 18 500 000 DH | ICE: 001526422000063', 
+         0, 
+         footerTextY + 16, 
+         { align: 'center', width: PAGE_WIDTH }
+       );
+
+    doc.end();
+
+  } catch (error) {
+    console.error("Erreur lors de la génération du PDF :", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+
+
+
+
+
+export const generateJustifCaisseExcel = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = req.session.user;
+
+    if (!user) return res.status(403).json({ success: false, error: "Utilisateur non authentifié" });
+
+    const justifCaisse = await prisma.justifCaisse.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        recettes: true,
+        depenses: true,
+        user: { select: { name: true } },
+        chantier: { select: { nom: true } },
+      },
+    });
+
+    if (!justifCaisse) return res.status(404).json({ success: false, error: "Justification non trouvée" });
+
+    if (justifCaisse.userId !== user.id && !["admin", "grandadmin"].includes(user.role))
+      return res.status(403).json({ success: false, error: "Accès refusé" });
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('Dépenses');
+
+    // ===== HEADER =====
+    sheet.mergeCells('A1', 'F1');
+    sheet.getCell('A1').value = `Justification Caisse: ${justifCaisse.designation}`;
+    sheet.getCell('A1').font = { bold: true, size: 14 };
+    sheet.getCell('A1').alignment = { horizontal: 'center' };
+
+    sheet.addRow([]);
+    sheet.addRow(['Chantier', justifCaisse.chantier?.nom || '-', 'Responsable', justifCaisse.user?.name || '-', 'Mois', justifCaisse.designation.split(' ').slice(-2).join(' ')]);
+    sheet.addRow([]);
+
+    // ===== TABLE HEADER =====
+    const headers = ['Date', 'N° Piece', 'Nature de la Dépense', 'Imputation', 'Justifié', 'Non Justifié'];
+    const headerRow = sheet.addRow(headers);
+
+    // Style headers
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    headerRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFA52A2A' } // soft red like PDF PRIMARY
+    };
+    headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
+    headerRow.eachCell((cell) => {
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    });
+
+    // ===== DATA ROWS =====
+    justifCaisse.depenses.forEach(depense => {
+      const row = sheet.addRow([
+        new Date(depense.dateDepense).toLocaleDateString('fr-FR'),
+        depense.numeroPiece || '-',
+        depense.natureDepense || '-',
+        depense.imputation || '-',
+        Number(depense.montantJustifie ?? 0),
+        Number(depense.montantNonJustifie ?? 0),
+      ]);
+
+      // Optional: alternating row color
+      const fillColor = sheet.lastRow.number % 2 === 0 ? 'FFF9F9F9' : 'FFFFFFFF';
+      row.eachCell((cell) => {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: fillColor }
+        };
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      });
+    });
+
+    // ===== TOTALS ROW =====
+    const totalJustifie = justifCaisse.depenses.reduce((sum, d) => sum + Number(d.montantJustifie ?? 0), 0);
+    const totalNonJustifie = justifCaisse.depenses.reduce((sum, d) => sum + Number(d.montantNonJustifie ?? 0), 0);
+    const totalRow = sheet.addRow(['TOTAL', '', '', '', totalJustifie, totalNonJustifie]);
+    totalRow.font = { bold: true };
+    totalRow.alignment = { horizontal: 'right' };
+    totalRow.eachCell((cell) => {
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    });
+
+    // ===== COLUMN WIDTHS =====
+    sheet.columns.forEach(col => { col.width = 20; });
+
+    // ===== SEND FILE =====
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=JustifCaisse-${justifCaisse.designation}.xlsx`
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+
+  } catch (error) {
+    console.error("Erreur lors de la génération de l'Excel :", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+

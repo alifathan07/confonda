@@ -21,8 +21,8 @@ import { createUi, destroyClient, indexClient, postClient, showClient, updateCli
 import { deleteEncaissement, indexHis, saveEncaissement, updateHistoryBanque } from '../controllers/historiqueControlelr.js';
 import { deleteTelePai, indexTelePai, storeTelePai, updateTelePai } from '../controllers/telepay_prelevController.js';
 import { createEncaissement, indexEncaissement, updateEncaissement } from '../controllers/encaisementController.js';
-import { addCaisseItem, createDemandeCaisse, deleteDemandeCaisseItem, indexDemandeCaisse, storeDemandeCaisse, updateDemandeCaisseItem, updateDemandeCaisseItemValidation, updateDemandeCaisseStatut, viewDemandeCaisse } from '../controllers/demandecaisseController.js';
-import { addJustifCaisse, addJustifCaisseAdminAuto, adminUserList, createJustifCaisse, createJustifCaisseAdmin, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteJustifeCaisse, deleteRecette, getAllJustifCaisse, justifeCaisseListUser, saveAllData, saveRecettesAdmin, updateDepenceValidation, validateAllDepenses, viewJustifCaisse, viewJustifCaisseAdmin } from '../controllers/justifecaisseController.js';
+import { addCaisseItem, createDemandeCaisse, deleteDemandeCaisseItem, generateDemandeExcel, generateDemandePdf, indexDemandeCaisse, storeDemandeCaisse, updateDemandeCaisseItem, updateDemandeCaisseItemValidation, updateDemandeCaisseStatut, viewDemandeCaisse } from '../controllers/demandecaisseController.js';
+import { addJustifCaisse, addJustifCaisseAdminAuto, adminUserList, createJustifCaisse, createJustifCaisseAdmin, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteJustifeCaisse, deleteRecette, generateJustifCaisseExcel, generateJustifCaissePDF, getAllJustifCaisse, justifeCaisseListUser, saveAllData, saveRecettesAdmin, updateDepenceValidation, validateAllDepenses, viewJustifCaisse, viewJustifCaisseAdmin } from '../controllers/justifecaisseController.js';
 
 export const dashboardRouter = express.Router();
 dashboardRouter.use(isAuthenticated)
@@ -324,6 +324,9 @@ dashboardRouter.get('/dashboard' , isAdmin, async (req, res) => {
        dashboardRouter.post("/demandes/caisse/:id", addCaisseItem);
        dashboardRouter.patch("/achats/demandes/caisse/updateStatus/:id", updateDemandeCaisseStatut);
        dashboardRouter.patch("/achats/demandes/caisse/updateValidation/:id", updateDemandeCaisseItemValidation);
+       dashboardRouter.get('/achats/demandes/caisse/:id/pdf', generateDemandePdf);
+       dashboardRouter.get('/achats/demandes/caisse/:id/excel', generateDemandeExcel);
+
 
        // justification caisse
        // Render create page
@@ -337,7 +340,8 @@ dashboardRouter.get('/dashboard' , isAdmin, async (req, res) => {
         // Handle recettes
         dashboardRouter.post("/achats/caisse/justification/recettes", createOrUpdateRecettes);
         dashboardRouter.delete("/achats/caisse/justification/recettes/:id", deleteRecette);
-
+        dashboardRouter.get("/achats/caisse/justification/recettes/:id/pdf", generateJustifCaissePDF);
+        dashboardRouter.get("/achats/caisse/justification/recettes/:id/excel", generateJustifCaisseExcel);
         // Handle depenses
         dashboardRouter.post("/achats/caisse/justification/depenses", createOrUpdateDepenses);
         dashboardRouter.delete("/achats/caisse/justification/depenses/:id", deleteDepense);
