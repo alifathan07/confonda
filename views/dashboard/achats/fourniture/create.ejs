@@ -35,52 +35,46 @@
     <h1 class="h3 mb-4 text-gray-800">Créer une Demande de Fournitures</h1>
   
     <!-- Form Card -->
-    <div class="card shadow mb-4">
+    <!-- <div class="card shadow mb-4">
       <div class="card-body">
         <form id="demandeForm" action="/achats/fourniture/create" method="POST">
-          <div class="form-row">
-            <!-- Code de la demande -->
-            <div class="form-group col-md-6">
-              <label for="codeDemande">Code de la demande</label>
-              <input type="text" class="form-control" id="codeDemande" name="codeDemande" 
-                     value="1" readonly>
-            </div>
-  
-            <!-- Nom Chantier -->
-            <div class="form-group col-md-6">
-                <input type="number" class="form-control" id="chantierId" name="chantierId" 
-                value="<%= user.chantierId %>" hidden>
-         
-              </div>
-  
-          <div class="form-row">
-            <!-- Date d’établissement -->
-            <div class="form-group col-md-6">
-              <label for="dateEtablissement">Date d’établissement</label>
-              <input type="date" class="form-control" id="dateEtablissement" name="dateEtablissement" 
-                     value="<%= new Date().toISOString().split('T')[0] %>" readonly>
-            </div>
-  
-            <!-- Demandeur -->
-            <div class="form-group col-md-6">
-              <label for="demandeur">Demandeur</label>
-              <input type="text" class="form-control" id="demandeur" name="demandeur" 
-                     value="<%= user.name %>" readonly>
-            </div>
-            
-          </div>
-  
-          <!-- Observations -->
+          
           
         </form>
       </div>
-    </div>
+    </div> -->
   
     <!-- Products Table -->
     <!-- Products Table -->
 <div class="card shadow mb-4">
     <div class="card-header py-3">
       <h6 class="m-0 font-weight-bold text-primary">Demande Fournitures </h6>
+      <br>
+          <form 
+            id="demandeForm"
+            action="/achats/demande/fourniture"
+            method="POST"
+          >
+        <div class="d-flex justify-content-between">
+      
+            <div class="form-group">
+              <label for="date">Date</label>
+
+              <input type="text" class="form-control" id="date" name="date" value="<%= today %>" readonly>
+            </div>
+            <div class="form-group">
+              <label for="numero">Numéro</label>
+              <input type="number" class="form-control" id="numero" name="numero" value="<%= numero %>" readonly>
+            </div>
+            <div class="form-group">
+              <label for="user">User</label>
+              <input type="text" class="form-control" id="user" name="user" value="<%= user.name %>" readonly>
+            </div>
+        
+        </div>
+
+
+        
     </div>
     <div class="card-body">
       <div class="table-responsive">
@@ -90,51 +84,57 @@
               <th rowspan="2">Code article</th>
               <th rowspan="2">Désignations</th>
               <th rowspan="2">Unité</th>
-              <th colspan="2">Quantités</th>
+              <th rowspan="2">Quantité</th>
               <th colspan="2">Date de livraison</th>
-              <th colspan="2">Quantités</th>
               <th rowspan="2">LOT</th>
               <th rowspan="2">Recommandations et Observations</th>
               <th rowspan="2"></th>
             </tr>
             <tr>
-              <th>Demandées</th>
-              <th>Stockées</th>
+              
               <th>Au plus tôt</th>
               <th>Au plus tard</th>
-              <th>Prévu</th>
-              <th>Reçue</th>
+              
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td><input type="text" name="codeArticle[]" class="form-control" value=""></td>
-              <td><input type="text" name="designation[]" class="form-control" value=""></td>
-              <td><input type="text" name="unite[]" class="form-control" value=""></td>
-              <td><input type="number" name="qteDemandee[]" class="form-control" value=""></td>
-              <td><input type="number" name="qteStockee[]" class="form-control"></td>
-              <td><input type="date" name="dateTôt[]" class="form-control"></td>
-              <td><input type="date" name="dateTard[]" class="form-control"></td>
-              <td><input type="number" name="qtePrevue[]" class="form-control"></td>
-              <td><input type="number" name="qteRecue[]" class="form-control"></td>
-              <td><input type="text" name="lot[]" class="form-control"></td>
-              <td><input type="text" name="observation[]" class="form-control"></td>
-              <td>
-                <button type="button" class="btn btn-sm btn-danger deleteRow">
-                  <i class="fas fa-trash"></i>
-                </button>
-              </td>
-            </tr>
+  <td><input type="text" name="items[0][code]" class="form-control" value=""></td>
+  <td><input type="text" name="items[0][designation]" class="form-control" value=""></td>
+  <td><input type="text" name="items[0][unité]" class="form-control" value=""></td>
+  <td><input type="number" name="items[0][quantité]" class="form-control" value=""></td>
+  <td><input type="date" name="items[0][auPlutot]" class="form-control"></td>
+  <td><input type="date" name="items[0][auPlutart]" class="form-control"></td>
+  <td><input type="text" name="items[0][lot]" class="form-control"></td>
+  <td><input type="text" name="items[0][observation]" class="form-control"></td>
+  <td>
+    <div class="d-flex justify-content-end">
+      <button type="button" class="btn btn-md btn-danger deleteRow">
+        <i class="fas fa-trash"></i>
+      </button>
+      <button type="button" class="btn btn-md btn-primary addRow">
+        <i class="fas fa-plus"></i> 
+      </button>
+    </div>
+  </td>
+</tr>
           </tbody>
         </table>
       </div>
   
-      <button type="button" id="addRow" class="btn btn-success btn-sm mt-2">
-        <i class="fas fa-plus"></i> Ajouter une Fourniture
+      
+    </div>
+
+      </form>
+  </div>
+  <div class="mb-4 text-right">
+     
+      <button type="submit" form="demandeForm" name="action" value="submit" class="btn btn-primary" onclick="saveDemande()">
+        Enregistrer la Demande
       </button>
+      <a href="/demande-fourniture" class="btn btn-danger">Annuler</a>
     </div>
   </div>
-  
   <script>
     $(document).ready(function() {
       const tableBody = $("#productsTable tbody");
@@ -143,21 +143,24 @@
       $("#addRow").on("click", function() {
         const row = `
           <tr>
-            <td><input type="text" name="codeArticle[]" class="form-control"></td>
-            <td><input type="text" name="designation[]" class="form-control"></td>
-            <td><input type="text" name="unite[]" class="form-control"></td>
-            <td><input type="number" name="qteDemandee[]" class="form-control"></td>
-            <td><input type="number" name="qteStockee[]" class="form-control"></td>
+            <td><input type="text" name="codeArticle[]" class="form-control" value=""></td>
+            <td><input type="text" name="designation[]" class="form-control" value=""></td>
+            <td><input type="text" name="unite[]" class="form-control" value=""></td>
+            <td><input type="number" name="qteDemandee[]" class="form-control" value=""></td>
             <td><input type="date" name="dateTôt[]" class="form-control"></td>
             <td><input type="date" name="dateTard[]" class="form-control"></td>
-            <td><input type="number" name="qtePrevue[]" class="form-control"></td>
-            <td><input type="number" name="qteRecue[]" class="form-control"></td>
             <td><input type="text" name="lot[]" class="form-control"></td>
             <td><input type="text" name="observation[]" class="form-control"></td>
+            
             <td>
-              <button type="button" class="btn btn-sm btn-danger deleteRow">
-                <i class="fas fa-trash"></i>
-              </button>
+              <div class="d-flex justify-content-end">
+                <button type="button" class="btn btn-md btn-danger deleteRow">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                  <button type="button" id="addRow" class="btn btn-md btn-primary">
+                    <i class="fas fa-plus"></i> 
+                  </button>
+              </div>
             </td>
           </tr>`;
         tableBody.append(row);
@@ -168,18 +171,14 @@
         $(this).closest("tr").remove();
       });
     });
+    const saveDemande = () => {
+      document.getElementById('demandeForm').submit();
+    }
   </script>
   
   
     <!-- Action Buttons -->
-    <div class="mb-4 text-right">
-     
-      <button type="submit" form="demandeForm" name="action" value="submit" class="btn btn-primary">
-        Enregistrer la Demande
-      </button>
-      <a href="/demande-fourniture" class="btn btn-danger">Annuler</a>
-    </div>
-  </div>
+    
   <!-- /.container-fluid -->
   
   

@@ -20,14 +20,13 @@ model User {
   password  String
   name      String @unique
 
-  demandesCreated   DemandeFourniture[] @relation("DemandeRequestedBy")
-  demandesValidated DemandeFourniture[] @relation("DemandeValidatedBy")
-
+ 
   JustifCaisse JustifCaisse[]
 
   chantier    Chantier @relation(fields: [chantierId], references: [id])
   chantierId  Int      // foreign key
   demandeCaisse   DemandeCaisse[] 
+  demandeFourniture   DemandeFourniture[] 
   role        String @default("grandadmin") // user, admin, grandadmin
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -71,6 +70,51 @@ model ItemCaisse {
   demandeCaisseId Int?
   validepar String?
   demandeCaisse   DemandeCaisse?  @relation(fields: [demandeCaisseId], references: [id])
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+
+model DemandeFourniture {
+  id          Int           @id @default(autoincrement())
+  numero      Int?
+  dateDemande DateTime?
+  demandeur String?
+  color String?
+  
+  // Relations
+  userId      Int
+  user        User          @relation(fields: [userId], references: [id])
+
+  chantierId  Int?
+  chantier    Chantier?     @relation(fields: [chantierId], references: [id])
+  status String @default("En Attente") // En Attente // Commandé // Livré // Annulé
+
+  items       ItemFourniture[]  
+  
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // ✅ numero unique per user
+  @@unique([userId, numero])
+}
+
+model ItemFourniture{
+  id              Int            @id @default(autoincrement())
+  code String?
+  designation     String
+  unité String?
+  quantité Int?
+  auPlutart  String?
+  auPlutot String?
+  lot String?
+  observation String?
+  validation String @default("En cours") // En cours , Refusée , Validée
+  validepar String?
+  demandeFournitureId Int?
+  demandeFourniture   DemandeFourniture?  @relation(fields: [demandeFournitureId], references: [id])
 
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
@@ -510,22 +554,7 @@ model ChantierItem {
 
 
 // Demande Fourniture : 
-model DemandeFourniture {
-  id               Int       @id @default(autoincrement())
-  codeDemande      Int    @unique
-  nomChantier      Chantier  @relation(fields: [chantierId], references: [id])
-  chantierId       Int
-  dateEtablissement DateTime @default(now())
-  obsDemande       String?
-  osValidation     String?   // e.g., "pending", "accepted", "rejected"
-  requestedBy      User?     @relation("DemandeRequestedBy", fields: [requestedById], references: [id])
-  requestedById    Int?
-  validatedBy      User?     @relation("DemandeValidatedBy", fields: [validatedById], references: [id])
-  validatedById    Int?
-  produits         DemandeProduit[] // One demand can have multiple products
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-}
+
 
 model DemandeProduit {
   id                  Int               @id @default(autoincrement())
@@ -541,8 +570,6 @@ model DemandeProduit {
   lot                 String?
   observation         String?
   codeArticle         String?
-  demandeFourniture   DemandeFourniture @relation(fields: [demandeFournitureId], references: [id])
-  demandeFournitureId Int
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
 }

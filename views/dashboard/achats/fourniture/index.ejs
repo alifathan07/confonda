@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Liste des Demandes de Fourniture</title>
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+  <link href="/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+  <style>
+    .custom-btn { min-width: 120px; }
+    .excel-table th { cursor: move; user-select: none; }
+    .excel-dirty-row { background-color: #fff3cd !important; }
+    .dragging { opacity: .5; }
+    .drag-over { background-color: #e2e6ea; }
+  </style>
+</head>
+
+<body id="page-top">
+  <div id="wrapper">
+    <%- include('../../../layouts/sidebar') %>
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <%- include('../../../layouts/topbar') %>
+        <div class="container-fluid">
+
+          <!-- CARD -->
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">Liste des Demandes de Fourniture</h6>
+            </div>
+
+            <div class="card-body">
+
+              <!-- BUTTONS -->
+              <div class="d-flex justify-content-end" style="gap: 10px;">
+                <a href="/achats/create/fourniture" class="btn btn-primary custom-btn">
+                  <i class="fas fa-plus"></i> Ajouter
+                </a>
+                <button id="downloadPdfBtn" class="btn btn-success custom-btn">
+                  <i class="fas fa-file-pdf"></i> PDF
+                </button>
+                <button id="downloadExcelBtn" class="btn btn-outline-success custom-btn">
+                  <i class="fas fa-file-excel"></i> Excel
+                </button>
+              </div>
+
+              <!-- FILTERS (admin / grandadmin only) -->
+              <% if (user.role !== 'user') { %>
+                <div class="form-group mt-3">
+                  <div class="d-flex" style="gap:10px; align-items:flex-end;">
+                    <div class="flex-grow-1">
+                      <label for="chantierFilter">Chantier</label>
+                      <select id="chantierFilter" class="form-control custom-select">
+                        <option value="">Tous</option>
+                        <% chantiers.forEach(c => { %>
+                          <option value="<%= c.id %>"><%= c.nom %></option>
+                        <% }) %>
+                      </select>
+                    </div>
+
+                    <div class="flex-grow-1">
+                      <label for="demandeurFilter">Demandeur</label>
+                      <select id="demandeurFilter" class="form-control custom-select">
+                        <option value="">Tous</option>
+                        <% users.forEach(u => { %>
+                          <option value="<%= u.id %>"><%= u.name %></option>
+                        <% }) %>
+                      </select>
+                    </div>
+
+                    
+
+                    <div class="flex-grow-1">
+                      <label for="statusFilter">Statut</label>
+                      <select id="statusFilter" class="form-control custom-select">
+                        <option value="">Tous</option>
+                        <option value="En Attente">En Attente</option>
+                        <option value="Versée">Versée</option>
+                        <option value="Annulée">Annulée</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <button id="resetFilters" class="btn btn-secondary custom-btn">
+                        <i class="fas fa-undo"></i> Réinitialiser
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              <% } %>
+
+              <br>
+
+              <!-- TABLE -->
+              <div class="table-responsive">
+                <% 
+                  const formatDate = d => d ? 
+                    `${String(new Date(d).getDate()).padStart(2,'0')}/${String(new Date(d).getMonth()+1).padStart(2,'0')}/${new Date(d).getFullYear()}` 
+                    : '';
+                %>
+                <table id="editableTable" class="excel-table table table-bordered">
+                  <thead>
+                    <tr style="position:sticky;top:0;background:#fff;z-index:1;">
+                      <th draggable="true">Numéro</th>
+                      <th draggable="true">Date Demande</th>
+                      <th draggable="true">Demandeur</th>
+                      <th draggable="true">Chantier</th>
+                      <th draggable="true">Statut</th>
+                      <th style="width:130px;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% if (!demande || demande.length===0) { %>
+                      <tr><td colspan="8" class="text-center">Aucune demande disponible.</td></tr>
+                    <% } else { %>
+                      <% demande.forEach(d => { %>
+                        <% if (user.role==='admin' || user.role==='grandadmin' || d.userId===user.id) { %>
+                          <tr data-id="<%= d.id %>"
+                              style="<%- d.color==='green' ? 'background:#c6efc5;' : '' %>
+                                     <%- d.color==='blue' ? 'background:#f49797;color:#fff;' : '' %>
+                                     <%- d.color==='gray' ? 'background:#f5f5f5;' : '' %>">
+                            <td contenteditable data-name="numero"><%= d.numero||'' %></td>
+                            <td contenteditable data-name="dateSaisie"><%= formatDate(d.dateDemande) %></td>
+                            <td contenteditable data-name="demandeur"><%= d.user?.name||'' %></td>
+                            <td contenteditable data-name="chantier"><%= d.chantier.nom ||'e' %></td>
+                         
+
+                            <% if (user.role==='user' || user.role==='grandadmin') { %>
+                              <td data-name="status" class="text-center">
+                                <span class="badge rounded-pill px-3 py-2"
+                                      style="min-width:100px;<%
+                                        if(d.status==='Versée'){%>background:#C6E2B5;color:#256029;<%}
+                                        else if(d.status==='Annulée'){%>background:#FFD6D6;color:#B71C1C;<%}
+                                        else if(d.status==='En Attente'){%>background:#FFF3CD;color:#856404;<%}
+                                        else{%>background:#F8F9FA;color:#6C757D;<%}%>">
+                                  <%= d.status||'—' %>
+                                </span>
+                              </td>
+                            <% } else { /* admin */ %>
+                              <td data-name="status">
+                                <select class="form-control form-control-sm" onchange="updateStatus(<%= d.id %>,this.value)">
+                                  <option value="">—</option>
+                                  <option value="Versée"   <%= d.status==='Versée'   ?'selected':'' %>>Versée</option>
+                                  <option value="Annulée"  <%= d.status==='Annulée'  ?'selected':'' %>>Annulée</option>
+                                  <option value="En Attente"<%= d.status==='En Attente'? 'selected':'' %>>En Attente</option>
+                                </select>
+                              </td>
+                            <% } %>
+
+                            <td>
+                              <div class="btn-group" role="group">
+                                <a href="/achats/fourniture/<%= d.id %>" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> Voir</a>
+                                <a href="/achats/fourniture/<%= d.id %>/pdf" class="btn btn-danger btn-sm"><i class="fas fa-file-pdf"></i> PDF</a>
+                                <a href="/achats/fourniture/<%= d.id %>/excel" class="btn btn-success btn-sm"><i class="fas fa-file-excel"></i> Excel</a>
+                              </div>
+                            </td>
+                          </tr>
+                        <% } %>
+                      <% }) %>
+                    <% } %>
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colspan="5" class="text-right font-weight-bold">Total :</td>
+                      <td id="total" class="font-weight-bold">0,00</td>
+                      <td colspan="2"></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCRIPTS -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+      <script>
+        const { jsPDF } = window.jspdf;
+
+        // ---------- UTILS ----------
+        const debounce = (fn, wait) => {
+          let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), wait); };
+        };
+
+        const formatDateToDDMMYYYY = d => d ? `${String(new Date(d).getDate()).padStart(2,'0')}/${String(new Date(d).getMonth()+1).padStart(2,'0')}/${new Date(d).getFullYear()}` : '';
+        const sanitize = s => s.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        // ---------- STATUS UPDATE ----------
+        async function updateStatus(id, status) {
+          try {
+            const r = await fetch(`/achats/demandes/fourniture/updateStatus/${id}`, {
+              method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status})
+            });
+            if(r.ok){ alert('Statut mis à jour'); location.reload(); }
+            else alert('Erreur statut');
+          }catch(e){ alert('Erreur réseau'); }
+        }
+
+        // ---------- AUTO-SAVE ROW ----------
+        const debouncedSave = debounce(async row => {
+          const id = row.dataset.id;
+          const data = {};
+          let invalid = false;
+
+          row.querySelectorAll('td[data-name]').forEach(td => {
+            const k = td.dataset.name;
+            if(k==='status'){
+              const sel = td.querySelector('select'); if(sel) data[k]=sel.value||null;
+            }else{
+              let v = sanitize(td.innerText.trim());
+              if(k==='montant'){
+                v = parseFloat(v.replace(/\s/g,'').replace(',','.'));
+                if(isNaN(v)) invalid=true;
+                else data[k]=v;
+              }else if(k==='dateSaisie'){
+                const iso = v.split('/').reverse().join('-');
+                if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)) invalid=true;
+                else data[k]=iso;
+              }else if(v) data[k]=v;
+            }
+          });
+
+          if(invalid){ alert('Valeur invalide dans la ligne'); return; }
+
+          try{
+            const r = await fetch(`/achats/demandes/fourniture/update/${id}`,{
+              method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
+            });
+            const j = await r.json();
+            if(r.ok){
+              row.classList.remove('excel-dirty-row');
+              row.removeAttribute('data-dirty');
+            }else alert(j.message||'Erreur');
+          }catch(e){ alert('Erreur réseau'); }
+        },600);
+
+        // ---------- FILTERS ----------
+        const applyFilters = () => {
+          const c = document.getElementById('chantierFilter')?.value||'';
+          const u = document.getElementById('demandeurFilter')?.value||'';
+          const m = document.getElementById('moisFilter')?.value ? 
+                     `${document.getElementById('moisFilter').value.toLowerCase()}-${new Date().getFullYear()}` : '';
+          const s = document.getElementById('statusFilter')?.value||'';
+
+          document.querySelectorAll('#editableTable tbody tr[data-id]').forEach(tr=>{
+            let show = true;
+
+            if(c){
+              const txt = tr.querySelector('td[data-name="chantier"]').innerText.trim();
+              const opt = document.querySelector(`#chantierFilter option[value="${c}"]`).innerText;
+              show = show && txt===opt;
+            }
+            if(u){
+              const txt = tr.querySelector('td[data-name="demandeur"]').innerText.trim();
+              const opt = document.querySelector(`#demandeurFilter option[value="${u}"]`).innerText;
+              show = show && txt===opt;
+            }
+            if(m){
+              const txt = tr.querySelector('td[data-name="designation"]').innerText.trim().toLowerCase();
+              show = show && txt===m;
+            }
+            if(s){
+              const sel = tr.querySelector('select[data-name="status"]');
+              const txt = sel ? sel.value : tr.querySelector('td[data-name="status"] span').innerText.trim();
+              show = show && txt===s;
+            }
+            tr.style.display = show ? '' : 'none';
+          });
+          updateTotal();
+        };
+
+        // ---------- TOTAL ----------
+        const updateTotal = () => {
+          let sum = 0;
+          document.querySelectorAll('#editableTable tbody tr[data-id]:not([style*="display: none"]) td[data-name="montant"]').forEach(td=>{
+            const v = parseFloat(td.innerText.replace(/\s/g,'').replace(',','.'));
+            if(!isNaN(v)) sum+=v;
+          });
+          document.getElementById('total').innerText = sum.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});
+        };
+
+        // ---------- DRAG COLUMNS ----------
+        let dragIdx=null;
+        const swapCols = (tbl, from, to) => {
+          if(from===to || from>=tbl.tHead.rows[0].cells.length-1 || to>=tbl.tHead.rows[0].cells.length-1) return;
+          const insert = from<to ? 1 : 0;
+          tbl.tHead.rows[0].insertBefore(tbl.tHead.rows[0].children[from], tbl.tHead.rows[0].children[to+insert]);
+          tbl.tBodies[0].querySelectorAll('tr').forEach(r=> r.insertBefore(r.children[from], r.children[to+insert]));
+        };
+        document.querySelectorAll('#editableTable thead th[draggable="true"]').forEach((th,i)=>{
+          th.addEventListener('dragstart',e=>{ dragIdx=i; th.classList.add('dragging'); });
+          th.addEventListener('dragend',()=>{ dragIdx=null; th.classList.remove('dragging'); });
+          th.addEventListener('dragover',e=>e.preventDefault());
+          th.addEventListener('drop',e=>{ e.preventDefault(); if(dragIdx!==null) swapCols(document.getElementById('editableTable'),dragIdx,i); });
+        });
+
+        // ---------- EDIT MARK ----------
+        document.getElementById('editableTable').addEventListener('input',e=>{
+          const td = e.target.closest('td[data-name]');
+          if(td){
+            const tr = td.parentElement;
+            tr.dataset.dirty='true';
+            tr.classList.add('excel-dirty-row');
+            if(td.dataset.name==='montant') updateTotal();
+          }
+        });
+        document.addEventListener('click',e=>{
+          if(!e.target.closest('#editableTable')){
+            document.querySelectorAll('#editableTable tbody tr[data-dirty]').forEach(r=>debouncedSave(r));
+          }
+        });
+
+        // ---------- FILTER LISTENERS ----------
+        ['chantierFilter','demandeurFilter','moisFilter','statusFilter'].forEach(id=>{
+          const el=document.getElementById(id);
+          if(el) el.addEventListener('change',applyFilters);
+        });
+        document.getElementById('resetFilters')?.addEventListener('click',()=>{
+          ['chantierFilter','demandeurFilter','moisFilter','statusFilter'].forEach(id=>document.getElementById(id).value='');
+          document.querySelectorAll('#editableTable tbody tr[data-id]').forEach(r=>r.style.display='');
+          updateTotal();
+        });
+
+        // ---------- PDF ----------
+        document.getElementById('downloadPdfBtn').addEventListener('click',()=>{
+          const tbl = document.getElementById('editableTable');
+          const rows = [...tbl.querySelectorAll('tbody tr[data-id]')].filter(r=>r.style.display!=='none');
+          if(!rows.length){ alert('Aucune donnée visible'); return; }
+
+          const doc = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+          const head = [...tbl.querySelectorAll('thead th')].slice(0,-1).map(th=>th.innerText);
+          const body = rows.map(r=>[...r.querySelectorAll('td:not(:last-child)')].map(td=>{
+            const sel=td.querySelector('select');
+            let v = sel ? sel.options[sel.selectedIndex].text : td.innerText.trim();
+            if(td.dataset.name==='montant'){
+              const n = parseFloat(v.replace(/\s/g,'').replace(',','.'));
+              if(!isNaN(n)) v = n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,' ')+',00';
+            }
+            return v;
+          }));
+
+          doc.setFontSize(16); doc.text('Liste des Demandes de Fourniture',10,15);
+          doc.autoTable({head:[head],body,startY:25,theme:'grid',
+            headStyles:{fillColor:[22,160,133],textColor:[255,255,255],fontStyle:'bold'},
+            columnStyles:{5:{halign:'right'}},
+            styles:{fontSize:8,cellPadding:2}
+          });
+
+         
+          doc.save('demandes_fourniture.pdf');
+        });
+
+        // ---------- EXCEL ----------
+        document.getElementById('downloadExcelBtn').addEventListener('click',()=>{
+          const tbl = document.getElementById('editableTable');
+          const rows = [...tbl.querySelectorAll('tbody tr[data-id]')].filter(r=>r.style.display!=='none');
+          if(!rows.length){ alert('Aucune donnée visible'); return; }
+
+          const head = [...tbl.querySelectorAll('thead th')].slice(0,-1).map(th=>th.innerText);
+          const body = rows.map(r=>[...r.querySelectorAll('td:not(:last-child)')].map(td=>{
+            const sel=td.querySelector('select');
+            let v = sel ? sel.options[sel.selectedIndex].text : td.innerText.trim();
+            if(td.dataset.name==='montant'){
+              const n = parseFloat(v.replace(/\s/g,'').replace(',','.'));
+              v = isNaN(n)?0:n;
+            }
+            return v;
+          }));
+          const total = document.getElementById('total').innerText.replace(/\s/g,'').replace(',','.');
+          body.push(['Total','','','','',parseFloat(total)||0,'']);
+
+          const wb = XLSX.utils.book_new();
+          const ws = XLSX.utils.aoa_to_sheet([head,...body]);
+          ws['!cols'] = [{wch:18},{wch:18},{wch:25},{wch:25},{wch:25},{wch:18},{wch:23}];
+          XLSX.utils.book_append_sheet(wb,ws,'Fournitures');
+          XLSX.writeFile(wb,'demandes_fourniture.xlsx');
+        });
+
+        // ---------- INIT ----------
+        document.addEventListener('DOMContentLoaded',()=>{ updateTotal(); });
+      </script>
+
+      <!-- VENDOR SCRIPTS -->
+      <script src="/vendor/jquery/jquery.min.js"></script>
+      <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+      <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+      <script src="/js/sb-admin-2.min.js"></script>
+      <script src="/vendor/datatables/jquery.dataTables.min.js"></script>
+      <script src="/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+      <script>
+        $(function(){ $('#editableTable').DataTable({searching:false,ordering:false,paging:false,info:false}); });
+      </script>
+    </div>
+  </div>
+</body>
+</html>
