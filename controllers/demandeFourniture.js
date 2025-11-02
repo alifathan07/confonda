@@ -279,3 +279,126 @@ export const deleteDemandeFourniture = async (req, res) => {
       .json({ success: false, error: `Erreur serveur : ${error.message}` });
   }
 };
+
+
+export const updateValidationFourniture = async (req, res) => {
+  const startTime = Date.now();
+  console.log('DEBUT updateValidationFourniture | Timestamp:', new Date().toISOString());
+
+  try {
+    // ÉTAPE 1 : Récupération des données
+    const { id } = req.params;
+    const { validation, validerPar } = req.body;
+    const admin = req.session.user;
+
+    console.log('Étape 1 - Params ID:', id);
+    console.log('Étape 1 - Body reçu:', { validation, validerPar });
+    console.log('Étape 1 - Session admin:', admin ? { id: admin.id, name: admin.name } : 'Aucun');
+
+    // ÉTAPE 2 : Validation du champ obligatoire
+    if (validation === undefined) {
+      console.warn('ÉCHEC - Champ "validation" manquant');
+      return res.status(400).json({
+        success: false,
+        error: 'Le champ validation est requis',
+      });
+    }
+
+    // Conversion en booléen
+    const validationBool = Boolean(validation);
+    console.log('Étape 2 - Validation convertie en booléen:', validationBool);
+
+    // ÉTAPE 3 : Construction du payload
+    const updateData = { validation: validationBool };
+
+    if (validationBool) {
+      const nameToUse = admin?.name ?? 'Inconnu';
+      updateData.validePar = nameToUse;
+      console.log('Étape 3 - Validation activée → validePar défini:', nameToUse);
+    } else {
+      updateData.validePar = null;
+      console.log('Étape 3 - Validation désactivée → validePar remis à null');
+    }
+
+    console.log('Étape 3 - Payload Prisma final:', updateData);
+
+    // ÉTAPE 4 : Mise à jour Prisma
+    console.log('Étape 4 - Exécution Prisma update...');
+    const updatedItem = await prisma.itemFourniture.update({
+      where: { id: parseInt(id, 10) },
+      data: updateData,
+    });
+
+    console.log('Étape 4 - Mise à jour réussie ! Item mis à jour:', {
+      id: updatedItem.id,
+      validation: updatedItem.validation,
+      validePar: updatedItem.validePar,
+    });
+
+    // ÉTAPE 5 : Réponse au client
+    const response = {
+      success: true,
+      validation: updatedItem.validation,
+      validerPar: updatedItem.validePar ?? '-',
+    };
+
+    console.log('Étape 5 - Réponse envoyée:', response);
+    console.log(`FIN updateValidationFourniture | Durée: ${Date.now() - startTime}ms\n`);
+
+    res.status(200).json(response);
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error('ERREUR CRITIQUE updateValidationFourniture | Durée:', `${duration}ms`);
+    console.error('Message:', error.message);
+    console.error('Stack:', error.stack);
+    console.error('--- FIN ERREUR ---\n');
+
+    res.status(500).json({
+      success: false,
+      error: 'Erreur serveur lors de la mise à jour.',
+    });
+  }
+};
+
+export const validateAllFourniture = async (req, res) => {
+  try {
+    console.log('Request received for validateAllDepenses:', req.params);
+    const { fournId } = req.params;
+    const admin = req.session.user;
+    if (!fournId) {
+      console.log('Missing justifId in params');
+      return res.status(400).json({ success: false, error: 'justifId est requis' });
+    }
+    if (!admin || !admin.name) {
+      console.log('Missing admin or admin.name:', admin);
+      return res.status(401).json({ success: false, error: 'Utilisateur non authentifié ou nom manquant' });
+    }
+
+    console.log(`Updating expenses for justifId: ${justifId}, admin: ${admin.name}`);
+    // Update all expenses for the given justifId
+    const fourniture = await prisma.itemFourniture.updateMany({
+      where: { demandeFournitureId: parseInt(fournId) },
+      data: {
+        validation: true,
+        validerPar: admin.name,
+      },
+    });
+
+    console.log(`Update result: ${fourniture.count} expenses updated`);
+    if (fourniture.count === 0) {
+      return res.status(404).json({ success: false, error: 'Aucune dépense trouvée pour ce justifId' });
+    }
+
+    // Recalculate totals using helper
+
+    res.status(200).json({ 
+      success: true, 
+      validerPar: admin.name,
+      message: `${fourniture.count} dépense(s) validée(s)`,
+    });
+  } catch (error) {
+    console.error('❌ Error validating depenses:', error);
+    res.status(500).json({ success: false, error: 'Erreur lors de la validation des dépenses.' });
+  }
+};
+/* ------------------------------------------------------------------ */

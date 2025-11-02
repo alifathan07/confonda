@@ -62,7 +62,8 @@
 
             <div class="card-body">
               <div class="table-responsive">
-                <table class="table table-bordered text-center align-middle"
+               <% if (user.role === "user") { %>
+                 <table class="table table-bordered text-center align-middle"
                        id="productsTable" width="100%" cellspacing="0">
                   <thead class="thead-light">
                     <tr>
@@ -74,6 +75,8 @@
                       <th rowspan="2">LOT</th>
                       <th rowspan="2">Recommandations et Observations</th>
                       <th rowspan="2">Actions</th>
+                      <th rowspan="2">Validation</th>
+                      <th rowspan="2">Validé Par </th>
                     </tr>
                     <tr>
                       <th>Au plus tôt</th>
@@ -104,11 +107,169 @@
                                 </button>
                             </div>
                         </td>
+                        <td>
+                            <% if (item.validation === "Validée") { %>
+                                Validée
+                            <% } else if (item.validation === "Refusée") { %>
+                                Refusée
+                            <% } else { %>
+                                En cours
+                            <% } %> 
+                        </td>
+                        <td>Test</td>
                         </td>
                       </tr>
                     <% }) %>
                   </tbody>
                 </table>
+               
+              <% } else { %>
+               <!-- 1. Add a hidden input with the *demandeFourniture* id (once, outside the loop) -->
+<input type="hidden" name="demandeFournitureId" value="<%= demandeFourniture.id %>">
+
+<button class="btn btn-success btn-sm" id="validBtn" onclick="validePar()">
+  <i class="fas fa-check-circle"></i> Tout Valider
+</button>
+
+<table class="table table-bordered text-center align-middle" id="productsTable">
+  <thead class="thead-light">
+    <tr>
+      <th rowspan="2">Code article</th>
+      <th rowspan="2">Désignations</th>
+      <th rowspan="2">Unité</th>
+      <th rowspan="2">Quantité</th>
+      <th colspan="2">Date de livraison</th>
+      <th rowspan="2">LOT</th>
+      <th rowspan="2">Recommandations et Observations</th>
+      <th rowspan="2">Validation</th>
+      <th rowspan="2">Validé Par</th>
+    </tr>
+    <tr><th>Au plus tôt</th><th>Au plus tard</th></tr>
+  </thead>
+
+  <tbody>
+    <% demandeFourniture.items.forEach((item, idx) => { %>
+      <tr data-item-id="<%= item._id %>">
+        <td><input type="hidden" name="items[<%= idx %>][id]" value="<%= item.id %>">
+            <input type="text" name="items[<%= idx %>][code]" class="form-control" value="<%= item.code ?? '' %>"></td>
+        <td><input type="text" name="items[<%= idx %>][designation]" class="form-control" value="<%= item.designation %>"></td>
+        <td><input type="text" name="items[<%= idx %>][unité]" class="form-control" value="<%= item.unité ?? '' %>"></td>
+        <td><input type="number" name="items[<%= idx %>][quantité]" class="form-control" value="<%= item.quantité %>"></td>
+        <td><input type="date" name="items[<%= idx %>][auPlutot]" class="form-control"
+                   value="<%= item.auPlutot ? new Date(item.auPlutot).toISOString().split('T')[0] : '' %>"></td>
+        <td><input type="date" name="items[<%= idx %>][auPlutart]" class="form-control"
+                   value="<%= item.auPlutart ? new Date(item.auPlutart).toISOString().split('T')[0] : '' %>"></td>
+        <td><input type="text" name="items[<%= idx %>][lot]" class="form-control" value="<%= item.lot ?? '' %>"></td>
+        <td><input type="text" name="items[<%= idx %>][observation]" class="form-control" value="<%= item.observation ?? '' %>"></td>
+
+        <td>
+          <div class="form-check d-flex justify-content-center">
+            <input type="checkbox" class="form-check-input validation-checkbox"
+                   id="validation-<%= item._id %>" data-id="<%= item._id %>"
+                   <%= item.validation === true ? 'checked' : '' %>>
+            <label class="form-check-label" for="validation-<%= item._id %>"></label>
+          </div>
+        </td>
+
+        <td class="validerPar-cell">Haddou</td>   <!-- will be filled by JS -->
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+
+<script>
+/* ---------- PER-ROW VALIDATION (unchanged) ---------- */
+document.addEventListener('change', e => {
+  if (!e.target.classList.contains('validation-checkbox')) return;
+
+  const checkbox = e.target;
+  const itemId   = checkbox.dataset.id;
+  const checked  = checkbox.checked;               // new desired state
+
+  // ---- UI lock -------------------------------------------------
+  checkbox.disabled = true;
+  const label = checkbox.nextElementSibling;
+  label.style.opacity = '0.5';
+
+  // ---- Payload -------------------------------------------------
+  const payload = {
+    validation: checked,
+    // optional – you can omit it, the server uses the session anyway
+    // validerPar: checked ? /*admin name*/ : null
+  };
+
+  fetch(`/achats/fourniture/${itemId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        const row = checkbox.closest('tr');
+        const cell = row.querySelector('.validerPar-cell');
+
+        cell.textContent = data.validerPar;
+
+        // If the server rejected the change (e.g. race condition),
+        // revert the checkbox to the value the DB actually stored.
+        if (data.validation !== checked) {
+          checkbox.checked = data.validation;
+        }
+      } else {
+        alert('Erreur : ' + (data.error || 'Inconnue'));
+        checkbox.checked = !checked; // revert UI
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert(err.message);
+      checkbox.checked = !checked; // revert UI
+    })
+    .finally(() => {
+      checkbox.disabled = false;
+      label.style.opacity = '1';
+    });
+});
+/* ---------- VALIDATE ALL ---------- */
+async function validePar() {
+  const btn = document.getElementById('validBtn');
+  const demandeId = document.querySelector('input[name="demandeFournitureId"]').value.trim();
+
+  if (!demandeId) return alert('ID de la demande manquant');
+
+  btn.disabled = true;
+  btn.style.opacity = '0.5';
+
+  try {
+    const resp = await fetch(`/achats/fourniture/validate-all/${demandeId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+
+    const data = await resp.json();
+
+    if (data.success) {
+      // 1. Check all checkboxes
+      document.querySelectorAll('.validation-checkbox').forEach(cb => cb.checked = true);
+      // 2. Fill every “Validé Par” cell
+      document.querySelectorAll('.validerPar-cell').forEach(cell => cell.textContent = data.validerPar);
+      alert(`${data.updatedCount} ligne(s) validée(s)`);
+    } else {
+      alert('Erreur : ' + (data.error || 'Inconnue'));
+    }
+  } catch (e) {
+    console.error(e);
+    alert('Erreur réseau');
+  } finally {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  }
+}
+</script>               
+             <% } %>
+                
 
                 <!-- ==== GLOBAL ADD BUTTON ==== -->
                 

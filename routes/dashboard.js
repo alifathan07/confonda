@@ -23,7 +23,7 @@ import { deleteTelePai, indexTelePai, storeTelePai, updateTelePai } from '../con
 import { createEncaissement, indexEncaissement, updateEncaissement } from '../controllers/encaisementController.js';
 import { addCaisseItem, createDemandeCaisse, deleteDemandeCaisseItem, generateDemandeExcel, generateDemandePdf, indexDemandeCaisse, storeDemandeCaisse, updateDemandeCaisseItem, updateDemandeCaisseItemValidation, updateDemandeCaisseStatut, viewDemandeCaisse } from '../controllers/demandecaisseController.js';
 import { addJustifCaisse, addJustifCaisseAdminAuto, adminUserList, createJustifCaisse, createJustifCaisseAdmin, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteJustifeCaisse, deleteRecette, generateJustifCaisseExcel, generateJustifCaissePDF, getAllJustifCaisse, justifeCaisseListUser, saveAllData, saveRecettesAdmin, updateDepenceValidation, validateAllDepenses, viewJustifCaisse, viewJustifCaisseAdmin } from '../controllers/justifecaisseController.js';
-import { createDemandeFourniture, deleteDemandeFourniture, editDemandeFourniture, indexDemandeFourniture, storeDemandeFourniture, updateDemandeFourniture, viewDemandeFourniture } from '../controllers/demandeFourniture.js';
+import { createDemandeFourniture, deleteDemandeFourniture, editDemandeFourniture, indexDemandeFourniture, storeDemandeFourniture, updateDemandeFourniture, updateValidationFourniture, validateAllFourniture, viewDemandeFourniture } from '../controllers/demandeFourniture.js';
 
 export const dashboardRouter = express.Router();
 dashboardRouter.use(isAuthenticated)
@@ -373,3 +373,6 @@ dashboardRouter.get('/dashboard' , isAdmin, async (req, res) => {
       dashboardRouter.get("/achats/fourniture/:id/edit", editDemandeFourniture);
       dashboardRouter.put("/achats/fourniture/:id", updateDemandeFourniture);
       dashboardRouter.delete("/achats/fourniture/:id", deleteDemandeFourniture);
+      dashboardRouter.patch('/achats/fourniture/:id', updateValidationFourniture);
+      dashboardRouter.post('/achats/fourniture/:fournId', validateAllFourniture );
+

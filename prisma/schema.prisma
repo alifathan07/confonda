@@ -111,7 +111,9 @@ model ItemFourniture{
   auPlutot String?
   lot String?
   observation String?
-  validation String @default("En cours") // En cours , Refusée , Validée
+   validation  Boolean?  @default(true)
+      
+ // En cours , Refusée , Validée
   validepar String?
   demandeFournitureId Int?
   demandeFourniture   DemandeFourniture?  @relation(fields: [demandeFournitureId], references: [id])
