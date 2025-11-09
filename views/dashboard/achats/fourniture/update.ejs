@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="Fournisseurs" />
+  <meta name="author" content="Confonda" />
+  <title>Fournisseurs</title>
+
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+</head>
+
+<body id="page-top">
+<div id="wrapper">
+  <%- include('../../../layouts/sidebar') %>
+
+  <div id="content-wrapper" class="d-flex flex-column">
+    <div id="content">
+      <%- include('../../../layouts/topbar') %>
+
+      <div class="container-fluid">
+
+        <h1 class="h3 mb-4 text-gray-800">Modifier la Demande de Fournitures</h1>
+
+        <!-- ==== FORM ==== -->
+        <form id="demandeForm">
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">Demande Fournitures</h6>
+              <br>
+              <div class="d-flex justify-content-between">
+                <div class="form-group">
+                  <label for="date">Date</label>
+                  <input type="text" class="form-control" id="date" name="date"
+                         value="<%= demandeFourniture.dateDemande 
+                           ? (function(){
+                               const d = new Date(demandeFourniture.dateDemande);
+                               const day   = String(d.getDate()).padStart(2,'0');
+                               const month = String(d.getMonth()+1).padStart(2,'0');
+                               const year  = d.getFullYear();
+                               return `${day}/${month}/${year}`;
+                             })()
+                           : '' %>" readonly>
+                </div>
+
+                <div class="form-group">
+                  <label for="numero">Numéro</label>
+                  <input type="number" class="form-control" id="numero" name="numero"
+                         value="<%= demandeFourniture.numero %>" readonly>
+                </div>
+
+                <div class="form-group">
+                  <label for="user">User</label>
+                  <input type="text" class="form-control" id="user" name="user"
+                         value="<%= demandeFourniture.user.name %>" readonly>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <div class="table-responsive">
+              <% if (user.role === "user") { %>
+                
+              <div class="d-flex justify-content-end mb-2">
+                  <button type="button" id="btnAddRow" class="btn btn-success btn-sm">
+                    <i class="fas fa-plus"></i> Ajouter une ligne
+                  </button>
+                </div>
+                 <table class="table table-bordered text-center align-middle"
+                       id="productsTable" width="100%" cellspacing="0">
+                  <thead class="thead-light">
+                    <tr>
+                      <th rowspan="2">Code article</th>
+                      <th rowspan="2">Désignations</th>
+                      <th rowspan="2">Unité</th>
+                      <th rowspan="2">Quantité</th>
+                      <th colspan="2">Date de livraison</th>
+                      <th rowspan="2">LOT</th>
+                      <th rowspan="2">Recommandations et Observations</th>
+                       <th rowspan="2">Validation</th>
+                      <th rowspan="2">Validé Par </th>
+                      <th rowspan="2">Actions</th>
+                     
+                    </tr>
+                    <tr>
+                      <th>Au plus tôt</th>
+                      <th>Au plus tard</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- ==== DYNAMIC ROWS FOR EVERY ITEM ==== -->
+                    <% demandeFourniture.items.forEach((item, idx) => { %>
+                      <tr data-index="<%= idx %>">
+                        <td><input type="text"   name="items[<%= idx %>][code]"        class="form-control" value="<%= item.code ?? '' %>"></td>
+                        <td><input type="text"   name="items[<%= idx %>][designation]" class="form-control" value="<%= item.designation %>"></td>
+                        <td><input type="text"   name="items[<%= idx %>][unité]"       class="form-control" value="<%= item.unité ?? '' %>"></td>
+                        <td><input type="number" name="items[<%= idx %>][quantité]"    class="form-control" value="<%= item.quantité %>"></td>
+                        <td><input type="date"   name="items[<%= idx %>][auPlutot]"    class="form-control"
+                                   value="<%= item.auPlutot ? new Date(item.auPlutot).toISOString().split('T')[0] : '' %>"></td>
+                        <td><input type="date"   name="items[<%= idx %>][auPlutart]"   class="form-control"
+                                   value="<%= item.auPlutart ? new Date(item.auPlutart).toISOString().split('T')[0] : '' %>"></td>
+                        <td><input type="text"   name="items[<%= idx %>][lot]"         class="form-control" value="<%= item.lot ?? '' %>"></td>
+                        <td><input type="text"   name="items[<%= idx %>][observation]" class="form-control" value="<%= item.observation ?? '' %>"></td>
+                        
+                      <td>
+  <!-- always send the PK so the backend knows it is an UPDATE -->
+  <input type="hidden" name="items[<%= idx %>][id]" value="<%= item.id %>">
+
+  <!-- the badge is just for display -->
+  <% if (item.validation === true && item.validepar !== null) { %>
+    <span class="badge badge-success"><i class="fas fa-check-circle mr-1"></i> Validée</span>
+  <% } else if (item.validation === false && item.validepar !== null) { %>
+    <span class="badge badge-danger"><i class="fas fa-times-circle mr-1"></i> Refusée</span>
+  <% } else if (item.validepar === null) { %>
+                            <span class="badge badge-secondary"><i class="fas fa-hourglass-half mr-1"></i> En attente</span>
+                          <% } %>
+</td>
+                        <td class="validerPar-cell"><%= item.validepar %></td>   <!-- will be filled by JS -->
+<td>
+  <div class="d-flex justify-content-center align-items-center">
+    <!-- DELETE -->
+    <button type="button" class="btn btn-sm btn-danger deleteRow">
+      <i class="fas fa-trash"></i>
+    </button>
+
+    <!-- ADD ROW -->
+   
+
+    <!-- UPLOAD -->
+    <button type="button"
+            class="btn btn-sm btn-primary uploadBtn ml-2"
+            data-item-id="<%= item.id %>">
+      <i class="fas fa-upload"></i>
+    </button>
+
+    <!-- DOWNLOAD (visible only when an image exists) -->
+    <!-- DOWNLOAD (always an <a>, never a disabled button) -->
+<% if (item.image) { %>
+  <a href="/achat/fourniture/<%= item.id %>/download-image"
+     class="btn btn-sm btn-info ml-2 downloadBtn"
+     data-item-id="<%= item.id %>"
+     download
+     title="Télécharger l'image">
+    <i class="fas fa-download"></i>
+  </a>
+<% } else { %>
+  <a class="btn btn-sm btn-secondary ml-2 downloadBtn d-none"
+     data-item-id="<%= item.id %>"
+     download>
+    <i class="fas fa-download"></i>
+  </a>
+<% } %>
+
+    <!-- hidden file input -->
+    <input type="file" class="d-none uploadInput" accept="image/*"
+           data-item-id="<%= item.id %>" />
+
+    <!-- filename label -->
+    <span class="uploaded-filename ml-2 text-truncate"
+          style="max-width:100px;"
+          data-item-id="<%= item.id %>">
+      <% 
+        const filename = item.image ? item.image.split('/').pop() : '';
+      %>
+      <%= filename %>
+    </span>
+
+    <!-- IMAGE PREVIEW (hidden until upload) -->
+    <% if (item.image) { %>
+      <img src="<%= item.image %>"
+           class="img-thumbnail ml-2 previewImg"
+           style="max-height:32px; cursor:pointer;"
+           data-item-id="<%= item.id %>"
+           title="Cliquez pour télécharger"
+           onclick="window.location='/achat/fourniture/<%= item.id %>/download-image'">
+    <% } else { %>
+      <img class="img-thumbnail ml-2 previewImg d-none"
+           style="max-height:32px; cursor:pointer;"
+           data-item-id="<%= item.id %>"
+           title="Cliquez pour télécharger">
+    <% } %>
+  </div>
+</td>
+
+<script>
+  $(function () {
+    let isUploading = false;
+
+    // 1. Open file dialog
+    $(document).on('click', '.uploadBtn', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isUploading) return;
+
+      const id = $(this).data('item-id');
+      const $input = $(`.uploadInput[data-item-id="${id}"]`);
+
+      if ($input.length) {
+        $input.val(''); // allow same file
+        setTimeout(() => $input.trigger('click'), 0);
+      }
+    });
+
+    // 2. Handle file selection + upload
+    $(document).on('change', '.uploadInput', function () {
+      const input = this;
+      const file = input.files[0];
+      if (!file) return;
+
+      const id = $(input).data('item-id');
+      if (!id) {
+        alert('ID manquant.');
+        return;
+      }
+
+      if (isUploading) return;
+      isUploading = true;
+
+      const $btn = $(`.uploadBtn[data-item-id="${id}"]`);
+      const $label = $(`.uploaded-filename[data-item-id="${id}"]`);
+      $btn.prop('disabled', true);
+
+      const fd = new FormData();
+      fd.append('image', file);
+
+      $.ajax({
+        url: `/achat/fourniture/${id}/upload-image`,
+        method: 'POST',
+        data: fd,
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 30000,
+
+        success: function (res) {
+          if (res.success) {
+            const filename = res.data?.image?.split('/').pop() || file.name;
+            const imageUrl = res.data?.image;
+
+            // 1. Update filename
+            $label.text(filename).attr('title', filename);
+
+            // 2. Show/enable download button
+            let $downloadBtn = $(`.downloadBtn[data-item-id="${id}"]`);
+            if ($downloadBtn.length === 0) {
+              $downloadBtn = $(`
+                <a href="/achat/fourniture/${id}/download-image"
+                   class="btn btn-sm btn-info ml-2 downloadBtn"
+                   data-item-id="${id}"
+                   download
+                   title="Télécharger l'image">
+                  <i class="fas fa-download"></i>
+                </a>
+              `);
+              $btn.after($downloadBtn);
+            } else {
+              $downloadBtn
+                .removeClass('d-none btn-secondary')
+                .addClass('btn-info')
+                .prop('disabled', false)
+                .attr('href', `/achat/fourniture/${id}/download-image`);
+            }
+
+            // 3. Show image preview
+            let $preview = $(`.previewImg[data-item-id="${id}"]`);
+            if ($preview.length === 0) {
+              $preview = $(`
+                <img class="img-thumbnail ml-2 previewImg d-none"
+                     style="max-height:32px; cursor:pointer;"
+                     data-item-id="${id}"
+                     title="Cliquez pour télécharger">
+              `);
+              $label.after($preview);
+            }
+            $preview
+              .attr('src', imageUrl)
+              .removeClass('d-none')
+              .off('click')
+              .on('click', () => {
+                window.location.href = `/achat/fourniture/${id}/download-image`;
+              });
+
+          } else {
+            alert('Erreur : ' + (res.error || 'Upload échoué'));
+          }
+        },
+
+        error: function (xhr) {
+          const msg = xhr.responseJSON?.error || 'Erreur upload';
+          alert('Erreur : ' + msg);
+          console.error('Upload error:', xhr);
+        },
+
+        complete: function () {
+          isUploading = false;
+          $btn.prop('disabled', false);
+          input.value = '';
+        }
+      });
+    });
+  });
+</script>
+
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+               
+              <% } else if (user.role === "grandadmin" && user.name !== "CONFONDA") { %>
+                
+           
+                    <input type="hidden" name="demandeFournitureId" value="<%= demandeFourniture.id %>">
+
+
+
+                    <table class="table table-bordered text-center align-middle" id="productsTable">
+                      <thead class="thead-light">
+                        <tr>
+                          <th rowspan="2">Code article</th>
+                          <th rowspan="2">Désignations</th>
+                          <th rowspan="2">Unité</th>
+                          <th rowspan="2">Quantité</th>
+                          <th colspan="2">Date de livraison</th>
+                          <th rowspan="2">LOT</th>
+                          <th rowspan="2">Recommandations et Observations</th>
+                          <th rowspan="2">Validation</th>
+                          <th rowspan="2">Validé Par</th>
+                        </tr>
+                        <tr><th>Au plus tôt</th><th>Au plus tard</th></tr>
+                      </thead>
+
+                      <tbody>
+                        <div class="d-flex justify-content-end mb-2">
+                          <button type="button" id="btnValiderAll" class="btn btn-success" onclick="valideAll()">
+                            Valider
+                          </button>
+                        </div>
+                        <% demandeFourniture.items.forEach((item, idx) => { %>
+                          <tr data-item-id="<%= item._id %>">
+                            <td><input type="hidden" name="items[<%= idx %>][id]" value="<%= item.id %>">
+                                <input type="text" name="items[<%= idx %>][code]" class="form-control" value="<%= item.code ?? '' %>"></td>
+                            <td><input type="text" name="items[<%= idx %>][designation]" class="form-control" value="<%= item.designation %>"></td>
+                            <td><input type="text" name="items[<%= idx %>][unité]" class="form-control" value="<%= item.unité ?? '' %>"></td>
+                            <td><input type="number" name="items[<%= idx %>][quantité]" class="form-control" value="<%= item.quantité %>"></td>
+                            <td><input type="date" name="items[<%= idx %>][auPlutot]" class="form-control"
+                                      value="<%= item.auPlutot ? new Date(item.auPlutot).toISOString().split('T')[0] : '' %>"></td>
+                            <td><input type="date" name="items[<%= idx %>][auPlutart]" class="form-control"
+                                      value="<%= item.auPlutart ? new Date(item.auPlutart).toISOString().split('T')[0] : '' %>"></td>
+                            <td><input type="text" name="items[<%= idx %>][lot]" class="form-control" value="<%= item.lot ?? '' %>"></td>
+                            <td><input type="text" name="items[<%= idx %>][observation]" class="form-control" value="<%= item.observation ?? '' %>"></td>
+
+                          <td>
+                      <div class="form-check d-flex justify-content-center">
+                        <input 
+                          type="checkbox" 
+                          class="form-check-input validation-checkbox"
+                          id="validation-<%= item.id %>" 
+                          data-id="<%= item.id %>"
+                          <%= item.validation ? 'checked' : '' %>>
+                        <label class="form-check-label" for="validation-<%= item.id %>"></label>
+                      </div>
+                    </td>
+
+                    <script>
+                      document.addEventListener('change', async function (e) {
+                        if (e.target.classList.contains('validation-checkbox')) {
+                          const itemId = e.target.dataset.id;
+                          const validation = e.target.checked;
+                          const previousState = !validation;
+
+                          e.target.disabled = true;
+                          e.target.nextElementSibling.style.opacity = '0.5';
+
+                          try {
+                            const res = await fetch(`/achat/fourniture/${itemId}/validation`, {
+                              method: 'PATCH',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ validation }),
+                            });
+
+                            const data = await res.json();
+
+                            if (data.success) {
+                              window.location.reload();
+                              // Optionally update inline cell (no need reload)
+                              const row = e.target.closest('tr');
+                              const validerParCell = row.querySelector('.valide-par');
+                              if (validerParCell) validerParCell.textContent = data.data.validePar || '-';
+
+                              // Reload page for full refresh (optional)
+                              window.location.reload();
+                            } else {
+                              alert('Erreur : ' + (data.error || 'Erreur inconnue.'));
+                              e.target.checked = previousState;
+                            }
+                          } catch (err) {
+                            console.error('Fetch error:', err);
+                            alert('Erreur réseau : ' + err.message);
+                            e.target.checked = previousState;
+                          } finally {
+                            e.target.disabled = false;
+                            e.target.nextElementSibling.style.opacity = '1';
+                          }
+                        }
+                      });
+                      function valideAll() {
+                        const demandeId = "<%= demandeFourniture.id %>";
+                        fetch(`/achat/fourniture/validate-all/${demandeId}`, {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                        })
+                          .then(res => res.json())
+                          .then(data => {
+                            if (data.success) {
+                              window.location.reload();
+                            } else {
+                              alert('❌ Erreur : ' + (data.error || 'Erreur inconnue.'));
+                            }
+                          })
+                          .catch(err => {
+                            console.error('Fetch error:', err);
+                            alert('Erreur réseau : ' + err.message);
+                          });
+                      }
+
+
+                    </script>
+
+
+
+
+                            <td class="validerPar-cell"><%= item.validepar %></td>   <!-- will be filled by JS -->
+                          </tr>
+                        <% }) %>
+                      </tbody>
+                    </table>
+
+             
+            <% } else if (user.role === "grandadmin" && user.name === "CONFONDA") { %>
+                 <table class="table table-bordered text-center align-middle"
+                       id="productsTable" width="100%" cellspacing="0">
+                  <thead class="thead-light">
+                    <tr>
+                      <th rowspan="2">Code article</th>
+                      <th rowspan="2">Désignations</th>
+                      <th rowspan="2">Unité</th>
+                      <th rowspan="2">Quantité</th>
+                      <th colspan="2">Date de livraison</th>
+                      <th rowspan="2">LOT</th>
+                      <th rowspan="2">Recommandations et Observations</th>
+                       <th rowspan="2">Validation</th>
+                      <th rowspan="2">Validé Par </th>
+                      <th rowspan="2">Actions</th>
+                     
+                    </tr>
+                    <tr>
+                      <th>Au plus tôt</th>
+                      <th>Au plus tard</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- ==== DYNAMIC ROWS FOR EVERY ITEM ==== -->
+                    <% demandeFourniture.items.forEach((item, idx) => { %>
+                      <tr data-index="<%= idx %>">
+                        <td><input type="text"   name="items[<%= idx %>][code]"        class="form-control" value="<%= item.code ?? '' %>"></td>
+                        <td><input type="text"   name="items[<%= idx %>][designation]" class="form-control" value="<%= item.designation %>"></td>
+                        <td><input type="text"   name="items[<%= idx %>][unité]"       class="form-control" value="<%= item.unité ?? '' %>"></td>
+                        <td><input type="number" name="items[<%= idx %>][quantité]"    class="form-control" value="<%= item.quantité %>"></td>
+                        <td><input type="date"   name="items[<%= idx %>][auPlutot]"    class="form-control"
+                                   value="<%= item.auPlutot ? new Date(item.auPlutot).toISOString().split('T')[0] : '' %>"></td>
+                        <td><input type="date"   name="items[<%= idx %>][auPlutart]"   class="form-control"
+                                   value="<%= item.auPlutart ? new Date(item.auPlutart).toISOString().split('T')[0] : '' %>"></td>
+                        <td><input type="text"   name="items[<%= idx %>][lot]"         class="form-control" value="<%= item.lot ?? '' %>"></td>
+                        <td><input type="text"   name="items[<%= idx %>][observation]" class="form-control" value="<%= item.observation ?? '' %>"></td>
+                        
+                        <td>
+                          <% if (item.validation === true) { %>
+                            <span class="badge badge-success"><i class="fas fa-check-circle mr-1"></i> Validée</span>
+                           <% } else if (item.validation === false) { %>
+                            <span class="badge badge-danger"><i class="fas fa-times-circle mr-1"></i> Refusée</span>
+                            <% } else { %>
+                            <span class="badge badge-secondary"><i class="fas fa-hourglass-half mr-1"></i> En attente</span>
+                          <% } %>
+                        </td>
+                        <td class="validerPar-cell"><%= item.validepar %></td>   <!-- will be filled by JS -->
+<td>
+                            <div class="d-flex justify-content-center align-items-center">
+                                <button type="button" class="btn btn-sm btn-danger deleteRow" id="deleteData">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                <button type="button" id="btnAddRow" class="btn btn-success btn-sm ml-2">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+             <% } %>
+                
+
+                <!-- ==== GLOBAL ADD BUTTON ==== -->
+                
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-4 text-right">
+            <button type="submit" class="btn btn-primary">Enregistrer la Demande</button>
+            <a href="/demande-fourniture" class="btn btn-danger">Annuler</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <footer class="sticky-footer bg-white">
+      <div class="container my-auto">
+        <div class="copyright text-center my-auto">
+          <span>Copyright &copy; Your Website 2020</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<a class="scroll-to-top rounded" href="#page-top"><i class="fas fa-angle-up"></i></a>
+
+<script src="/vendor/jquery/jquery.min.js"></script>
+<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+<script src="/js/sb-admin-2.min.js"></script>
+
+<script>
+  $(function () {
+    const $tbody = $('#productsTable tbody');
+    let rowIndex = $tbody.find('tr').length;   // start after existing rows
+
+    // ---------- ADD ROW ----------
+    $('#btnAddRow').on('click', function () {
+      const html = `
+        <tr data-index="${rowIndex}">
+          <td><input type="text"   name="items[${rowIndex}][code]"        class="form-control"></td>
+          <td><input type="text"   name="items[${rowIndex}][designation]" class="form-control"></td>
+          <td><input type="text"   name="items[${rowIndex}][unité]"       class="form-control"></td>
+          <td><input type="number" name="items[${rowIndex}][quantité]"    class="form-control"></td>
+          <td><input type="date"   name="items[${rowIndex}][auPlutot]"    class="form-control"></td>
+          <td><input type="date"   name="items[${rowIndex}][auPlutart]"   class="form-control"></td>
+          <td><input type="text"   name="items[${rowIndex}][lot]"         class="form-control"></td>
+          <td><input type="text"   name="items[${rowIndex}][observation]" class="form-control"></td>
+          <td>
+            <button type="button" class="btn btn-sm btn-danger deleteRow">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>`;
+      $tbody.append(html);
+      rowIndex++;
+    });
+
+    // ---------- DELETE ROW ----------
+    $tbody.on('click', '.deleteRow', function () {
+      $(this).closest('tr').remove();
+      reindexRows();
+    });
+
+    // ---------- RE-INDEX ----------
+    function reindexRows() {
+      $tbody.find('tr').each(function (i) {
+        $(this).attr('data-index', i);
+        $(this).find('input').each(function () {
+          const name = $(this).attr('name');
+          if (name) {
+            const newName = name.replace(/\[\d+\]/, '[' + i + ']');
+            $(this).attr('name', newName);
+          }
+        });
+      });
+      rowIndex = $tbody.find('tr').length;
+    }
+
+    // ---------- FORM SUBMISSION ----------
+    $('#demandeForm').on('submit', function (e) {
+      e.preventDefault();
+
+      const formData = $(this).serialize();
+
+      $.ajax({
+        url: '/achats/fourniture/<%= demandeFourniture.id %>',   // fixed: .id not ._id
+        method: 'PUT',
+        data: formData,
+        success: function () {
+          window.location.reload(); 
+        },
+        error: function (xhr) {
+          const msg = xhr.responseJSON?.error || xhr.statusText;
+          alert('Erreur : ' + msg);
+        }
+      });
+    });
+    $('#deleteData').on('click', function(){
+    if (!confirm('Confirmer la suppression de cette demande ?')) return;
+
+    const $btn = $(this);
+    $btn.prop('disabled', true);
+
+    $.ajax({
+        url: '/achats/fourniture/<%= demandeFourniture.id %>',
+        method: 'DELETE',
+        success() {
+            alert('Demande supprimée avec succès.');
+            window.location.href = '/achats/fourniture/' + demandeFourniture.id;
+        },
+        error(xhr) {
+            const msg = xhr.responseJSON?.error || xhr.statusText || 'Erreur inconnue';
+            alert('Erreur : ' + msg);
+            $btn.prop('disabled', false);
+        }
+    });
+    });
+  });
+</script>
+</body>
+</html>

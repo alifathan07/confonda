@@ -1,0 +1,73 @@
+<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#convertModal">
+  Convertir en Demande de Prix
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="convertModal" tabindex="-1" aria-labelledby="convertModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Sélectionner les articles à convertir</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="convertForm">
+        <div class="modal-body">
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th><input type="checkbox" id="checkAll"></th>
+                <th>Code article</th>
+                <th>Désignation</th>
+                <th>Quantité</th>
+                <th>Unité</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% articles.forEach(article => { %>
+                <tr>
+                  <td><input type="checkbox" name="selected[]" value="<%= article.id %>" checked></td>
+                  <td><%= article.code %></td>
+                  <td><%= article.designation %></td>
+                  <td><%= article.quantite %></td>
+                  <td><%= article.unite %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-success">Valider la conversion</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Select/Deselect all
+  document.getElementById('checkAll').addEventListener('change', function(e) {
+    document.querySelectorAll('input[name="selected[]"]').forEach(cb => cb.checked = e.target.checked);
+  });
+
+  // Handle conversion form
+  document.getElementById('convertForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const selected = formData.getAll('selected[]');
+    const demandeId = "<%= demande.id %>";
+
+    const res = await fetch(`/demandes/${demandeId}/convert`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ selected })
+    });
+
+    if (res.ok) {
+      alert('Demande de prix créée avec succès');
+      location.reload();
+    } else {
+      alert('Erreur lors de la conversion');
+    }
+  });
+</script>

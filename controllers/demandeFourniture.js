@@ -2,23 +2,35 @@ import prisma from "../db.js";
 import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
 import ExcelJS from "exceljs";
+import multer from "multer";
+import { fileURLToPath } from 'url';
+import { error } from "console";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-/* ------------------------------------------------------------------ */
-/*  INDEX – list all demands (En Attente first)                       */
-/* ------------------------------------------------------------------ */
+/* -------------------------- MULTER -------------------------- */
+export const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = './uploads/fournitures';
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, uniqueName + path.extname(file.originalname));
+  },
+});
+export const uploadFour = multer({ storage });
+
+/* -------------------------- LIST -------------------------- */
 export const indexDemandeFourniture = async (req, res) => {
   const demande = await prisma.demandeFourniture.findMany({
     include: { user: true, items: true, chantier: true },
     orderBy: { id: "desc" },
-    
   });
 
-  // “En Attente” first
   const sortedDemande = demande.sort((a, b) => {
     if (a.status === "En Attente" && b.status !== "En Attente") return -1;
     if (a.status !== "En Attente" && b.status === "En Attente") return 1;
@@ -28,37 +40,28 @@ export const indexDemandeFourniture = async (req, res) => {
   const users = await prisma.user.findMany({ where: { role: "user" } });
   const chantiers = await prisma.chantier.findMany();
 
-
-  res.render("dashboard/achats/fourniture/index", { demande: sortedDemande, users , chantiers});
+  res.render("dashboard/achats/fourniture/index", { demande: sortedDemande, users, chantiers });
 };
 
-/* ------------------------------------------------------------------ */
-/*  CREATE – show empty form                                          */
-/* ------------------------------------------------------------------ */
+/* -------------------------- CREATE FORM -------------------------- */
 export const createDemandeFourniture = async (req, res) => {
-  const demandeFourniture = await prisma.demandeFourniture.findMany({
+  const last = await prisma.demandeFourniture.findMany({
     where: { user: { id: req.session.user.id } },
+    orderBy: { numero: "desc" },
+    take: 1,
   });
-
-  const lastNumero = demandeFourniture.length
-    ? demandeFourniture[demandeFourniture.length - 1].numero
-    : 0;
-
-  const numero = lastNumero + 1;
-
+  const numero = (last[0]?.numero || 0) + 1;
   const user = await prisma.user.findUnique({
     where: { id: req.session.user.id },
     include: { chantier: true },
   });
-
   const today = new Date().toLocaleDateString("fr-FR");
-
   res.render("dashboard/achats/fourniture/create", { user, today, numero });
 };
 
-/* ------------------------------------------------------------------ */
-/*  STORE – create new demand + items                                 */
-/* ------------------------------------------------------------------ */
+/* -------------------------- STORE -------------------------- */
+// controllers/demandeFournitureController.js
+
 export const storeDemandeFourniture = async (req, res) => {
   try {
     const { date, numero, items } = req.body;
@@ -69,39 +72,35 @@ export const storeDemandeFourniture = async (req, res) => {
     });
 
     if (!user?.chantierId) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Utilisateur ou chantier non trouvé." });
+      return res.status(400).json({ success: false, error: "Utilisateur ou chantier non trouvé." });
     }
 
     // ---- validation -------------------------------------------------
     if (!Array.isArray(items) || items.length === 0) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Les items doivent être un tableau non vide." });
+      return res.status(400).json({ success: false, error: "Les items doivent être un tableau non vide." });
     }
 
     for (const [i, it] of items.entries()) {
       const designation = (it.designation || "").trim();
-      const quantité = parseInt(it.quantité || it.qteDemandee, 10);
+      const qtyRaw = (it.quantité || it.quantite || "").trim();
 
       if (!designation) {
-        return res
-          .status(400)
-          .json({ success: false, error: `Désignation requise (item ${i + 1})` });
+        return res.status(400).json({ success: false, error: `Désignation requise (item ${i + 1})` });
       }
-      if (isNaN(quantité) || quantité <= 0) {
-        return res
-          .status(400)
-          .json({ success: false, error: `Quantité positive requise (item ${i + 1})` });
+
+      const quantité = qtyRaw.replace(/[^0-9]/g, '');
+      if (!quantité || parseInt(quantité, 10) <= 0) {
+        return res.status(400).json({ success: false, error: `Quantité invalide ou ≤ 0 (item ${i + 1})` });
       }
+
+      it.quantité = quantité; // ← string propre
     }
 
     // ---- creation ---------------------------------------------------
     const demandeFourniture = await prisma.demandeFourniture.create({
       data: {
         dateDemande: new Date(date),
-        numero: parseInt(numero),
+        numero: parseInt(numero, 10),
         demandeur: user.name,
         user: { connect: { id: req.session.user.id } },
         chantier: { connect: { id: user.chantierId } },
@@ -112,293 +111,411 @@ export const storeDemandeFourniture = async (req, res) => {
             code: (it.code || "").trim() || null,
             designation: (it.designation || "").trim(),
             unité: (it.unité || it.unite || "").trim() || null,
-            quantité: parseInt(it.quantité || it.qteDemandee, 10),
+            quantité: it.quantité, // ← "50", "100", etc.
             auPlutot: it.auPlutot || null,
             auPlutart: it.auPlutart || null,
-            lot: (it.lot || "").trim() || null,          // <-- added
+            lot: (it.lot || "").trim() || null,
             observation: (it.observation || "").trim() || null,
+            image: it.tempImage || null,
           })),
         },
       },
       include: { items: true },
     });
 
-    // redirect to the fresh view (HTML) – you already have a JSON fallback
     return res.redirect(`/achats/fourniture/${demandeFourniture.id}`);
   } catch (error) {
     console.error("storeDemandeFourniture error:", error);
-    return res
-      .status(500)
-      .json({ success: false, error: `Erreur serveur : ${error.message}` });
+    return res.status(500).json({ success: false, error: `Erreur serveur : ${error.message}` });
   }
 };
 
-/* ------------------------------------------------------------------ */
-/*  SHOW – view a single demand (read-only)                           */
-/* ------------------------------------------------------------------ */
+export const updateDemandeFourniture = async (req, res) => {
+  const { id } = req.params;
+  const { date, numero, items, newImageCount } = req.body;
+
+  try {
+    // -------------------------------------------------
+    // 1. Parse items (JSON string or array)
+    // -------------------------------------------------
+    let parsedItems = [];
+    if (typeof items === 'string') {
+      parsedItems = JSON.parse(items);
+    } else if (Array.isArray(items)) {
+      parsedItems = items;
+    } else {
+      return res.status(400).json({ success: false, error: "Items invalides." });
+    }
+
+    const fileCount = parseInt(newImageCount) || 0;
+    let fileIndex = 0;
+
+    // -------------------------------------------------
+    // 2. Validate every item
+    // -------------------------------------------------
+    if (!Array.isArray(parsedItems) || parsedItems.length === 0) {
+      return res.status(400).json({ success: false, error: "Au moins un item." });
+    }
+
+    for (const [i, it] of parsedItems.entries()) {
+      const designation = (it.designation || "").trim();
+      const qtyRaw = (it.quantité || it.quantite || "").trim();
+
+      if (!designation) {
+        return res.status(400).json({ success: false, error: `Désignation manquante (ligne ${i + 1})` });
+      }
+
+      const quantité = qtyRaw.replace(/[^0-9]/g, '');
+      if (!quantité || parseInt(quantité, 10) <= 0) {
+        return res.status(400).json({ success: false, error: `Quantité invalide (ligne ${i + 1})` });
+      }
+
+      it.quantité = quantité;
+    }
+
+    // -------------------------------------------------
+    // 3. Get existing items from DB
+    // -------------------------------------------------
+    const existing = await prisma.itemFourniture.findMany({
+      where: { demandeFournitureId: parseInt(id, 10) },
+      select: { id: true, image: true, validation: true, validepar: true },
+    });
+
+    const existingIds = existing.map(e => e.id);
+    const incomingIds = parsedItems
+      .filter(it => it.id && !isNaN(parseInt(it.id)))
+      .map(it => parseInt(it.id));
+
+    const idsToDelete = existingIds.filter(e => !incomingIds.includes(e));
+
+    // -------------------------------------------------
+    // 4. Transaction – delete / create / update
+    // -------------------------------------------------
+    await prisma.$transaction(async (tx) => {
+      // ---- DELETE removed rows ----
+      if (idsToDelete.length) {
+        await tx.itemFourniture.deleteMany({ where: { id: { in: idsToDelete } } });
+      }
+
+      // ---- CREATE new rows ----
+      const newItems = parsedItems.filter(it => !it.id || isNaN(parseInt(it.id)));
+      if (newItems.length) {
+        await tx.itemFourniture.createMany({
+          data: newItems.map(it => {
+            let imagePath = it.tempImage || null;
+            if (fileIndex < fileCount && req.files && req.files[fileIndex]) {
+              imagePath = `/uploads/fournitures/${req.files[fileIndex].filename}`;
+              fileIndex++;
+            }
+            return {
+              demandeFournitureId: parseInt(id, 10),
+              code: (it.code || "").trim() || null,
+              designation: (it.designation || "").trim(),
+              unité: (it.unite || "").trim() || null,
+              quantité: it.quantité,
+              auPlutot: it.auPlutot || null,
+              auPlutart: it.auPlutart || null,
+              lot: (it.lot || "").trim() || null,
+              observation: (it.observation || "").trim() || null,
+              image: imagePath,
+              // New rows are never validated yet
+              validation: false,
+              validepar: null,
+            };
+          }),
+        });
+      }
+
+      // ---- UPDATE existing rows ----
+      const updatePromises = parsedItems
+        .filter(it => it.id && !isNaN(parseInt(it.id)))
+        .map(async it => {
+          const itemId = parseInt(it.id);
+          const current = existing.find(e => e.id === itemId);
+
+          // ---- Image handling ----
+          let imagePath = current?.image;
+          if (it.tempImage) {
+            imagePath = it.tempImage;
+          }
+          if (fileIndex < fileCount && req.files && req.files[fileIndex]) {
+            imagePath = `/uploads/fournitures/${req.files[fileIndex].filename}`;
+            fileIndex++;
+          }
+
+          // ---- Validation handling (admin only) ----
+          // If the admin sent a `validation` flag → use it
+          // Otherwise keep the DB value (or false if never set)
+          const validation =
+            it.validation !== undefined ? Boolean(it.validation) : (current?.validation ?? false);
+
+          return tx.itemFourniture.update({
+            where: { id: itemId },
+            data: {
+              code: (it.code || "").trim() || null,
+              designation: (it.designation || "").trim(),
+              unité: (it.unite || "").trim() || null,
+              quantité: it.quantité,
+              auPlutot: it.auPlutot || null,
+              auPlutart: it.auPlutart || null,
+              lot: (it.lot || "").trim() || null,
+              observation: (it.observation || "").trim() || null,
+              image: imagePath,
+              validation,
+              validepar: current?.validepar ?? null,
+            },
+          });
+        });
+
+      await Promise.all(updatePromises);
+
+      // ---- Update header (date / numero) ----
+      await tx.demandeFourniture.update({
+        where: { id: parseInt(id, 10) },
+        data: {
+          dateDemande: new Date(date),
+          numero: parseInt(numero, 10),
+        },
+      });
+    });
+
+    res.json({ success: true });
+  } catch (e) {
+    console.error("updateDemandeFourniture ERROR:", e);
+    res.status(500).json({ success: false, error: e.message });
+  }
+};
+/* -------------------------- VIEW -------------------------- */
 export const viewDemandeFourniture = async (req, res) => {
   const { id } = req.params;
   const demandeFourniture = await prisma.demandeFourniture.findUnique({
     where: { id: parseInt(id) },
     include: { user: true, chantier: true, items: true },
   });
-
-  if (!demandeFourniture) {
-    return res
-      .status(404)
-      .json({ success: false, error: "Demande non trouvée." });
-  }
-
+  if (!demandeFourniture) return res.status(404).json({ success: false, error: "Introuvable." });
   res.render("dashboard/achats/fourniture/view", { demandeFourniture });
 };
 
-/* ------------------------------------------------------------------ */
-/*  EDIT – load the form with existing data                           */
-/* ------------------------------------------------------------------ */
+/* -------------------------- EDIT FORM -------------------------- */
 export const editDemandeFourniture = async (req, res) => {
   const { id } = req.params;
-
   const demandeFourniture = await prisma.demandeFourniture.findUnique({
     where: { id: parseInt(id) },
     include: { user: true, chantier: true, items: true },
   });
+  if (!demandeFourniture) return res.status(404).render("error", { message: "Demande introuvable." });
 
-  if (!demandeFourniture) {
-    return res
-      .status(404)
-      .render("error", { message: "Demande introuvable." });
-  }
-
-  // format date for the <input type="text"> (DD/MM/YYYY)
-  const format = (d) => {
+  const format = d => {
     if (!d) return "";
     const date = new Date(d);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
   };
-
   const today = format(demandeFourniture.dateDemande);
 
-  res.render("dashboard/achats/fourniture/edit", {
-    demandeFourniture,
-    today,
-  });
+  res.render("dashboard/achats/fourniture/edit", { demandeFourniture, today });
 };
 
-/* ------------------------------------------------------------------ */
-/*  UPDATE – replace header + delete/insert items                     */
-/* ------------------------------------------------------------------ */
-export const updateDemandeFourniture = async (req, res) => {
-  const { id } = req.params;
-  const { date, numero, items } = req.body;
+/* -------------------------- UPDATE -------------------------- */
 
-  try {
-    // ---- validation -------------------------------------------------
-    if (!Array.isArray(items) || items.length === 0) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Au moins un item requis." });
-    }
 
-    for (const [i, it] of items.entries()) {
-      const designation = (it.designation || "").trim();
-      const quantité = parseInt(it.quantité || it.qteDemandee, 10);
-
-      if (!designation) {
-        return res
-          .status(400)
-          .json({ success: false, error: `Désignation requise (item ${i + 1})` });
-      }
-      if (isNaN(quantité) || quantité <= 0) {
-        return res
-          .status(400)
-          .json({ success: false, error: `Quantité positive requise (item ${i + 1})` });
-      }
-    }
-
-    // ---- update -----------------------------------------------------
-    const updated = await prisma.demandeFourniture.update({
-      where: { id: parseInt(id) },
-      data: {
-        dateDemande: new Date(date),
-        numero: parseInt(numero),
-        // delete old items + create new ones in one transaction
-        items: {
-          deleteMany: {},
-          create: items.map((it) => ({
-            code: (it.code || "").trim() || null,
-            designation: (it.designation || "").trim(),
-            unité: (it.unité || it.unite || "").trim() || null,
-            quantité: parseInt(it.quantité || it.qteDemandee, 10),
-            auPlutot: it.auPlutot || null,
-            auPlutart: it.auPlutart || null,
-            lot: (it.lot || "").trim() || null,
-            observation: (it.observation || "").trim() || null,
-          })),
-        },
-      },
-      include: { items: true },
-    });
-    
-
-    // AJAX response (your view already uses it)
-    res.json({ success: true, data: updated });
-  } catch (error) {
-    console.error("updateDemandeFourniture error:", error);
-    res
-      .status(500)
-      .json({ success: false, error: `Erreur serveur : ${error.message}` });
-  }
-};
-
-/* ------------------------------------------------------------------ */
-/*  DELETE – remove a demand (soft-delete if you have a `deletedAt`)  */
-/* ------------------------------------------------------------------ */
+/* -------------------------- DELETE -------------------------- */
 export const deleteDemandeFourniture = async (req, res) => {
   const { id } = req.params;
-
   try {
-    // Hard delete (cascade will remove items)
-    await prisma.demandeFourniture.delete({
-      where: { id: parseInt(id) },
-    });
-
-    // If you prefer soft-delete, uncomment:
-    // await prisma.demandeFourniture.update({
-    //   where: { id: parseInt(id) },
-    //   data: { deletedAt: new Date() },
-    // });
-
-    res.json({ success: true, message: "Demande supprimée." });
-  } catch (error) {
-    console.error("deleteDemandeFourniture error:", error);
-    res
-      .status(500)
-      .json({ success: false, error: `Erreur serveur : ${error.message}` });
+    await prisma.demandeFourniture.delete({ where: { id: parseInt(id) } });
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
   }
 };
 
+/* -------------------------- VALIDATION (single) -------------------------- */
+// controllers/fournitureController.js  (or wherever you keep it)
 
 export const updateValidationFourniture = async (req, res) => {
-  const startTime = Date.now();
-  console.log('DEBUT updateValidationFourniture | Timestamp:', new Date().toISOString());
-
   try {
-    // ÉTAPE 1 : Récupération des données
     const { id } = req.params;
-    const { validation, validerPar } = req.body;
-    const admin = req.session.user;
+    const { validation } = req.body;
+    const admin = req.session?.user;
+    
 
-    console.log('Étape 1 - Params ID:', id);
-    console.log('Étape 1 - Body reçu:', { validation, validerPar });
-    console.log('Étape 1 - Session admin:', admin ? { id: admin.id, name: admin.name } : 'Aucun');
+    // -------------------------------------------------
+    // 1. Basic validation
+    // -------------------------------------------------
+    if (!admin) {
+      return res.status(401).json({ success: false, error: 'Utilisateur non authentifié' });
+    }
 
-    // ÉTAPE 2 : Validation du champ obligatoire
     if (validation === undefined) {
-      console.warn('ÉCHEC - Champ "validation" manquant');
-      return res.status(400).json({
-        success: false,
-        error: 'Le champ validation est requis',
-      });
+      return res.status(400).json({ success: false, error: 'Champ "validation" requis' });
     }
 
-    // Conversion en booléen
-    const validationBool = Boolean(validation);
-    console.log('Étape 2 - Validation convertie en booléen:', validationBool);
-
-    // ÉTAPE 3 : Construction du payload
-    const updateData = { validation: validationBool };
-
-    if (validationBool) {
-      const nameToUse = admin?.name ?? 'Inconnu';
-      updateData.validePar = nameToUse;
-      console.log('Étape 3 - Validation activée → validePar défini:', nameToUse);
-    } else {
-      updateData.validePar = null;
-      console.log('Étape 3 - Validation désactivée → validePar remis à null');
+    const itemId = parseInt(id, 10);
+    if (isNaN(itemId)) {
+      return res.status(400).json({ success: false, error: 'ID invalide' });
     }
 
-    console.log('Étape 3 - Payload Prisma final:', updateData);
+    // -------------------------------------------------
+    // 2. Update in DB
+    // -------------------------------------------------
+    const data = {
+      validation: Boolean(validation),   // true / false
+      validepar: admin.name,
 
-    // ÉTAPE 4 : Mise à jour Prisma
-    console.log('Étape 4 - Exécution Prisma update...');
-    const updatedItem = await prisma.itemFourniture.update({
-      where: { id: parseInt(id, 10) },
-      data: updateData,
-    });
-
-    console.log('Étape 4 - Mise à jour réussie ! Item mis à jour:', {
-      id: updatedItem.id,
-      validation: updatedItem.validation,
-      validePar: updatedItem.validePar,
-    });
-
-    // ÉTAPE 5 : Réponse au client
-    const response = {
-      success: true,
-      validation: updatedItem.validation,
-      validerPar: updatedItem.validePar ?? '-',
     };
+    const idDemande = await prisma.itemFourniture.findUnique({ where: { id: itemId }, select: { demandeFournitureId: true } });
+    const demande = await prisma.demandeFourniture.findUnique({ where: { id: parseInt(idDemande.demandeFournitureId) } });
+    if (!demande) return res.status(404).json({ success: false, error: "Demande introuvable" });
 
-    console.log('Étape 5 - Réponse envoyée:', response);
-    console.log(`FIN updateValidationFourniture | Durée: ${Date.now() - startTime}ms\n`);
 
-    res.status(200).json(response);
+
+    const updated = await prisma.itemFourniture.update({
+      where: { id: itemId },
+      data,
+    });
+     const udateDemande = await prisma.demandeFourniture.update({
+    where: { id: parseInt(demande.id) },
+    data: { status: "Validé", color: "green" },
+  });
+
+    
+
+
+    // -------------------------------------------------
+    // 3. Success response
+    // -------------------------------------------------
+    res.json({ success: true, data: updated });
+
   } catch (error) {
-    const duration = Date.now() - startTime;
-    console.error('ERREUR CRITIQUE updateValidationFourniture | Durée:', `${duration}ms`);
-    console.error('Message:', error.message);
-    console.error('Stack:', error.stack);
-    console.error('--- FIN ERREUR ---\n');
+    // -------------------------------------------------
+    // 4. All errors → JSON (never HTML)
+    // -------------------------------------------------
+    console.error('updateValidationFourniture error:', error);
 
+    // Prisma record-not-found
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      return res.status(404).json({ success: false, error: 'Article non trouvé' });
+    }
+
+    // Any other error
     res.status(500).json({
       success: false,
-      error: 'Erreur serveur lors de la mise à jour.',
+      error: 'Erreur serveur',
+      // optional: detail: error.message   (remove in production)
     });
   }
 };
-
+/* -------------------------- VALIDATE ALL -------------------------- */
 export const validateAllFourniture = async (req, res) => {
-  try {
-    console.log('Request received for validateAllDepenses:', req.params);
-    const { fournId } = req.params;
-    const admin = req.session.user;
-    if (!fournId) {
-      console.log('Missing justifId in params');
-      return res.status(400).json({ success: false, error: 'justifId est requis' });
-    }
-    if (!admin || !admin.name) {
-      console.log('Missing admin or admin.name:', admin);
-      return res.status(401).json({ success: false, error: 'Utilisateur non authentifié ou nom manquant' });
-    }
+  const { id } = req.params;
+  const admin = req.session.user;
 
-    console.log(`Updating expenses for justifId: ${justifId}, admin: ${admin.name}`);
-    // Update all expenses for the given justifId
-    const fourniture = await prisma.itemFourniture.updateMany({
-      where: { demandeFournitureId: parseInt(fournId) },
-      data: {
-        validation: true,
-        validerPar: admin.name,
-      },
+  const demande = await prisma.demandeFourniture.findUnique({ where: { id: parseInt(id) } });
+  if (!demande) return res.status(404).json({ success: false, error: "Demande introuvable" });
+
+  const upd = await prisma.itemFourniture.updateMany({
+    where: { demandeFournitureId: parseInt(id) },
+    data: { validation: true, validepar: admin.name },
+  });
+  const udateDemande = await prisma.demandeFourniture.update({
+    where: { id: parseInt(id) },
+    data: { status: "Validé", color: "green" },
+  });
+
+  res.json({ success: true, count: upd.count });
+};
+
+/* -------------------------- IMAGE UPLOAD (existing item) -------------------------- */
+export const uploadImageFourniture = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!req.file) return res.status(400).json({ success: false, error: "Fichier manquant" });
+
+    const imagePath = `/uploads/fournitures/${req.file.filename}`;
+    const updated = await prisma.itemFourniture.update({
+      where: { id: parseInt(id) },
+      data: { image: imagePath },
     });
 
-    console.log(`Update result: ${fourniture.count} expenses updated`);
-    if (fourniture.count === 0) {
-      return res.status(404).json({ success: false, error: 'Aucune dépense trouvée pour ce justifId' });
+    res.json({ success: true, data: updated });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ success: false, error: e.message });
+  }
+};
+
+/* -------------------------- TEMP IMAGE UPLOAD (new rows) -------------------------- */
+export const uploadTempImage = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, error: "Fichier manquant" });
+
+    const imagePath = `/uploads/fournitures/${req.file.filename}`;
+    res.json({ success: true, data: { image: imagePath } });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ success: false, error: e.message });
+  }
+};
+
+/* -------------------------- IMAGE DOWNLOAD -------------------------- */
+export const downloadImageFourniture = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const item = await prisma.itemFourniture.findUnique({
+      where: { id: parseInt(id) },
+      select: { image: true },
+    });
+    if (!item?.image) return res.status(404).json({ success: false, error: "Image introuvable" });
+
+    const filePath = path.resolve(__dirname, '..', item.image.replace(/^\//, ''));
+    await fs.promises.access(filePath);
+    const filename = path.basename(filePath);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.sendFile(filePath);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ success: false, error: e.message });
+  }
+};
+
+
+
+
+export const uploadImageFournitures = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate ID
+    const itemId = parseInt(id, 10);
+    if (isNaN(itemId)) {
+      return res.status(400).json({ success: false, error: "ID invalide." });
     }
 
-    // Recalculate totals using helper
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: "Aucun fichier reçu." });
+    }
 
-    res.status(200).json({ 
-      success: true, 
-      validerPar: admin.name,
-      message: `${fourniture.count} dépense(s) validée(s)`,
+    const imagePath = `/uploads/fournitures/${req.file.filename}`;
+
+    // Check if item exists
+    const updated = await prisma.itemFourniture.update({
+      where: { id: itemId },
+      data: { image: imagePath },
+    });
+
+    res.json({
+      success: true,
+      message: "Image uploadée avec succès.",
+      data: updated,
     });
   } catch (error) {
-    console.error('❌ Error validating depenses:', error);
-    res.status(500).json({ success: false, error: 'Erreur lors de la validation des dépenses.' });
+    console.error("Erreur uploadImageFourniture:", error.message, error.stack);
+    
+    // Specific Prisma error
+    if (error.code === 'P2025') {
+      return res.status(404).json({ success: false, error: "Article non trouvé." });
+    }
+
+    res.status(500).json({ success: false, error: "Erreur serveur lors de l'upload." });
   }
 };
-/* ------------------------------------------------------------------ */

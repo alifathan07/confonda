@@ -1,0 +1,14 @@
+first user will see list de fournitures 
+second he will convert theme to two options : 
+        - Devis 
+        - Bon de commande
+before all that i will have as a user a button named convert its a dropdown with two options 
+        - Convertir en devis :
+                if i click here i shiuld get a popup so in this popup i will see all items that i have in demande and from that 
+                popup i will be able to choose the item that i want to convert and at same popup i  should select the 
+                fournisseur for that item and after that i will click on convert button
+                so that convert button will create a new devis with all that info
+                and i should be redirected to the devis detail page wish i can edit it 
+
+        - Convertir en bon de commande : come soon ! 
+

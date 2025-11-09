@@ -106,13 +106,13 @@ model ItemFourniture{
   code String?
   designation     String
   unité String?
-  quantité Int?
+  quantité String?
   auPlutart  String?
   auPlutot String?
   lot String?
   observation String?
    validation  Boolean?  @default(true)
-      
+  image           String?   // <-- ✅ image file path
  // En cours , Refusée , Validée
   validepar String?
   demandeFournitureId Int?
@@ -620,6 +620,10 @@ model EncaissementRecu {
 
   
 }
+
+
+
+// 
 
 
 

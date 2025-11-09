@@ -23,9 +23,13 @@ import { deleteTelePai, indexTelePai, storeTelePai, updateTelePai } from '../con
 import { createEncaissement, indexEncaissement, updateEncaissement } from '../controllers/encaisementController.js';
 import { addCaisseItem, createDemandeCaisse, deleteDemandeCaisseItem, generateDemandeExcel, generateDemandePdf, indexDemandeCaisse, storeDemandeCaisse, updateDemandeCaisseItem, updateDemandeCaisseItemValidation, updateDemandeCaisseStatut, viewDemandeCaisse } from '../controllers/demandecaisseController.js';
 import { addJustifCaisse, addJustifCaisseAdminAuto, adminUserList, createJustifCaisse, createJustifCaisseAdmin, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteJustifeCaisse, deleteRecette, generateJustifCaisseExcel, generateJustifCaissePDF, getAllJustifCaisse, justifeCaisseListUser, saveAllData, saveRecettesAdmin, updateDepenceValidation, validateAllDepenses, viewJustifCaisse, viewJustifCaisseAdmin } from '../controllers/justifecaisseController.js';
-import { createDemandeFourniture, deleteDemandeFourniture, editDemandeFourniture, indexDemandeFourniture, storeDemandeFourniture, updateDemandeFourniture, updateValidationFourniture, validateAllFourniture, viewDemandeFourniture } from '../controllers/demandeFourniture.js';
+import { createDemandeFourniture, deleteDemandeFourniture, downloadImageFourniture, editDemandeFourniture, indexDemandeFourniture, storeDemandeFourniture, updateDemandeFourniture, updateValidationFourniture, uploadFour, uploadImageFourniture, uploadTempImage, validateAllFourniture, viewDemandeFourniture } from '../controllers/demandeFourniture.js';
+import { fileURLToPath } from 'url';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 export const dashboardRouter = express.Router();
+dashboardRouter.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
 dashboardRouter.use(isAuthenticated)
 
 dashboardRouter.use((req, res, next) => {
@@ -364,15 +368,18 @@ dashboardRouter.get('/dashboard' , isAdmin, async (req, res) => {
         dashboardRouter.post('/achats/caisse/justification/valider/:justifId', validateAllDepenses);
 
 
-      dashboardRouter.get("/achats/fourniture", indexDemandeFourniture);
-      dashboardRouter.get("/achats/create/fourniture", createDemandeFourniture);
-      dashboardRouter.post("/achats/demande/fourniture", storeDemandeFourniture);
-      dashboardRouter.get("/achats/fourniture/:id", viewDemandeFourniture);
+      /* -------------------------- DEMANDE FOURNITURE -------------------------- */
+dashboardRouter.get("/achats/fourniture", indexDemandeFourniture);
+dashboardRouter.get("/achats/create/fourniture", createDemandeFourniture);
+dashboardRouter.post("/achats/demande/fourniture", uploadFour.any(), storeDemandeFourniture);
+dashboardRouter.get("/achats/fourniture/:id", viewDemandeFourniture);
+dashboardRouter.get("/achats/fourniture/:id/edit", editDemandeFourniture);
+dashboardRouter.put("/achats/fourniture/:id", uploadFour.any(), updateDemandeFourniture);
+dashboardRouter.delete("/achats/fourniture/:id", deleteDemandeFourniture);
 
-      // ---- NEW ----
-      dashboardRouter.get("/achats/fourniture/:id/edit", editDemandeFourniture);
-      dashboardRouter.put("/achats/fourniture/:id", updateDemandeFourniture);
-      dashboardRouter.delete("/achats/fourniture/:id", deleteDemandeFourniture);
-      dashboardRouter.patch('/achats/fourniture/:id', updateValidationFourniture);
-      dashboardRouter.post('/achats/fourniture/:fournId', validateAllFourniture );
+dashboardRouter.patch('/achat/fourniture/:id/validate', updateValidationFourniture);
+dashboardRouter.patch('/achat/fourniture/validate-all/:id', validateAllFourniture);
 
+dashboardRouter.post('/achat/fourniture/:id/upload-image', uploadFour.single('image'), uploadImageFourniture);
+dashboardRouter.post('/achat/fourniture/upload-temp-image', uploadFour.single('image'), uploadTempImage);
+dashboardRouter.get('/achat/fourniture/:id/download-image', downloadImageFourniture);

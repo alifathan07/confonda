@@ -6,8 +6,10 @@ import methodOverride from 'method-override';
 
 import session from 'express-session';
 import expressMySQLSession from 'express-mysql-session';
-import { $Enums } from '@prisma/client';
-import { dashboardRouter } from './routes/dashboard.js';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+const { $Enums } = prisma;import { dashboardRouter } from './routes/dashboard.js';
 import { authRouter } from './routes/auth.js';
 import PDFDocument from "pdfkit";
 import fs from "fs";
@@ -29,6 +31,9 @@ const PORT = process.env.PORT || 3000;
 
 // Serve static files from SB Admin 2 folder
 app.use(express.static(path.join(__dirname, 'public')));
+// ✅ Serve uploaded images
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 const MySQLStore = expressMySQLSession(session);
 const sessionStore = new MySQLStore({
