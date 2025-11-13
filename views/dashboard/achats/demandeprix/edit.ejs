@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Demande de Prix #<%= demandePrix.id %> - Édition</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+
+  <style>
+    :root {
+      --blue: #2563eb;
+      --green: #16a34a;
+      --red: #ef4444;
+      --gray-100: #f8f9fc;
+      --gray-200: #e5e7eb;
+      --blue-light: #e0efff;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--gray-100);
+      font-size: 0.95rem;
+      color: #333;
+    }
+
+    .action-bar {
+      background: white;
+      border-bottom: 1px solid var(--gray-200);
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .action-bar h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .action-bar .badge {
+      background: var(--blue);
+      color: white;
+      padding: 0.35rem 0.8rem;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    .btn-modern {
+      padding: 0.7rem 1.4rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: all 0.25s;
+    }
+    .btn-modern:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    }
+    .btn-send { background: var(--blue); color: white; }
+    .btn-save { background: var(--green); color: white; font-size: 1rem; padding: 0.9rem 2rem; }
+    .btn-add-line { background: #6366f1; color: white; }
+
+    .doc-card {
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+      max-width: 1000px;
+      margin: 0 auto 2rem;
+    }
+
+    td[contenteditable="true"] {
+      outline: 2px dashed transparent;
+      transition: all 0.2s;
+      padding: 10px !important;
+      font-size: 0.95rem;
+    }
+    td[contenteditable="true"]:focus {
+      outline: 2px dashed var(--blue);
+      background: #f8fbff !important;
+      border-radius: 8px;
+    }
+
+    .qty-input {
+      width: 80px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 1rem;
+      border: none;
+      background: #e2e8f0;
+      border-radius: 50px;
+      padding: 0.5rem 1rem;
+    }
+    .qty-input:focus { outline: 2px solid var(--blue); background: white; }
+
+    .delete-btn {
+      color: var(--red);
+      font-size: 1.3rem;
+      cursor: pointer;
+      opacity: 0.7;
+    }
+    .delete-btn:hover { opacity: 1; }
+
+    .table th, .table td { vertical-align: middle; }
+    .table thead { background: var(--blue); color: white; font-size: 0.85rem; }
+
+    @media print {
+      .no-print, .action-bar, .sidebar, .topbar, .delete-btn, .btn-add-line, #btnSave { display: none !important; }
+      body { background: white; padding: 20px; }
+      .doc-card { box-shadow: none; border: 1px solid #eee; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="wrapper">
+  <%- include('../../../layouts/sidebar') %>
+  <div id="content-wrapper" class="d-flex flex-column">
+    <div id="content">
+      <%- include('../../../layouts/topbar') %>
+
+      <div class="container-fluid px-3 px-md-4">
+
+        <!-- Action Bar -->
+        <div class="action-bar no-print">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <h1><i class="fas fa-file-invoice-dollar"></i> Demande de Prix <span class="badge">#<%= demandePrix.id %></span></h1>
+            <div class="d-flex flex-wrap gap-2">
+              <button onclick="sendEmail()" class="btn btn-modern btn-send" id="btnSend">Envoyer</button>
+              <button onclick="window.print()" class="btn btn-modern btn-outline">Imprimer</button>
+              <button id="btnSave" class="btn btn-modern btn-save">SAUVEGARDER LES MODIFICATIONS</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Document -->
+        <div class="doc-card">
+
+          <!-- En-tête + Fournisseur -->
+          <div class="p-4" style="background: linear-gradient(135deg, #f3f8ff 0%, white 70%); border-bottom: 1px solid #dee2e6;">
+            <div class="row">
+              <div class="col-md-6">
+                <img src="/img/logo-4.png" alt="Logo" style="height:70px; object-fit:contain;">
+                <h1 class="mt-3" style="font-size:2rem; font-weight:800;">Demande de Prix</h1>
+                <p style="color:var(--blue); font-weight:600;">N° <%= demandePrix.id %> • <%= new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) %></p>
+              </div>
+              <div class="col-md-6">
+                <div class="p-4 bg-white rounded-3 shadow-sm border border-primary border-2">
+                  <h5 class="mb-3"><i class="fas fa-building"></i> Fournisseur</h5>
+                  <select id="fournisseurSelect" class="form-control mb-3">
+                    <option value="">-- Choisir un fournisseur --</option>
+                    <% fournisseurs.forEach(f => { %>
+                      <option value="<%= f.id %>" <%= f.id === demandePrix.fournisseur.id ? 'selected' : '' %>><%= f.name %> <%= f.ville ? '- ' + f.ville : '' %></option>
+                    <% }) %>
+                  </select>
+                  <div class="small">
+                    <div><i class="fas fa-user-tie"></i> <strong id="fourName"><%= demandePrix.fournisseur.name %></strong></div>
+                    <div><i class="fas fa-envelope"></i> <span id="fourEmail"><%= demandePrix.fournisseur.email %></span></div>
+                    <div><i class="fas fa-phone"></i> <span id="fourTel"><%= demandePrix.fournisseur.telFournisseur || 'Non renseigné' %></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tableau Articles -->
+          <div class="p-4">
+            <table class="table table-bordered" id="articlesTable">
+              <thead class="table-primary text-white">
+                <tr>
+                  <th width="6%" class="text-center">N°</th>
+                  <th width="40%">Désignation <small class="d-block text-white-50">+ observation</small></th>
+                  <th width="16%" class="text-center">Réf / Lot</th>
+                  <th width="10%" class="text-center">Unité</th>
+                  <th width="10%" class="text-center">Quantité</th>
+                  <th width="8%" class="text-center no-print">Suppr</th>
+                </tr>
+              </thead>
+              <tbody id="articlesBody">
+                <% demandePrix.articles.forEach((art, i) => { %>
+                  <tr>
+                    <td class="text-center align-middle"><div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:34px;height:34px;font-weight:700;"><%= i+1 %></div></td>
+                    <td class="align-middle">
+                      <div contenteditable="true" class="fw-bold"><%= art.designation %></div>
+                      <div contenteditable="true" class="text-muted small mt-1" style="font-style:italic;"><%= art.observation || 'Cliquez pour ajouter une observation...' %></div>
+                    </td>
+                    <td contenteditable="true" class="text-center align-middle"><%= art.lot || art.reference || '—' %></td>
+                    <td contenteditable="true" class="text-center align-middle fw-semibold"><%= art.unite || '-' %></td>
+                    <td class="text-center align-middle"><input type="number" min="1" class="qty-input" value="<%= art.quantite %>"></td>
+                    <td class="text-center align-middle no-print"><i class="fas fa-trash-alt delete-btn" onclick="this.closest('tr').remove(); renumberRows()"></i></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+
+            <!-- Bouton Ajouter article -->
+            <div class="text-center mt-3 no-print">
+              <button onclick="addArticleRow()" class="btn btn-modern btn-add-line">Ajouter un article</button>
+            </div>
+          </div>
+
+          <!-- Signatures -->
+          <div class="p-5 text-center" style="background:#f8fbff; border-top:1px solid #dee2e6;">
+            <div class="row">
+              <div class="col-6">
+                <div class="border border-2 border-dashed rounded-3 p-4 bg-white">
+                  <h6 class="text-uppercase text-muted small">Cachet & Signature du Fournisseur</h6>
+                  <div style="height:90px; border-bottom:3px solid #ddd; margin:20px 0;"></div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="border border-2 border-dashed rounded-3 p-4 bg-white">
+                  <h6 class="text-uppercase text-muted small">Le Responsable Achats</h6>
+                  <div style="height:90px; border-bottom:3px solid #ddd; margin:20px 0;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Fournisseurs data
+const fournisseursData = [<% fournisseurs.forEach(f => { %>{"id":"<%= f.id %>","name":"<%= f.name %>","email":"<%= f.email %>","tel":"<%= f.telFournisseur || '' %>"},<% }) %>];
+
+document.getElementById('fournisseurSelect').addEventListener('change', function() {
+  const f = fournisseursData.find(x => x.id === this.value);
+  if(f) {
+    document.getElementById('fourName').textContent = f.name;
+    document.getElementById('fourEmail').textContent = f.email;
+    document.getElementById('fourTel').textContent = f.tel || 'Non renseigné';
+  }
+});
+
+// Ajouter ligne
+function addArticleRow() {
+  const tbody = document.getElementById('articlesBody');
+  const row = tbody.insertRow();
+  const idx = tbody.rows.length;
+  row.innerHTML = `
+    <td class="text-center align-middle"><div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:34px;height:34px;font-weight:700;">${idx}</div></td>
+    <td class="align-middle"><div contenteditable="true" class="fw-bold">Nouvelle désignation</div><div contenteditable="true" class="text-muted small mt-1" style="font-style:italic;">Observation...</div></td>
+    <td contenteditable="true" class="text-center align-middle">—</td>
+    <td contenteditable="true" class="text-center align-middle fw-semibold">unité</td>
+    <td class="text-center align-middle"><input type="number" min="1" class="qty-input" value="1"></td>
+    <td class="text-center align-middle no-print"><i class="fas fa-trash-alt delete-btn" onclick="this.closest('tr').remove(); renumberRows()"></i></td>
+  `;
+}
+
+// Renumber rows
+function renumberRows() {
+  document.querySelectorAll('#articlesBody tr').forEach((tr, i) => {
+    tr.cells[0].querySelector('div').textContent = i + 1;
+  });
+}
+
+// Sauvegarder
+document.getElementById('btnSave').addEventListener('click', function() {
+  const btn = this;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sauvegarde...';
+  btn.disabled = true;
+
+  const articles = [];
+  document.querySelectorAll('#articlesBody tr').forEach(tr => {
+    const cells = tr.cells;
+    articles.push({
+      designation: cells[1].querySelector('div').innerText.trim(),
+      observation: cells[1].querySelectorAll('div')[1].innerText.trim() === 'Observation...' ? '' : cells[1].querySelectorAll('div')[1].innerText.trim(),
+      reference: cells[2].innerText.trim(),
+      unite: cells[3].innerText.trim(),
+      quantite: parseInt(cells[4].querySelector('input').value) || 1
+    });
+  });
+
+  const data = {
+    fournisseurId: document.getElementById('fournisseurSelect').value,
+    articles: articles
+  };
+
+  fetch('/demandes-prix/<%= demandePrix.id %>/update', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  })
+  .then(r => r.json())
+  .then(res => {
+    btn.innerHTML = '<i class="fas fa-check"></i> Sauvegardé !';
+    btn.style.background = '#10b981';
+    setTimeout(() => location.reload(), 1500);
+  })
+  .catch(() => {
+    btn.innerHTML = '<i class="fas fa-times"></i> Erreur';
+    btn.style.background = '#ef4444';
+    setTimeout(() => {
+      btn.innerHTML = 'SAUVEGARDER LES MODIFICATIONS';
+      btn.disabled = false;
+      btn.style.background = '';
+    }, 2000);
+  });
+});
+
+function sendEmail() { /* ton code existant */ }
+</script>
+
+</body>
+</html>

@@ -25,6 +25,7 @@ import { addCaisseItem, createDemandeCaisse, deleteDemandeCaisseItem, generateDe
 import { addJustifCaisse, addJustifCaisseAdminAuto, adminUserList, createJustifCaisse, createJustifCaisseAdmin, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteJustifeCaisse, deleteRecette, generateJustifCaisseExcel, generateJustifCaissePDF, getAllJustifCaisse, justifeCaisseListUser, saveAllData, saveRecettesAdmin, updateDepenceValidation, validateAllDepenses, viewJustifCaisse, viewJustifCaisseAdmin } from '../controllers/justifecaisseController.js';
 import { createDemandeFourniture, deleteDemandeFourniture, downloadImageFourniture, editDemandeFourniture, indexDemandeFourniture, storeDemandeFourniture, updateDemandeFourniture, updateValidationFourniture, uploadFour, uploadImageFourniture, uploadTempImage, validateAllFourniture, viewDemandeFourniture } from '../controllers/demandeFourniture.js';
 import { fileURLToPath } from 'url';
+import { EditDemandePrix, postDemandePrixViaFourniture, viewDemandePrix } from '../controllers/demandeprixController.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -383,3 +384,11 @@ dashboardRouter.patch('/achat/fourniture/validate-all/:id', validateAllFournitur
 dashboardRouter.post('/achat/fourniture/:id/upload-image', uploadFour.single('image'), uploadImageFourniture);
 dashboardRouter.post('/achat/fourniture/upload-temp-image', uploadFour.single('image'), uploadTempImage);
 dashboardRouter.get('/achat/fourniture/:id/download-image', downloadImageFourniture);
+
+
+
+/// Creation de La demande de prix :
+dashboardRouter.post('/achats/demande/prix', postDemandePrixViaFourniture)
+dashboardRouter.get('/achat/demande-prix/:id', viewDemandePrix);
+dashboardRouter.get('/achat/demande-prix/:id/edit', EditDemandePrix);
+

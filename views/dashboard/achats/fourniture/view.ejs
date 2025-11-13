@@ -1,309 +1,313 @@
-  <!DOCTYPE html>
-  <html lang="fr">
-  <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Modifier la Demande de Fournitures</title>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Modifier la Demande de Fournitures</title>
 
-    <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet">
-    <link href="/css/sb-admin-2.min.css" rel="stylesheet">
-  </head>
-  <body id="page-top">
-  <div id="wrapper">
-    <%- include('../../../layouts/sidebar') %>
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet">
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+</head>
+<body id="page-top">
+<div id="wrapper">
+  <%- include('../../../layouts/sidebar') %>
 
-    <div id="content-wrapper" class="d-flex flex-column">
-      <div id="content">
-        <%- include('../../../layouts/topbar') %>
+  <div id="content-wrapper" class="d-flex flex-column">
+    <div id="content">
+      <%- include('../../../layouts/topbar') %>
 
-        <div class="container-fluid">
-          <h1 class="h3 mb-4 text-gray-800">Modifier la Demande de Fournitures</h1>
+      <div class="container-fluid">
+        <h1 class="h3 mb-4 text-gray-800">Modifier la Demande de Fournitures</h1>
 
-          <form id="demandeForm">
-            <!-- Hidden JSON field for items -->
-            <input type="hidden" name="items" id="itemsJson">
+        <form id="demandeForm">
+          <!-- Hidden JSON field for items -->
+          <input type="hidden" name="items" id="itemsJson">
 
-            <div class="card shadow mb-4">
-              <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Demande Fournitures</h6>
-                <br>
-                <div class="d-flex justify-content-between">
-                  <div class="form-group">
-                    <label for="date">Date</label>
-                    <input type="text" class="form-control" id="date" value="<%= demandeFourniture.dateDemande
-                      ? (function(){
-                          const d = new Date(demandeFourniture.dateDemande);
-                          const day   = String(d.getDate()).padStart(2,'0');
-                          const month = String(d.getMonth()+1).padStart(2,'0');
-                          const year  = d.getFullYear();
-                          return `${day}/${month}/${year}`;
-                        })()
-                      : '' %>" readonly>
-                  </div>
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">Demande Fournitures</h6>
+              <br>
+              <div class="d-flex justify-content-between">
+                <div class="form-group">
+                  <label for="date">Date</label>
+                  <input type="text" class="form-control" id="date" value="<%= demandeFourniture.dateDemande
+                    ? (function(){
+                        const d = new Date(demandeFourniture.dateDemande);
+                        const day   = String(d.getDate()).padStart(2,'0');
+                        const month = String(d.getMonth()+1).padStart(2,'0');
+                        const year  = d.getFullYear();
+                        return `${day}/${month}/${year}`;
+                      })()
+                    : '' %>" readonly>
+                </div>
 
-                  <div class="form-group">
-                    <label for="numero">Numéro</label>
-                    <input type="number" class="form-control" id="numero" value="<%= demandeFourniture.numero %>" readonly>
-                  </div>
+                <div class="form-group">
+                  <label for="numero">Numéro</label>
+                  <input type="number" class="form-control" id="numero" value="<%= demandeFourniture.numero %>" readonly>
+                </div>
 
-                  <div class="form-group">
-                    <label for="user">User</label>
-                    <input type="text" class="form-control" id="user" value="<%= demandeFourniture.user.name %>" readonly>
-                  </div>
+                <div class="form-group">
+                  <label for="user">User</label>
+                  <input type="text" class="form-control" id="user" value="<%= demandeFourniture.user.name %>" readonly>
                 </div>
               </div>
+            </div>
 
-              <div class="card-body">
-                <div class="table-responsive">
-                  <% if (user.role === "user") { %>
-                  
+            <div class="card-body">
+              <div class="table-responsive">
+                <% if (user.role === "user") { %>
+                 
 
-                    <table class="table table-bordered text-center align-middle" id="productsTable">
-                      <thead class="thead-light">
-                        <tr>
-                          <th rowspan="2">Code article</th>
-                          <th rowspan="2">Désignations</th>
-                          <th rowspan="2">Unité</th>
-                          <th rowspan="2">Quantité</th>
-                          <th colspan="2">Date de livraison</th>
-                          <th rowspan="2">LOT</th>
-                          <th rowspan="2">Recommandations et Observations</th>
-                          <th rowspan="2">Validation</th>
-                          <th rowspan="2">Validé Par</th>
-                          <th rowspan="2">Image</th>
-                          <th rowspan="2">Actions</th>
+                  <table class="table table-bordered text-center align-middle" id="productsTable">
+                    <thead class="thead-light">
+                      <tr>
+                        <th rowspan="2">Code article</th>
+                        <th rowspan="2">Désignations</th>
+                        <th rowspan="2">Unité</th>
+                        <th rowspan="2">Quantité</th>
+                        <th colspan="2">Date de livraison</th>
+                        <th rowspan="2">LOT</th>
+                        <th rowspan="2">Recommandations et Observations</th>
+                        <th rowspan="2">Validation</th>
+                        <th rowspan="2">Validé Par</th>
+                        <th rowspan="2">Image</th>
+                        <th rowspan="2">Actions</th>
+                      </tr>
+                      <tr><th>Au plus tôt</th><th>Au plus tard</th></tr>
+                    </thead>
+                    <tbody>
+                      <% demandeFourniture.items.forEach((item, idx) => { %>
+                        <tr data-index="<%= idx %>" data-item-id="<%= item.id %>">
+                          <!-- Inputs WITHOUT name -->
+                          <td><input type="text"   class="form-control" value="<%= item.code ?? '' %>"></td>
+                          <td><input type="text"   class="form-control" value="<%= item.designation ?? '' %>"></td>
+                          <td><input type="text"   class="form-control" value="<%= item.unité ?? '' %>"></td>
+                          <td><input type="number" class="form-control" value="<%= item.quantité ?? '' %>" min="1"></td>
+                          <td><input type="date"   class="form-control"
+                                    value="<%= item.auPlutot ? new Date(item.auPlutot).toISOString().split('T')[0] : '' %>"></td>
+                          <td><input type="date"   class="form-control"
+                                    value="<%= item.auPlutart ? new Date(item.auPlutart).toISOString().split('T')[0] : '' %>"></td>
+                          <td><input type="text"   class="form-control" value="<%= item.lot ?? '' %>"></td>
+                          <td><input type="text"   class="form-control" value="<%= item.observation ?? '' %>"></td>
+
+                          <!-- Hidden fields -->
+                          <input type="hidden" class="itemId" value="<%= item.id %>">
+                          <input type="hidden" class="tempImage" value="<%= item.image || '' %>">
+
+                          <!-- Validation -->
+                          <td>
+                            <% if (item.validation === true && item.validepar) { %>
+                              <span class="badge badge-success">Validée</span>
+                            <% } else if (item.validation === false && item.validepar) { %>
+                              <span class="badge badge-danger">Refusée</span>
+                            <% } else { %>
+                              <span class="badge badge-secondary">En attente</span>
+                            <% } %>
+                          </td>
+
+                          <td class="validerPar-cell"><%= item.validepar || '-' %></td>
+
+                          <!-- Image Column -->
+                          <td class="text-center">
+                            <% if (item.image) { %>
+                              <img src="<%= item.image %>"  style="max-height:32px;cursor:pointer;" class="img-thumbnail ml-2"  
+                                   onclick="window.open('<%= item.image %>', '_blank')">
+                            <% } else { %> 
+                              <span class="text-muted">Aucune image</span>
+                            <% } %>
+                                 
+                            <div class="d-flex justify-content-center mt-2">
+                              <img class="img-thumbnail ml-2 previewImg d-none" style="max-height:32px;cursor:pointer;">
+                            </div>
+                          </td>
+
+                          <!-- Actions -->
+                          <td>
+                            <div class="d-flex align-items-center gap-2">
+                              <button type="button" class="btn btn-sm btn-primary uploadBtn" data-item-id="<%= item.id %>">
+                                <i class="fas fa-upload"></i>
+                              </button>
+                              <input type="file" class="d-none uploadInput" accept="image/*">
+                              <input type="hidden" class="tempImage" value="<%= item.image || '' %>">
+                              <button type="button" class="btn btn-sm btn-danger deleteRow">
+                                <i class="fas fa-trash"></i>
+                              </button>
+                            </div>
+                          </td>
                         </tr>
-                        <tr><th>Au plus tôt</th><th>Au plus tard</th></tr>
-                      </thead>
-                      <tbody>
-                        <% demandeFourniture.items.forEach((item, idx) => { %>
-                          <tr data-index="<%= idx %>" data-item-id="<%= item.id %>">
-                            <!-- Inputs WITHOUT name -->
-                            <td><input type="text"   class="form-control" value="<%= item.code ?? '' %>"></td>
-                            <td><input type="text"   class="form-control" value="<%= item.designation ?? '' %>"></td>
-                            <td><input type="text"   class="form-control" value="<%= item.unité ?? '' %>"></td>
-                            <td><input type="number" class="form-control" value="<%= item.quantité ?? '' %>" min="1"></td>
-                            <td><input type="date"   class="form-control"
-                                      value="<%= item.auPlutot ? new Date(item.auPlutot).toISOString().split('T')[0] : '' %>"></td>
-                            <td><input type="date"   class="form-control"
-                                      value="<%= item.auPlutart ? new Date(item.auPlutart).toISOString().split('T')[0] : '' %>"></td>
-                            <td><input type="text"   class="form-control" value="<%= item.lot ?? '' %>"></td>
-                            <td><input type="text"   class="form-control" value="<%= item.observation ?? '' %>"></td>
+                      <% }) %>
+                    </tbody>
+                  </table>
 
-                            <!-- Hidden fields -->
-                            <input type="hidden" class="itemId" value="<%= item.id %>">
-                            <input type="hidden" class="tempImage" value="<%= item.image || '' %>">
+                <% } else if (user.role === "grandadmin" && user.name !== "CONFONDA") { %>
+                  <!-- Admin validation view -->
+                  <input type="hidden" name="demandeFournitureId" value="<%= demandeFourniture.id %>">
+                  <table class="table table-bordered text-center align-middle" id="productsTable">
+                    <thead class="thead-light">
+                      <tr>
+                        <th rowspan="2">Code article</th>
+                        <th rowspan="2">Désignations</th>
+                        <th rowspan="2">Unité</th>
+                        <th rowspan="2">Quantité</th>
+                        <th colspan="2">Date de livraison</th>
+                        <th rowspan="2">LOT</th>
+                        <th rowspan="2">Recommandations et Observations</th>
+                        <th rowspan="2">Validation</th>
+                        <th rowspan="2">Validé Par</th>
+                        <th rowspan="2"> Image</th>
+                        <th rowspan="2">Action </th>
+                      </tr>
+                      <tr><th>Au plus tôt</th><th>Au plus tard</th></tr>
+                    </thead>
+                    <tbody>
+                      <div class="d-flex justify-content-end mb-2">
+                        <button type="button" id="btnValiderAll" class="btn btn-success">Valider Tout</button>
+                      </div>
+                      <% demandeFourniture.items.forEach((item, idx) => { %>
+                        <tr data-item-id="<%= item.id %>">
+                          <td><input type="hidden" value="<%= item.id %>">
+                              <input type="text" class="form-control" value="<%= item.code ?? '' %>"></td>
+                          <td><input type="text" class="form-control" value="<%= item.designation ?? '' %>"></td>
+                          <td><input type="text" class="form-control" value="<%= item.unité ?? '' %>"></td>
+                          <td><input type="number" class="form-control" value="<%= item.quantité ?? '' %>" min="1"></td>
+                          <td><input type="date" class="form-control"
+                                    value="<%= item.auPlutot ? new Date(item.auPlutot).toISOString().split('T')[0] : '' %>"></td>
+                          <td><input type="date" class="form-control"
+                                    value="<%= item.auPlutart ? new Date(item.auPlutart).toISOString().split('T')[0] : '' %>"></td>
+                          <td><input type="text" class="form-control" value="<%= item.lot ?? '' %>"></td>
+                          <td><input type="text" class="form-control" value="<%= item.observation ?? '' %>"></td>
 
-                            <!-- Validation -->
-                            <td>
-                              <% if (item.validation === true && item.validepar) { %>
-                                <span class="badge badge-success">Validée</span>
-                              <% } else if (item.validation === false && item.validepar) { %>
-                                <span class="badge badge-danger">Refusée</span>
-                              <% } else { %>
-                                <span class="badge badge-secondary">En attente</span>
-                              <% } %>
-                            </td>
+                       <td class="text-center align-middle">
+  <div class="d-flex flex-column align-items-center gap-1">
+    <!-- Badge -->
+    <% if (item.validation === true && item.validepar) { %>
+      <span class="badge badge-success">Validée</span>
+    <% } else if (item.validation === false && item.validepar) { %>
+      <span class="badge badge-danger">Refusée</span>
+    <% } else { %>
+      <span class="badge badge-secondary">En attente</span>
+    <% } %>
+    <br>
 
-                            <td class="validerPar-cell"><%= item.validepar || '-' %></td>
+    <!-- Checkbox and label -->
+    <div class="d-flex align-items-center gap-2 mt-1">
+      <input type="checkbox" 
+             class="form-check-input validation-checkbox" 
+             id="validation-<%= item.id %>" 
+             data-id="<%= item.id %>"
+             <%= item.validation === true ? 'checked' : '' %>
+             style="width: 38px; height: 20px;">
 
-                            <!-- Image Column -->
-                            <td class="text-center">
-                              <% if (item.image) { %>
-                                <img src="<%= item.image %>"  style="max-height:32px;cursor:pointer;" class="img-thumbnail ml-2"  
-                                    onclick="window.open('<%= item.image %>', '_blank')">
-                              <% } else { %> 
-                                <span class="text-muted">Aucune image</span>
-                              <% } %>
-                                  
-                              <div class="d-flex justify-content-center mt-2">
-                                <img class="img-thumbnail ml-2 previewImg d-none" style="max-height:32px;cursor:pointer;">
-                              </div>
-                            </td>
-
-                            <!-- Actions -->
-                            <td>
-                              <div class="d-flex align-items-center gap-2">
-                                <button type="button" class="btn btn-sm btn-primary uploadBtn" data-item-id="<%= item.id %>">
-                                  <i class="fas fa-upload"></i>
-                                </button>
-                                <input type="file" class="d-none uploadInput" accept="image/*">
-                                <input type="hidden" class="tempImage" value="<%= item.image || '' %>">
-                                <button type="button" class="btn btn-sm btn-danger deleteRow">
-                                  <i class="fas fa-trash"></i>
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        <% }) %>
-                      </tbody>
-                    </table>
-
-                  <% } else if (user.role === "grandadmin" && user.name !== "CONFONDA") { %>
-                    <!-- Admin validation view -->
-                    <input type="hidden" name="demandeFournitureId" value="<%= demandeFourniture.id %>">
-                    <table class="table table-bordered text-center align-middle" id="productsTable">
-                      <thead class="thead-light">
-                        <tr>
-                          <th rowspan="2">Code article</th>
-                          <th rowspan="2">Désignations</th>
-                          <th rowspan="2">Unité</th>
-                          <th rowspan="2">Quantité</th>
-                          <th colspan="2">Date de livraison</th>
-                          <th rowspan="2">LOT</th>
-                          <th rowspan="2">Recommandations et Observations</th>
-                          <th rowspan="2">Validation</th>
-                          <th rowspan="2">Validé Par</th>
-                          <th rowspan="2"> Image</th>
-                          <th rowspan="2">Action </th>
-                        </tr>
-                        <tr><th>Au plus tôt</th><th>Au plus tard</th></tr>
-                      </thead>
-                      <tbody>
-                        <div class="d-flex justify-content-end mb-2">
-                          <button type="button" id="btnValiderAll" class="btn btn-success">Valider Tout</button>
-                        </div>
-                        <% demandeFourniture.items.forEach((item, idx) => { %>
-                          <tr data-item-id="<%= item.id %>">
-                            <td><input type="hidden" value="<%= item.id %>">
-                                <input type="text" class="form-control" value="<%= item.code ?? '' %>"></td>
-                            <td><input type="text" class="form-control" value="<%= item.designation ?? '' %>"></td>
-                            <td><input type="text" class="form-control" value="<%= item.unité ?? '' %>"></td>
-                            <td><input type="number" class="form-control" value="<%= item.quantité ?? '' %>" min="1"></td>
-                            <td><input type="date" class="form-control"
-                                      value="<%= item.auPlutot ? new Date(item.auPlutot).toISOString().split('T')[0] : '' %>"></td>
-                            <td><input type="date" class="form-control"
-                                      value="<%= item.auPlutart ? new Date(item.auPlutart).toISOString().split('T')[0] : '' %>"></td>
-                            <td><input type="text" class="form-control" value="<%= item.lot ?? '' %>"></td>
-                            <td><input type="text" class="form-control" value="<%= item.observation ?? '' %>"></td>
-
-                        <td class="text-center align-middle">
-    <div class="d-flex flex-column align-items-center gap-1">
-      <!-- Badge -->
-      <% if (item.validation === true && item.validepar) { %>
-        <span class="badge badge-success">Validée</span>
-      <% } else if (item.validation === false && item.validepar) { %>
-        <span class="badge badge-danger">Refusée</span>
-      <% } else { %>
-        <span class="badge badge-secondary">En attente</span>
-      <% } %>
-      <br>
-
-      <!-- Checkbox and label -->
-      <div class="d-flex align-items-center gap-2 mt-1">
-        <input type="checkbox" 
-              class="form-check-input validation-checkbox" 
-              id="validation-<%= item.id %>" 
-              data-id="<%= item.id %>"
-              <%= item.validation === true ? 'checked' : '' %>
-              style="width: 38px; height: 20px;">
-
-      
-      </div>
+     
     </div>
-  </td>
+  </div>
+</td>
 
 
 
-                            <td class="validerPar-cell"><%= item.validepar || '-' %></td>
-                            <td class="text-center">
+                          <td class="validerPar-cell"><%= item.validepar || '-' %></td>
+                          <td class="text-center">
+                            <% if (item.image) { %>
+                              <img src="<%= item.image %>"  style="max-height:32px;cursor:pointer;" class="img-thumbnail ml-2"  
+                                   onclick="window.open('<%= item.image %>', '_blank')">
+                            <% } else { %> 
+                              <span class="text-muted">Aucune image</span>
+                            <% } %>
+                                 
+                            <div class="d-flex justify-content-center mt-2">
+                              <img class="img-thumbnail ml-2 previewImg d-none" style="max-height:32px;cursor:pointer;">
+                            </div>
+                          </td>
+                          <td>
+                            <div class="d-flex align-items-center gap-2">
+                              <!-- Downlaod Image -->
                               <% if (item.image) { %>
-                                <img src="<%= item.image %>"  style="max-height:32px;cursor:pointer;" class="img-thumbnail ml-2"  
-                                    onclick="window.open('<%= item.image %>', '_blank')">
-                              <% } else { %> 
-                                <span class="text-muted">Aucune image</span>
+                                <a href="/achat/fourniture/<%= item.id %>/download-image" 
+                                   class="btn btn-sm btn-info downloadBtn" target="_blank">
+                                  <i class="fas fa-download"></i>
+                                </a>
+                              <% } else { %>
+                                <a href="#" class="btn btn-sm btn-secondary downloadBtn d-none" target="_blank">
+                                  <i class="fas fa-download"></i>
+                                </a>
                               <% } %>
-                                  
-                              <div class="d-flex justify-content-center mt-2">
-                                <img class="img-thumbnail ml-2 previewImg d-none" style="max-height:32px;cursor:pointer;">
-                              </div>
-                            </td>
-                            <td>
-                              <div class="d-flex align-items-center gap-2">
-                                <!-- Downlaod Image -->
-                                <% if (item.image) { %>
-                                  <a href="/achat/fourniture/<%= item.id %>/download-image" 
-                                    class="btn btn-sm btn-info downloadBtn" target="_blank">
-                                    <i class="fas fa-download"></i>
-                                  </a>
-                                <% } else { %>
-                                  <a href="#" class="btn btn-sm btn-secondary downloadBtn d-none" target="_blank">
-                                    <i class="fas fa-download"></i>
-                                  </a>
-                                <% } %>
-                              </div>
-                            </td>
-                          </tr>
-                        <% }) %>
-                      </tbody>
-                    </table>
+                            </div>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
 
-                  <% } else if (user.role === "grandadmin" && user.name === "CONFONDA") { %>
-   <!-- === BOUTON CONVERTIR (Bootstrap 4) === -->
+                <% } else if (user.role === "grandadmin" && user.name === "CONFONDA") { %>
+  <!-- ====== CONFONDA: Convertir en Devis / Bon de Commande ====== -->
   <div class="d-flex justify-content-end mb-3">
-    <div class="btn-group">
-      <button type="button" class="btn btn-primary dropdown-toggle" 
+    <div class="dropdown">
+      <button class="btn btn-primary dropdown-toggle" type="button" id="convertirDropdown"
               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         Convertir
       </button>
-      <div class="dropdown-menu">
+      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="convertirDropdown">
         <a class="dropdown-item" href="#" id="convertToDevisBtn">Convertir en devis</a>
         <a class="dropdown-item disabled" href="#">Convertir en bon de commande <small>(bientôt)</small></a>
       </div>
     </div>
   </div>
-    <table class="table table-bordered text-center align-middle">
-      <thead class="thead-light">
-        <tr>
-          <th rowspan="2">Code article</th>
-          <th rowspan="2">Désignations</th>
-          <th rowspan="2">Unité</th>
-          <th rowspan="2">Quantité</th>
-          <th colspan="2">Date de livraison</th>
-          <th rowspan="2">LOT</th>
-          <th rowspan="2">Recommandations et Observations</th>
-          <th rowspan="2">Validation</th>
-          <th rowspan="2">Validé Par</th>
-          <th rowspan="2">Image</th>
+
+  <!-- Tableau CONFONDA (lecture seule) -->
+  <table class="table table-bordered text-center align-middle" id="productsTable">
+    <thead class="thead-light">
+      <tr>
+        <th rowspan="2">Code article</th>
+        <th rowspan="2">Désignations</th>
+        <th rowspan="2">Unité</th>
+        <th rowspan="2">Quantité</th>
+        <th colspan="2">Date de livraison</th>
+        <th rowspan="2">LOT</th>
+        <th rowspan="2">Recommandations et Observations</th>
+        <th rowspan="2">Validation</th>
+        <th rowspan="2">Validé Par</th>
+        <th rowspan="2">Image</th>
+      </tr>
+      <tr><th>Au plus tôt</th><th>Au plus tard</th></tr>
+    </thead>
+    <tbody>
+      <% demandeFourniture.items.forEach((item) => { %>
+        <tr data-item-id="<%= item.id %>">
+          <td><%= item.code ?? '' %></td>
+          <td><%= item.designation ?? '' %></td>
+          <td><%= item.unité ?? '' %></td>
+          <td><%= item.quantité ?? '' %></td>
+          <td><%= item.auPlutot ? new Date(item.auPlutot).toLocaleDateString('fr-FR') : '' %></td>
+          <td><%= item.auPlutart ? new Date(item.auPlutart).toLocaleDateString('fr-FR') : '' %></td>
+          <td><%= item.lot ?? '' %></td>
+          <td><%= item.observation ?? '' %></td>
+          <td>
+            <% if (item.validation === true) { %>
+              <span class="badge badge-success">Validée</span>
+            <% } else if (item.validation === false) { %>
+              <span class="badge badge-danger">Refusée</span>
+            <% } else { %>
+              <span class="badge badge-secondary">En attente</span>
+            <% } %>
+          </td>
+          <td><%= item.validepar || '-' %></td>
+          <td class="text-center">
+            <% if (item.image) { %>
+              <img src="<%= item.image %>" style="max-height:90px; cursor:pointer; object-fit:cover; border-radius:8px;" 
+                   onclick="window.open('<%= item.image %>', '_blank')">
+            <% } else { %>
+              <span class="text-muted">Aucune image</span>
+            <% } %>
+          </td>
         </tr>
-        <tr><th>Au plus tôt</th><th>Au plus tard</th></tr>
-      </thead>
-      <tbody>
-        <% demandeFourniture.items.forEach((item) => { %>
-          <tr data-item-id="<%= item.id %>">
-            <td><%= item.code ?? '' %></td>
-            <td><%= item.designation ?? '' %></td>
-            <td><%= item.unité ?? '' %></td>
-            <td><%= item.quantité ?? '' %></td>
-            <td><%= item.auPlutot ? new Date(item.auPlutot).toLocaleDateString('fr-FR') : '' %></td>
-            <td><%= item.auPlutart ? new Date(item.auPlutart).toLocaleDateString('fr-FR') : '' %></td>
-            <td><%= item.lot ?? '' %></td>
-            <td><%= item.observation ?? '' %></td>
-            <td>
-              <% if (item.validation === true) { %>
-                <span class="badge badge-success">Validée</span>
-              <% } else if (item.validation === false) { %>
-                <span class="badge badge-danger">Refusée</span>
-              <% } else { %>
-                <span class="badge badge-secondary">En attente</span>
-              <% } %>
-            </td>
-            <td><%= item.validepar || '-' %></td>
-            <td class="text-center">
-              <% if (item.image) { %>
-                <img src="<%= item.image %>" style="max-height:90px; cursor:pointer; object-fit:cover; border-radius:8px;" 
-                    onclick="window.open('<%= item.image %>', '_blank')">
-              <% } else { %>
-                <span class="text-muted">Aucune image</span>
-              <% } %>
-            </td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
-    <div class="modal fade" id="convertDevisModal" tabindex="-1" role="dialog" aria-labelledby="convertDevisModalLabel" aria-hidden="true">
+      <% }) %>
+    </tbody>
+  </table>
+
+  <!-- ====== MODAL: Convertir en Devis ====== -->
+  <div class="modal fade" id="convertDevisModal" tabindex="-1" role="dialog" aria-labelledby="convertDevisModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -327,274 +331,24 @@
     </div>
   </div>
 
-  <% } %>
-              </div>
-            </div>
-
-            <% if (user.role === "user") { %>
-              <div class="mb-4 text-right">
-                <button type="submit" class="btn btn-primary">Enregistrer</button>
-                <button type="button" id="btnAddRow" class="btn btn-success btn-sm">
-                  <i class="fas fa-plus"></i> Ajouter une ligne
-                </button>
-              </div>
-            <% } %>
-          </form>
-        </div>
-      </div>
-
-      <footer class="sticky-footer bg-white">
-        <div class="container my-auto">
-          <div class="copyright text-center my-auto">
-            <span>Copyright © Your Website 2025</span>
-          </div>
-        </div>
-      </footer>
-    </div>
-  </div>
-
-  <script src="/vendor/jquery/jquery.min.js"></script>
-  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
-  <script src="/js/sb-admin-2.min.js"></script>
-
+  <!-- ====== JS: CONFONDA Modal Logic ====== -->
   <script>
-  $(function () {
-    const $tbody = $('#productsTable tbody');
-    let rowIndex = $tbody.find('tr').length;
-    let isUploading = false;
-
-    /* ---------- ADD ROW ---------- */
-    $('#btnAddRow').on('click', function () {
-      const html = `
-        <tr data-index="${rowIndex}" data-new="true">
-          <td><input type="text" class="form-control"></td>
-          <td><input type="text" class="form-control"></td>
-          <td><input type="text" class="form-control"></td>
-          <td><input type="number" class="form-control" min="1"></td>
-          <td><input type="date" class="form-control"></td>
-          <td><input type="date" class="form-control"></td>
-          <td><input type="text" class="form-control"></td>
-          <td><input type="text" class="form-control"></td>
-          <td><span class="badge badge-secondary">En attente</span></td>
-          <td class="validerPar-cell">-</td>
-          <td class="text-center">
-            <div class="d-flex justify-content-center mt-2">
-                <img class="img-thumbnail ml-2 previewImg d-none" style="max-height:32px;cursor:pointer;">
-              </div>
-          </td>
-          <td>
-            <div class="d-flex align-items-center gap-2">
-              <button type="button" class="btn btn-sm btn-primary uploadBtn">
-                <i class="fas fa-upload"></i>
-              </button>
-              <input type="file" class="d-none uploadInput" accept="image/*">
-              <input type="hidden" class="tempImage">
-              <button type="button" class="btn btn-sm btn-danger deleteRow">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-          </td>
-        </tr>`;
-      $tbody.append(html);
-      rowIndex++;
-    });
-
-    /* ---------- DELETE ROW ---------- */
-    $tbody.on('click', '.deleteRow', function () {
-      $(this).closest('tr').remove();
-    });
-
-    /* ---------- UPLOAD IMAGE ---------- */
-    $tbody.on('click', '.uploadBtn', function (e) {
-      e.preventDefault();
-      if (isUploading) return;
-      const $row = $(this).closest('tr');
-      const $input = $row.find('.uploadInput');
-      $input.val('');
-      setTimeout(() => $input.trigger('click'), 0);
-    });
-
-    $tbody.on('change', '.uploadInput', function () {
-      const input = this;
-      const file = input.files[0];
-      if (!file) return;
-
-      const $row = $(input).closest('tr');
-      const $btn = $row.find('.uploadBtn');
-      const $preview = $row.find('.previewImg');
-      const $download = $row.find('.downloadBtn');
-      const $tempHidden = $row.find('.tempImage');
-
-      const itemId = $row.data('item-id');
-      const isNew = $row.data('new') === true;
-
-      if (isUploading) return;
-      isUploading = true;
-      $btn.prop('disabled', true);
-
-      const fd = new FormData();
-      fd.append('image', file);
-
-      const url = isNew
-        ? '/achat/fourniture/upload-temp-image'
-        : `/achat/fourniture/${itemId}/upload-image`;
-
-      $.ajax({
-        url,
-        method: 'POST',
-        data: fd,
-        processData: false,
-        contentType: false,
-        success: function (res) {
-          if (!res.success) { 
-            alert(res.error || 'Erreur'); 
-            return; 
-          }
-
-          const imgUrl = res.data.image;
-          $preview.attr('src', imgUrl).removeClass('d-none')
-            .off('click').on('click', () => window.open(imgUrl, '_blank'));
-
-          if (!isNew) {
-            $download.attr('href', `/achat/fourniture/${itemId}/download-image`)
-                    .removeClass('d-none').addClass('btn-info');
-          }
-
-          if (isNew) $tempHidden.val(imgUrl);
-
-          if (!isNew) {
-            window.location.reload();
-          }
-        },
-        error: () => alert("Erreur d'upload"),
-        complete: () => {
-          isUploading = false;
-          $btn.prop('disabled', false);
-          input.value = '';
-        }
-      });
-    });
-
-    /* ---------- FORM SUBMIT ---------- */
-    $('#demandeForm').on('submit', function (e) {
-      e.preventDefault();
-
-      const items = [];
-      $tbody.find('tr').each(function () {
-        const $tr = $(this);
-        const item = {
-          id: $tr.find('.itemId').val() || null,
-          code: $tr.find('input[type="text"]').eq(0).val(),
-          designation: $tr.find('input[type="text"]').eq(1).val(),
-          unite: $tr.find('input[type="text"]').eq(2).val(),
-          quantite: $tr.find('input[type="number"]').val(),
-          auPlutot: $tr.find('input[type="date"]').eq(0).val(),
-          auPlutart: $tr.find('input[type="date"]').eq(1).val(),
-          lot: $tr.find('input[type="text"]').eq(3).val(),
-          observation: $tr.find('input[type="text"]').eq(4).val(),
-          tempImage: $tr.find('.tempImage').val() || null,
-        };
-        items.push(item);
-      });
-
-      const fd = new FormData();
-      fd.append('items', JSON.stringify(items));
-      fd.append('date', $('#date').val());
-      fd.append('numero', $('#numero').val());
-
-      let fileIndex = 0;
-      $tbody.find('tr[data-new="true"]').each(function () {
-        const $input = $(this).find('.uploadInput')[0];
-        if ($input && $input.files[0]) {
-          fd.append(`newImage_${fileIndex}`, $input.files[0]);
-          fileIndex++;
-        }
-      });
-      fd.append('newImageCount', fileIndex);
-
-      $.ajax({
-        url: '/achats/fourniture/<%= demandeFourniture.id %>',
-        method: 'PUT',
-        data: fd,
-        processData: false,
-        contentType: false,
-        success: () => location.reload(),
-        error: xhr => alert("Erreur: " + (xhr.responseJSON?.error || 'Inconnue'))
-      });
-    });
-
-    /* ---------- VALIDATE ALL (Admin) ---------- */
-    $('#btnValiderAll').on('click', function () {
-      fetch(`/achat/fourniture/validate-all/<%= demandeFourniture.id %>`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' }
-      }).then(r => r.json()).then(d => {
-        if (d.success) location.reload();
-        else alert(d.error);
-      });
-    });
-
-    /* ---------- INDIVIDUAL VALIDATION (Admin) ---------- */
-  $tbody.on('change', '.validation-checkbox', function () {
-    const $cb       = $(this);
-    const itemId    = $cb.data('id');
-    const isChecked = $cb.is(':checked');
-
-    $cb.prop('disabled', true);
-
-    fetch(`/achat/fourniture/${itemId}/validate`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'same-origin',          // <-- important for session cookie
-      body: JSON.stringify({ validation: isChecked })
-    })
-    .then(r => {
-      if (!r.ok) return r.json().then(err => { throw new Error(err.error || 'Erreur serveur'); });
-      return r.json();
-    })
-    .then(data => {
-      if (!data.success) throw new Error(data.error);
-      window.location.reload();
-
-      const $row        = $cb.closest('tr');
-      const $badgeCell  = $row.find('td').eq(8);          // Validation column
-      const $validerPar = $row.find('.validerPar-cell');
-
-      $badgeCell.html(isChecked
-        ? '<span class="badge badge-success">Validée</span>'
-        : '<span class="badge badge-danger">Refusée</span>');
-
-      $validerPar.text(data.data.validepar || '-');
-    })
-    .catch(err => {
-      alert(err.message);
-      $cb.prop('checked', !isChecked);   // revert
-    })
-    .finally(() => $cb.prop('disabled', false));
-  });
-  }); // <-- Fermeture du $(function()
-
-
-  // === CONFONDA: Convertir en Devis ===
   let fournisseurs = [];
   let selectedItems = [];
 
-  $('#convertToDevisBtn').on('click', function (e) {
+  $(document).on('click', '#convertToDevisBtn', function (e) {
     e.preventDefault();
     selectedItems = [];
     $('#itemsList').empty();
     $('#loadingFournisseurs').removeClass('d-none');
 
-    // Charger les fournisseurs
-    $.get('/api/fournisseurs', function (data) {
-      fournisseurs = data;
-      renderItemsForConversion();
-      $('#loadingFournisseurs').addClass('d-none');
-    }).fail(() => {
-      alert('Erreur lors du chargement des fournisseurs');
-      $('#loadingFournisseurs').addClass('d-none');
-    });
+    $.get('/api/fournisseurs')
+      .done(data => {
+        fournisseurs = data;
+        renderItemsForConversion();
+      })
+      .fail(() => alert('Erreur lors du chargement des fournisseurs'))
+      .always(() => $('#loadingFournisseurs').addClass('d-none'));
 
     $('#convertDevisModal').modal('show');
   });
@@ -606,15 +360,16 @@
     $('#productsTable tbody tr').each(function () {
       const $tr = $(this);
       const itemId = $tr.data('item-id');
-      const cells = $tr.find('td');
-      const designation = cells.eq(1).text().trim();
-      const quantite = cells.eq(3).text().trim();
-      const unite = cells.eq(2).text().trim();
+      if (!itemId) return;
+
+      const designation = $tr.find('td').eq(1).text().trim();
+      const quantite = $tr.find('td').eq(3).text().trim();
+      const unite = $tr.find('td').eq(2).text().trim();
 
       if (!designation) return;
 
       const itemHtml = `
-        <div class="border rounded p-3 mb-2">
+        <div class="border rounded p-3 mb-2 article-item">
           <div class="custom-control custom-checkbox">
             <input type="checkbox" class="custom-control-input item-checkbox" id="item-${itemId}" value="${itemId}">
             <label class="custom-control-label font-weight-bold" for="item-${itemId}">
@@ -625,66 +380,326 @@
             <label class="small">Fournisseur</label>
             <select class="form-control form-control-sm fournisseur-select" data-item-id="${itemId}" disabled>
               <option value="">-- Choisir --</option>
-              ${fournisseurs.map(f => `<option value="${f.id}">${f.nom} (${f.email})</option>`).join('')}
+              ${fournisseurs.map(f => `<option value="${f.id}">${f.name} (${f.email})</option>`).join('')}
             </select>
           </div>
         </div>`;
-
       $list.append(itemHtml);
     });
 
-    // Activer le select quand checkbox cochée
-    $list.on('change', '.item-checkbox', function () {
-      const $select = $(this).closest('.border').find('.fournisseur-select');
+    $list.off('change', '.item-checkbox').on('change', '.item-checkbox', function () {
+      const $select = $(this).closest('.article-item').find('.fournisseur-select');
       $select.prop('disabled', !this.checked);
       if (!this.checked) $select.val('');
     });
   }
 
-  $('#btnCreateDevis').on('click', function () {
+  $(document).on('click', '#btnCreateDevis', function () {
     selectedItems = [];
+    let hasValidSelection = false;
 
     $('#itemsList .item-checkbox:checked').each(function () {
       const itemId = $(this).val();
-      const fournisseurId = $(this).closest('.border').find('.fournisseur-select').val();
+      const fournisseurId = $(this).closest('.article-item').find('.fournisseur-select').val();
       if (fournisseurId) {
         selectedItems.push({ itemId, fournisseurId });
+        hasValidSelection = true;
       }
     });
 
-    if (selectedItems.length === 0) {
+    if (!hasValidSelection) {
       alert('Veuillez sélectionner au moins un article avec un fournisseur.');
       return;
     }
 
-    $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Création...');
+    const $btn = $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Création...');
 
     $.ajax({
-      url: '/achat/devis/create-from-demande',
+      url: '/achats/demande/prix',
       method: 'POST',
       contentType: 'application/json',
       data: JSON.stringify({
         demandeId: <%= demandeFourniture.id %>,
         items: selectedItems
       }),
-      success: function (res) {
-        if (res.success && res.devisId) {
-          window.location.href = `/achat/devis/${res.devisId}`;
+      success: res => {
+        if (res.success) {
+          const count = res.count || 1;
+          const primaryId = res.primaryId || res.demandePrixIds[0];
+
+          if (count === 1) {
+            window.location.href = `/achat/demande-prix/${primaryId}`;
+          } else {
+            // Multiple demandes created
+            if (confirm(`${count} demandes de prix créées.\nVoulez-vous voir la première ?`)) {
+              window.location.href = `/achat/demande-prix/${primaryId}`;
+            } else {
+              $('#convertDevisModal').modal('hide');
+              // Optionally refresh or show success
+              alert(`${count} demandes de prix créées avec succès !`);
+            }
+          }
         } else {
-          alert(res.error || 'Erreur lors de la création du devis');
+          alert(res.error || 'Erreur lors de la création');
         }
       },
       error: () => alert('Erreur réseau'),
       complete: () => {
-        $('#btnCreateDevis').prop('disabled', false).html('Convertir');
+        $btn.prop('disabled', false).html('Convertir');
         $('#convertDevisModal').modal('hide');
       }
     });
   });
-  </script>
+</script>
+<% } %>
 
+          <% if (user.role === "user") { %>
+            <div class="mb-4 text-right">
+              <button type="submit" class="btn btn-primary">Enregistrer</button>
+              <button type="button" id="btnAddRow" class="btn btn-success btn-sm">
+                <i class="fas fa-plus"></i> Ajouter une ligne
+              </button>
+            </div>
+          <% } %>
+        </form>
+      </div>
+    </div>
 
-  <!-- Modal Convertir en Devis -->
-  
-  </body>
-  </html>
+    <footer class="sticky-footer bg-white">
+      <div class="container my-auto">
+        <div class="copyright text-center my-auto">
+          <span>Copyright © Your Website 2025</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script src="/vendor/jquery/jquery.min.js"></script>
+<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+<script src="/js/sb-admin-2.min.js"></script>
+
+<script>
+$(function () {
+  const $tbody = $('#productsTable tbody');
+  let rowIndex = $tbody.find('tr').length;
+  let isUploading = false;
+
+  /* ---------- ADD ROW ---------- */
+  $('#btnAddRow').on('click', function () {
+    const html = `
+      <tr data-index="${rowIndex}" data-new="true">
+        <td><input type="text" class="form-control"></td>
+        <td><input type="text" class="form-control"></td>
+        <td><input type="text" class="form-control"></td>
+        <td><input type="number" class="form-control" min="1"></td>
+        <td><input type="date" class="form-control"></td>
+        <td><input type="date" class="form-control"></td>
+        <td><input type="text" class="form-control"></td>
+        <td><input type="text" class="form-control"></td>
+        <td><span class="badge badge-secondary">En attente</span></td>
+        <td class="validerPar-cell">-</td>
+        <td class="text-center">
+           <div class="d-flex justify-content-center mt-2">
+              <img class="img-thumbnail ml-2 previewImg d-none" style="max-height:32px;cursor:pointer;">
+            </div>
+        </td>
+        <td>
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-primary uploadBtn">
+              <i class="fas fa-upload"></i>
+            </button>
+            <input type="file" class="d-none uploadInput" accept="image/*">
+            <input type="hidden" class="tempImage">
+            <button type="button" class="btn btn-sm btn-danger deleteRow">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </td>
+      </tr>`;
+    $tbody.append(html);
+    rowIndex++;
+  });
+
+  /* ---------- DELETE ROW ---------- */
+  $tbody.on('click', '.deleteRow', function () {
+    $(this).closest('tr').remove();
+  });
+
+  /* ---------- UPLOAD IMAGE ---------- */
+  $tbody.on('click', '.uploadBtn', function (e) {
+    e.preventDefault();
+    if (isUploading) return;
+    const $row = $(this).closest('tr');
+    const $input = $row.find('.uploadInput');
+    $input.val('');
+    setTimeout(() => $input.trigger('click'), 0);
+  });
+
+  $tbody.on('change', '.uploadInput', function () {
+    const input = this;
+    const file = input.files[0];
+    if (!file) return;
+
+    const $row = $(input).closest('tr');
+    const $btn = $row.find('.uploadBtn');
+    const $preview = $row.find('.previewImg');
+    const $download = $row.find('.downloadBtn');
+    const $tempHidden = $row.find('.tempImage');
+
+    const itemId = $row.data('item-id');
+    const isNew = $row.data('new') === true;
+
+    if (isUploading) return;
+    isUploading = true;
+    $btn.prop('disabled', true);
+
+    const fd = new FormData();
+    fd.append('image', file);
+
+    const url = isNew
+      ? '/achat/fourniture/upload-temp-image'
+      : `/achat/fourniture/${itemId}/upload-image`;
+
+    $.ajax({
+      url,
+      method: 'POST',
+      data: fd,
+      processData: false,
+      contentType: false,
+      success: function (res) {
+        if (!res.success) { 
+          alert(res.error || 'Erreur'); 
+          return; 
+        }
+
+        const imgUrl = res.data.image;
+        $preview.attr('src', imgUrl).removeClass('d-none')
+          .off('click').on('click', () => window.open(imgUrl, '_blank'));
+
+        if (!isNew) {
+          $download.attr('href', `/achat/fourniture/${itemId}/download-image`)
+                   .removeClass('d-none').addClass('btn-info');
+        }
+
+        if (isNew) $tempHidden.val(imgUrl);
+
+        if (!isNew) {
+          window.location.reload();
+        }
+      },
+      error: () => alert("Erreur d'upload"),
+      complete: () => {
+        isUploading = false;
+        $btn.prop('disabled', false);
+        input.value = '';
+      }
+    });
+  });
+
+  /* ---------- FORM SUBMIT ---------- */
+  $('#demandeForm').on('submit', function (e) {
+    e.preventDefault();
+
+    const items = [];
+    $tbody.find('tr').each(function () {
+      const $tr = $(this);
+      const item = {
+        id: $tr.find('.itemId').val() || null,
+        code: $tr.find('input[type="text"]').eq(0).val(),
+        designation: $tr.find('input[type="text"]').eq(1).val(),
+        unite: $tr.find('input[type="text"]').eq(2).val(),
+        quantite: $tr.find('input[type="number"]').val(),
+        auPlutot: $tr.find('input[type="date"]').eq(0).val(),
+        auPlutart: $tr.find('input[type="date"]').eq(1).val(),
+        lot: $tr.find('input[type="text"]').eq(3).val(),
+        observation: $tr.find('input[type="text"]').eq(4).val(),
+        tempImage: $tr.find('.tempImage').val() || null,
+      };
+      items.push(item);
+    });
+
+    const fd = new FormData();
+    fd.append('items', JSON.stringify(items));
+    fd.append('date', $('#date').val());
+    fd.append('numero', $('#numero').val());
+
+    let fileIndex = 0;
+    $tbody.find('tr[data-new="true"]').each(function () {
+      const $input = $(this).find('.uploadInput')[0];
+      if ($input && $input.files[0]) {
+        fd.append(`newImage_${fileIndex}`, $input.files[0]);
+        fileIndex++;
+      }
+    });
+    fd.append('newImageCount', fileIndex);
+
+    $.ajax({
+      url: '/achats/fourniture/<%= demandeFourniture.id %>',
+      method: 'PUT',
+      data: fd,
+      processData: false,
+      contentType: false,
+      success: () => location.reload(),
+      error: xhr => alert("Erreur: " + (xhr.responseJSON?.error || 'Inconnue'))
+    });
+  });
+
+  /* ---------- VALIDATE ALL (Admin) ---------- */
+  $('#btnValiderAll').on('click', function () {
+    fetch(`/achat/fourniture/validate-all/<%= demandeFourniture.id %>`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' }
+    }).then(r => r.json()).then(d => {
+      if (d.success) location.reload();
+      else alert(d.error);
+    });
+  });
+
+  /* ---------- INDIVIDUAL VALIDATION (Admin) ---------- */
+ $tbody.on('change', '.validation-checkbox', function () {
+  const $cb       = $(this);
+  const itemId    = $cb.data('id');
+  const isChecked = $cb.is(':checked');
+
+  $cb.prop('disabled', true);
+
+  fetch(`/achat/fourniture/${itemId}/validate`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',          // <-- important for session cookie
+    body: JSON.stringify({ validation: isChecked })
+  })
+  .then(r => {
+    if (!r.ok) return r.json().then(err => { throw new Error(err.error || 'Erreur serveur'); });
+    return r.json();
+  })
+  .then(data => {
+    if (!data.success) throw new Error(data.error);
+    window.location.reload();
+
+    const $row        = $cb.closest('tr');
+    const $badgeCell  = $row.find('td').eq(8);          // Validation column
+    const $validerPar = $row.find('.validerPar-cell');
+
+    $badgeCell.html(isChecked
+      ? '<span class="badge badge-success">Validée</span>'
+      : '<span class="badge badge-danger">Refusée</span>');
+
+    $validerPar.text(data.data.validepar || '-');
+  })
+  .catch(err => {
+    alert(err.message);
+    $cb.prop('checked', !isChecked);   // revert
+  })
+  .finally(() => $cb.prop('disabled', false));
+});
+}); // <-- Fermeture du $(function()
+</script>
+
+</body>
+</html>

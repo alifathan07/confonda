@@ -200,67 +200,16 @@ model Attestation {
   updatedAt      DateTime    @updatedAt
 }
 
-model DemandeDePrix {
-  id            Int      @id @default(autoincrement())
-  date          DateTime @default(now())
-  fournisseur   Fournisseur @relation(fields: [fournisseurId], references: [id])
-  fournisseurId Int
-  articles      Article[]
-  devisPath     String? // PDF path
-  sentByEmail   Boolean @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
 
-model Article {
-  id              Int      @id @default(autoincrement())
-  designation     String
-  demandeDePrix   DemandeDePrix? @relation(fields: [demandeDePrixId], references: [id])
-  demandeDePrixId Int?
-  commande        Commande? @relation(fields: [commandeId], references: [id])
-  commandeId      Int?
-  facture         Facture? @relation(fields: [factureId], references: [id])
-  factureId       Int?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-}
 
-model Commande {
-  id            Int      @id @default(autoincrement())
-  numero        String   @unique
-  date          DateTime @default(now())
-  fournisseur   Fournisseur @relation(fields: [fournisseurId], references: [id])
-  fournisseurId Int
-  articles      Article[]
-  modeReglement String
-  delaiReglement String?
-  blPath        String? // Bon de Livraison PDF path
-  facturePath   String? // Facture PDF path
-  sentByEmail   Boolean @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
 
-model Facture {
-  id            Int      @id @default(autoincrement())
-  numero        String   @unique
-  date          DateTime @default(now())
-  designation   String
-  prixTTC       Float
-  articles      Article[]
-  affectations  Affectation[]
-  modeReglement String
-  // reglements    Reglement[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
+
 
 model Affectation {
   id         Int      @id @default(autoincrement())
   chantier   String
   montant    Float
-  facture    Facture  @relation(fields: [factureId], references: [id])
-  factureId  Int
+  
 }
 model Fournisseur {
   id        Int      @id @default(autoincrement())
@@ -279,12 +228,10 @@ model Fournisseur {
   attestations Attestation[] // One-to-many: a supplier can have many attestations
 
   demandes     DemandeDePrix[]
-  commandes    Commande[]
   prelevements Prelevement[]
   cheques      Cheque[]
   effets       Effet[]
   telepaimentPrelevement TelepaimentPrelevement[]
-  
 
   payavenir Payavenir[]
   virements Virement[]
@@ -625,5 +572,31 @@ model EncaissementRecu {
 
 // 
 
+model DemandeDePrix {
+  id            Int      @id @default(autoincrement())
+  date          DateTime @default(now())
+  fournisseur   Fournisseur @relation(fields: [fournisseurId], references: [id])
+  fournisseurId Int
+  articles      Article[]
+  devisPath     String? // PDF path
+  sentByEmail   Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+model Article {
+  id              Int      @id @default(autoincrement())
+  designation     String
+  reference       String?
+  unite          String
+  quantite        Int
+  prixUnitaire    Float?
+  totalHt         Float?
+  delaiLivraison   String?
+  observation     String?
+  demandeDePrix   DemandeDePrix? @relation(fields: [demandeDePrixId], references: [id])
+  demandeDePrixId Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
 
 
