@@ -25,7 +25,7 @@ const __dirname = path.dirname(__filename);
 // Set EJS as the view engine
 
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));    
+app.set('views', path.join(__dirname, 'views'));   
 const PORT = process.env.PORT || 3000;
 
 
@@ -40,7 +40,7 @@ const sessionStore = new MySQLStore({
     host: 'localhost',
     user: 'root',
     password: '',
-    database: 'confonda'
+    database: 'confonda_dev'
 });
 app.set('trust proxy', 1);
 

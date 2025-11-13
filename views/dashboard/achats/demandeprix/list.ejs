@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Liste des Demandes de Prix</title>
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+  
+  
+  <style>
+    /* Tableau compact et propre */
+    #dpTable {
+      font-size: 0.9rem;
+    }
+    #dpTable th, #dpTable td {
+      padding: 0.5rem 0.75rem !important;
+      vertical-align: middle;
+    }
+    #dpTable th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    /* Largeurs fixes pour chaque colonne */
+    #dpTable th:nth-child(1), #dpTable td:nth-child(1) { width: 80px;  text-align: center; } /* Numéro */
+    #dpTable th:nth-child(2), #dpTable td:nth-child(2) { width: 110px; text-align: center; } /* Date */
+    #dpTable th:nth-child(3), #dpTable td:nth-child(3) { width: 220px; } /* Fournisseur */
+    #dpTable th:nth-child(4), #dpTable td:nth-child(4) { width: 90px;  text-align: center; } /* Articles */
+    #dpTable th:nth-child(5), #dpTable td:nth-child(5) { width: 260px; text-align: center; } /* Actions */
+
+    /* Boutons plus petits et alignés */
+    .btn-group .btn {
+      font-size: 0.8rem;
+      padding: 0.25rem 0.5rem;
+    }
+
+    /* Icônes seules sur petits boutons pour gagner de la place */
+    @media (max-width: 768px) {
+      .btn-group .btn .fas { margin-right: 0 !important; }
+      .btn-group .btn span.d-none.d-md-inline { display: none !important; }
+    }
+
+    /* Sticky header propre */
+    #dpTable thead th {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #f8f9fa !important;
+    }
+  </style>
+</head>
+<body id="page-top">
+  <div id="wrapper">
+    <%- include('../../../layouts/sidebar') %>
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <%- include('../../../layouts/topbar') %>
+        <div class="container-fluid">
+
+          <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex align-items-center justify-content-between">
+              <h6 class="m-0 font-weight-bold text-primary">Liste des Demandes de Prix</h6>
+              <div class="d-flex" style="gap:10px;">
+                <button id="downloadPdfBtn" class="btn btn-success btn-sm">
+                  <i class="fas fa-file-pdf"></i> <span class="d-none d-md-inline">PDF</span>
+                </button>
+                <button id="downloadExcelBtn" class="btn btn-outline-success btn-sm">
+                  <i class="fas fa-file-excel"></i> <span class="d-none d-md-inline">Excel</span>
+                </button>
+                <a href="/achat/demandePrix/create" class="btn btn-modern btn-primary">Créer une demande de prix</a>
+              </div>
+            </div>
+
+            <div class="card-body">
+              
+              <div class="table-responsive">
+                <table id="dpTable" class="table table-bordered table-sm table-hover">
+                  <thead class="thead-light">
+                    <tr>
+                      <th>Numéro</th>
+                      <th>Date</th>
+                      <th>Fournisseur</th>
+                      <th>Articles</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% if (!demandePrix || demandePrix.length === 0) { %>
+                      <tr><td colspan="5" class="text-center text-muted">Aucune demande de prix disponible.</td></tr>
+                    <% } else { %>
+                      <% demandePrix.forEach(dp => { %>
+                        <tr data-id="<%= dp.id %>">
+                          <td class="font-weight-bold" data-order="<%= dp.id %>">#<%= dp.id %></td>
+                          <td><%= new Date(dp.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) %></td>
+                          <td><%= dp.fournisseur?.name || '—' %></td>
+                          <td class="text-center"><span class="badge badge-info"><%= Array.isArray(dp.articles) ? dp.articles.length : 0 %></span></td>
+                          <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                              <a href="/achat/demande-prix/<%= dp.id %>" class="btn btn-info" title="Voir">
+                                <i class="fas fa-eye"></i>
+                              </a>
+                              <a href="/achat/demande-prix/<%= dp.id %>/edit" class="btn btn-warning" title="Éditer">
+                                <i class="fas fa-edit"></i>
+                              </a>
+                              <button class="btn btn-danger" title="PDF" onclick="exportTableToPdf(this, 'demande_prix_<%= dp.id %>')">
+                                <i class="fas fa-file-pdf"></i>
+                              </button>
+                              <button class="btn btn-outline-danger" title="Supprimer" onclick="deleteDemandePrix(<%= dp.id %>, this)">
+                                <i class="fas fa-trash"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scripts (inchangés sauf petite amélioration Excel) -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+      <script>
+        // Ensure jsPDF + autotable are available; load from CDN if needed
+        function loadPdfLibs() {
+          return new Promise((resolve, reject) => {
+            if (window.jspdf && window.jspdf.jsPDF && window.jspdf?.autoTable) return resolve();
+            const add = (src, onload) => { const s=document.createElement('script'); s.src=src; s.defer=true; s.onload=onload; s.onerror=reject; document.head.appendChild(s); };
+            const afterJsPdf = () => add('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js', () => resolve());
+            if (!(window.jspdf && window.jspdf.jsPDF)) add('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', afterJsPdf); else afterJsPdf();
+          });
+        }
+
+        const jsPdfReady = () => (window.jspdf && window.jspdf.jsPDF && window.jspdf?.autoTable);
+        const getJsPDF = () => window.jspdf.jsPDF;
+
+        // Export PDF util: if called from row button (filename like 'demande_prix_<id>'), export that row only.
+        async function exportTableToPdf(targetOrTable, fileName) {
+          if (!jsPdfReady()) { try { await loadPdfLibs(); } catch(e){ alert('Impossible de charger jsPDF'); return; } }
+          const tbl = typeof targetOrTable === 'string' 
+            ? document.getElementById(targetOrTable)
+            : (targetOrTable && targetOrTable.closest ? targetOrTable.closest('.card-body').querySelector('#dpTable') : null);
+          if (!tbl) { alert('Table introuvable'); return; }
+
+          let rows = [];
+          // If filename indicates a single demande, try to find the clicked row
+          const single = /^demande_prix_\d+/.test(fileName || '');
+          if (single) {
+            const btn = typeof targetOrTable === 'string' ? null : targetOrTable;
+            const tr = btn ? btn.closest('tr') : null;
+            if (tr) rows = [tr];
+          }
+          if (!rows.length) {
+            // Prefer DataTables API when available (respects filtering/paging)
+            if (window.jQuery && jQuery.fn && jQuery.fn.dataTable && jQuery.fn.dataTable.isDataTable && jQuery.fn.dataTable.isDataTable(tbl)) {
+              const dt = jQuery(tbl).DataTable();
+              rows = Array.from(dt.rows({ search: 'applied' }).nodes());
+            } else {
+              // Fallback: visible DOM rows
+              rows = [...tbl.querySelectorAll('tbody tr')]
+                .filter(r => !r.querySelector('td')?.colSpan)
+                .filter(r => r.offsetParent !== null && r.style.display !== 'none');
+            }
+          }
+          if (!rows.length) {
+            // Fallback to server-rendered dataset
+            const data = Array.isArray(window.__DP_ROWS__) ? window.__DP_ROWS__ : [];
+            if (!data.length) { alert('Aucune donnée'); return; }
+            const { jsPDF } = window.jspdf; // now safe
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+            const head = ['Numéro', 'Date', 'Fournisseur', 'Articles'];
+            const body = data.map(r => [
+              r.id,
+              (r.dateISO ? new Date(r.dateISO).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''),
+              r.fournisseur,
+              String(r.articles)
+            ]);
+            doc.setFontSize(16);
+            doc.text('Liste des Demandes de Prix', 15, 15);
+            doc.autoTable({ head: [head], body, startY: 25, theme: 'grid', headStyles: { fillColor: [22,160,133], textColor: [255,255,255] }, styles: { fontSize: 9 } });
+            doc.save((fileName || 'demandes_prix') + '.pdf');
+            return;
+          }
+
+          const { jsPDF } = window.jspdf; // now safe
+          const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+          const head = ['Numéro', 'Date', 'Fournisseur', 'Articles'];
+          const body = rows.map(r => {
+            const cells = r.querySelectorAll('td');
+            return [
+              (cells[0]?.innerText || '').trim(),
+              (cells[1]?.innerText || '').trim(),
+              (cells[2]?.innerText || '').trim(),
+              (cells[3]?.innerText || '').trim()
+            ];
+          });
+
+          doc.setFontSize(16);
+          doc.text('Liste des Demandes de Prix', 15, 15);
+          doc.autoTable({
+            head: [head],
+            body,
+            startY: 25,
+            theme: 'grid',
+            headStyles: { fillColor: [22, 160, 133], textColor: [255,255,255] },
+            styles: { fontSize: 9 },
+            columnStyles: { 0: { cellWidth: 25 }, 1: { cellWidth: 30 }, 2: { cellWidth: 'auto' }, 3: { cellWidth: 20 } }
+          });
+          doc.save((fileName || 'demandes_prix') + '.pdf');
+        }
+
+        // Top button: export all visible rows
+        document.getElementById('downloadPdfBtn').addEventListener('click', () => exportTableToPdf('dpTable', 'demandes_prix'));
+
+        document.getElementById('downloadExcelBtn').addEventListener('click', () => {
+          const tbl = document.getElementById('dpTable');
+          const ws = XLSX.utils.table_to_sheet(tbl);
+          // Ajustement des largeurs dans Excel
+          ws['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 35 }, { wch: 10 }];
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "DemandesPrix");
+          XLSX.writeFile(wb, "demandes_prix.xlsx");
+        });
+
+        async function deleteDemandePrix(id, btn){
+          if(!confirm('Confirmer la suppression de la demande #' + id + ' ?')) return;
+          const original = btn.innerHTML;
+          btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+          try{
+            const res = await fetch(`/achat/demande-prix/${id}`, { method: 'DELETE' });
+            const json = await res.json().catch(() => ({}));
+            if(!res.ok || !json.success){ throw new Error(json.error || 'Suppression échouée'); }
+            const tr = btn.closest('tr');
+            if (tr){ tr.remove(); }
+          }catch(e){
+            alert(e.message || 'Erreur serveur');
+            btn.disabled = false; btn.innerHTML = original;
+          }
+        }
+      </script>
+
+      <script src="/vendor/jquery/jquery.min.js"></script>
+      <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+      <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+      <script src="/js/sb-admin-2.min.js"></script>
+      
+      <script>
+        // Data snapshot for robust exports (fallback if DOM/DataTables retrieval fails)
+        window.__DP_ROWS__ = (<%- JSON.stringify((demandePrix||[]).map(dp => ({
+          id: `#${dp.id}`,
+          date: new Date(dp.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+          fournisseur: (dp.fournisseur && dp.fournisseur.name) ? dp.fournisseur.name : '—',
+          articles: Array.isArray(dp.articles) ? String(dp.articles.length) : '0'
+        })), null, 2) %>);
+
+        // No DataTables: simple table, exports work over DOM rows
+      </script>
+    </div>
+  </div>
+</body>
+</html>

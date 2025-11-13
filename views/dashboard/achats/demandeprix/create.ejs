@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Créer une Demande de Prix</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+
+  <style>
+    :root {
+      --blue: #2563eb;
+      --green: #16a34a;
+      --red: #ef4444;
+      --gray-100: #f8f9fc;
+      --gray-200: #e5e7eb;
+      --blue-light: #e0efff;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--gray-100);
+      font-size: 0.95rem;
+      color: #333;
+    }
+
+    .action-bar {
+      background: white;
+      border-bottom: 1px solid var(--gray-200);
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .action-bar h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .action-bar .badge {
+      background: var(--blue);
+      color: white;
+      padding: 0.35rem 0.8rem;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    .btn-modern {
+      padding: 0.7rem 1.4rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: all 0.25s;
+    }
+    .btn-modern:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    }
+    .btn-send { background: var(--blue); color: white; }
+    .btn-save { background: var(--green); color: white; font-size: 1rem; padding: 0.9rem 2rem; }
+    .btn-add-line { background: #6366f1; color: white; }
+
+    .doc-card {
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+      max-width: 1000px;
+      margin: 0 auto 2rem;
+    }
+
+    td[contenteditable="true"] {
+      outline: 2px dashed transparent;
+      transition: all 0.2s;
+      padding: 10px !important;
+      font-size: 0.95rem;
+    }
+    td[contenteditable="true"]:focus {
+      outline: 2px dashed var(--blue);
+      background: #f8fbff !important;
+      border-radius: 8px;
+    }
+
+    .qty-input {
+      width: 80px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 1rem;
+      border: none;
+      background: #e2e8f0;
+      border-radius: 50px;
+      padding: 0.5rem 1rem;
+    }
+    .qty-input:focus { outline: 2px solid var(--blue); background: white; }
+
+    .table th, .table td { vertical-align: middle; }
+    .table thead { background: var(--blue); color: white; font-size: 0.85rem; }
+    .cell-input { width: 100%; }
+    .cell-input, .cell-textarea { font-size: 0.92rem; }
+    .cell-textarea { width: 100%; min-height: 38px; resize: vertical; }
+
+    @media print {
+      .no-print, .action-bar, .sidebar, .topbar, .delete-btn, .btn-add-line, #btnSave { display: none !important; }
+      body { background: white; padding: 20px; }
+      .doc-card { box-shadow: none; border: 1px solid #eee; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="wrapper">
+  <%- include('../../../layouts/sidebar') %>
+  <div id="content-wrapper" class="d-flex flex-column">
+    <div id="content">
+      <%- include('../../../layouts/topbar') %>
+
+      <div class="container-fluid px-3 px-md-4">
+
+        <div class="action-bar no-print d-flex justify-content-between align-items-center">
+          <h1 class="h5 m-0"><i class="fas fa-file-invoice-dollar"></i> Créer une Demande de Prix</h1>
+          <button id="btnSave" class="btn btn-modern btn-save">ENREGISTRER</button>
+        </div>
+
+        <div class="doc-card">
+          <div class="p-4" style="background:linear-gradient(135deg,#f3f8ff 0%,white 70%); border-bottom:1px solid #dee2e6;">
+            <div class="row">
+              <div class="col-md-6">
+                <img src="/img/logo-4.png" alt="Logo" style="height:70px; object-fit:contain;">
+                <h1 class="mt-3" style="font-size:2rem; font-weight:800;">Demande de Prix</h1>
+                <div class="d-flex align-items-center gap-2 mt-2">
+                  <label class="mb-0 mr-2">Date:</label>
+                  <input type="date" name="date" id="dpDate" class="form-control" style="max-width:200px;">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="p-4 bg-white rounded-3 shadow-sm border border-primary border-2">
+                  <h5 class="mb-3"><i class="fas fa-building"></i> Fournisseur</h5>
+                  <select id="fournisseurSelect" class="form-control mb-3" name="supplier">
+                    <option value="">-- Choisir un fournisseur --</option>
+                    <% (fournisseurs||[]).forEach(f => { %>
+                      <option value="<%= f.id %>"><%= f.name %> <%= f.ville ? '- ' + f.ville : '' %></option>
+                    <% }) %>
+                  </select>
+                  <div class="small">
+                    <div><i class="fas fa-user-tie"></i> <strong id="fourName">—</strong></div>
+                    <div><i class="fas fa-envelope"></i> <span id="fourEmail">—</span></div>
+                    <div><i class="fas fa-phone"></i> <span id="fourTel">Non renseigné</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4">
+            <table class="table table-bordered" id="articlesTable">
+              <thead class="table-primary text-white">
+                <tr>
+                  <th width="6%" class="text-center">N°</th>
+                  <th width="40%">Désignation</th>
+                  <th width="16%" class="text-center">Réf / Lot</th>
+                  <th width="10%" class="text-center">Unité</th>
+                  <th width="10%" class="text-center">Quantité</th>
+                  <th width="8%" class="text-center">Suppr</th>
+                </tr>
+              </thead>
+              <tbody id="articlesBody"></tbody>
+            </table>
+            <div class="text-center mt-3">
+              <button onclick="addArticleRow()" class="btn btn-modern btn-add-line">Ajouter un article</button>
+            </div>
+          </div>
+        </div>
+
+
+
+          <!-- Signatures -->
+          <div class="p-5 text-center" style="background:#f8fbff; border-top:1px solid #dee2e6;">
+            <div class="row">
+              <div class="col-6">
+                <div class="border border-2 border-dashed rounded-3 p-4 bg-white">
+                  <h6 class="text-uppercase text-muted small">Cachet & Signature du Fournisseur</h6>
+                  <div style="height:90px; border-bottom:3px solid #ddd; margin:20px 0;"></div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="border border-2 border-dashed rounded-3 p-4 bg-white">
+                  <h6 class="text-uppercase text-muted small">Le Responsable Achats</h6>
+                  <div style="height:90px; border-bottom:3px solid #ddd; margin:20px 0;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const fournisseursData = <%- JSON.stringify((fournisseurs||[]).map(f => ({ id:String(f.id), name:f.name||'', email:f.email||'', tel:f.telFournisseur||'' }))) %>;
+
+document.getElementById('dpDate').value = new Date().toISOString().slice(0,10);
+
+document.getElementById('fournisseurSelect').addEventListener('change', function(){
+  const f = fournisseursData.find(x => x.id === this.value);
+  document.getElementById('fourName').textContent = (f && f.name) ? f.name : '—';
+  document.getElementById('fourEmail').textContent = (f && f.email) ? f.email : '—';
+  document.getElementById('fourTel').textContent = (f && f.tel) ? f.tel : 'Non renseigné';
+});
+
+// Add an initial empty row and focus so user can start immediately
+if (!document.querySelector('#articlesBody tr')) {
+  addArticleRow();
+}
+setTimeout(() => {
+  const supplierSel = document.getElementById('fournisseurSelect');
+  if (supplierSel && !supplierSel.value) {
+    supplierSel.focus();
+  } else {
+    const firstDesignation = document.querySelector('#articlesBody tr td:nth-child(2) input');
+    if (firstDesignation) firstDesignation.focus();
+  }
+}, 0);
+
+function addArticleRow(){
+  const tbody = document.getElementById('articlesBody');
+  const row = tbody.insertRow();
+  const idx = tbody.rows.length;
+  row.innerHTML = `
+    <td class="text-center align-middle"><div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:34px;height:34px;font-weight:700;">${idx}</div></td>
+    <td class="align-middle"><input type="text" class="form-control form-control-sm" placeholder="Désignation"></td>
+    <td class="text-center align-middle"><input type="text" class="form-control form-control-sm text-center" placeholder="Réf / Lot"></td>
+    <td class="text-center align-middle"><input type="text" class="form-control form-control-sm text-center" placeholder="Unité"></td>
+    <td class="text-center align-middle"><input type="number" min="1" class="qty-input" value="1"></td>
+    <td class="text-center align-middle"><i class="fas fa-trash-alt" style="cursor:pointer" onclick="this.closest('tr').remove(); renumberRows();"></i></td>
+  `;
+}
+
+function renumberRows(){
+  document.querySelectorAll('#articlesBody tr').forEach((tr,i)=>{ tr.cells[0].querySelector('div').textContent = i+1; });
+}
+
+function collectPayload(){
+  const articles = [];
+  document.querySelectorAll('#articlesBody tr').forEach(tr => {
+    const cells = tr.cells;
+    const designation = (cells[1].querySelector('input')?.value||'').trim();
+    if(!designation) return; // skip empty lines
+    articles.push({
+      designation,
+      reference: (cells[2].querySelector('input')?.value||'').trim(),
+      unite: (cells[3].querySelector('input')?.value||'').trim(),
+      quantite: parseInt(cells[4].querySelector('input')?.value)||1
+    });
+  });
+  return {
+    supplier: parseInt(document.getElementById('fournisseurSelect').value)||null,
+    date: document.getElementById('dpDate').value || null,
+    articles
+  };
+}
+
+document.getElementById('btnSave').addEventListener('click', async function(){
+  const btn = this; btn.disabled = true; const original = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
+  const data = collectPayload();
+  if (!data.supplier){ alert('Sélectionnez un fournisseur.'); btn.disabled=false; btn.innerHTML=original; return; }
+  const d = new Date(data.date); if(!(d instanceof Date) || isNaN(d.getTime())){ alert('La date est invalide.'); btn.disabled=false; btn.innerHTML=original; return; }
+  try{
+    const res = await fetch('/achat/demande-prix', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    const json = await res.json();
+    if(!res.ok || !json.success){ throw new Error(json.error || 'Erreur serveur'); }
+    window.location.href = json.redirect || '/achats/demande-prix';
+  }catch(e){ alert(e.message||'Erreur'); btn.disabled=false; btn.innerHTML=original; }
+});
+</script>
+
+</body>
+</html>

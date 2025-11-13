@@ -25,7 +25,7 @@ import { addCaisseItem, createDemandeCaisse, deleteDemandeCaisseItem, generateDe
 import { addJustifCaisse, addJustifCaisseAdminAuto, adminUserList, createJustifCaisse, createJustifCaisseAdmin, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteJustifeCaisse, deleteRecette, generateJustifCaisseExcel, generateJustifCaissePDF, getAllJustifCaisse, justifeCaisseListUser, saveAllData, saveRecettesAdmin, updateDepenceValidation, validateAllDepenses, viewJustifCaisse, viewJustifCaisseAdmin } from '../controllers/justifecaisseController.js';
 import { createDemandeFourniture, deleteDemandeFourniture, downloadImageFourniture, editDemandeFourniture, indexDemandeFourniture, storeDemandeFourniture, updateDemandeFourniture, updateValidationFourniture, uploadFour, uploadImageFourniture, uploadTempImage, validateAllFourniture, viewDemandeFourniture } from '../controllers/demandeFourniture.js';
 import { fileURLToPath } from 'url';
-import { EditDemandePrix, postDemandePrixViaFourniture, viewDemandePrix } from '../controllers/demandeprixController.js';
+import { EditDemandePrix, listDemandePrix, postDemandePrixViaFourniture, updateDemandePrix, viewDemandePrix, deleteDemandePrix, deleteArticle, createDemandePrix, storeDemandePrix } from '../controllers/demandeprixController.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -391,4 +391,10 @@ dashboardRouter.get('/achat/fourniture/:id/download-image', downloadImageFournit
 dashboardRouter.post('/achats/demande/prix', postDemandePrixViaFourniture)
 dashboardRouter.get('/achat/demande-prix/:id', viewDemandePrix);
 dashboardRouter.get('/achat/demande-prix/:id/edit', EditDemandePrix);
+dashboardRouter.get("/achats/demande-prix", listDemandePrix)
+dashboardRouter.put("/achat/demande-prix/:id", updateDemandePrix)
+dashboardRouter.delete("/achat/demande-prix/:id", deleteDemandePrix)
+dashboardRouter.delete("/achat/demande-prix/article/:id", deleteArticle)
+dashboardRouter.get("/achat/demandePrix/create", createDemandePrix)
+dashboardRouter.post("/achat/demande-prix", storeDemandePrix)
 
