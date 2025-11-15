@@ -310,15 +310,16 @@
               <button onclick="sendEmail()" class="btn btn-modern btn-send" id="btnSend">
                 <i class="fas fa-paper-plane"></i> <span class="d-none d-sm-inline">Envoyer</span>
               </button>
-              <button onclick="window.print()" class="btn btn-modern btn-outline">
-                <i class="fas fa-print"></i> <span class="d-none d-sm-inline">Imprimer</span>
-              </button>
-              <button id="btnPdf" class="btn btn-modern btn-outline">
-                <i class="fas fa-file-pdf"></i> <span class="d-none d-sm-inline">PDF</span>
-              </button>
-              <button id="btnExcel" class="btn btn-modern btn-outline">
-                <i class="fas fa-file-excel"></i> <span class="d-none d-sm-inline">Excel</span>
-              </button>
+           
+             
+               <button class="btn btn-modern btn-outline" title="PDF" onclick="downloadPDF(<%= demandePrix.id %>)">
+                                              <i class="fas fa-file-pdf"></i> <span class="d-none d-sm-inline">PDF</span>
+
+                              </button>
+              
+              <a href="/achat/demande-prix/<%= demandePrix.id %>/edit" style="background-color: green; color: white;" class="btn btn-modern btn-outline">
+                <i class="fas fa-edit"></i> <span class="d-none d-sm-inline">Modifier</span>
+              </a>
             </div>
           </div>
         </div>
@@ -391,7 +392,10 @@
               </div>
               <div class="sig-box">
                 <h6>Le Responsable Achats</h6>
-                <div class="sig-line"></div>
+                <div class="sig-line">
+              <img src="/img/signature.png" alt="logo-pw" style="width: 240px; height: 150px;">
+
+                </div>
               </div>
             </div>
           </div>
@@ -418,7 +422,8 @@
       email: '<%= demandePrix.fournisseur.email %>'
     })
     .done(() => {
-      btn.html('<i class="fas fa-check"></i> Envoyé !').css('background','#28a745');
+            alert('Email envoyé avec succès !');
+
       setTimeout(() => {
         btn.html('<i class="fas fa-paper-plane"></i> <span class="d-none d-sm-inline">Envoyer</span>').prop('disabled', false).css('background', '');
       }, 2500);
@@ -430,6 +435,28 @@
       }, 2500);
     });
   }
+
+   async function downloadPDF(id) {
+                    try {
+                        const res = await fetch(`/achat/demande-prix/${id}/pdf`);
+                        if (!res.ok) throw new Error('Erreur lors du téléchargement');
+                        const blob = await res.blob();
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `demande_prix_${id}.pdf`;
+                        document.body.appendChild(link);
+                        link.click();
+                        link.remove();
+                        URL.revokeObjectURL(url);
+                    } catch (err) {
+                        console.error(err);
+                        alert('Erreur lors du téléchargement du PDF');
+                    }
+                }
+      
+      
+
 </script>
 
 </body>

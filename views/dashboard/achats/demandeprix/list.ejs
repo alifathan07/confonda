@@ -104,7 +104,7 @@
                               <a href="/achat/demande-prix/<%= dp.id %>/edit" class="btn btn-warning" title="Éditer">
                                 <i class="fas fa-edit"></i>
                               </a>
-                              <button class="btn btn-danger" title="PDF" onclick="exportTableToPdf(this, 'demande_prix_<%= dp.id %>')">
+                              <button class="btn btn-danger" title="PDF" onclick="downloadPDF(<%= dp.id %>)">
                                 <i class="fas fa-file-pdf"></i>
                               </button>
                               <button class="btn btn-outline-danger" title="Supprimer" onclick="deleteDemandePrix(<%= dp.id %>, this)">
@@ -140,97 +140,8 @@
           });
         }
 
-        const jsPdfReady = () => (window.jspdf && window.jspdf.jsPDF && window.jspdf?.autoTable);
-        const getJsPDF = () => window.jspdf.jsPDF;
-
-        // Export PDF util: if called from row button (filename like 'demande_prix_<id>'), export that row only.
-        async function exportTableToPdf(targetOrTable, fileName) {
-          if (!jsPdfReady()) { try { await loadPdfLibs(); } catch(e){ alert('Impossible de charger jsPDF'); return; } }
-          const tbl = typeof targetOrTable === 'string' 
-            ? document.getElementById(targetOrTable)
-            : (targetOrTable && targetOrTable.closest ? targetOrTable.closest('.card-body').querySelector('#dpTable') : null);
-          if (!tbl) { alert('Table introuvable'); return; }
-
-          let rows = [];
-          // If filename indicates a single demande, try to find the clicked row
-          const single = /^demande_prix_\d+/.test(fileName || '');
-          if (single) {
-            const btn = typeof targetOrTable === 'string' ? null : targetOrTable;
-            const tr = btn ? btn.closest('tr') : null;
-            if (tr) rows = [tr];
-          }
-          if (!rows.length) {
-            // Prefer DataTables API when available (respects filtering/paging)
-            if (window.jQuery && jQuery.fn && jQuery.fn.dataTable && jQuery.fn.dataTable.isDataTable && jQuery.fn.dataTable.isDataTable(tbl)) {
-              const dt = jQuery(tbl).DataTable();
-              rows = Array.from(dt.rows({ search: 'applied' }).nodes());
-            } else {
-              // Fallback: visible DOM rows
-              rows = [...tbl.querySelectorAll('tbody tr')]
-                .filter(r => !r.querySelector('td')?.colSpan)
-                .filter(r => r.offsetParent !== null && r.style.display !== 'none');
-            }
-          }
-          if (!rows.length) {
-            // Fallback to server-rendered dataset
-            const data = Array.isArray(window.__DP_ROWS__) ? window.__DP_ROWS__ : [];
-            if (!data.length) { alert('Aucune donnée'); return; }
-            const { jsPDF } = window.jspdf; // now safe
-            const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-            const head = ['Numéro', 'Date', 'Fournisseur', 'Articles'];
-            const body = data.map(r => [
-              r.id,
-              (r.dateISO ? new Date(r.dateISO).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''),
-              r.fournisseur,
-              String(r.articles)
-            ]);
-            doc.setFontSize(16);
-            doc.text('Liste des Demandes de Prix', 15, 15);
-            doc.autoTable({ head: [head], body, startY: 25, theme: 'grid', headStyles: { fillColor: [22,160,133], textColor: [255,255,255] }, styles: { fontSize: 9 } });
-            doc.save((fileName || 'demandes_prix') + '.pdf');
-            return;
-          }
-
-          const { jsPDF } = window.jspdf; // now safe
-          const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-          const head = ['Numéro', 'Date', 'Fournisseur', 'Articles'];
-          const body = rows.map(r => {
-            const cells = r.querySelectorAll('td');
-            return [
-              (cells[0]?.innerText || '').trim(),
-              (cells[1]?.innerText || '').trim(),
-              (cells[2]?.innerText || '').trim(),
-              (cells[3]?.innerText || '').trim()
-            ];
-          });
-
-          doc.setFontSize(16);
-          doc.text('Liste des Demandes de Prix', 15, 15);
-          doc.autoTable({
-            head: [head],
-            body,
-            startY: 25,
-            theme: 'grid',
-            headStyles: { fillColor: [22, 160, 133], textColor: [255,255,255] },
-            styles: { fontSize: 9 },
-            columnStyles: { 0: { cellWidth: 25 }, 1: { cellWidth: 30 }, 2: { cellWidth: 'auto' }, 3: { cellWidth: 20 } }
-          });
-          doc.save((fileName || 'demandes_prix') + '.pdf');
-        }
-
-        // Top button: export all visible rows
-        document.getElementById('downloadPdfBtn').addEventListener('click', () => exportTableToPdf('dpTable', 'demandes_prix'));
-
-        document.getElementById('downloadExcelBtn').addEventListener('click', () => {
-          const tbl = document.getElementById('dpTable');
-          const ws = XLSX.utils.table_to_sheet(tbl);
-          // Ajustement des largeurs dans Excel
-          ws['!cols'] = [{ wch: 10 }, { wch: 12 }, { wch: 35 }, { wch: 10 }];
-          const wb = XLSX.utils.book_new();
-          XLSX.utils.book_append_sheet(wb, ws, "DemandesPrix");
-          XLSX.writeFile(wb, "demandes_prix.xlsx");
-        });
-
+   
+      
         async function deleteDemandePrix(id, btn){
           if(!confirm('Confirmer la suppression de la demande #' + id + ' ?')) return;
           const original = btn.innerHTML;
@@ -246,7 +157,34 @@
             btn.disabled = false; btn.innerHTML = original;
           }
         }
+      
+      
+      
+      
+       async function downloadPDF(id) {
+                    try {
+                        const res = await fetch(`/achat/demande-prix/${id}/pdf`);
+                        if (!res.ok) throw new Error('Erreur lors du téléchargement');
+                        const blob = await res.blob();
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `demande_prix_${id}.pdf`;
+                        document.body.appendChild(link);
+                        link.click();
+                        link.remove();
+                        URL.revokeObjectURL(url);
+                    } catch (err) {
+                        console.error(err);
+                        alert('Erreur lors du téléchargement du PDF');
+                    }
+                }
+      
+      
+      
+      
       </script>
+
 
       <script src="/vendor/jquery/jquery.min.js"></script>
       <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
