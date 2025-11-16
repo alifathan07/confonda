@@ -26,6 +26,7 @@ import { addJustifCaisse, addJustifCaisseAdminAuto, adminUserList, createJustifC
 import { createDemandeFourniture, deleteDemandeFourniture, downloadImageFourniture, editDemandeFourniture, indexDemandeFourniture, storeDemandeFourniture, updateDemandeFourniture, updateValidationFourniture, uploadFour, uploadImageFourniture, uploadTempImage, validateAllFourniture, viewDemandeFourniture } from '../controllers/demandeFourniture.js';
 import { fileURLToPath } from 'url';
 import { EditDemandePrix, listDemandePrix, postDemandePrixViaFourniture, updateDemandePrix, viewDemandePrix, deleteDemandePrix, deleteArticle, createDemandePrix, storeDemandePrix, generateDemandePrixPDF, sendDemandePrixEmail } from '../controllers/demandeprixController.js';
+import { editBc, postBcDemandeFourniture, viewBc } from '../controllers/bcController.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -400,3 +401,15 @@ dashboardRouter.get("/achat/demandePrix/create", createDemandePrix)
 dashboardRouter.post("/achat/demande-prix", storeDemandePrix)
 dashboardRouter.get("/achat/demande-prix/:id/pdf", generateDemandePrixPDF)
 dashboardRouter.post('/api/demandes-prix/:id/send-email', sendDemandePrixEmail)
+
+// Creation de Bon de Commande depuis une Demande de Fourniture (même payload que demande de prix)
+dashboardRouter.post('/achats/bon-commande/create-from-demande', postBcDemandeFourniture);
+
+
+/// Routers de Bon de commande :
+dashboardRouter.get("/achat/bc/:id", viewBc);
+dashboardRouter.get("/achat/bc/:id/edit", editBc);
+// dashboardRouter.put("/achat/bc/:id", updateBc);
+// dashboardRouter.delete("/achat/bc/:id", deleteBc);
+
+dashboardRouter.post('/achats/bc/create-from-demande', postBcDemandeFourniture);

@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bon de Commande #<%= bc.id %></title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+
+  <style>
+    :root {
+      --blue: #0052cc;
+      --blue-light: #f3f8ff;
+      --gray-100: #f8f9fc;
+      --gray-200: #e9ecef;
+      --gray-600: #6c757d;
+      --gray-800: #343a40;
+      --gray-900: #212529;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--gray-100);
+      color: var(--gray-800);
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+    }
+
+    /* Impression */
+    @media print {
+      .no-print, .action-bar, .sidebar, .topbar { display: none !important; }
+      body { background: white; padding: 15px; }
+      .doc-card { box-shadow: none; border: 1px solid #eee; }
+      .table-container { overflow: visible !important; }
+    }
+
+    /* Action Bar */
+    .action-bar {
+      background: white;
+      border-bottom: 1px solid #dee2e6;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .action-bar h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .action-bar .badge {
+      background: var(--blue);
+      color: white;
+      font-weight: 600;
+      font-size: 0.8rem;
+      padding: 0.35rem 0.8rem;
+      border-radius: 50px;
+    }
+
+    .btn-modern {
+      padding: 0.65rem 1.2rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      border: none;
+      transition: all 0.25s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .btn-modern:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+
+    .btn-send { background: var(--blue); color: white; }
+    .btn-send:hover { background: #0041a3; }
+    .btn-outline { background: white; color: var(--blue); border: 2px solid var(--blue); }
+    .btn-outline:hover { background: var(--blue-light); }
+
+    /* Document Card */
+    .doc-card {
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+      margin: 0 auto;
+      max-width: 1000px;
+    }
+
+    .doc-header {
+      padding: 2.5rem 2rem;
+      background: linear-gradient(135deg, var(--blue-light) 0%, white 70%);
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .header-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    @media (min-width: 768px) {
+      .header-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .logo-title h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--gray-900);
+      margin: 0.8rem 0 0.4rem;
+    }
+
+    .logo-title p {
+      color: var(--blue);
+      font-weight: 600;
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    .logo-img {
+      height: 70px;
+      object-fit: contain;
+      margin-bottom: 0.8rem;
+    }
+
+    .fournisseur-box {
+      background: white;
+      border: 2px solid var(--blue-light);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 15px rgba(0,82,204,0.08);
+    }
+
+    .fournisseur-box h5 {
+      color: var(--blue);
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+    }
+
+    .info-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 0.7rem;
+      font-size: 0.92rem;
+    }
+
+    .info-line i {
+      color: var(--blue);
+      width: 18px;
+      font-size: 1rem;
+    }
+
+    /* Table Responsive Wrapper */
+    .table-section {
+      padding: 2rem;
+      overflow-x: auto;
+    }
+
+    .table-container {
+      min-width: 800px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .table-doc {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      min-width: 700px;
+    }
+
+    .table-doc thead th {
+      background: var(--blue);
+      color: white;
+      padding: 0.9rem 0.8rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .table-doc tbody td {
+      padding: 1rem 0.8rem;
+      border-bottom: 1px solid #eef1f5;
+      vertical-align: top;
+    }
+
+    .table-doc tbody tr:hover {
+      background: var(--blue-light);
+    }
+
+    .num-circle {
+      background: var(--blue);
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .qty-pill {
+      background: #e2e8f0;
+      color: #1e293b;
+      padding: 0.4rem 0.9rem;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .observation {
+      font-size: 0.82rem;
+      color: #64748b;
+      font-style: italic;
+      margin-top: 5px;
+    }
+
+    /* Signature */
+    .signature-area {
+      padding: 2.5rem 2rem;
+      background: #f8fbff;
+      border-top: 1px solid #dee2e6;
+    }
+
+    .signature-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      margin-top: 1.5rem;
+    }
+
+    @media (min-width: 640px) {
+      .signature-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .sig-box {
+      text-align: center;
+      padding: 1.8rem;
+      border: 2px dashed #c3d4e9;
+      border-radius: 16px;
+      background: white;
+    }
+
+    .sig-box h6 {
+      color: var(--gray-600);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-size: 0.82rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .sig-line {
+      height: 80px;
+      border-bottom: 3px solid #e2e8f0;
+      margin: 1.2rem 0;
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 576px) {
+      .action-bar { padding: 1rem; }
+      .action-bar h1 { font-size: 1.2rem; }
+      .btn-modern { padding: 0.6rem 1rem; font-size: 0.8rem; }
+      .doc-header { padding: 2rem 1.5rem; }
+      .logo-title h1 { font-size: 1.7rem; }
+      .table-section { padding: 1.5rem; }
+      .fournisseur-box { padding: 1.2rem; }
+      .info-line { font-size: 0.88rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="wrapper">
+  <%- include('../../../layouts/sidebar') %>
+  <div id="content-wrapper" class="d-flex flex-column">
+    <div id="content">
+      <%- include('../../../layouts/topbar') %>
+
+      <div class="container-fluid px-3 px-md-4">
+
+        <!-- Action Bar -->
+        <div class="action-bar no-print">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <h1>
+              <i class="fas fa-file-invoice-dollar"></i>
+              Bon De Commande 
+              <span class="badge">#<%= bc.id %></span>
+            </h1>
+
+            <div class="d-flex flex-wrap gap-2">  
+              <button onclick="sendEmail()" class="btn btn-modern btn-send" id="btnSend">
+                <i class="fas fa-paper-plane"></i> <span class="d-none d-sm-inline">Envoyer</span>
+              </button>
+           
+             
+               <button class="btn btn-modern btn-outline" title="PDF" onclick="downloadPDF(<%= bc.id %>)">
+                                              <i class="fas fa-file-pdf"></i> <span class="d-none d-sm-inline">PDF</span>
+
+                              </button>
+              
+              <a href="/achat/bc/<%= bc.id %>/edit" style="background-color: green; color: white;" class="btn btn-modern btn-outline">
+                <i class="fas fa-edit"></i> <span class="d-none d-sm-inline">Modifier</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Document -->
+        <div class="doc-card">
+
+          <div class="doc-header">
+            <div class="header-grid">
+              <div class="logo-title">
+                <img src="/img/logo-4.png" alt="Logo" class="logo-img">
+                <h1>Bon De Commande</h1>
+                <p>N° <%= bc.numero || bc.id %> • <%= new Date(bc.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) %></p>
+              </div>
+
+              <div class="fournisseur-box">
+                <h5><i class="fas fa-building"></i> Fournisseur</h5>
+                <div class="info-line"><i class="fas fa-user-tie"></i> <strong><%= bc.fournisseur.name %></strong></div>
+                <div class="info-line"><i class="fas fa-envelope"></i> <%= bc.fournisseur.email %></div>
+                <div class="info-line"><i class="fas fa-phone"></i> <%= bc.fournisseur.telFournisseur || 'Non renseigné' %></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-section" >
+            <div class="table-container">
+              <table class="table-doc">
+                <thead>
+                  <tr>
+                    <th style="width:6%; text-align:center; border: 1px solid #dee2e6;">N°</th>
+                    <th style="width:34%; border: 1px solid #dee2e6;">Désignation</th>
+                    <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Unité</th>
+                    <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Quantité</th>
+                    <th style="width:18%; text-align:center; border: 1px solid #dee2e6;">Prix unitaire HT</th>
+                    <th style="width:18%; text-align:center; border: 1px solid #dee2e6;">Total HT</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% (bc.commandesItems || []).forEach((item, i) => { %>
+                    <tr class="bc-row" style="background-color: <%= i % 2 === 0 ? '#ffffff' : '#f9fafb' %>; border: 1px solid #dee2e6;">
+                      <td style="text-align:center; border: 1px solid #dee2e6;">
+                        <div class="num-circle"><%= i + 1 %></div>
+                      </td>
+                      <td style="border: 1px solid #dee2e6;" contenteditable="true" data-field="designation">
+                        <div style="font-weight:600; color:#1e293b;"><%= item.designation %></div>
+                      </td>
+                      <td style="text-align:center; font-weight:600; border: 1px solid #dee2e6;" contenteditable="true" data-field="unite">
+                        <%= item.unite || '-' %>
+                      </td>
+                      <td style="text-align:center; border: 1px solid #dee2e6;">
+                        <span class="qty-pill" contenteditable="true" data-field="quantite"><%= item.quantite %></span>
+                      </td>
+                      <td style="text-align:right; border: 1px solid #dee2e6;" contenteditable="true" data-field="prixUnitaire">
+                        <%= (item.prixUnitaire || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                      </td>
+                      <td style="text-align:right; border: 1px solid #dee2e6;" data-field="totalHt">
+                        <%= (item.totalHt || (item.prixUnitaire || 0) * (item.quantite || 0)).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Totals section -->
+          <div class="table-section" style="padding-top: 0;">
+            <div class="row justify-content-end">
+              <div class="col-md-6">
+                <table class="table table-sm mb-0">
+                  <tbody>
+                    <tr>
+                      <th class="text-right" style="border-top: none;">Total HT</th>
+                      <td class="text-right" style="border-top: none;">
+                        <span
+                          id="totalHtValue"
+                          data-total-ht="<%= bc.totalHt || 0 %>"
+                        >
+                          <%= (bc.totalHt || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                        </span>
+                      </td>
+                    </tr>
+                     <tr>
+                      <th class="text-right align-middle">Remise (%)</th>
+                      <td class="text-right">
+                        <div class="input-group input-group-sm justify-content-end" style="max-width: 180px; float: right;">
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            class="form-control text-right"
+                            id="remiseInput"
+                            value="<%= bc.tauxRemise || 0 %>"
+                          />
+                          <div class="input-group-append">
+                            <span class="input-group-text">%</span>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th class="text-right">Montant remise</th>
+                      <td class="text-right">
+                        <span id="montantRemiseValue">
+                          <% const _totalHtTmp = bc.totalHt || 0; %>
+                          <% const _tauxRemiseTmp = bc.tauxRemise || 0; %>
+                          <%= (_totalHtTmp * _tauxRemiseTmp / 100).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                        </span>
+                      </td>
+                    </tr>
+                   
+                    <tr>
+                      <th class="text-right">Net commercial</th>
+                      <td class="text-right">
+                        <span
+                          id="netCommercialValue"
+                          data-net-commercial="<%= bc.netCommercial || 0 %>"
+                        >
+                          <%= (bc.netCommercial || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                        </span>
+                      </td>
+                    </tr>
+                    
+                    <tr>
+                      <th class="text-right align-middle">TVA (%)</th>
+                      <td class="text-right">
+                        <div class="input-group input-group-sm justify-content-end" style="max-width: 180px; float: right;">
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            class="form-control text-right"
+                            id="tvaInput"
+                            value="<%= bc.tauxTva || 0 %>"
+                          />
+                          <div class="input-group-append">
+                            <span class="input-group-text">%</span>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th class="text-right">Montant TVA</th>
+                      <td class="text-right">
+                        <span id="montantTvaValue">
+                          <% const _netTmp = bc.netCommercial || _totalHtTmp; %>
+                          <% const _tauxTvaTmp = bc.tauxTva || 0; %>
+                          <%= (_netTmp * _tauxTvaTmp / 100).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th class="text-right">Total TTC</th>
+                      <td class="text-right font-weight-bold">
+                        <span
+                          id="totalTtcValue"
+                          data-total-ttc="<%= bc.totalTtc || 0 %>"
+                        >
+                          <%= (bc.totalTtc || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="signature-area">
+            <div class="signature-grid">
+              <div class="sig-box">
+                <h6>Cachet & Signature du Fournisseur</h6>
+                <div class="sig-line"></div>
+              </div>
+              <div class="sig-box">
+                <h6>Le Responsable Achats</h6>
+                <div class="sig-line">
+              <img src="/img/signature.png" alt="logo-pw" style="width: 240px; height: 150px;">
+
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="/vendor/jquery/jquery.min.js"></script>
+<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+  (function() {
+    const totalHtEl = document.getElementById('totalHtValue');
+    if (!totalHtEl) return;
+
+    const remiseInput = document.getElementById('remiseInput');
+    const tvaInput = document.getElementById('tvaInput');
+    const netCommercialEl = document.getElementById('netCommercialValue');
+    const totalTtcEl = document.getElementById('totalTtcValue');
+    const montantRemiseEl = document.getElementById('montantRemiseValue');
+    const montantTvaEl = document.getElementById('montantTvaValue');
+
+    const formatNumber = (value) => {
+      return value.toLocaleString('fr-FR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    };
+
+    const recalc = () => {
+      // 1) Recalculate line totals and Total HT from editable table
+      let rawTotalHt = 0;
+      const rows = document.querySelectorAll('.bc-row');
+
+      rows.forEach((tr) => {
+        const qtyEl = tr.querySelector('[data-field="quantite"]');
+        const priceEl = tr.querySelector('[data-field="prixUnitaire"]');
+        const totalEl = tr.querySelector('[data-field="totalHt"]');
+
+        if (!qtyEl || !priceEl || !totalEl) return;
+
+        const qtyText = (qtyEl.textContent || '')
+          .trim()
+          .replace(/[^0-9.,-]/g, '')
+          .replace(/\s/g, '')
+          .replace(',', '.');
+
+        const priceText = (priceEl.textContent || '')
+          .trim()
+          .replace(/[^0-9.,-]/g, '')
+          .replace(/\s/g, '')
+          .replace(',', '.');
+
+        const q = parseFloat(qtyText || '0') || 0;
+        const p = parseFloat(priceText || '0') || 0;
+        const lineTotal = q * p;
+
+        rawTotalHt += lineTotal;
+        totalEl.textContent = formatNumber(lineTotal);
+      });
+
+      // Update Total HT display element
+      totalHtEl.setAttribute('data-total-ht', rawTotalHt);
+      totalHtEl.textContent = formatNumber(rawTotalHt);
+
+      // 2) Recalculate remise / TVA / TTC from Total HT
+      let remise = parseFloat((remiseInput.value || '').replace(',', '.'));
+      let tva = parseFloat((tvaInput.value || '').replace(',', '.'));
+
+      if (isNaN(remise) || remise < 0) remise = 0;
+      if (isNaN(tva) || tva < 0) tva = 0;
+
+      const montantRemise = rawTotalHt * remise / 100;
+      const netCommercial = rawTotalHt - montantRemise;
+      const montantTva = netCommercial * tva / 100;
+      const totalTtc = netCommercial + montantTva;
+
+      if (montantRemiseEl) {
+        montantRemiseEl.textContent = formatNumber(montantRemise);
+      }
+      if (netCommercialEl) {
+        netCommercialEl.textContent = formatNumber(netCommercial);
+      }
+      if (montantTvaEl) {
+        montantTvaEl.textContent = formatNumber(montantTva);
+      }
+      if (totalTtcEl) {
+        totalTtcEl.textContent = formatNumber(totalTtc);
+      }
+    };
+
+    // Recompute when remise / TVA change
+    if (remiseInput) remiseInput.addEventListener('input', recalc);
+    if (tvaInput) tvaInput.addEventListener('input', recalc);
+
+    // Recompute when quantity or price cells change
+    const editableCells = document.querySelectorAll('[data-field="quantite"], [data-field="prixUnitaire"]');
+    editableCells.forEach((el) => {
+      el.addEventListener('input', recalc);
+    });
+
+    // Initial calculation to sync with current values
+    recalc();
+  })();
+</script>
+
+</body>
+</html>

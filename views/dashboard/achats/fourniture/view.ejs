@@ -250,7 +250,7 @@
       </button>
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="convertirDropdown">
         <a class="dropdown-item" href="#" id="convertToDevisBtn">Convertir en devis</a>
-        <a class="dropdown-item disabled" href="#">Convertir en bon de commande <small>(bientôt)</small></a>
+        <a class="dropdown-item" id="convertToBonCommandeBtn" href="#">Convertir en bon de commande</a>
       </div>
     </div>
   </div>
@@ -305,7 +305,31 @@
       <% }) %>
     </tbody>
   </table>
-
+  <!-- ///////////////////////////////////////////// MODAL Bon de commande (non utilisé par le JS, IDs renommés pour éviter les conflits) /////////////////////////////////////////////  -->
+  <div class="modal fade" id="convertBonCommandeModal" tabindex="-1" role="dialog" aria-labelledby="convertBonCommandeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="convertBonCommandeModalLabel">Convertir en Bon de commande</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p><strong>Sélectionnez les articles à inclure dans le bon de commande :</strong></p>
+          <div id="bcItemsList_unused" class="mb-3"></div>
+          <div id="bcLoadingFournisseurs_unused" class="text-center d-none">
+            <div class="spinner-border text-primary" role="status"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-primary" id="btnCreateBonCommande_unused">Convertir</button>
+          <button type="button" class="btn btn-primary" id="btnCreateBonCommande">Convertir</button>
+        </div>
+      </div>
+    </div>
+  </div>
   <!-- ====== MODAL: Convertir en Devis ====== -->
   <div class="modal fade" id="convertDevisModal" tabindex="-1" role="dialog" aria-labelledby="convertDevisModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
@@ -335,12 +359,38 @@
   <script>
   let fournisseurs = [];
   let selectedItems = [];
+  let convertMode = 'devis'; // 'devis' | 'bc'
 
+  // Ouvrir modal en mode DEMANDE DE PRIX
   $(document).on('click', '#convertToDevisBtn', function (e) {
     e.preventDefault();
+    convertMode = 'devis';
     selectedItems = [];
     $('#itemsList').empty();
     $('#loadingFournisseurs').removeClass('d-none');
+
+    $('#convertDevisModalLabel').text('Convertir en Devis');
+
+    $.get('/api/fournisseurs')
+      .done(data => {
+        fournisseurs = data;
+        renderItemsForConversion();
+      })
+      .fail(() => alert('Erreur lors du chargement des fournisseurs'))
+      .always(() => $('#loadingFournisseurs').addClass('d-none'));
+
+    $('#convertDevisModal').modal('show');
+  });
+
+  // Ouvrir modal en mode BON DE COMMANDE (même contenu, autre action)
+  $(document).on('click', '#convertToBonCommandeBtn', function (e) {
+    e.preventDefault();
+    convertMode = 'bc';
+    selectedItems = [];
+    $('#itemsList').empty();
+    $('#loadingFournisseurs').removeClass('d-none');
+
+    $('#convertDevisModalLabel').text('Convertir en Bon de commande');
 
     $.get('/api/fournisseurs')
       .done(data => {
@@ -414,30 +464,46 @@
 
     const $btn = $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Création...');
 
+    const url = convertMode === 'bc'
+      ? '/achats/bon-commande/create-from-demande'
+      : '/achats/demande/prix';
+
     $.ajax({
-      url: '/achats/demande/prix',
+      url,
       method: 'POST',
       contentType: 'application/json',
       data: JSON.stringify({
         demandeId: <%= demandeFourniture.id %>,
-        items: selectedItems
+        items: selectedItems,
       }),
-      success: res => {
+      success: (res) => {
         if (res.success) {
           const count = res.count || 1;
-          const primaryId = res.primaryId || res.demandePrixIds[0];
+          const primaryId = res.primaryId || (res.demandePrixIds && res.demandePrixIds[0]);
 
-          if (count === 1) {
-            window.location.href = `/achat/demande-prix/${primaryId}/edit`;
-          } else {
-            // Multiple demandes created
-            if (confirm(`${count} demandes de prix créées.\nVoulez-vous voir la première ?`)) {
-              window.location.href = `/achat/demande-prix/${primaryId}/edit`;
+          const basePath = convertMode === 'bc'
+            ? '/achat/bc'
+            : '/achat/demande-prix';
+
+          if (primaryId) {
+            if (count === 1) {
+              window.location.href = `${basePath}/${primaryId}/edit`;
             } else {
-              $('#convertDevisModal').modal('hide');
-              // Optionally refresh or show success
-              alert(`${count} demandes de prix créées avec succès !`);
+              const message = convertMode === 'bc'
+                ? `${count} bon(s) de commande créés.\nVoulez-vous voir le premier ?`
+                : `${count} demandes de prix créées.\nVoulez-vous voir la première ?`;
+
+              if (confirm(message)) {
+                window.location.href = `${basePath}/${primaryId}/edit`;
+              } else {
+                $('#convertDevisModal').modal('hide');
+                alert(convertMode === 'bc'
+                  ? `${count} bon(s) de commande créés avec succès !`
+                  : `${count} demandes de prix créées avec succès !`);
+              }
             }
+          } else {
+            alert('Création effectuée mais ID introuvable.');
           }
         } else {
           alert(res.error || 'Erreur lors de la création');
@@ -447,13 +513,14 @@
       complete: () => {
         $btn.prop('disabled', false).html('Convertir');
         $('#convertDevisModal').modal('hide');
-      }
+      },
     });
   });
 </script>
 <% } %>
 
           <% if (user.role === "user") { %>
+          
             <div class="mb-4 text-right">
               <button type="submit" class="btn btn-primary">Enregistrer</button>
               <button type="button" id="btnAddRow" class="btn btn-success btn-sm">

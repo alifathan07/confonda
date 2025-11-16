@@ -55,7 +55,7 @@ export const createDemandeFourniture = async (req, res) => {
     where: { id: req.session.user.id },
     include: { chantier: true },
   });
-  const today = new Date().toLocaleDateString("fr-FR");
+  const today = new Date().toISOString().slice(0, 10);
   res.render("dashboard/achats/fourniture/create", { user, today, numero });
 };
 
@@ -97,9 +97,14 @@ export const storeDemandeFourniture = async (req, res) => {
     }
 
     // ---- creation ---------------------------------------------------
+    const parsedDate = date ? new Date(date) : new Date();
+    if (isNaN(parsedDate.getTime())) {
+      return res.status(400).json({ success: false, error: "Date invalide" });
+    }
+
     const demandeFourniture = await prisma.demandeFourniture.create({
       data: {
-        dateDemande: new Date(date),
+        dateDemande: parsedDate,
         numero: parseInt(numero, 10),
         demandeur: user.name,
         user: { connect: { id: req.session.user.id } },
@@ -270,10 +275,15 @@ export const updateDemandeFourniture = async (req, res) => {
       await Promise.all(updatePromises);
 
       // ---- Update header (date / numero) ----
+      const parsedDate = date ? new Date(date) : new Date();
+      if (isNaN(parsedDate.getTime())) {
+        return res.status(400).json({ success: false, error: "Date invalide" });
+      }
+
       await tx.demandeFourniture.update({
         where: { id: parseInt(id, 10) },
         data: {
-          dateDemande: new Date(date),
+          dateDemande: parsedDate,
           numero: parseInt(numero, 10),
         },
       });

@@ -230,6 +230,7 @@ model Fournisseur {
   demandes     DemandeDePrix[]
   prelevements Prelevement[]
   cheques      Cheque[]
+  commandes    BondeCommande[]
   effets       Effet[]
   telepaimentPrelevement TelepaimentPrelevement[]
 
@@ -595,6 +596,36 @@ model Article {
   observation     String?
   demandeDePrix   DemandeDePrix? @relation(fields: [demandeDePrixId], references: [id])
   demandeDePrixId Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+
+
+model BondeCommande {
+  id            Int      @id @default(autoincrement())
+  date          DateTime @default(now())
+  numero        Int
+  fournisseur   Fournisseur @relation(fields: [fournisseurId], references: [id])
+  fournisseurId Int
+  commandesItems      commandesItems[]
+  totalHt         Float?
+  tauxRemise      Float?
+  netCommercial   Float?
+  tauxTva         Float?
+  totalTtc        Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+model commandesItems {
+  id              Int      @id @default(autoincrement())
+  designation     String
+  unite          String
+  quantite        Int
+  prixUnitaire    Float?
+  totalHt         Float?
+  bondeCommande   BondeCommande? @relation(fields: [bondeCommandeId], references: [id])
+  bondeCommandeId Int?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
