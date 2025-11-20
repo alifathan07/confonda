@@ -189,61 +189,61 @@ export const listDemandePrix = async (req, res) => {
       res.render('dashboard/achats/demandeprix/list', { demandePrix, fournisseurs, rowsForExport })
 }
 
-export const updateDemandePrix = async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    const { supplier, date, articles = [], deletedArticleIds = [] } = req.body || {};
+  export const updateDemandePrix = async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { supplier, date, articles = [], deletedArticleIds = [] } = req.body || {};
 
-    const fournisseurId = parseInt(supplier);
-    const jsDate = new Date(date);
-    if (!id || Number.isNaN(id)) return res.status(400).json({ success: false, error: 'ID invalide' });
-    if (!fournisseurId || Number.isNaN(fournisseurId)) return res.status(400).json({ success: false, error: 'Fournisseur invalide' });
-    if (!(jsDate instanceof Date) || isNaN(jsDate.getTime())) return res.status(400).json({ success: false, error: 'Date invalide' });
+      const fournisseurId = parseInt(supplier);
+      const jsDate = new Date(date);
+      if (!id || Number.isNaN(id)) return res.status(400).json({ success: false, error: 'ID invalide' });
+      if (!fournisseurId || Number.isNaN(fournisseurId)) return res.status(400).json({ success: false, error: 'Fournisseur invalide' });
+      if (!(jsDate instanceof Date) || isNaN(jsDate.getTime())) return res.status(400).json({ success: false, error: 'Date invalide' });
 
-    const toDelete = (Array.isArray(deletedArticleIds) ? deletedArticleIds : []).map(Number).filter(n => Number.isInteger(n) && n > 0);
-    const existing = (Array.isArray(articles) ? articles : []).filter(a => a && a.id).map(a => ({
-      id: Number(a.id),
-      designation: String(a.designation || '').trim(),
-      reference: a.reference ? String(a.reference).trim() : null,
-      unite: String(a.unite || ''),
-      quantite: Number.parseInt(a.quantite) || 1,
-    })).filter(a => Number.isInteger(a.id) && a.id > 0);
-    const toCreate = (Array.isArray(articles) ? articles : []).filter(a => !a || !a.id).map(a => ({
-      designation: String(a?.designation || '').trim(),
-      reference: a?.reference ? String(a.reference).trim() : null,
-      unite: String(a?.unite || ''),
-      quantite: Number.parseInt(a?.quantite) || 1,
-    })).filter(a => a.designation);
+      const toDelete = (Array.isArray(deletedArticleIds) ? deletedArticleIds : []).map(Number).filter(n => Number.isInteger(n) && n > 0);
+      const existing = (Array.isArray(articles) ? articles : []).filter(a => a && a.id).map(a => ({
+        id: Number(a.id),
+        designation: String(a.designation || '').trim(),
+        reference: a.reference ? String(a.reference).trim() : null,
+        unite: String(a.unite || ''),
+        quantite: Number.parseInt(a.quantite) || 1,
+      })).filter(a => Number.isInteger(a.id) && a.id > 0);
+      const toCreate = (Array.isArray(articles) ? articles : []).filter(a => !a || !a.id).map(a => ({
+        designation: String(a?.designation || '').trim(),
+        reference: a?.reference ? String(a.reference).trim() : null,
+        unite: String(a?.unite || ''),
+        quantite: Number.parseInt(a?.quantite) || 1,
+      })).filter(a => a.designation);
 
-    const updated = await prisma.demandeDePrix.update({
-      where: { id },
-      data: {
-        date: jsDate,
-        fournisseur: { connect: { id: fournisseurId } },
-        articles: {
-          deleteMany: toDelete.length ? { id: { in: toDelete } } : undefined,
-          create: toCreate,
-          update: existing.map(a => ({
-            where: { id: a.id },
-            data: {
-              designation: a.designation,
-              reference: a.reference,
-              unite: a.unite,
-              quantite: a.quantite,
-            }
-          }))
-        }
-      },
-      include: { articles: true, fournisseur: true }
-    });
+      const updated = await prisma.demandeDePrix.update({
+        where: { id },
+        data: {
+          date: jsDate,
+          fournisseur: { connect: { id: fournisseurId } },
+          articles: {
+            deleteMany: toDelete.length ? { id: { in: toDelete } } : undefined,
+            create: toCreate,
+            update: existing.map(a => ({
+              where: { id: a.id },
+              data: {
+                designation: a.designation,
+                reference: a.reference,
+                unite: a.unite,
+                quantite: a.quantite,
+              }
+            }))
+          }
+        },
+        include: { articles: true, fournisseur: true }
+      });
 
-    return res.json({ success: true, message: 'Demande de prix mise à jour avec succès', demande: updated });
+      return res.json({ success: true, message: 'Demande de prix mise à jour avec succès', demande: updated });
 
-  } catch (error) {
-    console.error('Erreur mise à jour demande de prix:', error);
-    res.status(500).json({ success: false, error: 'Erreur serveur' });
-  }
-};
+    } catch (error) {
+      console.error('Erreur mise à jour demande de prix:', error);
+      res.status(500).json({ success: false, error: 'Erreur serveur' });
+    }
+  };
 export const deleteArticle = async (req, res) => {
   const { id } = req.params;
   try {
@@ -295,13 +295,6 @@ export const storeDemandePrix = async (req, res) => {
     res.status(500).json({ success: false, error: 'Erreur serveur' });
   }
 };
-
-
-
-
-
-
-
 export const generateDemandePrixPDF = async (req, res) => {
   const { id } = req.params;
   const demandePrixId = parseInt(id, 10);
@@ -513,8 +506,6 @@ export const generateDemandePrixPDF = async (req, res) => {
     res.status(500).send("Erreur PDF");
   }
 };
-
-
 export const sendDemandePrixEmail = async (req, res) => {
   const { id } = req.params;
   const { email } = req.body || {};
@@ -732,6 +723,7 @@ export const sendDemandePrixEmail = async (req, res) => {
     console.error('Erreur préparation email demande de prix:', err);
     return res.status(500).json({ success: false, error: 'Erreur serveur' });
   }
-};
+};  
+
 
 

@@ -165,6 +165,40 @@
       font-size: 1rem;
     }
 
+    /* NEW: Additional info section for User & Chantier */
+    .additional-info {
+      padding: 1.5rem 2rem;
+      background: #f8fbff;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .additional-info-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+      .additional-info-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .info-box {
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.2rem;
+    }
+
+    .info-box h6 {
+      color: var(--blue);
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     /* Table Responsive Wrapper */
     .table-section {
       padding: 2rem;
@@ -285,6 +319,8 @@
       .table-section { padding: 1.5rem; }
       .fournisseur-box { padding: 1.2rem; }
       .info-line { font-size: 0.88rem; }
+      .additional-info { padding: 1.2rem 1.5rem; }
+      .info-box { padding: 1rem; }
     }
   </style>
 </head>
@@ -340,6 +376,33 @@
                 <div class="info-line"><i class="fas fa-user-tie"></i> <strong><%= typeof bonCommande !== 'undefined' ? bonCommande.fournisseur.name : (bc ? bc.fournisseur.name : '') %></strong></div>
                 <div class="info-line"><i class="fas fa-envelope"></i> <%= typeof bonCommande !== 'undefined' ? bonCommande.fournisseur.email : (bc ? bc.fournisseur.email : '') %></div>
                 <div class="info-line"><i class="fas fa-phone"></i> <%= typeof bonCommande !== 'undefined' ? bonCommande.fournisseur.telFournisseur || 'Non renseigné' : (bc ? bc.fournisseur.telFournisseur || 'Non renseigné' : '') %></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- NEW SECTION: User & Chantier Information -->
+          <div class="additional-info">
+            <div class="additional-info-grid">
+              <div class="info-box">
+                <h6><i class="fas fa-user"></i> Utilisateur</h6>
+                <div class="info-line">
+                  <i class="fas fa-id-badge"></i>
+                  <span><strong>
+                    <%= typeof bonCommande !== 'undefined' ? bonCommande.demandeur : (bc ? bc.demandeur : '') %>
+                  </strong></span>
+                </div>
+              </div>
+
+              <div class="info-box">
+                <h6><i class="fas fa-hard-hat"></i> Chantier</h6>
+                <div class="info-line">
+                  <i class="fas fa-map-marker-alt"></i>
+                  <span><strong>
+                    <%= typeof bonCommande !== 'undefined' 
+                      ? (bonCommande.chantier?.nom || 'Non renseigné') 
+                      : (bc ? (bc.chantier?.nom || 'Non renseigné') : 'Non renseigné') %>
+                  </strong></span>
+                </div>
               </div>
             </div>
           </div>
@@ -585,7 +648,11 @@
 
     // Initial calculation to sync with current values
     recalc();
+
+    
   })();
+      
+
 </script>
 
 </body>

@@ -449,6 +449,7 @@ model Chantier {
   // Relations
   users           User[]
   demandeCaisse   DemandeCaisse[] 
+  bondeCommande   BondeCommande[]
 
   demandes        DemandeFourniture[]
   JustifCaisse JustifCaisse[]
@@ -608,12 +609,16 @@ model BondeCommande {
   numero        Int
   fournisseur   Fournisseur @relation(fields: [fournisseurId], references: [id])
   fournisseurId Int
+  chantier      Chantier? @relation(fields: [chantierId], references: [id])
+  chantierId    Int?
+  demandeur   String?
   commandesItems      commandesItems[]
   totalHt         Float?
   tauxRemise      Float?
   netCommercial   Float?
   tauxTva         Float?
   totalTtc        Float?
+  montantLettre    String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }

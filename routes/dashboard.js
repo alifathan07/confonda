@@ -26,7 +26,7 @@ import { addJustifCaisse, addJustifCaisseAdminAuto, adminUserList, createJustifC
 import { createDemandeFourniture, deleteDemandeFourniture, downloadImageFourniture, editDemandeFourniture, indexDemandeFourniture, storeDemandeFourniture, updateDemandeFourniture, updateValidationFourniture, uploadFour, uploadImageFourniture, uploadTempImage, validateAllFourniture, viewDemandeFourniture } from '../controllers/demandeFourniture.js';
 import { fileURLToPath } from 'url';
 import { EditDemandePrix, listDemandePrix, postDemandePrixViaFourniture, updateDemandePrix, viewDemandePrix, deleteDemandePrix, deleteArticle, createDemandePrix, storeDemandePrix, generateDemandePrixPDF, sendDemandePrixEmail } from '../controllers/demandeprixController.js';
-import { editBc, postBcDemandeFourniture, viewBc } from '../controllers/bcController.js';
+import { editBc, postBcDemandeFourniture, updateBc, viewBc, deleteBcItem, createBcForm, storeBc, generateBcPDF, sendBcEmail } from '../controllers/bcController.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -407,9 +407,13 @@ dashboardRouter.post('/achats/bon-commande/create-from-demande', postBcDemandeFo
 
 
 /// Routers de Bon de commande :
+dashboardRouter.get('/achat/bc/create', createBcForm);
 dashboardRouter.get("/achat/bc/:id", viewBc);
 dashboardRouter.get("/achat/bc/:id/edit", editBc);
-// dashboardRouter.put("/achat/bc/:id", updateBc);
-// dashboardRouter.delete("/achat/bc/:id", deleteBc);
+dashboardRouter.put("/achat/bc/:id", updateBc);
+dashboardRouter.delete("/achat/bc/article/:id", deleteBcItem);
+dashboardRouter.post("/achat/bc", storeBc);
+dashboardRouter.get('/achat/bc/:id/pdf', generateBcPDF);
+dashboardRouter.post('/api/bc/:id/send-email', sendBcEmail);
 
 dashboardRouter.post('/achats/bc/create-from-demande', postBcDemandeFourniture);
