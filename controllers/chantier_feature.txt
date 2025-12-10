@@ -1,0 +1,13 @@
+Change the logic how i connect chantier with bc by making a many to many relationship instead of one to many just like how i do in cheques 
+to do that : 
+    ------------TASKS DONE --------------------------
+    1 - i should make a join table called chantier_bonde_commande and migrate
+
+
+    -------------- TASKS TO DO --------------------------
+    3 - i should update the store and update function to add new the chantier logic 
+    4 - i should update the list function to add new the chantier logic 
+    5 - i should update the show function to add new the chantier logic 
+    6 - i should update the delete function to add new the chantier logic 
+    7- i should update the ui of the creation and the update to integrate chantier
+    8- i should update the ui of the list to integrate chantier

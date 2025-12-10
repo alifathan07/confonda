@@ -1,7 +1,7 @@
 import prisma from "../db.js";
 
 export const showCreate = (req, res) => {
-    res.render('dashboard/tresorerie/banques/create');
+  res.render('dashboard/tresorerie/banques/create');
 };
 export const createBanque = async (req, res) => {
   try {
@@ -31,15 +31,15 @@ export const createBanque = async (req, res) => {
 };
 
 
-export const displayBanques = async(req, res) => {
-    try {
-        const banques = await prisma.banque.findMany();
-        res.render('dashboard/tresorerie/index', { banques : banques });
-        
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Erreur lors de la récupération des banques.' });
-    }
+export const displayBanques = async (req, res) => {
+  try {
+    const banques = await prisma.banque.findMany();
+    res.render('dashboard/tresorerie/index', { banques: banques });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erreur lors de la récupération des banques.' });
+  }
 }
 
 export const listBanques = async (req, res) => {
@@ -54,186 +54,187 @@ export const listBanques = async (req, res) => {
     res.status(500).json({ error: 'Erreur lors de la récupération des banques.' });
   }
 }
-export const displayBanquesForcheques = async(req, res) => {
-    try {
-        const banques = await prisma.banque.findMany();
-        res.json(banques);
-        
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Erreur lors de la récupération des banques.' });
-    }
+export const displayBanquesForcheques = async (req, res) => {
+  try {
+    const banques = await prisma.banque.findMany();
+    res.json(banques);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erreur lors de la récupération des banques.' });
+  }
 }
 export const getSituationBancaire = async (req, res) => {
-    try {
-      const { from, to } = req.query;
-  
-      const banques = await prisma.banque.findMany({
-        select: {
-          id: true,
-          name: true,
-          rib: true,
-          agence: true,
-          positive: true,
-          negative: true,
-          dmlt: true,
-        },
-      });
-      const fromDate = from ? new Date(from) : new Date('1900-01-01');
-      const toDate = to ? new Date(to) : new Date('2100-01-01');
-  
-      const cheques = await prisma.cheque.findMany({
-        where: {
-          statut: { in: ['En Circulation', 'Impayé'] },
-          dateEcheance: {
-            gte: fromDate,
-            lte: toDate,
-          },
-        },
-        select: {
-          id: true,
-          numero: true,
-          dateEtablissement: true,
-          montant: true,
-          dateEcheance: true,
-          validation: true, 
-          beneficiaire: true,
-          statut: true,
-          obs : true,
-          banque: {
-            select: { name: true },
-          },
-        },
-        orderBy: {
-          dateEcheance: 'asc',
-        },
-      });
-      console.log(cheques);
-      const effets = await prisma.effet.findMany({
-        where: {
-          statut: { in: ['En Circulation', 'Impayé'] },
-          dateEcheance: {
-            gte: fromDate,
-            lte: toDate,
-          },
-        },
-        select: {
-          id: true,
-          numero: true,
-          dateEtablissement: true,
-          montant: true,
-          dateEcheance: true,
-          validation: true, 
-          beneficiaire: true,
-          obs : true,
-          statut: true,
-          banque: {
-            select: { name: true },
-          },
-        },
-        orderBy: {
-          dateEcheance: 'asc',
-        },
-      });
-      
-      const payavenirs = await prisma.payavenir.findMany({
-        where: {
-          statut: { in: ["échu", "impayé", "non échu"] },
-          dateEcheance: {
-            gte: fromDate,
-            lte: toDate,
-          },
-        },
-        select: {
-          id: true,
-          designation: true,
-          montant: true,
-          dateEcheance: true,
-          validation: true, 
-          statut: true,
-          dateReglement: true,
-          fournisseur: {
-            select: { name: true },
-          },
-          banque: {
-            select: { name: true },
-          },
-        },
-        orderBy: {
-          dateEcheance: 'asc',
-        },
-      });
+  try {
 
-      const recavenirs = await prisma.recavenir.findMany({
-        where: {
-          statut: { in: ["échu", "impayé", "non échu"] },
-          dateEcheance: {
-            gte: fromDate,
-            lte: toDate,
-          },
+    const { from, to } = req.query;
+
+    const banques = await prisma.banque.findMany({
+      select: {
+        id: true,
+        name: true,
+        rib: true,
+        agence: true,
+        positive: true,
+        negative: true,
+        dmlt: true,
+      },
+    });
+    const fromDate = from ? new Date(from) : new Date('1900-01-01');
+    const toDate = to ? new Date(to) : new Date('2100-01-01');
+
+    const cheques = await prisma.cheque.findMany({
+      where: {
+        statut: { in: ['En Circulation', 'Impayé'] },
+        dateEcheance: {
+          gte: fromDate,
+          lte: toDate,
         },
-        select: {
-          id: true,
-          designation: true,
-          montant: true,
-          dateEcheance: true,
-          statut: true,
-          dateReglement: true,
-          client: {
-            select: { name: true },
-          },
-          banque: {
-            select: { name: true },
-          },
-          chantier: {
-            select: { nom: true },
-          }
+      },
+      select: {
+        id: true,
+        numero: true,
+        dateEtablissement: true,
+        montant: true,
+        dateEcheance: true,
+        validation: true,
+        beneficiaire: true,
+        statut: true,
+        obs: true,
+        banque: {
+          select: { name: true },
         },
-        orderBy: {
-          client: {
-            name: 'asc',
-          },
+      },
+      orderBy: {
+        dateEcheance: 'asc',
+      },
+    });
+    console.log(cheques);
+    const effets = await prisma.effet.findMany({
+      where: {
+        statut: { in: ['En Circulation', 'Impayé'] },
+        dateEcheance: {
+          gte: fromDate,
+          lte: toDate,
         },
-      });
-      const fournisseurs = await prisma.fournisseur.findMany({
-        select: { id: true, name: true },
-        
-        orderBy: {
+      },
+      select: {
+        id: true,
+        numero: true,
+        dateEtablissement: true,
+        montant: true,
+        dateEcheance: true,
+        validation: true,
+        beneficiaire: true,
+        obs: true,
+        statut: true,
+        banque: {
+          select: { name: true },
+        },
+      },
+      orderBy: {
+        dateEcheance: 'asc',
+      },
+    });
+
+    const payavenirs = await prisma.payavenir.findMany({
+      where: {
+        statut: { in: ["échu", "impayé", "non échu"] },
+        dateEcheance: {
+          gte: fromDate,
+          lte: toDate,
+        },
+      },
+      select: {
+        id: true,
+        designation: true,
+        montant: true,
+        dateEcheance: true,
+        validation: true,
+        statut: true,
+        dateReglement: true,
+        fournisseur: {
+          select: { name: true },
+        },
+        banque: {
+          select: { name: true },
+        },
+      },
+      orderBy: {
+        dateEcheance: 'asc',
+      },
+    });
+
+    const recavenirs = await prisma.recavenir.findMany({
+      where: {
+        statut: { in: ["échu", "impayé", "non échu"] },
+        dateEcheance: {
+          gte: fromDate,
+          lte: toDate,
+        },
+      },
+      select: {
+        id: true,
+        designation: true,
+        montant: true,
+        dateEcheance: true,
+        statut: true,
+        dateReglement: true,
+        client: {
+          select: { name: true },
+        },
+        banque: {
+          select: { name: true },
+        },
+        chantier: {
+          select: { nom: true },
+        }
+      },
+      orderBy: {
+        client: {
           name: 'asc',
-        }
-      });
-      const clients = await prisma.client.findMany({
-        select: { id: true, name: true },
-        
-        orderBy: {
-          name: 'asc',
-        }
-      });
-      const chantiers = await prisma.chantier.findMany({
-        select: { id: true, nom: true },
-        
-        orderBy: {
-          nom: 'asc',
-        }
-      })
-     console.log(payavenirs)
-      res.render('dashboard/tresorerie/situation/index', {
-        banques,
-        cheques,
-        effets,
-        payavenirs,
-        recavenirs,
-        from,
-        to,
-        fournisseurs,
-        clients,
-        chantiers,
-      });
-    } catch (error) {
-      console.error(error);
-      res.status(500).send('Erreur serveur.');
-    }
-  };
+        },
+      },
+    });
+    const fournisseurs = await prisma.fournisseur.findMany({
+      select: { id: true, name: true },
+
+      orderBy: {
+        name: 'asc',
+      }
+    });
+    const clients = await prisma.client.findMany({
+      select: { id: true, name: true },
+
+      orderBy: {
+        name: 'asc',
+      }
+    });
+    const chantiers = await prisma.chantier.findMany({
+      select: { id: true, nom: true },
+
+      orderBy: {
+        nom: 'asc',
+      }
+    })
+    console.log(payavenirs)
+    res.render('dashboard/tresorerie/situation/index', {
+      banques,
+      cheques,
+      effets,
+      payavenirs,
+      recavenirs,
+      from,
+      to,
+      fournisseurs,
+      clients,
+      chantiers,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Erreur serveur.');
+  }
+};
 export const updateSituationBancaire = async (req, res) => {
   try {
     const { positive, negative, dmlt, banqueId } = req.body;
@@ -283,11 +284,11 @@ export const updateSituationBancaire = async (req, res) => {
   }
 };
 
-export const deleteBanque = async(req,res) => {
+export const deleteBanque = async (req, res) => {
   const idParam = req.params.id || req.body.id;
   await prisma.banque.delete({
     where: { id: parseInt(idParam) },
-    
+
   });
 
   res.json('success')
@@ -299,16 +300,16 @@ export const updateChequeInStituation = async (req, res) => {
   try {
     const { id } = req.params;
     const {
-      
+
       obs,
     } = req.body;
 
-    
 
-   
+
+
     const data = {};
 
-    
+
     if (obs !== undefined) data.obs = obs;
 
     // 🛠️ Update cheque
@@ -332,7 +333,7 @@ export const updateChequeInStituation = async (req, res) => {
 export const updateChequeValidation = async (req, res) => {
   try {
     const { id } = req.params;
-    const { validation } = req.body; 
+    const { validation } = req.body;
 
     const cheque = await prisma.cheque.update({
       where: { id: parseInt(id) },
@@ -352,7 +353,7 @@ export const updateChequeValidation = async (req, res) => {
 export const updateEffetInStituation = async (req, res) => {
   try {
     const { id } = req.params;
-    const {obs} = req.body;
+    const { obs } = req.body;
     const data = {};
     if (obs !== undefined) data.obs = obs;
 

@@ -215,13 +215,7 @@
 
             <% if (user.role === 'grandadmin' || user.role === 'admin') { %>
             <div class="achat-buttons d-flex flex-wrap justify-content-center gap-4">
-              <a href="/achats/caisse" class="achat-card shadow">
-                <div class="card-icon-wrapper">
-                  <i class="fas fa-money-bill-alt"></i>
-                </div>
-                <span class="card-title">Caisse</span>
-                <small class="card-subtitle">Les operations De Caisse </small>
-              </a>
+             
               <a href="/achats/devis" class="achat-card shadow">
                 <div class="card-icon-wrapper">
                   <i class="fas fa-file-invoice-dollar"></i>
@@ -266,6 +260,13 @@
                   </div>  
                   <span class="card-title">Demande Prix</span>
                   <small class="card-subtitle">List Demande Prix </small>
+                </a>
+                  <a href="/achat/bon-commande" class="achat-card shadow">
+                  <div class="card-icon-wrapper">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                  </div>  
+                  <span class="card-title">Bon de commande</span>
+                  <small class="card-subtitle">List Bon des commande </small>
                 </a>
 
                 

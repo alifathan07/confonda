@@ -135,6 +135,8 @@ export const storeDemandeFourniture = async (req, res) => {
   }
 };
 
+import { parse } from 'date-fns';
+
 export const updateDemandeFourniture = async (req, res) => {
   const { id } = req.params;
   const { date, numero, items, newImageCount } = req.body;
@@ -223,7 +225,6 @@ export const updateDemandeFourniture = async (req, res) => {
               lot: (it.lot || "").trim() || null,
               observation: (it.observation || "").trim() || null,
               image: imagePath,
-              // New rows are never validated yet
               validation: false,
               validepar: null,
             };
@@ -240,17 +241,13 @@ export const updateDemandeFourniture = async (req, res) => {
 
           // ---- Image handling ----
           let imagePath = current?.image;
-          if (it.tempImage) {
-            imagePath = it.tempImage;
-          }
+          if (it.tempImage) imagePath = it.tempImage;
           if (fileIndex < fileCount && req.files && req.files[fileIndex]) {
             imagePath = `/uploads/fournitures/${req.files[fileIndex].filename}`;
             fileIndex++;
           }
 
           // ---- Validation handling (admin only) ----
-          // If the admin sent a `validation` flag → use it
-          // Otherwise keep the DB value (or false if never set)
           const validation =
             it.validation !== undefined ? Boolean(it.validation) : (current?.validation ?? false);
 
@@ -275,7 +272,22 @@ export const updateDemandeFourniture = async (req, res) => {
       await Promise.all(updatePromises);
 
       // ---- Update header (date / numero) ----
-      const parsedDate = date ? new Date(date) : new Date();
+      let parsedDate;
+      if (date) {
+        // Try ISO first
+        parsedDate = new Date(date);
+        if (isNaN(parsedDate.getTime())) {
+          // Try DD/MM/YYYY
+          const [day, month, year] = date.split('/');
+          if (!day || !month || !year) {
+            return res.status(400).json({ success: false, error: "Date invalide" });
+          }
+          parsedDate = new Date(`${year}-${month}-${day}`);
+        }
+      } else {
+        parsedDate = new Date();
+      }
+
       if (isNaN(parsedDate.getTime())) {
         return res.status(400).json({ success: false, error: "Date invalide" });
       }
@@ -289,12 +301,13 @@ export const updateDemandeFourniture = async (req, res) => {
       });
     });
 
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (e) {
     console.error("updateDemandeFourniture ERROR:", e);
-    res.status(500).json({ success: false, error: e.message });
+    res.status(500).send({ success: false, error: e.message });
   }
 };
+
 /* -------------------------- VIEW -------------------------- */
 export const viewDemandeFourniture = async (req, res) => {
   const { id } = req.params;
@@ -318,7 +331,9 @@ export const editDemandeFourniture = async (req, res) => {
   const format = d => {
     if (!d) return "";
     const date = new Date(d);
-    return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
+    return `${String(date.getDate()).padStart(2, "0"
+
+    )}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
   };
   const today = format(demandeFourniture.dateDemande);
 
@@ -347,7 +362,7 @@ export const updateValidationFourniture = async (req, res) => {
     const { id } = req.params;
     const { validation } = req.body;
     const admin = req.session?.user;
-    
+
 
     // -------------------------------------------------
     // 1. Basic validation
@@ -383,12 +398,12 @@ export const updateValidationFourniture = async (req, res) => {
       where: { id: itemId },
       data,
     });
-     const udateDemande = await prisma.demandeFourniture.update({
-    where: { id: parseInt(demande.id) },
-    data: { status: "Validé", color: "green" },
-  });
+    const udateDemande = await prisma.demandeFourniture.update({
+      where: { id: parseInt(demande.id) },
+      data: { status: "Validé", color: "green" },
+    });
 
-    
+
 
 
     // -------------------------------------------------
@@ -520,7 +535,7 @@ export const uploadImageFournitures = async (req, res) => {
     });
   } catch (error) {
     console.error("Erreur uploadImageFourniture:", error.message, error.stack);
-    
+
     // Specific Prisma error
     if (error.code === 'P2025') {
       return res.status(404).json({ success: false, error: "Article non trouvé." });

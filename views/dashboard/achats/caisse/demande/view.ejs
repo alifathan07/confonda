@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
   <meta name="description" content="Client Dashboard" />
-  <title><%= user.name %> - Détails Client</title>
+  <title>
+    <%= user.name %> - Détails Client
+  </title>
 
   <!-- Fonts & Icons -->
   <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
@@ -15,105 +18,142 @@
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
 
   <style>
-    .card-header { font-weight: 600; font-size: 1.1rem; }
-    .client-info p { margin-bottom: 0.4rem; }
-    .badge { font-size: 0.85rem; padding: 0.4em 0.7em; }
-    .table th { background: #f8f9fc; }
-    .page-title { font-weight: 700; color: #4e73df; }
+    .card-header {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .client-info p {
+      margin-bottom: 0.4rem;
+    }
+
+    .badge {
+      font-size: 0.85rem;
+      padding: 0.4em 0.7em;
+    }
+
+    .table th {
+      background: #f8f9fc;
+    }
+
+    .page-title {
+      font-weight: 700;
+      color: #4e73df;
+    }
   </style>
 </head>
+
 <body id="page-top">
-    <div id="wrapper">
-  
-      <!-- Sidebar -->
-      <%- include('../../../../layouts/sidebar') %>
-  
+  <div id="wrapper">
+
+    <!-- Sidebar -->
+    <%- include('../../../../layouts/sidebar') %>
+
       <!-- Content Wrapper -->
       <div id="content-wrapper" class="d-flex flex-column">
         <div id="content">
-  
+
           <!-- Topbar -->
           <%- include('../../../../layouts/topbar') %>
-  
-          <div class="container-fluid">
-  
-            <!-- Page Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-              <h1 class="h3 page-title"><i class="fas fa-cash-register"></i> Demande Caisse</h1>
-              <div>
-                <a href="/achats/demandeCaisse" class="btn btn-primary btn-sm">
-                  <i class="fas fa-arrow-left"></i> Retour
-                </a>
-              </div>
-            </div>
-  
-            <!-- Demande Info -->
-            <div class="row">
-              <div class="col-lg-12">
-                <div class="card shadow mb-4">
-                  <div class="card-header">Demande</div>
-                  <div class="card-body demande-info" style="display: flex; align-items: center; gap: 20px; padding: 20px;">
-                    <p style="margin: 0;"><strong>Demandeur :</strong> <%= demandeCaisse.user.name %></p>
-                    <p style="margin: 0;"><strong>Numéro :</strong> <%= demandeCaisse.numero %></p>
-                    <p style="margin: 0;"><strong>Chantier :</strong> <%= demandeCaisse.chantier.nom %></p>
-                    <input type="hidden" name="demandeur" value="<%= demandeCaisse.user.name %>" />
-                    
-                    <div class="form-group" style="margin: 0;">
-                      <label for="mois" style="margin-right: 10px;"><strong>Mois :</strong></label>
-                      <input type="hidden" name="id" id="demandeCaisseId" value="<%= demandeCaisse.id %>" />
 
-                      <select name="designation" id="mois" class="form-control" style="width: 200px; display: inline-block; background-color: #17A673; color : white"" disabled>
+            <div class="container-fluid">
+
+              <!-- Page Header -->
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 page-title"><i class="fas fa-cash-register"></i> Demande Caisse</h1>
+                <div>
+                  <a href="/achats/demandeCaisse" class="btn btn-primary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Retour
+                  </a>
+                </div>
+              </div>
+
+              <!-- Demande Info -->
+              <div class="row">
+                <div class="col-lg-12">
+                  <div class="card shadow mb-4">
+                    <div class="card-header">Demande</div>
+                    <div class="card-body demande-info"
+                      style="display: flex; align-items: center; gap: 20px; padding: 20px;">
+                      <p style="margin: 0;"><strong>Demandeur :</strong>
+                        <%= demandeCaisse.user.name %>
+                      </p>
+                      <p style="margin: 0;"><strong>Numéro :</strong>
+                        <%= demandeCaisse.numero %>
+                      </p>
+                      <p style="margin: 0;"><strong>Chantier :</strong>
+                        <%= demandeCaisse.chantier.nom %>
+                      </p>
+                      <input type="hidden" name="demandeur" value="<%= demandeCaisse.user.name %>" />
+
+                      <div class="form-group" style="margin: 0;">
+                        <label for="mois" style="margin-right: 10px;"><strong>Mois :</strong></label>
+                        <input type="hidden" name="id" id="demandeCaisseId" value="<%= demandeCaisse.id %>" />
+
+                        <select name="designation" id="mois" class="form-control"
+                          style="width: 200px; display: inline-block; background-color: #17A673; color : white"" disabled>
                         <option value="">Sélectionner un mois</option>
                         <% const year = new Date().getFullYear(); %>
                         <% const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']; %>
                         <% months.forEach((m) => { %>
                             <% if (m === demandeCaisse.designation.split('-')[0]) { %>
-                              <option value="<%= `${m}-${year}` %>" selected><%= `${m}-${year}` %></option>
+                              <option value=" <%=`${m}-${year}` %>" selected><%= `${m}-${year}` %>
+                            </option>
                             <% } else { %>
-                              <option value="<%= `${m}-${year}` %>"><%= `${m}-${year}` %></option>
-                            <% } %>
-                        <% }); %>
-                      </select>
+                              <option value="<%= `${m}-${year}` %>">
+                                <%= `${m}-${year}` %>
+                              </option>
+                              <% } %>
+                                <% }); %>
+                        </select>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-  
-            <!-- Demandes -->
-            <div id="demandes" class="card shadow mb-4">
-              <div class="card-header d-flex justify-content-between align-items-center">
-               
-                
-              </div>
-              <div class="card-body">
-                <table class="table table-hover" id="demandeTable">
-                  <thead>
-                    <tr>
-                      <th>Date Caisse</th>
-                      <th>Désignation</th>
-                      <th>Montant</th>
-                      <th>Imputation</th>
-                      <th>Validation</th>
-                      <th>Validée par</th>
 
-                      <% if (user.role === "user") { %>
-                        <th>Actions</th>
-                      <% } %>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% if (demandeCaisse.items && demandeCaisse.items.length > 0) { %>
-                      <% demandeCaisse.items.forEach(d => { %>
-                        <tr>
-                          <td><%= d.dateCaisse ? new Date(d.dateCaisse).toLocaleDateString('fr-FR') : '' %></td>
-                          <td><%= d.designation %></td>
-                          <td><%= d.montant ? d.montant.toFixed(2) : '' %> DH</td>
-                          <td><%= d.imputation %></td>
-                          <!-- Validation Status -->
-                          <% if (user.role === "admin" || user.role === "user") { %>
+              <!-- Demandes -->
+              <div id="demandes" class="card shadow mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+
+
+                </div>
+                <div class="card-body">
+                  <table class="table table-hover" id="demandeTable">
+                    <thead>
+                      <tr>
+                        <th>Date Caisse</th>
+                        <th>Désignation</th>
+                        <th>Montant</th>
+                        <th>Imputation</th>
+                        <th>Validation</th>
+                        <th>Validée par</th>
+
+                        <% if (user.role==="user" ) { %>
+                          <th>Actions</th>
+                          <% } %>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% if (demandeCaisse.items && demandeCaisse.items.length> 0) { %>
+                        <% demandeCaisse.items.forEach(d=> { %>
+                          <tr>
                             <td>
-                              <span style="
+                              <%= d.dateCaisse ? new Date(d.dateCaisse).toLocaleDateString('fr-FR') : '' %>
+                            </td>
+                            <td>
+                              <%= d.designation %>
+                            </td>
+                            <td>
+                              <%= d.montant ? d.montant.toFixed(2) : '' %> DH
+                            </td>
+                            <td>
+                              <%= d.imputation %>
+                            </td>
+                            <!-- Validation Status -->
+                            <% if (user.role==="admin" || user.role==="user" ) { %>
+                              <td>
+                                <span style="
                                 display:inline-block;
                                 min-width:100px;
                                 text-align:center;
@@ -139,133 +179,152 @@
                                   color:#6C757D;
                                 <% } %>
                               ">
-                                <%= d.validation || '' %>
-                              </span>
-                            </td>
-                          <% } else if (user.role === "grandadmin") { %>
-                            <td>
-                              <div class="form-check">
-                              <select class="form-select" aria-label="Validation" onchange="updateValidation(<%= d.id %>, this.value)">
-                                <option value="" <% if (!d.validation) { %> selected <% } %>>Selectionner</option>
-                                <option value="Refusée" <% if (d.validation === 'Refusée') { %> selected <% } %>>Refusée</option>
-                                <option value="Validée" <% if (d.validation === 'Validée') { %> selected <% } %>>Validée</option>
-                              </select>
-                                
-                              </div>
-                            </td>
-                            
-                            
-                          <% } %>
-                         
-                          <td>
-                            <%= d.validepar || 'En Attente' %> 
-                           </td>
-                          
-                          <!-- Actions -->
-                          <% if (user.role === "user") { %>
-                            <% if (d.validation === 'En cours' || d.validation === 'Refusée') { %>
-                              <td>
-                                <a class="btn btn-success btn-sm" data-toggle="modal" data-target="#updateDemandeModal-<%= d.id %>">
-                                  <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="<%= `/demandes/caisse/items/${d.id}?_method=DELETE` %>" method="POST" style="display:inline;">
-                                  <button class="btn btn-danger btn-sm" onclick="return confirm('Supprimer cet item ?')">
-                                    <i class="fas fa-trash"></i>
-                                  </button>
-                                  
-                                </form>
-                                <button class="btn btn-primary btn-sm" onclick="addNewRow()">
-                                  <i class="fas fa-plus"></i>
-                                </button>
+                                  <%= d.validation || '' %>
+                                </span>
                               </td>
-                            <% } %>
-                          <% } %>
-                        </tr>
-                  
-                        <!-- Update Modal -->
-                        <div class="modal fade" id="updateDemandeModal-<%= d.id %>" tabindex="-1" role="dialog" aria-labelledby="updateDemandeModalLabel-<%= d.id %>" aria-hidden="true">
-                          <div class="modal-dialog modal-lg" role="document">
-                            <div class="modal-content">
-                              <form id="updateDemandeForm-<%= d.id %>" action="/demandes/caisse/items/<%= d.id %>?_method=PUT" method="POST">
-                                <div class="modal-header">
-                                  <h5 class="modal-title" id="updateDemandeModalLabel-<%= d.id %>">Modifier Demande</h5>
-                                  <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
-                                    <span aria-hidden="true">&times;</span>
-                                  </button>
-                                </div>
-                                <div class="modal-body">
-                                  <div class="form-group">
-                                    <label for="dateCaisse-<%= d.id %>">Date Caisse</label>
-                                    <input type="date" name="dateCaisse" id="dateCaisse-<%= d.id %>" class="form-control" value="<%= d.dateCaisse ? new Date(d.dateCaisse).toISOString().split('T')[0] : '' %>" />
+                              <% } else if (user.role==="grandadmin" ) { %>
+                                <td>
+                                  <div class="form-check">
+                                    <select class="form-select" aria-label="Validation"
+                                      onchange="updateValidation(<%= d.id %>, this.value)">
+                                      <option value="" <% if (!d.validation) { %> selected <% } %>>Selectionner</option>
+                                      <option value="Refusée" <% if (d.validation==='Refusée' ) { %> selected <% } %>
+                                          >Refusée</option>
+                                      <option value="Validée" <% if (d.validation==='Validée' ) { %> selected <% } %>
+                                          >Validée</option>
+                                    </select>
+
                                   </div>
-                                  <div class="form-group">
-                                    <label for="designation-<%= d.id %>">Désignation</label>
-                                    <input type="text" name="designation" id="designation-<%= d.id %>" class="form-control" value="<%= d.designation %>" />
+                                </td>
+
+
+                                <% } %>
+
+                                  <td>
+                                    <%= d.validepar || 'En Attente' %>
+                                  </td>
+
+                                  <!-- Actions -->
+                                  <% if (user.role==="user" ) { %>
+                                    <% if (d.validation==='En cours' || d.validation==='Refusée' ) { %>
+                                      <td>
+                                        <a class="btn btn-success btn-sm" data-toggle="modal"
+                                          data-target="#updateDemandeModal-<%= d.id %>">
+                                          <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form action="<%= `/demandes/caisse/items/${d.id}?_method=DELETE` %>"
+                                          method="POST" style="display:inline;">
+                                          <button class="btn btn-danger btn-sm"
+                                            onclick="return confirm('Supprimer cet item ?')">
+                                            <i class="fas fa-trash"></i>
+                                          </button>
+
+                                        </form>
+                                        <button class="btn btn-primary btn-sm" onclick="addNewRow()">
+                                          <i class="fas fa-plus"></i>
+                                        </button>
+                                      </td>
+                                      <% } %>
+                                        <% } %>
+                          </tr>
+
+                          <!-- Update Modal -->
+                          <div class="modal fade" id="updateDemandeModal-<%= d.id %>" tabindex="-1" role="dialog"
+                            aria-labelledby="updateDemandeModalLabel-<%= d.id %>" aria-hidden="true">
+                            <div class="modal-dialog modal-lg" role="document">
+                              <div class="modal-content">
+                                <form id="updateDemandeForm-<%= d.id %>"
+                                  action="/demandes/caisse/items/<%= d.id %>?_method=PUT" method="POST">
+                                  <div class="modal-header">
+                                    <h5 class="modal-title" id="updateDemandeModalLabel-<%= d.id %>">Modifier Demande
+                                    </h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
+                                      <span aria-hidden="true">&times;</span>
+                                    </button>
                                   </div>
-                                  <div class="form-group">
-                                    <label for="montant-<%= d.id %>">Montant</label>
-                                    <input type="number" step="0.01" name="montant" id="montant-<%= d.id %>" class="form-control" value="<%= d.montant %>" />
+                                  <div class="modal-body">
+                                    <div class="form-group">
+                                      <label for="dateCaisse-<%= d.id %>">Date Caisse</label>
+                                      <input type="date" name="dateCaisse" id="dateCaisse-<%= d.id %>"
+                                        class="form-control"
+                                        value="<%= d.dateCaisse ? new Date(d.dateCaisse).toISOString().split('T')[0] : '' %>" />
+                                    </div>
+                                    <div class="form-group">
+                                      <label for="designation-<%= d.id %>">Désignation</label>
+                                      <input type="text" name="designation" id="designation-<%= d.id %>"
+                                        class="form-control" value="<%= d.designation %>" />
+                                    </div>
+                                    <div class="form-group">
+                                      <label for="montant-<%= d.id %>">Montant</label>
+                                      <input type="number" step="0.01" name="montant" id="montant-<%= d.id %>"
+                                        class="form-control" value="<%= d.montant %>" />
+                                    </div>
+                                    <div class="form-group">
+                                      <label for="imputation-<%= d.id %>">Imputation</label>
+                                      <input type="text" name="imputation" id="imputation-<%= d.id %>"
+                                        class="form-control" value="<%= d.imputation %>" />
+                                    </div>
                                   </div>
-                                  <div class="form-group">
-                                    <label for="imputation-<%= d.id %>">Imputation</label>
-                                    <input type="text" name="imputation" id="imputation-<%= d.id %>" class="form-control" value="<%= d.imputation %>" />
+                                  <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                      data-dismiss="modal">Annuler</button>
+                                    <button type="submit" class="btn btn-primary">Modifier</button>
                                   </div>
-                                </div>
-                                <div class="modal-footer">
-                                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
-                                  <button type="submit" class="btn btn-primary">Modifier</button>
-                                </div>
-                                
-                              </form>
+
+                                </form>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                  
-                      <% }) %>
-                    <% } else { %>
-                      <tr>
-                        <td><input type="date" name="dateCaisse" value="<%= new Date().toISOString().split('T')[0] %>" class="form-control"  /></td>
-          <td><input type="text" class="form-control" name="designationItem" /></td>
-          <td><input type="number" step="0.01" class="form-control" name="montant" /></td>
-          <td><input type="text" class="form-control" name="imputation" /></td>
-          <td>
-            <button class="btn btn-primary btn-sm" onclick="saveNewRow(this)">
-              Enregistrer
-            </button>
-            
-           <button class="btn btn-primary btn-sm" onclick="addNewRow()">
-                        <i class="fas fa-plus"></i>
-                      </button>
-            <button class="btn btn-danger btn-sm" onclick="removeRow(this)">
-              <i class="fas fa-trash"></i>
-            </button>
-            
-          </td>
-                      </tr>
-                    <% } %>
-                  </tbody>
-                  
-                  <tfoot style="font-weight: bold; background-color: #f8f9fc;">
-                    <tr>
-                      <td colspan="2" style="text-align: right; font-weight: bold;">Total:</td>
-                      <td id="total" style="font-weight: bold;"><%= demandeCaisse.montantTotal.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %> DH</td>
 
-                      <td colspan="1"></td>
-                    </tr>
-                  </tfoot>
-                </table>
+                          <% }) %>
+                            <% } else { %>
+                              <tr>
+                                <td><input type="date" name="dateCaisse"
+                                    value="<%= new Date().toISOString().split('T')[0] %>" class="form-control" /></td>
+                                <td><input type="text" class="form-control" name="designationItem" /></td>
+                                <td><input type="number" step="0.01" class="form-control" name="montant" /></td>
+                                <td><input type="text" class="form-control" name="imputation" /></td>
+                                <td>
+                                  <button class="btn btn-primary btn-sm" onclick="saveNewRow(this)">
+                                    Enregistrer
+                                  </button>
+
+                                  <button class="btn btn-primary btn-sm" onclick="addNewRow()">
+                                    <i class="fas fa-plus"></i>
+                                  </button>
+                                  <button class="btn btn-danger btn-sm" onclick="removeRow(this)">
+                                    <i class="fas fa-trash"></i>
+                                  </button>
+
+                                </td>
+                              </tr>
+                              <% } %>
+                    </tbody>
+
+                    <tfoot style="font-weight: bold; background-color: #f8f9fc;">
+                      <tr>
+                        <td colspan="2" style="text-align: right; font-weight: bold;">Total:</td>
+                        <td id="total" style="font-weight: bold;">
+                          <%= demandeCaisse.montantTotal.toLocaleString('fr-FR', { minimumFractionDigits: 2,
+                            maximumFractionDigits: 2 }).replace(/\u202F/g, ' ' ) %> DH
+                        </td>
+
+                        <td colspan="1"></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
               </div>
             </div>
-          </div>
         </div>
       </div>
-    </div>
-  
-    <script>
-      function addNewRow() {
-        const tableBody = document.querySelector('#demandeTable tbody');
-        const newRow = document.createElement('tr');
-        newRow.innerHTML = `
+  </div>
+
+  <script>
+    function addNewRow() {
+      const tableBody = document.querySelector('#demandeTable tbody');
+      const newRow = document.createElement('tr');
+      newRow.innerHTML = `
           <td><input type="date" name="dateCaisse" value="<%= new Date().toISOString().split('T')[0] %>" class="form-control"  /></td>
           <td><input type="text" class="form-control" name="designationItem" /></td>
           <td><input type="number" step="0.01" class="form-control" name="montant" /></td>
@@ -284,84 +343,85 @@
             
           </td>
         `;
-        tableBody.appendChild(newRow);
+      tableBody.appendChild(newRow);
+    }
+
+    function saveNewRow(button) {
+      const row = button.closest('tr');
+      if (!row) return alert('Erreur: ligne non trouvée');
+
+      const dateCaisse = row.querySelector('input[name="dateCaisse"]')?.value;
+      const designation = row.querySelector('input[name="designationItem"]')?.value;
+      const montant = parseFloat(row.querySelector('input[name="montant"]')?.value || 0);
+      const imputation = row.querySelector('input[name="imputation"]')?.value || null;
+
+      const demandeCaisseId = document.getElementById('demandeCaisseId')?.value;
+      if (!demandeCaisseId) return alert('Erreur: demandeCaisseId manquant');
+
+      // Validate required fields
+      if (!designation || !dateCaisse || isNaN(montant)) {
+        return alert('Veuillez remplir tous les champs obligatoires');
       }
-  
-      function saveNewRow(button) {
-  const row = button.closest('tr');
-  if (!row) return alert('Erreur: ligne non trouvée');
 
-  const dateCaisse = row.querySelector('input[name="dateCaisse"]')?.value;
-  const designation = row.querySelector('input[name="designationItem"]')?.value;
-  const montant = parseFloat(row.querySelector('input[name="montant"]')?.value || 0);
-  const imputation = row.querySelector('input[name="imputation"]')?.value || null;
+      const data = {
+        dateCaisse,
+        designation,
+        montant,
+        imputation,
+      };
 
-  const demandeCaisseId = document.getElementById('demandeCaisseId')?.value;
-  if (!demandeCaisseId) return alert('Erreur: demandeCaisseId manquant');
-
-  // Validate required fields
-  if (!designation || !dateCaisse || isNaN(montant)) {
-    return alert('Veuillez remplir tous les champs obligatoires');
-  }
-
-  const data = {
-    dateCaisse,
-    designation,
-    montant,
-    imputation,
-  };
-
-  fetch(`/demandes/caisse/${demandeCaisseId}`, {
-    method: 'POST', // keep POST, it creates an item and updates total internally
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  })
-    .then(res => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
-    })
-    .then(result => {
-      if (result.success) {
-        // Reload or dynamically insert the new row (better UX)
-        location.reload();
-      } else {
-        alert(result.error || 'Erreur inconnue lors de l’ajout');
-      }
-    })
-    .catch(err => {
-      console.error('Erreur réseau:', err);
-      alert('Erreur réseau: ' + err.message);
-    });
-}
-
-function removeRow(button) {
-        button.closest('tr').remove();
-      }
-    
-      async function updateValidation(id, validation) {
-        try {
-          const response = await fetch(`/achats/demandes/caisse/updateValidation/${id}`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ validation }),
-          });
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          const result = await response.json();
+      fetch(`/demandes/caisse/${demandeCaisseId}`, {
+        method: 'POST', // keep POST, it creates an item and updates total internally
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then(result => {
           if (result.success) {
+            // Reload or dynamically insert the new row (better UX)
             location.reload();
           } else {
-            alert(result.error || 'Erreur inconnue lors de la mise à jour');
+            alert(result.error || 'Erreur inconnue lors de l’ajout');
           }
-        } catch (err) {
+        })
+        .catch(err => {
           console.error('Erreur réseau:', err);
           alert('Erreur réseau: ' + err.message);
+        });
+    }
+
+    function removeRow(button) {
+      button.closest('tr').remove();
+    }
+
+    async function updateValidation(id, validation) {
+      try {
+        const response = await fetch(`/achats/demandes/caisse/updateValidation/${id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ validation }),
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const result = await response.json();
+        if (result.success) {
+          location.reload();
+        } else {
+          alert(result.error || 'Erreur inconnue lors de la mise à jour');
         }
+      } catch (err) {
+        console.error('Erreur réseau:', err);
+        alert('Erreur réseau: ' + err.message);
       }
-    
-    </script>
-  </body>
+    }
+
+  </script>
+</body>
+
 </html>

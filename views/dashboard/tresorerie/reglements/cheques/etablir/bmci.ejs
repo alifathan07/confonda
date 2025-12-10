@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,14 +23,16 @@
             background: white;
             padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
         .bank-logo {
             font-size: 24px;
-             font-weight: 700; /* Reduced from 500 */
+            font-weight: 700;
+            /* Reduced from 500 */
 
-                font-family: Arial, sans-serif; /* Standard font */
+            font-family: Arial, sans-serif;
+            /* Standard font */
             color: #2c5aa0;
             text-align: center;
             margin-bottom: 30px;
@@ -42,9 +45,11 @@
         .form-group label {
             display: block;
             margin-bottom: 5px;
-             font-weight: 700; /* Reduced from 500 */
+            font-weight: 700;
+            /* Reduced from 500 */
 
-                font-family: Arial, sans-serif; /* Standard font */
+            font-family: Arial, sans-serif;
+            /* Standard font */
             color: #333;
         }
 
@@ -104,7 +109,7 @@
 
         .btn-primary {
             background-color: #2c5aa0;
-            color: white;   
+            color: white;
         }
 
         .btn-secondary {
@@ -119,11 +124,13 @@
         /* Print styles - This is where the magic happens */
         @media print {
             @page {
-                size: A4 ;
+                size: A4;
                 margin: 0 !important;
             }
-            
-            *, *::before, *::after {
+
+            *,
+            *::before,
+            *::after {
                 margin: 0 !important;
                 padding: 0 !important;
                 box-shadow: none !important;
@@ -178,20 +185,25 @@
                 width: 210mm !important;
                 height: 99mm !important;
                 border: 1px dashed #ccc;
-                transform: rotate(90deg); /* Rotate 90 degrees clockwise */
-                transform-origin: center center; /* Pivot around the center */
+                transform: rotate(90deg);
+                /* Rotate 90 degrees clockwise */
+                transform-origin: center center;
+                /* Pivot around the center */
             }
 
             /* Position each field exactly on the BMCE cheque - FROM TOP */
             .print-payee {
                 position: absolute;
-                top: 35mm !important; /* From very top of page */
+                top: 35mm !important;
+                /* From very top of page */
                 left: 50mm !important;
                 width: 85mm;
                 font-size: 15pt;
-                 font-weight: 700; /* Reduced from 500 */
+                font-weight: 700;
+                /* Reduced from 500 */
 
-                font-family: Arial, sans-serif; /* Standard font */
+                font-family: Arial, sans-serif;
+                /* Standard font */
                 line-height: 1.1;
                 margin: 0 !important;
                 padding: 0 !important;
@@ -199,12 +211,15 @@
 
             .print-amount {
                 position: absolute;
-                top: 10mm !important; /* From very top of page */
+                top: 10mm !important;
+                /* From very top of page */
                 left: 180mm !important;
                 font-size: 11pt;
-                 font-weight: 700; /* Reduced from 500 */
+                font-weight: 700;
+                /* Reduced from 500 */
 
-                font-family: Arial, sans-serif; /* Standard font */
+                font-family: Arial, sans-serif;
+                /* Standard font */
                 font-size: 15pt;
                 text-align: left;
                 width: 50mm;
@@ -214,17 +229,22 @@
 
             .print-amount-words {
                 position: absolute;
-                top: 22mm !important; /* From very top of page */
+                top: 22mm !important;
+                /* From very top of page */
                 left: 55mm !important;
-                 font-weight: 700; /* Reduced from 500 */
+                font-weight: 700;
+                /* Reduced from 500 */
 
-                font-family: Arial, sans-serif; /* Standard font */
+                font-family: Arial, sans-serif;
+                /* Standard font */
                 width: 170mm;
                 font-size: 17px;
                 max-width: 150mm;
-                    white-space: normal;      /* allow wrapping */
-                word-wrap: break-word;    /* break long words if needed */
-                
+                white-space: normal;
+                /* allow wrapping */
+                word-wrap: break-word;
+                /* break long words if needed */
+
                 text-transform: uppercase;
                 line-height: 1.1;
                 margin: 0 !important;
@@ -233,12 +253,15 @@
 
             .print-date {
                 position: absolute;
-                top: 43mm !important; /* From very top of page */
+                top: 43mm !important;
+                /* From very top of page */
                 left: 165mm !important;
                 font-size: 9pt;
-                 font-weight: 700; /* Reduced from 500 */
+                font-weight: 700;
+                /* Reduced from 500 */
 
-                font-family: Arial, sans-serif; /* Standard font */
+                font-family: Arial, sans-serif;
+                /* Standard font */
                 font-size: 15pt;
                 margin: 0 !important;
                 padding: 0 !important;
@@ -246,12 +269,15 @@
 
             .print-city {
                 position: absolute;
-                top: 43mm !important; /* From very top of page */
+                top: 43mm !important;
+                /* From very top of page */
                 left: 115mm !important;
                 font-size: 9pt;
-                 font-weight: 700; /* Reduced from 500 */
+                font-weight: 700;
+                /* Reduced from 500 */
 
-                font-family: Arial, sans-serif; /* Standard font */
+                font-family: Arial, sans-serif;
+                /* Standard font */
                 font-size: 15pt;
                 margin: 0 !important;
                 padding: 0 !important;
@@ -259,12 +285,15 @@
 
             .print-cheque-number {
                 position: absolute;
-                top: 80mm !important; /* From very top of page */
+                top: 80mm !important;
+                /* From very top of page */
                 left: 65mm !important;
                 font-size: 9pt;
-                 font-weight: 700; /* Reduced from 500 */
+                font-weight: 700;
+                /* Reduced from 500 */
 
-                font-family: Arial, sans-serif; /* Standard font */
+                font-family: Arial, sans-serif;
+                /* Standard font */
                 font-size: 15pt;
                 text-align: left;
                 margin: 0 !important;
@@ -278,6 +307,7 @@
         }
     </style>
 </head>
+
 <body>
     <a href="/tresorerie" class="btn btn-primary">Retour</a>
 
@@ -289,51 +319,54 @@
             <div class="cheque-row">
                 <div class="form-group textarea-wrapper">
                     <label for="payee">À l'ordre de:</label>
-                    <input type="text" id="payee" name="beneficiaire" placeholder="Nom du bénéficiaire" autocomplete="off" class="form-control">
+                    <input type="text" id="payee" name="beneficiaire" placeholder="Nom du bénéficiaire"
+                        autocomplete="off" class="form-control">
 
                     <ul id="suggestions" class="autocomplete-list"></ul>
 
                     <script>
-                    const fournisseurs = <%- JSON.stringify(fournisseurs) %>;
-                    const payeeInput = document.getElementById('payee');
-                    const suggestions = document.getElementById('suggestions');
+                        const fournisseurs = <%- JSON.stringify(fournisseurs) %>;
+                        const payeeInput = document.getElementById('payee');
+                        const suggestions = document.getElementById('suggestions');
 
-                    payeeInput.addEventListener('input', () => {
-                    const value = payeeInput.value.toLowerCase();
-                    suggestions.innerHTML = '';
-                    if (!value) return;
+                        payeeInput.addEventListener('input', () => {
+                            const value = payeeInput.value.toLowerCase();
+                            suggestions.innerHTML = '';
+                            if (!value) return;
 
-                    const matches = fournisseurs.filter(f => f.name.toLowerCase().includes(value));
-                    matches.forEach(match => {
-                        const li = document.createElement('li');
-                        li.textContent = match.name;
-                        li.addEventListener('click', () => {
-                        payeeInput.value = match.name;
-                        suggestions.innerHTML = '';
+                            const matches = fournisseurs.filter(f => f.name.toLowerCase().includes(value));
+                            matches.forEach(match => {
+                                const li = document.createElement('li');
+                                li.textContent = match.name;
+                                li.addEventListener('click', () => {
+                                    payeeInput.value = match.name;
+                                    suggestions.innerHTML = '';
+                                });
+                                suggestions.appendChild(li);
+                            });
                         });
-                        suggestions.appendChild(li);
-                    });
-                    });
                     </script>
 
                     <style>
-                    .autocomplete-list {
-                    border: 1px solid #ccc;
-                    max-height: 150px;
-                    overflow-y: auto;
-                    padding: 0;
-                    margin: 0;
-                    list-style: none;
-                    }
-                    .autocomplete-list li {
-                    padding: 5px 10px;
-                    cursor: pointer;
-                    }
-                    .autocomplete-list li:hover {
-                    background-color: #eee;
-                    }
+                        .autocomplete-list {
+                            border: 1px solid #ccc;
+                            max-height: 150px;
+                            overflow-y: auto;
+                            padding: 0;
+                            margin: 0;
+                            list-style: none;
+                        }
+
+                        .autocomplete-list li {
+                            padding: 5px 10px;
+                            cursor: pointer;
+                        }
+
+                        .autocomplete-list li:hover {
+                            background-color: #eee;
+                        }
                     </style>
-                 </div>
+                </div>
                 <div class="form-group amount-numbers">
                     <label for="amount">Montant:</label>
                     <input id="amount" type="text" placeholder="0,00 MAD" name="montant">
@@ -350,15 +383,7 @@
                     <label for="date">Date:</label>
                     <input id="date" type="date" name="dateEcheance">
                 </div>
-                <div class="form-group">
-                    <label for="chantier">Chantier:</label>
-                    <select id="chantier" name="chantier" class="form-control">
-                        <option value="">Sélectionnez un chantier</option>
-                        <% chantiers.forEach(chant => { %>
-                            <option value="<%= chant.id %>"><%= chant.nom %></option>
-                        <% }) %>
-                    </select>
-                </div>
+                 
                 <div class="form-group">
                     <label for="city">À (Ville):</label>
                     <input id="city" type="text" placeholder="Casablanca" name="ville">
@@ -368,13 +393,44 @@
                     <input id="account" type="text" placeholder="Numéro du chèque" name="numero">
                 </div>
             </div>
+             <div class="form-group" style="flex: 2;">
+                <label>Répartition par Chantier:</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <select id="allocChantierSelect" class="form-control">
+                        <option value="">Sélectionnez un chantier</option>
+                        <% chantiers.forEach(chant=> { %>
+                            <option value="<%= chant.id %>" data-name="<%= chant.nom %>">
+                                <%= chant.nom %>
+                            </option>
+                            <% }) %>
+                    </select>
+                    <input type="number" id="allocAmountInput" class="form-control" placeholder="Montant"
+                        style="width: 150px;">
+                    <button type="button" class="btn btn-info" onclick="addAllocation()">+</button>
+                </div>
+
+                <table class="table table-sm table-bordered" style="font-size: 12px;">
+                    <thead>
+                        <tr>
+                            <th>Chantier</th>
+                            <th>Montant</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allocationTableBody"></tbody>
+                </table>
+                <div style="font-size: 12px; font-weight: bold;">
+                    Reste à allouer: <span id="remainingAmountDisplay" class="text-danger">0.00</span> DH
+                </div>
+                <input type="hidden" name="allocations" id="allocationsInput">
+            </div>
 
             <div class="footer-row">
                 <div>Signature:</div>
                 <div class="signature-line"></div>
                 <button type="button" class="btn btn-primary" id="printBtn">Imprimer le Chèque</button>
                 <!-- <button type="submit" class="btn btn-secondary">Enregistrer</button>* -->
-                <button type="submit" class="btn btn-success" >Enregistrer</button>
+                <button type="submit" class="btn btn-success">Enregistrer</button>
             </div>
         </form>
     </div>
@@ -391,152 +447,152 @@
 
     <script>
         // French number-to-words conversion function
-       function numberToFrenchWords(number) {
-    if (!Number.isInteger(number)) {
-        throw new Error("Input must be an integer");
-    }
-
-    if (number < 0) {
-        return "moins " + numberToFrenchWords(Math.abs(number));
-    }
-
-    const units = ["", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf"];
-    const teens = ["dix", "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept", "dix-huit", "dix-neuf"];
-    const tens = ["", "", "vingt", "trente", "quarante", "cinquante", "soixante", "", "quatre-vingt", ""];
-    const thousands = ["", "mille", "million", "milliard"];
-
-    function convertLessThanThousand(n) {
-        if (n === 0) return "";
-        let result = "";
-
-        if (n >= 100) {
-            const hundreds = Math.floor(n / 100);
-            if (hundreds === 1) {
-                result += "cent";
-            } else {
-                result += units[hundreds] + " cent";
+        function numberToFrenchWords(number) {
+            if (!Number.isInteger(number)) {
+                throw new Error("Input must be an integer");
             }
-            if (n % 100 === 0 && hundreds > 1) {
-                result += "s";
-            }
-            if (n % 100 > 0) {
-                result += " ";
-            }
-            n %= 100;
-        }
 
-        if (n > 0) {
-            if (n >= 20) {
-                const tenIndex = Math.floor(n / 10);
-                const unit = n % 10;
-                if (tenIndex === 7 || tenIndex === 9) {
-                    const base = tenIndex === 7 ? "soixante" : "quatre-vingt";
-                    if (unit === 0) {
-                        result += base + "-" + teens[0];
+            if (number < 0) {
+                return "moins " + numberToFrenchWords(Math.abs(number));
+            }
+
+            const units = ["", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf"];
+            const teens = ["dix", "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept", "dix-huit", "dix-neuf"];
+            const tens = ["", "", "vingt", "trente", "quarante", "cinquante", "soixante", "", "quatre-vingt", ""];
+            const thousands = ["", "mille", "million", "milliard"];
+
+            function convertLessThanThousand(n) {
+                if (n === 0) return "";
+                let result = "";
+
+                if (n >= 100) {
+                    const hundreds = Math.floor(n / 100);
+                    if (hundreds === 1) {
+                        result += "cent";
                     } else {
-                        result += base + "-" + teens[unit]; // no "et" here
+                        result += units[hundreds] + " cent";
                     }
-                } else {
-                    result += tens[tenIndex];
-                    if (unit === 1 && tenIndex !== 8) {
-                        result += "-et-" + units[unit];
-                    } else if (unit > 0) {
-                        result += "-" + units[unit];
-                    } else if (tenIndex === 8 && unit === 0) {
-                        result += "s"; // quatre-vingts
+                    if (n % 100 === 0 && hundreds > 1) {
+                        result += "s";
+                    }
+                    if (n % 100 > 0) {
+                        result += " ";
+                    }
+                    n %= 100;
+                }
+
+                if (n > 0) {
+                    if (n >= 20) {
+                        const tenIndex = Math.floor(n / 10);
+                        const unit = n % 10;
+                        if (tenIndex === 7 || tenIndex === 9) {
+                            const base = tenIndex === 7 ? "soixante" : "quatre-vingt";
+                            if (unit === 0) {
+                                result += base + "-" + teens[0];
+                            } else {
+                                result += base + "-" + teens[unit]; // no "et" here
+                            }
+                        } else {
+                            result += tens[tenIndex];
+                            if (unit === 1 && tenIndex !== 8) {
+                                result += "-et-" + units[unit];
+                            } else if (unit > 0) {
+                                result += "-" + units[unit];
+                            } else if (tenIndex === 8 && unit === 0) {
+                                result += "s"; // quatre-vingts
+                            }
+                        }
+                    } else if (n >= 10) {
+                        result += teens[n - 10];
+                    } else {
+                        result += units[n];
                     }
                 }
-            } else if (n >= 10) {
-                result += teens[n - 10];
-            } else {
-                result += units[n];
+
+                return result.trim();
             }
-        }
 
-        return result.trim();
-    }
+            function numberToWords(n) {
+                if (n === 0) return "zéro";
 
-    function numberToWords(n) {
-        if (n === 0) return "zéro";
+                let parts = [];
+                let index = 0;
 
-        let parts = [];
-        let index = 0;
-
-        while (n > 0) {
-            let chunk = n % 1000;
-            if (chunk > 0) {
-                let chunkText = convertLessThanThousand(chunk);
-                if (index === 1) {
-                    if (chunk === 1) {
-                        chunkText = "mille";
-                    } else {
-                        chunkText += " mille";
+                while (n > 0) {
+                    let chunk = n % 1000;
+                    if (chunk > 0) {
+                        let chunkText = convertLessThanThousand(chunk);
+                        if (index === 1) {
+                            if (chunk === 1) {
+                                chunkText = "mille";
+                            } else {
+                                chunkText += " mille";
+                            }
+                        } else if (index > 1) {
+                            chunkText += " " + thousands[index];
+                            if (chunk > 1) {
+                                chunkText += "s";
+                            }
+                        }
+                        parts.unshift(chunkText);
                     }
-                } else if (index > 1) {
-                    chunkText += " " + thousands[index];
-                    if (chunk > 1) {
-                        chunkText += "s";
-                    }
+                    n = Math.floor(n / 1000);
+                    index++;
                 }
-                parts.unshift(chunkText);
+
+                return parts.join(" ").trim();
             }
-            n = Math.floor(n / 1000);
-            index++;
+
+            return numberToWords(number);
         }
 
-        return parts.join(" ").trim();
-    }
-
-    return numberToWords(number);
-}
-
-function updatePrintFields() {
+        function updatePrintFields() {
             document.getElementById('print-payee').textContent = document.getElementById('payee').value;
-            
+
             const amount = document.getElementById('amount').value;
             document.getElementById('print-amount').textContent = amount ? amount + ' DH' : '';
-            
+
             document.getElementById('print-amount-words').textContent = document.getElementById('amount-words').value;
-            
+
             const date = document.getElementById('date').value;
             if (date) {
                 const formattedDate = new Date(date).toLocaleDateString('fr-FR');
                 document.getElementById('print-date').textContent = formattedDate;
             }
-            
+
             document.getElementById('print-city').textContent = document.getElementById('city').value;
             document.getElementById('print-cheque-number').textContent = document.getElementById('account').value;
         }
 
         // Handle amount input and convert to words
         document.getElementById("amount").addEventListener("input", function () {
-    let input = this.value.replace(/[^0-9,.]/g, "").replace(",", ".");
-    let amountWordsInput = document.getElementById("amount-words");
-    
-    if (!input || isNaN(parseFloat(input))) {
-        amountWordsInput.value = "ZÉRO DIRHAMS ET ZÉRO CENTIMES";
-        updatePrintFields();
-        return;
-    }
+            let input = this.value.replace(/[^0-9,.]/g, "").replace(",", ".");
+            let amountWordsInput = document.getElementById("amount-words");
 
-    let [dirhams, centimes = "0"] = input.split(".");
-    dirhams = parseInt(dirhams) || 0;
-    centimes = parseInt(centimes.padEnd(2, "0").substring(0, 2)) || 0;
+            if (!input || isNaN(parseFloat(input))) {
+                amountWordsInput.value = "ZÉRO DIRHAMS ET ZÉRO CENTIMES";
+                updatePrintFields();
+                return;
+            }
 
-    let dirhamsText = numberToFrenchWords(dirhams).toUpperCase();
-    let centimesText = numberToFrenchWords(centimes).toUpperCase();
+            let [dirhams, centimes = "0"] = input.split(".");
+            dirhams = parseInt(dirhams) || 0;
+            centimes = parseInt(centimes.padEnd(2, "0").substring(0, 2)) || 0;
 
-    let result = `${dirhamsText} DIRHAM${dirhams !== 1 ? "S" : ""}`;
-    if (centimes > 0) {
-        result += ` ET ${centimesText} CENTIME${centimes !== 1 ? "S" : ""}`;
-    } else {
-        result += " ET ZÉRO CENTIMES";
-    }
+            let dirhamsText = numberToFrenchWords(dirhams).toUpperCase();
+            let centimesText = numberToFrenchWords(centimes).toUpperCase();
 
-    amountWordsInput.value = result;
-    updatePrintFields();
-});
-       
+            let result = `${dirhamsText} DIRHAM${dirhams !== 1 ? "S" : ""}`;
+            if (centimes > 0) {
+                result += ` ET ${centimesText} CENTIME${centimes !== 1 ? "S" : ""}`;
+            } else {
+                result += " ET ZÉRO CENTIMES";
+            }
+
+            amountWordsInput.value = result;
+            updatePrintFields();
+        });
+
 
 
         // Update print fields on any input change
@@ -549,7 +605,7 @@ function updatePrintFields() {
         document.getElementById("printBtn").addEventListener("click", function () {
             // Update print fields before printing
             updatePrintFields();
-            
+
             // Print the page
             window.print();
         });
@@ -562,15 +618,79 @@ function updatePrintFields() {
             document.getElementById('date').value = "2025-08-16";
             document.getElementById('city').value = "CASABLANCA";
             document.getElementById('account').value = "0001234567";
-            
+
             // Trigger amount conversion
             document.getElementById('amount').dispatchEvent(new Event('input'));
             updatePrintFields();
-            
+
         });
 
         // Initialize print fields
         updatePrintFields();
     </script>
+    <script>
+        let allocations = [];
+        function updateAllocationUI() {
+            const tbody = document.getElementById('allocationTableBody');
+            tbody.innerHTML = '';
+
+            let totalAllocated = 0;
+
+            allocations.forEach((alloc, index) => {
+                totalAllocated += parseFloat(alloc.amount);
+                const row = `
+                <tr>
+                    <td>${alloc.chantierName}</td>
+                    <td>${parseFloat(alloc.amount).toFixed(2)}</td>
+                    <td><button type="button" class="btn btn-danger btn-sm" onclick="removeAllocation(${index})">X</button></td>
+                </tr>
+            `;
+                tbody.innerHTML += row;
+            });
+            const amountInput = document.getElementById('amount').value;
+            // Handle potential French format (comma) or empty string
+            const totalCheque = parseFloat(amountInput.replace(',', '.') || 0);
+
+            const remaining = totalCheque - totalAllocated;
+
+            const remainingDisplay = document.getElementById('remainingAmountDisplay');
+            remainingDisplay.textContent = remaining.toFixed(2);
+
+            // Use a small epsilon for float comparison if needed, but for currency 2 decimals usually ok
+            if (Math.abs(remaining) < 0.01) {
+                remainingDisplay.className = 't ext-success';
+                remainingDisplay.textContent = "0.00"; // Force clean zero
+            } else {
+                remainingDisplay.className = 'text-danger';
+            }
+            document.getElementById('allocationsInput').value = JSON.stringify(allocations);
+        }
+        function addAllocation() {
+            const select = document.getElementById('allocChantierSelect');
+            const amountInput = document.getElementById('allocAmountInput');
+
+            const chantierId = select.value;
+            // Safe access to dataset
+            const selectedOption = select.options[select.selectedIndex];
+            const chantierName = selectedOption ? selectedOption.dataset.name : '';
+            const amount = parseFloat(amountInput.value);
+            if (!chantierId || !amount || amount <= 0) {
+                alert('Veuillez sélectionner un chantier et entrer un montant valide.');
+                return;
+            }
+            allocations.push({ chantierId, chantierName, amount });
+            updateAllocationUI();
+
+            select.value = '';
+            amountInput.value = '';
+        }
+        function removeAllocation(index) {
+            allocations.splice(index, 1);
+            updateAllocationUI();
+        }
+        // Update calculations when main amount changes
+        document.getElementById('amount').addEventListener('input', updateAllocationUI);
+    </script>
 </body>
+
 </html>

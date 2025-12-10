@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bon de Commande #<%= bc.id %> - Édition</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
   <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
 
   <style>
     :root {
@@ -21,7 +23,10 @@
       --gray-900: #212529;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Inter', sans-serif;
       background: var(--gray-100);
@@ -33,10 +38,27 @@
 
     /* Impression */
     @media print {
-      .no-print, .action-bar, .sidebar, .topbar { display: none !important; }
-      body { background: white; padding: 15px; }
-      .doc-card { box-shadow: none; border: 1px solid #eee; }
-      .table-container { overflow: visible !important; }
+
+      .no-print,
+      .action-bar,
+      .sidebar,
+      .topbar {
+        display: none !important;
+      }
+
+      body {
+        background: white;
+        padding: 15px;
+      }
+
+      .doc-card {
+        box-shadow: none;
+        border: 1px solid #eee;
+      }
+
+      .table-container {
+        overflow: visible !important;
+      }
     }
 
     /* Action Bar */
@@ -45,7 +67,7 @@
       border-bottom: 1px solid #dee2e6;
       padding: 1rem 1.5rem;
       margin-bottom: 1.5rem;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
       position: sticky;
       top: 0;
       z-index: 10;
@@ -76,21 +98,45 @@
       font-weight: 600;
       font-size: 0.9rem;
       border: none;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       transition: all 0.25s;
     }
 
     .btn-modern:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
     }
 
-    .btn-send { background: var(--blue); color: white; }
-    .btn-send:hover { background: #0041a3; }
-    .btn-outline { background: white; color: var(--blue); border: 2px solid var(--blue); }
-    .btn-outline:hover { background: var(--blue-light); }
-    .btn-save { background: #16a34a; color: white; font-size: 1rem; padding: 0.8rem 2rem; }
-    .btn-add-line { background: #6366f1; color: white; }
+    .btn-send {
+      background: var(--blue);
+      color: white;
+    }
+
+    .btn-send:hover {
+      background: #0041a3;
+    }
+
+    .btn-outline {
+      background: white;
+      color: var(--blue);
+      border: 2px solid var(--blue);
+    }
+
+    .btn-outline:hover {
+      background: var(--blue-light);
+    }
+
+    .btn-save {
+      background: #16a34a;
+      color: white;
+      font-size: 1rem;
+      padding: 0.8rem 2rem;
+    }
+
+    .btn-add-line {
+      background: #6366f1;
+      color: white;
+    }
 
     td[contenteditable="true"] {
       outline: 2px dashed transparent;
@@ -110,7 +156,7 @@
       background: white;
       border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
       margin: 0 auto;
       max-width: 1000px;
     }
@@ -128,7 +174,9 @@
     }
 
     @media (min-width: 768px) {
-      .header-grid { grid-template-columns: 1fr 1fr; }
+      .header-grid {
+        grid-template-columns: 1fr 1fr;
+      }
     }
 
     .logo-title h1 {
@@ -156,7 +204,7 @@
       border: 2px solid var(--blue-light);
       border-radius: 16px;
       padding: 1.5rem;
-      box-shadow: 0 4px 15px rgba(0,82,204,0.08);
+      box-shadow: 0 4px 15px rgba(0, 82, 204, 0.08);
     }
 
     .fournisseur-box h5 {
@@ -286,7 +334,9 @@
     }
 
     @media (min-width: 640px) {
-      .signature-grid { grid-template-columns: 1fr 1fr; }
+      .signature-grid {
+        grid-template-columns: 1fr 1fr;
+      }
     }
 
     .sig-box {
@@ -314,16 +364,41 @@
 
     /* Mobile adjustments */
     @media (max-width: 576px) {
-      .action-bar { padding: 1rem; }
-      .action-bar h1 { font-size: 1.2rem; }
-      .btn-modern { padding: 0.6rem 1rem; font-size: 0.8rem; }
-      .doc-header { padding: 2rem 1.5rem; }
-      .logo-title h1 { font-size: 1.7rem; }
-      .table-section { padding: 1.5rem; }
-      .fournisseur-box { padding: 1.2rem; }
-      .info-line { font-size: 0.88rem; }
+      .action-bar {
+        padding: 1rem;
+      }
+
+      .action-bar h1 {
+        font-size: 1.2rem;
+      }
+
+      .btn-modern {
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
+      }
+
+      .doc-header {
+        padding: 2rem 1.5rem;
+      }
+
+      .logo-title h1 {
+        font-size: 1.7rem;
+      }
+
+      .table-section {
+        padding: 1.5rem;
+      }
+
+      .fournisseur-box {
+        padding: 1.2rem;
+      }
+
+      .info-line {
+        font-size: 0.88rem;
+      }
     }
-     /* NEW: Additional info section for User & Chantier */
+
+    /* NEW: Additional info section for User & Chantier */
     .additional-info {
       padding: 1.5rem 2rem;
       background: #f8fbff;
@@ -337,7 +412,9 @@
     }
 
     @media (min-width: 768px) {
-      .additional-info-grid { grid-template-columns: 1fr 1fr; }
+      .additional-info-grid {
+        grid-template-columns: 1fr 1fr;
+      }
     }
 
     .info-box {
@@ -356,543 +433,964 @@
       align-items: center;
       gap: 8px;
     }
-
   </style>
 </head>
+
 <body>
 
-<div id="wrapper">
-  <%- include('../../../layouts/sidebar') %>
-  <div id="content-wrapper" class="d-flex flex-column">
-    <div id="content">
-      <%- include('../../../layouts/topbar') %>
+  <div id="wrapper">
+    <%- include('../../../layouts/sidebar') %>
+      <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+          <%- include('../../../layouts/topbar') %>
 
-      <div class="container-fluid px-3 px-md-4">
+            <div class="container-fluid px-3 px-md-4">
 
-        <!-- Action Bar -->
-        <div class="action-bar no-print">
-          <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-            <h1 style="font-size: 1.2rem;">
-              <i class="fas fa-file-invoice-dollar"></i> Bon de Commande
-              <span class="badge">#<%= bc.id %></span>
-            </h1>
-            <div class="d-flex flex-wrap gap-1">
-              <button onclick="sendEmail()" class="btn btn-sm btn-modern btn-send d-flex align-items-center gap-1" id="btnSend">
-                <i class="fas fa-paper-plane"></i> <span>Envoyer</span>
-              </button>
-              <button class="btn btn-sm btn-modern btn-outline d-flex align-items-center gap-1" title="PDF" onclick="downloadPDF(<%= bc.id %>)">
-                <i class="fas fa-file-pdf"></i> <span>PDF</span>
-              </button>
-              <button id="btnSaveBc" class="btn btn-sm btn-modern btn-save d-flex align-items-center gap-1" title="Sauvegarder les modifications">
-                <i class="fas fa-save"></i> <span>Sauvegarder</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Document -->
-        <div class="doc-card">
-
-          <div class="doc-header">
-            <div class="header-grid">
-              <div class="logo-title">
-                <img src="/img/logo-4.png" alt="Logo" class="logo-img">
-                <h1>Bon De Commande</h1>
-                <input type="date" name="date" value="<%= new Date(bc.date).toISOString().slice(0,10) %>" hidden>
-                <p>N° <%= bc.numero || bc.id %> • <%= new Date(bc.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) %></p>
-              </div>
-
-              <div class="fournisseur-box">
-                <h5 class="mb-3"><i class="fas fa-building"></i> Fournisseur</h5>
-                <select id="fournisseurSelectBc" class="form-control mb-3" name="supplier">
-                  <option value="">-- Choisir un fournisseur --</option>
-                  <% fournisseurs.forEach(f => { %>
-                    <option value="<%= f.id %>" <%= f.id === bc.fournisseur.id ? 'selected' : '' %>><%= f.name %> <%= f.ville ? '- ' + f.ville : '' %></option>
-                  <% }) %>
-                </select>
-                <div class="small">
-                  <div class="info-line"><i class="fas fa-user-tie"></i> <strong id="fourNameBc"><%= bc.fournisseur.name %></strong></div>
-                  <div class="info-line"><i class="fas fa-envelope"></i> <span id="fourEmailBc"><%= bc.fournisseur.email %></span></div>
-                  <div class="info-line"><i class="fas fa-phone"></i> <span id="fourTelBc"><%= bc.fournisseur.telFournisseur || 'Non renseigné' %></span></div>
+              <!-- Action Bar -->
+              <div class="action-bar no-print">
+                <div
+                  class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+                  <h1 style="font-size: 1.2rem;">
+                    <i class="fas fa-file-invoice-dollar"></i> Bon de Commande
+                    <span class="badge">#<%= bc.id %></span>
+                  </h1>
+                  <div class="d-flex flex-wrap gap-1">
+                    <button onclick="sendEmail()" class="btn btn-sm btn-modern btn-send d-flex align-items-center gap-1"
+                      id="btnSend">
+                      <i class="fas fa-paper-plane"></i> <span>Envoyer</span>
+                    </button>
+                    <button class="btn btn-sm btn-modern btn-outline d-flex align-items-center gap-1" title="PDF"
+                      onclick="downloadPDF(<%= bc.id %>)">
+                      <i class="fas fa-file-pdf"></i> <span>PDF</span>
+                    </button>
+                    <button id="btnSaveBc" class="btn btn-sm btn-modern btn-save d-flex align-items-center gap-1"
+                      title="Sauvegarder les modifications">
+                      <i class="fas fa-save"></i> <span>Sauvegarder</span>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-           
 
-          <div class="table-section" >
-            <div class="table-container">
-              <table class="table-doc">
-                <thead>
-                  <tr>
-                    <th style="width:6%; text-align:center; border: 1px solid #dee2e6;">N°</th>
-                    <th style="width:34%; border: 1px solid #dee2e6;">Désignation</th>
-                    <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Unité</th>
-                    <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Quantité</th>
-                    <th style="width:18%; text-align:center; border: 1px solid #dee2e6;">Prix unitaire HT</th>
-                    <th style="width:18%; text-align:center; border: 1px solid #dee2e6;">Total HT</th>
-                    <th style="width:6%; text-align:center; border: 1px solid #dee2e6;">Action</th>
-                  </tr>
-                </thead>
-                <tbody id="bcBody">
-                  <% (bc.commandesItems || []).forEach((item, i) => { %>
-                    <tr class="bc-row" data-id="<%= item.id %>" style="background-color: <%= i % 2 === 0 ? '#ffffff' : '#f9fafb' %>; border: 1px solid #dee2e6;">
-                      <td style="text-align:center; border: 1px solid #dee2e6;">
-                        <div class="num-circle"><%= i + 1 %></div>
-                      </td>
-                      <td style="border: 1px solid #dee2e6;">
-                        <input
-                          type="text"
-                          class="form-control form-control-sm"
-                          style="font-weight:600; color:#1e293b; border-radius: 10px;"
-                          value="<%= item.designation || '' %>"
-                          data-field="designation"
-                        />
-                      </td>
-                      <td style="text-align:center; border: 1px solid #dee2e6;">
-                        <input
-                          type="text"
-                          class="form-control form-control-sm text-center"
-                          style="font-weight:600; border-radius: 999px; max-width: 110px; margin: 0 auto;"
-                          value="<%= item.unite || '' %>"
-                          data-field="unite"
-                        />
-                      </td>
-                      <td style="text-align:center; border: 1px solid #dee2e6;">
-                        <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          class="qty-pill"
-                          style="border:none; outline:none;"
-                          value="<%= item.quantite || 0 %>"
-                          data-field="quantite"
-                        />
-                      </td>
-                      <td style="text-align:right; border: 1px solid #dee2e6;">
-                        <input
-                          type="text"
-                          class="form-control form-control-sm text-right"
-                          style="border-radius: 10px; max-width: 140px; margin-left: auto;"
-                          value="<%= (item.prixUnitaire || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>"
-                          data-field="prixUnitaire"
-                        />
-                      </td>
-                      <td style="text-align:right; border: 1px solid #dee2e6;" data-field="totalHt">
-                        <%= (item.totalHt || (item.prixUnitaire || 0) * (item.quantite || 0)).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
-                        <input type="number" name="totalHt" id="totalHt" value="<%= item.totalHt || (item.prixUnitaire || 0) * (item.quantite || 0) %>" hidden />
-                      </td>
-                      <td style="text-align:center; border: 1px solid #dee2e6;">
-                        <button type="button" onclick="deleteBcRow(this)" class="btn btn-sm btn-modern btn-danger">
-                          <i class="fas fa-trash"></i>
-                        </button>
-                      </td>
-                    </tr>
-                  <% }) %>
-                </tbody>
-              </table>
-            </div>
-          </div>
+              <!-- Document -->
+              <div class="doc-card">
 
-          <!-- Bouton Ajouter ligne -->
-          <div class="table-section" style="padding-top: 0;" class="no-print">
-            <div class="text-center no-print">
-              <button type="button" onclick="addBcRow()" class="btn btn-modern btn-add-line">
-                Ajouter une ligne
-              </button>
-            </div>
-          </div>
-          
+                <div class="doc-header">
+                  <div class="header-grid">
+                    <div class="logo-title">
+                      <img src="/img/logo-4.png" alt="Logo" class="logo-img">
+                      <h1>Bon De Commande</h1>
+                      <input type="date" name="date" value="<%= new Date(bc.date).toISOString().slice(0,10) %>" hidden>
+                      <p>N° <%=  bc.id %> • <%= new Date(bc.date).toLocaleDateString('fr-FR', {
+                            weekday: 'long' , day: 'numeric' , month: 'long' , year: 'numeric' }) %>
+                      </p>
+                    </div>
 
-          <!-- Totals section -->
-          <div class="table-section" style="padding-top: 0;">
-            <div class="row justify-content-end">
-              <div class="col-md-6">
-                <table class="table table-sm mb-0">
-                  <tbody>
-                    <tr>
-                      <th class="text-right" style="border-top: none;">Total HT</th>
-                      <td class="text-right" style="border-top: none;">
-                        <span
-                          id="totalHtValue"
-                          data-total-ht="<%= bc.totalHt || 0 %>"
-                        >
-                          <%= (bc.totalHt || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
-                        </span>
-                      </td>
-                    </tr>
-                     <tr>
-                      <th class="text-right align-middle">Remise (%)</th>
-                      <td class="text-right">
-                        <div class="input-group input-group-sm justify-content-end" style="max-width: 180px; float: right;">
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            class="form-control text-right"
-                            id="remiseInput"
-                            value="<%= bc.tauxRemise || 0 %>"
-                          />
-                          <div class="input-group-append">
-                            <span class="input-group-text">%</span>
-                          </div>
+                    <div class="fournisseur-box">
+                      <h5 class="mb-3"><i class="fas fa-building"></i> Fournisseur</h5>
+                      <select id="fournisseurSelectBc" class="form-control mb-3" name="supplier">
+                        <option value="">-- Choisir un fournisseur --</option>
+                        <% fournisseurs.forEach(f=> { %>
+                          <option value="<%= f.id %>" <%=f.id===bc.fournisseur.id ? 'selected' : '' %>><%= f.name %>
+                              <%= f.ville ? '- ' + f.ville : '' %>
+                          </option>
+                          <% }) %>
+                      </select>
+                      <div class="small">
+                        <div class="info-line"><i class="fas fa-user-tie"></i> <strong id="fourNameBc">
+                            <%= bc.fournisseur.name %>
+                          </strong></div>
+                        <div class="info-line"><i class="fas fa-envelope"></i> <span id="fourEmailBc">
+                            <%= bc.fournisseur.email %>
+                          </span></div>
+                        <div class="info-line"><i class="fas fa-phone"></i> <span id="fourTelBc">
+                            <%= bc.fournisseur.telFournisseur || 'Non renseigné' %>
+                          </span></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+
+                <div class="col-12 mt-3">
+                  <div class="fournisseur-box">
+                    <h5 class="mb-3"><i class="fas fa-hard-hat"></i> Chantiers</h5>
+                        <div id="chantierCheckboxes">
+                          <!-- Multi-select + tags for chantiers -->
+                          <select id="chantierSelect" class="form-control" multiple size="6" style="min-height:120px;">
+                            <% chantiers.forEach(ch=> {
+                                const isUsed = bc.commandesItems.some(item => (item.BondeCommandeChantierItem || []).some(bcci => bcci.chantierId === ch.id));
+                              %>
+                              <option value="<%= ch.id %>" data-chantier-name="<%= ch.nom %>" <%= isUsed ? 'selected' : '' %>><%= ch.nom %></option>
+                            <% }) %>
+                          </select>
                         </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <th class="text-right">Montant remise</th>
-                      <td class="text-right">
-                        <span id="montantRemiseValue">
-                          <% const _totalHtTmp = bc.totalHt || 0; %>
-                          <% const _tauxRemiseTmp = bc.tauxRemise || 0; %>
-                          <%= (_totalHtTmp * _tauxRemiseTmp / 100).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
-                          <input type="number" name="montantRemise" id="montantRemise" value="<%= bc.montantRemise || 0 %>" hidden />
-                        </span>
-                      </td>
-                    </tr>
-                   
-                    <tr>
-                      <th class="text-right">Net commercial</th>
-                      <td class="text-right">
-                        <span
-                          id="netCommercialValue"
-                          data-net-commercial="<%= bc.netCommercial || 0 %>"
-                        >
-                          <%= (bc.netCommercial || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
-                        </span>
+                  </div>
+                </div>
 
-                        <input type="number" name="netCommercial" id="netCommercial" value="<%= bc.netCommercial || 0 %>" hidden />
-                      </td>
-                    </tr>
-                    
-                    <tr>
-                      <th class="text-right align-middle">TVA (%)</th>
-                      <td class="text-right">
-                        <div class="input-group input-group-sm justify-content-end" style="max-width: 180px; float: right;">
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            class="form-control text-right"
-                            id="tvaInput"
-                            value="<%= bc.tauxTva || 0 %>"
-                          />
-                          <div class="input-group-append">
-                            <span class="input-group-text">%</span>
-                          </div>
+                <div class="table-section">
+                  <div class="table-container">
+                    <table class="table-doc">
+                      <thead>
+                        <tr>
+                          <th style="width:6%; text-align:center; border: 1px solid #dee2e6;">N°</th>
+                          <th style="width:34%; border: 1px solid #dee2e6;">Désignation</th>
+                          <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Unité</th>
+                          <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Quantité</th>
+                          <th style="width:18%; text-align:center; border: 1px solid #dee2e6;">Prix unitaire HT</th>
+                          <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Total HT</th>
+                          <th style="width:20%; text-align:center; border: 1px solid #dee2e6;">Affectation</th>
+                          <th style="width:6%; text-align:center; border: 1px solid #dee2e6;">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody id="bcBody">
+                        <% (bc.commandesItems || []).forEach((item, i)=> {
+                          const distributionData = (item.BondeCommandeChantierItem || []).map(d => ({
+                          chantierId: String(d.chantierId),
+                          qty: d.qty,
+                          montant: d.montant
+                          }));
+                          const distributionJson = JSON.stringify(distributionData);
+                          %>
+                          <tr class="bc-row" data-id="<%= item.id %>" data-distribution='<%= distributionJson %>'
+                            style="background-color: <%= i % 2 === 0 ? '#ffffff' : '#f9fafb' %>; border: 1px solid #dee2e6;">
+                            <td style="text-align:center; border: 1px solid #dee2e6;">
+                              <div class="num-circle">
+                                <%= i + 1 %>
+                              </div>
+                            </td>
+                            <td style="border: 1px solid #dee2e6;">
+                              <input type="text" class="form-control form-control-sm"
+                                style="font-weight:600; color:#1e293b; border-radius: 10px;"
+                                value="<%= item.designation || '' %>" data-field="designation" />
+                            </td>
+                            <td style="text-align:center; border: 1px solid #dee2e6;">
+                              <input type="text" class="form-control form-control-sm text-center"
+                                style="font-weight:600; border-radius: 999px; max-width: 110px; margin: 0 auto;"
+                                value="<%= item.unite || '' %>" data-field="unite" />
+                            </td>
+                            <td style="text-align:center; border: 1px solid #dee2e6;">
+                              <input type="number" min="0" step="1" class="qty-pill item-total-qty"
+                                style="border:none; outline:none;" value="<%= item.quantite || 0 %>"
+                                data-field="quantite" />
+                            </td>
+                            <td style="text-align:right; border: 1px solid #dee2e6;">
+                              <input type="text" class="form-control form-control-sm text-right"
+                                style="border-radius: 10px; max-width: 140px; margin-left: auto;"
+                                value="<%= (item.prixUnitaire || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>"
+                                data-field="prixUnitaire" />
+                            </td>
+                            <td style="text-align:right; border: 1px solid #dee2e6;" data-field="totalHt">
+                              <%= (item.totalHt || (item.prixUnitaire || 0) * (item.quantite ||
+                                0)).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                                <input type="number" name="totalHt" id="totalHt"
+                                  value="<%= item.totalHt || (item.prixUnitaire || 0) * (item.quantite || 0) %>"
+                                  hidden />
+                            </td>
+                            <td style="border: 1px solid #dee2e6;">
+                              <button type="button"
+                                class="<%= distributionData.length > 0 ? 'btn btn-sm btn-success' : 'btn btn-sm btn-primary' %>"
+                                onclick="openDistributionModal(this)">
+                                <% if (distributionData.length> 0) { %>
+                                  <i class="fas fa-check"></i> Distribué (<%= distributionData.length %>)
+                                    <% } else { %>
+                                      <i class="fas fa-share-alt"></i> Distribuer
+                                      <% } %>
+                              </button>
+                              <div class="distribution-container" style="display:none;"></div>
+                            </td>
+                            <td style="text-align:center; border: 1px solid #dee2e6;">
+                              <button type="button" onclick="deleteBcRow(this)"
+                                class="btn btn-sm btn-modern btn-danger">
+                                <i class="fas fa-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
+                          <% }) %>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Bouton Ajouter ligne -->
+                <div class="table-section" style="padding-top: 0;" class="no-print">
+                  <div class="text-center no-print">
+                    <button type="button" onclick="addBcRow()" class="btn btn-modern btn-add-line">
+                      Ajouter une ligne
+                    </button>
+                  </div>
+                </div>
+
+
+                <!-- Totals section -->
+                <div class="table-section" style="padding-top: 0;">
+                  <div class="row justify-content-end">
+                    <div class="col-md-6">
+                      <table class="table table-sm mb-0">
+                        <tbody>
+                          <tr>
+                            <th class="text-right" style="border-top: none;">Total HT</th>
+                            <td class="text-right" style="border-top: none;">
+                              <span id="totalHtValue" data-total-ht="<%= bc.totalHt || 0 %>">
+                                <%= (bc.totalHt || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2 }) %>
+                              </span>
+                            </td>
+                          </tr>
+                          <tr>
+                            <th class="text-right align-middle">Remise (%)</th>
+                            <td class="text-right">
+                              <div class="input-group input-group-sm justify-content-end"
+                                style="max-width: 180px; float: right;">
+                                <input type="number" step="0.01" min="0" class="form-control text-right"
+                                  id="remiseInput" value="<%= bc.tauxRemise || 0 %>" />
+                                <div class="input-group-append">
+                                  <span class="input-group-text">%</span>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <th class="text-right">Montant remise</th>
+                            <td class="text-right">
+                              <span id="montantRemiseValue">
+                                <% const _totalHtTmp=bc.totalHt || 0; %>
+                                  <% const _tauxRemiseTmp=bc.tauxRemise || 0; %>
+                                    <%= (_totalHtTmp * _tauxRemiseTmp / 100).toLocaleString('fr-FR', {
+                                      minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                                      <input type="number" name="montantRemise" id="montantRemise"
+                                        value="<%= bc.montantRemise || 0 %>" hidden />
+                              </span>
+                            </td>
+                          </tr>
+
+                          <tr>
+                            <th class="text-right">Net commercial</th>
+                            <td class="text-right">
+                              <span id="netCommercialValue" data-net-commercial="<%= bc.netCommercial || 0 %>">
+                                <%= (bc.netCommercial || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2 }) %>
+                              </span>
+
+                              <input type="number" name="netCommercial" id="netCommercial"
+                                value="<%= bc.netCommercial || 0 %>" hidden />
+                            </td>
+                          </tr>
+
+                          <tr>
+                            <th class="text-right align-middle">TVA (%)</th>
+                            <td class="text-right">
+                              <div class="input-group input-group-sm justify-content-end"
+                                style="max-width: 180px; float: right;">
+                                <input type="number" step="0.01" min="0" class="form-control text-right" id="tvaInput"
+                                  value="<%= bc.tauxTva || 0 %>" />
+                                <div class="input-group-append">
+                                  <span class="input-group-text">%</span>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <th class="text-right">Montant TVA</th>
+                            <td class="text-right">
+                              <span id="montantTvaValue">
+                                <% const _netTmp=bc.netCommercial || _totalHtTmp; %>
+                                  <% const _tauxTvaTmp=bc.tauxTva || 0; %>
+                                    <%= (_netTmp * _tauxTvaTmp / 100).toLocaleString('fr-FR', { minimumFractionDigits:
+                                      2, maximumFractionDigits: 2 }) %>
+                              </span>
+                              <input type="number" name="montantTva" id="montantTva" value="<%= bc.montantTva || 0 %>"
+                                hidden />
+                            </td>
+                          </tr>
+                          <tr>
+                            <th class="text-right">Total TTC</th>
+                            <td class="text-right font-weight-bold">
+                              <span id="totalTtcValue" data-total-ttc="<%= bc.totalTtc || 0 %>">
+                                <%= (bc.totalTtc || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2 }) %>
+                              </span>
+                              <input type="number" name="totalTtc" id="totalTtc" value="<%= bc.totalTtc || 0 %>"
+                                hidden />
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Montant en lettres -->
+                <div class="table-section" style="padding-top: 0;">
+                  <div class="row">
+                    <div class="col-12">
+                      <div class="montant-lettres-box">
+                        <span class="montant-lettres-label">Montant en lettres :</span>
+                        <span class="montant-lettres-value" id="montantLettresValue">&nbsp;</span>
+                        <input type="text" name="montantLettre" id="montantLettresInp"
+                          value="<%= bc.montantLettre || '' %>" hidden />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- NEW SECTION: User & Chantier Information -->
+                <div class="additional-info">
+                  <div class="additional-info-grid">
+                    <div class="info-box">
+                      <h6><i class="fas fa-user"></i> Utilisateur</h6>
+                      <div class="info-line">
+                        <i class="fas fa-id-badge"></i>
+                        <span><strong>
+                            <%= typeof bonCommande !=='undefined' ? bonCommande.demandeur : (bc ? bc.demandeur : '' ) %>
+                          </strong></span>
+                      </div>
+                    </div>
+
+                    <div class="info-box">
+                      <h6><i class="fas fa-hard-hat"></i> Chantier</h6>
+                      <div class="info-line">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <% const chantierNames=new Set(); bc.commandesItems.forEach(item=> {
+                          item.BondeCommandeChantierItem.forEach(bcci => {
+                          if (bcci.chantier && bcci.chantier.nom) {
+                          chantierNames.add(bcci.chantier.nom);
+                          }
+                          });
+                          });
+                          %>
+
+                          <span><strong>
+                              <%= Array.from(chantierNames).join(', ') || ' Non renseigné' %>
+                            </strong></span>
+
+
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="signature-area">
+                    <div class="signature-grid">
+                      <div class="sig-box">
+                        <h6>Signature du direction</h6>
+                        <div class="sig-line"></div>
+                      </div>
+                      <div class="sig-box">
+                        <h6>Le Responsable Achats</h6>
+                        <div class="sig-line">
+                          <img src="/img/signature.png" alt="logo-pw" style="width: 240px; height: 150px;">
+
                         </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <th class="text-right">Montant TVA</th>
-                      <td class="text-right">
-                        <span id="montantTvaValue">
-                          <% const _netTmp = bc.netCommercial || _totalHtTmp; %>
-                          <% const _tauxTvaTmp = bc.tauxTva || 0; %>
-                          <%= (_netTmp * _tauxTvaTmp / 100).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
-                        </span>
-                        <input type="number" name="montantTva" id="montantTva" value="<%= bc.montantTva || 0 %>" hidden />
-                      </td>
-                    </tr>
-                    <tr>
-                      <th class="text-right">Total TTC</th>
-                      <td class="text-right font-weight-bold">
-                        <span
-                          id="totalTtcValue"
-                          data-total-ttc="<%= bc.totalTtc || 0 %>"
-                        >
-                          <%= (bc.totalTtc || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
-                        </span>
-                        <input type="number" name="totalTtc" id="totalTtc" value="<%= bc.totalTtc || 0 %>" hidden />
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          <!-- Montant en lettres -->
-          <div class="table-section" style="padding-top: 0;">
-            <div class="row">
-              <div class="col-12">
-                <div class="montant-lettres-box">
-                  <span class="montant-lettres-label">Montant en lettres :</span>
-                  <span class="montant-lettres-value" id="montantLettresValue">&nbsp;</span>
-                  <input type="text" 
-                   name="montantLettre" 
-                  id="montantLettresInp" 
-                  value="<%= bc.montantLettre || '' %>" hidden />
-                </div>
-              </div>
-            </div>
-          </div>
-            <!-- NEW SECTION: User & Chantier Information -->
-          <div class="additional-info">
-            <div class="additional-info-grid">
-              <div class="info-box">
-                <h6><i class="fas fa-user"></i> Utilisateur</h6>
-                <div class="info-line">
-                  <i class="fas fa-id-badge"></i>
-                  <span><strong>
-                    <%= typeof bonCommande !== 'undefined' ? bonCommande.demandeur : (bc ? bc.demandeur : '') %>
-                  </strong></span>
-                </div>
-              </div>
-
-              <div class="info-box">
-                <h6><i class="fas fa-hard-hat"></i> Chantier</h6>
-                <div class="info-line">
-                  <i class="fas fa-map-marker-alt"></i>
-                  <span><strong>
-                    <%= typeof bonCommande !== 'undefined' 
-                      ? (bonCommande.chantier?.nom || 'Non renseigné') 
-                      : (bc ? (bc.chantier?.nom || 'Non renseigné') : 'Non renseigné') %>
-                  </strong></span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="signature-area">
-            <div class="signature-grid">
-              <div class="sig-box">
-                <h6>Signature du direction</h6>
-                <div class="sig-line"></div>
-              </div>
-              <div class="sig-box">
-                <h6>Le Responsable Achats</h6>
-                <div class="sig-line">
-              <img src="/img/signature.png" alt="logo-pw" style="width: 240px; height: 150px;">
+                      </div>
+                    </div>
+                  </div>
 
                 </div>
               </div>
             </div>
-          </div>
-
         </div>
       </div>
-    </div>
-  </div>
-</div>
 
-<!-- Scripts -->
-<script src="/vendor/jquery/jquery.min.js"></script>
-<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+      <!-- Scripts -->
+      <script src="/vendor/jquery/jquery.min.js"></script>
+      <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
-<script>
-  function sendEmail() {
-    const btn = $('#btnSend');
-    btn.html('<i class="fas fa-spinner fa-spin"></i> Envoi...').prop('disabled', true);
+      <script>
+        function sendEmail() {
+          const btn = $('#btnSend');
+          btn.html('<i class="fas fa-spinner fa-spin"></i> Envoi...').prop('disabled', true);
 
-    $.post('/api/bc/<%= bc.id %>/send-email', {
-      email: '<%= bc.fournisseur.email %>'
-    })
-    .done(() => {
-      alert('Email envoyé avec succès !');
-    })
-    .fail(() => {
-      alert('Échec de l\'envoi !');
-    })
-    .always(() => {
-      btn.html('<i class="fas fa-paper-plane"></i> <span>Envoyer</span>').prop('disabled', false);
-    });
-  }
-
-  function downloadPDF(id) {
-    if (!id) return;
-    window.location.href = `/achat/bc/${id}/pdf`;
-  }
-
-  // Fournisseurs data for BC edit (UI only)
-  const fournisseursDataBc = <%- JSON.stringify(fournisseurs.map(f => ({
-    id: String(f.id),
-    name: f.name || '',
-    email: f.email || '',
-    tel: f.telFournisseur || ''
-  }))) %>;
-
-  const selectBc = document.getElementById('fournisseurSelectBc');
-  if (selectBc) {
-    selectBc.addEventListener('change', function () {
-      const f = fournisseursDataBc.find(x => x.id === this.value);
-      if (f) {
-        const nameEl = document.getElementById('fourNameBc');
-        const emailEl = document.getElementById('fourEmailBc');
-        const telEl = document.getElementById('fourTelBc');
-        if (nameEl) nameEl.textContent = f.name;
-        if (emailEl) emailEl.textContent = f.email;
-        if (telEl) telEl.textContent = f.tel || 'Non renseigné';
-      }
-    });
-  }
-
-  // Gestion de la sauvegarde du bon de commande
-  const btnSaveBc = document.getElementById('btnSaveBc');
-  if (btnSaveBc) {
-    btnSaveBc.addEventListener('click', function() {
-      const btn = this;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sauvegarde...';
-      btn.disabled = true;
-
-      const data = collectPayload();
-
-      // Validation basique côté client
-      if (!data.supplier || Number.isNaN(data.supplier)) {
-        alert('Sélectionnez un fournisseur.');
-        btn.innerHTML = 'SAUVEGARDER LES MODIFICATIONS';
-        btn.disabled = false;
-        return;
-      }
-      const d = new Date(data.date);
-      if (!(d instanceof Date) || isNaN(d.getTime())) {
-        alert('La date est invalide.');
-        btn.innerHTML = 'SAUVEGARDER LES MODIFICATIONS';
-        btn.disabled = false;
-        return;
-      }
-
-      try { console.log('Payload bon de commande', data); } catch(e) {}
-
-      fetch('/achat/bc/<%= bc.id %>', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)  
-      })
-      .then(r => r.json())
-      .then(res => {
-        btn.innerHTML = '<i class="fas fa-check"></i> Sauvegardé !';
-        btn.style.background = '#10b981';
-        setTimeout(() => location.reload(), 1500);
-      })
-      .catch(() => {
-        btn.innerHTML = '<i class="fas fa-times"></i> Erreur';
-        btn.style.background = '#ef4444';
-        setTimeout(() => {
-          btn.innerHTML = 'SAUVEGARDER LES MODIFICATIONS';
-          btn.disabled = false;
-          btn.style.background = '';
-        }, 2000);
-      });
-    });
-  }
-
-  // --- Conversion nombre -> texte FR (inspiré du chèque BMCI) ---
-  function bcNumberToFrenchWords(number) {
-    if (!Number.isInteger(number)) {
-      number = Math.trunc(number);
-    }
-
-    if (number < 0) {
-      return "moins " + bcNumberToFrenchWords(Math.abs(number));
-    }
-
-    const units = ["", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf"];
-    const teens = ["dix", "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept", "dix-huit", "dix-neuf"];
-    const tens = ["", "", "vingt", "trente", "quarante", "cinquante", "soixante", "", "quatre-vingt", ""];
-    const thousands = ["", "mille", "million", "milliard"];
-
-    function convertLessThanThousand(n) {
-      if (n === 0) return "";
-      let result = "";
-
-      if (n >= 100) {
-        const hundreds = Math.floor(n / 100);
-        if (hundreds === 1) {
-          result += "cent";
-        } else {
-          result += units[hundreds] + " cent";
+          $.post('/api/bc/<%= bc.id %>/send-email', {
+            email: '<%= bc.fournisseur.email %>'
+          })
+            .done(() => {
+              alert('Email envoyé avec succès !');
+            })
+            .fail(() => {
+              alert('Échec de l\'envoi !');
+            })
+            .always(() => {
+              btn.html('<i class="fas fa-paper-plane"></i> <span>Envoyer</span>').prop('disabled', false);
+            });
         }
-        if (n % 100 === 0 && hundreds > 1) {
-          result += "s";
-        }
-        if (n % 100 > 0) {
-          result += " ";
-        }
-        n %= 100;
-      }
 
-      if (n > 0) {
-        if (n >= 20) {
-          const tenIndex = Math.floor(n / 10);
-          const unit = n % 10;
-          if (tenIndex === 7 || tenIndex === 9) {
-            const base = tenIndex === 7 ? "soixante" : "quatre-vingt";
-            if (unit === 0) {
-              result += base + "-" + teens[0];
-            } else {
-              result += base + "-" + teens[unit];
+        function downloadPDF(id) {
+          if (!id) return;
+          window.location.href = `/achat/bc/${id}/pdf`;
+        }
+
+        // Fournisseurs data for BC edit (UI only)
+        const fournisseursDataBc = <%- JSON.stringify(fournisseurs.map(f => ({
+          id: String(f.id),
+          name: f.name || '',
+          email: f.email || '',
+          tel: f.telFournisseur || ''
+        }))) %>;
+
+        const selectBc = document.getElementById('fournisseurSelectBc');
+        if (selectBc) {
+          selectBc.addEventListener('change', function () {
+            const f = fournisseursDataBc.find(x => x.id === this.value);
+            if (f) {
+              const nameEl = document.getElementById('fourNameBc');
+              const emailEl = document.getElementById('fourEmailBc');
+              const telEl = document.getElementById('fourTelBc');
+              if (nameEl) nameEl.textContent = f.name;
+              if (emailEl) emailEl.textContent = f.email;
+              if (telEl) telEl.textContent = f.tel || 'Non renseigné';
             }
+
+            // (No-op) chantier UI is initialized globally with Choices.js
+          });
+        }
+
+        // Initialize Choices.js for chantierSelect to provide professional tag UI
+        (function initChantierChoices(){
+          const sel = document.getElementById('chantierSelect');
+          if (!sel || typeof Choices === 'undefined') return;
+          window.chantierChoices = new Choices(sel, {
+            removeItemButton: true,
+            placeholderValue: 'Sélectionner des chantiers',
+            shouldSort: false,
+            searchPlaceholderValue: 'Rechercher...'
+          });
+        })();
+
+        // Gestion de la sauvegarde du bon de commande
+        const btnSaveBc = document.getElementById('btnSaveBc');
+        if (btnSaveBc) {
+          btnSaveBc.addEventListener('click', function () {
+            const btn = this;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sauvegarde...';
+            btn.disabled = true;
+
+            const data = collectPayload();
+
+            // Validation basique côté client
+            if (!data.supplier || Number.isNaN(data.supplier)) {
+              alert('Sélectionnez un fournisseur.');
+              btn.innerHTML = 'SAUVEGARDER LES MODIFICATIONS';
+              btn.disabled = false;
+              return;
+            }
+            const d = new Date(data.date);
+            if (!(d instanceof Date) || isNaN(d.getTime())) {
+              alert('La date est invalide.');
+              btn.innerHTML = 'SAUVEGARDER LES MODIFICATIONS';
+              btn.disabled = false;
+              return;
+            }
+
+            try { console.log('Payload bon de commande', data); } catch (e) { }
+
+            fetch('/achat/bc/<%= bc.id %>', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data)
+            })
+              .then(r => r.json())
+              .then(res => {
+                btn.innerHTML = '<i class="fas fa-check"></i> Sauvegardé !';
+                btn.style.background = '#10b981';
+                setTimeout(() => location.reload(), 1500);
+              })
+              .catch(() => {
+                btn.innerHTML = '<i class="fas fa-times"></i> Erreur';
+                btn.style.background = '#ef4444';
+                setTimeout(() => {
+                  btn.innerHTML = 'SAUVEGARDER LES MODIFICATIONS';
+                  btn.disabled = false;
+                  btn.style.background = '';
+                }, 2000);
+              });
+          });
+        }
+
+        // --- Conversion nombre -> texte FR (inspiré du chèque BMCI) ---
+        function bcNumberToFrenchWords(number) {
+          if (!Number.isInteger(number)) {
+            number = Math.trunc(number);
+          }
+
+          if (number < 0) {
+            return "moins " + bcNumberToFrenchWords(Math.abs(number));
+          }
+
+          const units = ["", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf"];
+          const teens = ["dix", "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept", "dix-huit", "dix-neuf"];
+          const tens = ["", "", "vingt", "trente", "quarante", "cinquante", "soixante", "", "quatre-vingt", ""];
+          const thousands = ["", "mille", "million", "milliard"];
+
+          function convertLessThanThousand(n) {
+            if (n === 0) return "";
+            let result = "";
+
+            if (n >= 100) {
+              const hundreds = Math.floor(n / 100);
+              if (hundreds === 1) {
+                result += "cent";
+              } else {
+                result += units[hundreds] + " cent";
+              }
+              if (n % 100 === 0 && hundreds > 1) {
+                result += "s";
+              }
+              if (n % 100 > 0) {
+                result += " ";
+              }
+              n %= 100;
+            }
+
+            if (n > 0) {
+              if (n >= 20) {
+                const tenIndex = Math.floor(n / 10);
+                const unit = n % 10;
+                if (tenIndex === 7 || tenIndex === 9) {
+                  const base = tenIndex === 7 ? "soixante" : "quatre-vingt";
+                  if (unit === 0) {
+                    result += base + "-" + teens[0];
+                  } else {
+                    result += base + "-" + teens[unit];
+                  }
+                } else {
+                  result += tens[tenIndex];
+                  if (unit === 1 && tenIndex !== 8) {
+                    result += "-et-" + units[unit];
+                  } else if (unit > 0) {
+                    result += "-" + units[unit];
+                  } else if (tenIndex === 8 && unit === 0) {
+                    result += "s"; // quatre-vingts
+                  }
+                }
+              } else if (n >= 10) {
+                result += teens[n - 10];
+              } else {
+                result += units[n];
+              }
+            }
+
+            return result.trim();
+
+          }
+
+          function numberToWords(n) {
+            if (n === 0) return "zéro";
+
+            let parts = [];
+            let index = 0;
+
+            while (n > 0) {
+              let chunk = n % 1000;
+              if (chunk > 0) {
+                let chunkText = convertLessThanThousand(chunk);
+                if (index === 1) {
+                  if (chunk === 1) {
+                    chunkText = "mille";
+                  } else {
+                    chunkText += " mille";
+                  }
+                } else if (index > 1) {
+                  chunkText += " " + thousands[index];
+                  if (chunk > 1) {
+                    chunkText += "s";
+                  }
+                }
+                parts.unshift(chunkText);
+              }
+              n = Math.floor(n / 1000);
+              index++;
+            }
+
+            return parts.join(" ").trim();
+          }
+
+          return numberToWords(number);
+        }
+
+        // --- NEW: Distribution Logic (Fixed & Robust) ---
+        window.openDistributionModal = function (button) {
+          console.log("Opening distribution modal...");
+
+          if (typeof $ === 'undefined') {
+            alert("Erreur: jQuery n'est pas chargé.");
+            return;
+          }
+
+          const row = button.closest('tr');
+          // Always read fresh totalQty from input at modal open time (NOT stale)
+          const totalQtyInput = row.querySelector('input[data-field="quantite"].item-total-qty') || row.querySelector('input[data-field="quantite"]') || row.querySelector('.item-total-qty');
+          let totalQty = 0;
+          if (totalQtyInput) {
+            const raw = (totalQtyInput.value || '').toString().trim();
+            const cleaned = raw.replace(/\s/g, '').replace(/,/g, '.');
+            totalQty = parseFloat(cleaned) || 0;
+          }
+
+          // Unit Price from the row
+          const priceInput = row.querySelector('input[data-field="prixUnitaire"]');
+          const rawPrice = (priceInput && priceInput.value ? priceInput.value : '').toString().trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+          const unitPrice = parseFloat(rawPrice || '0') || 0;
+
+          if (totalQty <= 0) {
+            alert('Veuillez d\'abord entrer une quantité totale pour cet article.');
+            return;
+          }
+
+          // Get selected chantiers (Choices.js if available)
+          const selectedChantiers = [];
+          const chantierSelect = document.getElementById('chantierSelect');
+          if (chantierSelect) {
+            if (window.chantierChoices && typeof window.chantierChoices.getValue === 'function') {
+              const vals = window.chantierChoices.getValue(true) || [];
+              vals.forEach(v => {
+                const opt = chantierSelect.querySelector(`option[value="${v}"]`);
+                selectedChantiers.push({ id: v, name: opt ? (opt.dataset.chantierName || opt.textContent) : v });
+              });
+            } else {
+              Array.from(chantierSelect.selectedOptions).forEach(opt => {
+                selectedChantiers.push({ id: opt.value, name: opt.dataset.chantierName || opt.text });
+              });
+            }
+          }
+
+          if (selectedChantiers.length === 0) {
+            alert('Veuillez sélectionner au moins un chantier dans la liste en haut.');
+            return;
+          }
+
+          // Load existing distribution data
+          let existingData = [];
+          try {
+            if (row.dataset.distribution) {
+              // Handle potential single-quote issues if they exist
+              const rawJson = row.dataset.distribution;
+              existingData = JSON.parse(rawJson);
+            }
+          } catch (e) {
+            console.error("Error parsing distribution data", e);
+            existingData = [];
+          }
+
+          // Build modal content
+          let modalHTML = `
+            <div class="modal fade" id="distributionModal" tabindex="-1" role="dialog" aria-hidden="true">
+              <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Distribution des quantités</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <p><strong>Quantité totale:</strong> <span id="modalTotalQty">${totalQty}</span></p>
+                    <p><strong>Restant à distribuer:</strong> <span id="modalRemainingQty">${totalQty}</span></p>
+                    <table class="table table-bordered">
+                      <thead>
+                        <tr>
+                          <th>Chantier</th>
+                          <th>Quantité</th>
+                          <th>Montant</th>
+                        </tr>
+                      </thead>
+                      <tbody id="distributionTableBody">
+          `;
+
+          let totalAllocatedInit = 0;
+          selectedChantiers.forEach(ch => {
+            // Find existing data for this chantier
+            // Note: existingData chantierId might be string or number, force string comparison
+            const saved = existingData.find(d => String(d.chantierId) === String(ch.id));
+            const qtyVal = saved ? saved.qty : 0;
+            const montantVal = saved ? saved.montant : 0;
+
+            totalAllocatedInit += parseFloat(qtyVal) || 0;
+            modalHTML += `
+              <tr data-chantier-id="${ch.id}">
+                <td>${ch.name}</td>
+                <td>
+                  <input 
+                    type="number" 
+                    class="form-control chantier-qty-input" 
+                    min="0" 
+                    step="1" 
+                    value="${qtyVal}" 
+                    data-chantier-id="${ch.id}"
+                  />
+                </td>
+                <td>
+                  <input 
+                    type="number" 
+                    class="form-control chantier-montant-input" 
+                    min="0" 
+                    step="0.01" 
+                    value="${montantVal}" 
+                    data-chantier-id="${ch.id}"
+                  />
+                </td>
+              </tr>
+            `;
+          });
+
+          modalHTML += `
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="window.saveDistribution()">Sauvegarder</button>
+                    
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+
+          // Remove existing modal if any
+          const existingModal = document.getElementById('distributionModal');
+          if (existingModal) {
+            existingModal.remove();
+            $('.modal-backdrop').remove(); // Cleanup backdrops just in case
+          }
+
+          // Append and show
+          document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+          try {
+            $('#distributionModal').modal('show');
+          } catch (e) {
+            console.error("Bootstrap modal error:", e);
+            alert("Erreur lors de l'ouverture du modal (Bootstrap).");
+          }
+
+          window.currentDistributionRow = row;
+
+          // Initial remaining qty display
+          const remainingInit = totalQty - totalAllocatedInit;
+          const remEl = document.getElementById('modalRemainingQty');
+          if (remEl) {
+            remEl.textContent = remainingInit;
+            remEl.style.color = remainingInit < 0 ? 'red' : 'green';
+          }
+
+          setupDistributionListeners(totalQty, unitPrice);
+
+          // Attach listener to quantity input to refresh modal if qty is changed while modal is open
+          if (totalQtyInput) {
+            const handleQtyChange = function () {
+              // Close modal and reopen with fresh quantity
+              const backdrop = document.querySelector('.modal-backdrop');
+              if (backdrop) {
+                $('#distributionModal').modal('hide');
+                setTimeout(() => {
+                  window.openDistributionModal(button);
+                }, 400);
+              }
+            };
+            // Clean up old listeners and add fresh one
+            totalQtyInput.removeEventListener('input', totalQtyInput._distModalListener);
+            totalQtyInput._distModalListener = handleQtyChange;
+            totalQtyInput.addEventListener('input', handleQtyChange);
+          }
+        };
+
+        window.setupDistributionListeners = function (totalQty, unitPrice) {
+          const qtyInputs = document.querySelectorAll('.chantier-qty-input');
+          qtyInputs.forEach(input => {
+            input.addEventListener('input', function () {
+              // 1. Update Remaining Qty
+              let totalAllocated = 0;
+              qtyInputs.forEach(inp => {
+                totalAllocated += parseFloat(inp.value) || 0;
+              });
+              const remaining = totalQty - totalAllocated;
+              const remEl = document.getElementById('modalRemainingQty');
+              remEl.textContent = remaining;
+
+              if (remaining < 0) {
+                remEl.style.color = 'red';
+              } else {
+                remEl.style.color = 'green';
+              }
+
+              // Auto-calculate Montant
+              const currentQty = parseFloat(this.value) || 0;
+              const newMontant = currentQty * unitPrice;
+              const row = this.closest('tr');
+              const montantInput = row.querySelector('.chantier-montant-input');
+              if (montantInput) {
+                montantInput.value = newMontant.toFixed(2);
+              }
+            });
+          });
+        };
+
+        window.saveDistribution = function () {
+          const row = window.currentDistributionRow;
+          if (!row) return;
+
+          // Step 1: First, update the item's basic data (qty, price, etc.) on the server
+          const itemId = row.getAttribute('data-id');
+          
+          // Extract current item data from the row
+          const designationInput = row.querySelector('input[data-field="designation"]');
+          const uniteInput = row.querySelector('input[data-field="unite"]');
+          const quantiteInput = row.querySelector('input[data-field="quantite"]');
+          const prixUnitaireInput = row.querySelector('input[data-field="prixUnitaire"]');
+          
+          const designation = (designationInput && designationInput.value) || '';
+          const unite = (uniteInput && uniteInput.value) || '';
+          const quantiteRaw = (quantiteInput && quantiteInput.value) || '0';
+          const quantiteStr = quantiteRaw.toString().trim().replace(/\s/g, '').replace(/,/g, '.');
+          const quantite = parseFloat(quantiteStr) || 0;
+          const prixRaw = (prixUnitaireInput && prixUnitaireInput.value) || '0';
+          const prixStr = prixRaw.toString().trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(/,/g, '.');
+          const prixUnitaire = parseFloat(prixStr) || 0;
+
+          // Prepare distribution data
+          const distributionData = [];
+          document.querySelectorAll('#distributionTableBody tr').forEach(tr => {
+            const chantierId = tr.dataset.chantierId;
+            const qty = parseFloat(tr.querySelector('.chantier-qty-input').value) || 0;
+            const montant = parseFloat(tr.querySelector('.chantier-montant-input').value) || 0;
+
+            if (qty > 0 || montant > 0) {
+              distributionData.push({ chantierId, qty, montant });
+            }
+          });
+
+          // If this row has a server-side item ID, update the single item then its distribution.
+          const updateItemPayload = {
+            designation,
+            unite,
+            quantite,
+            prixUnitaire
+          };
+
+          if (itemId) {
+            fetch(`/achat/bc/item/${itemId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(updateItemPayload)
+            })
+              .then(r => r.json())
+              .then(resp1 => {
+                if (resp1 && resp1.success) {
+                  // Step 3: Now save distribution for this item
+                  return fetch(`/achat/bc/item/${itemId}/distribution`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ distribution: distributionData })
+                  });
+                } else {
+                  throw new Error('Échec de la sauvegarde des données de l\'article.');
+                }
+              })
+              .then(r => r.json())
+              .then(resp => {
+                if (resp && resp.success) {
+                  // store in dataset for UI sync
+                  row.dataset.distribution = JSON.stringify(distributionData);
+
+                  // Update button UI
+                  const button = row.querySelector('button[onclick*="openDistributionModal"]');
+                  if (button) {
+                    if (distributionData.length > 0) {
+                      button.innerHTML = '<i class="fas fa-check"></i> Distribué (' + distributionData.length + ')';
+                      button.classList.remove('btn-primary');
+                      button.classList.add('btn-success');
+                    } else {
+                      button.innerHTML = '<i class="fas fa-share-alt"></i> Distribuer';
+                      button.classList.remove('btn-success');
+                      button.classList.add('btn-primary');
+                    }
+                  }
+
+                  $('#distributionModal').modal('hide');
+                  window.location.reload();
+                } else {
+                  alert('Échec de la sauvegarde de la distribution.');
+                }
+              })
+              .catch(err => {
+                console.error('Erreur sauvegarde:', err);
+                alert('Erreur lors de la sauvegarde: ' + err.message);
+              });
           } else {
-            result += tens[tenIndex];
-            if (unit === 1 && tenIndex !== 8) {
-              result += "-et-" + units[unit];
-            } else if (unit > 0) {
-              result += "-" + units[unit];
-            } else if (tenIndex === 8 && unit === 0) {
-              result += "s"; // quatre-vingts
+            // No itemId: this is a new UI-only row. We must send the full BC payload so the server can create the item and persist its distribution.
+            try {
+              const payload = collectPayload();
+              // Find index of current row among table rows
+              const rows = Array.from(document.querySelectorAll('#bcBody tr'));
+              const rowIndex = rows.indexOf(row);
+              if (rowIndex === -1) throw new Error('Impossible de localiser la ligne dans le tableau');
+
+              // Ensure commandesItems exists and has same order as rows
+              if (!Array.isArray(payload.commandesItems) || payload.commandesItems.length !== rows.length) {
+                // Rebuild commandesItems to match rows
+                payload.commandesItems = rows.map(r => {
+                  const cells = r.cells;
+                  const rawQty = (cells[3].querySelector('input')?.value || '').toString();
+                  const rawPu = (cells[4].querySelector('input')?.value || '').toString();
+                  const qtyVal = rawQty.trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+                  const prixVal = rawPu.trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+                  const quantiteLocal = parseFloat(qtyVal || '0') || 0;
+                  const prixUnitaireLocal = parseFloat(prixVal || '0') || 0;
+                  return {
+                    id: parseInt(r.getAttribute('data-id')) || null,
+                    designation: (cells[1].querySelector('input')?.value || '').trim(),
+                    unite: (cells[2].querySelector('input')?.value || '').trim(),
+                    quantite: quantiteLocal,
+                    prixUnitaire: prixUnitaireLocal,
+                    totalHt: quantiteLocal * prixUnitaireLocal,
+                    chantierDistribution: r.dataset.distribution ? JSON.parse(r.dataset.distribution) : []
+                  };
+                });
+              }
+
+              // Overwrite the current row's chantierDistribution with the freshly edited distribution
+              payload.commandesItems[rowIndex].chantierDistribution = distributionData;
+
+              // Call update BC endpoint to persist new item + its distribution
+              fetch(`/achat/bc/<%= bc.id %>`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              })
+                .then(r => r.json())
+                .then(res => {
+                  if (res && res.success) {
+                    $('#distributionModal').modal('hide');
+                    window.location.reload();
+                  } else {
+                    throw new Error(res && res.error ? res.error : 'Échec sauvegarde BC');
+                  }
+                })
+                .catch(err => {
+                  console.error('Erreur création ligne + distribution:', err);
+                  alert('Erreur lors de la sauvegarde: ' + (err.message || err));
+                });
+            } catch (e) {
+              console.error('Erreur préparation payload:', e);
+              alert('Erreur lors de la préparation des données: ' + e.message);
             }
           }
-        } else if (n >= 10) {
-          result += teens[n - 10];
-        } else {
-          result += units[n];
-        }
-      }
+        };
 
-      return result.trim();
+        // Ajouter une nouvelle ligne de BC (inspiré de Demande de prix)
+        function addBcRow() {
+          const tbody = document.getElementById('bcBody');
+          if (!tbody) return;
 
-    }
+          const index = tbody.querySelectorAll('tr.bc-row').length + 1;
+          const tr = document.createElement('tr');
+          tr.className = 'bc-row';
+          tr.style.backgroundColor = index % 2 === 1 ? '#ffffff' : '#f9fafb';
+          tr.style.border = '1px solid #dee2e6';
 
-    function numberToWords(n) {
-      if (n === 0) return "zéro";
-
-      let parts = [];
-      let index = 0;
-
-      while (n > 0) {
-        let chunk = n % 1000;
-        if (chunk > 0) {
-          let chunkText = convertLessThanThousand(chunk);
-          if (index === 1) {
-            if (chunk === 1) {
-              chunkText = "mille";
-            } else {
-              chunkText += " mille";
-            }
-          } else if (index > 1) {
-            chunkText += " " + thousands[index];
-            if (chunk > 1) {
-              chunkText += "s";
-            }
-          }
-          parts.unshift(chunkText);
-        }
-        n = Math.floor(n / 1000);
-        index++;
-      }
-
-      return parts.join(" ").trim();
-    }
-
-    return numberToWords(number);
-  }
-  
-  // Ajouter une nouvelle ligne de BC (inspiré de Demande de prix)
-  function addBcRow() {
-    const tbody = document.getElementById('bcBody');
-    if (!tbody) return;
-
-    const index = tbody.querySelectorAll('tr.bc-row').length + 1;
-    const tr = document.createElement('tr');
-    tr.className = 'bc-row';
-    tr.style.backgroundColor = index % 2 === 1 ? '#ffffff' : '#f9fafb';
-    tr.style.border = '1px solid #dee2e6';
-
-    tr.innerHTML = `
+          tr.innerHTML = `
       <td style="text-align:center; border: 1px solid #dee2e6;">
         <div class="num-circle">${index}</div>
       </td>
@@ -915,15 +1413,15 @@
         />
       </td>
       <td style="text-align:center; border: 1px solid #dee2e6;">
-        <input
-          type="number"
-          min="0"
-          step="1"
-          class="qty-pill"
-          style="border:none; outline:none;"
-          value="0"
-          data-field="quantite"
-        />
+          <input
+            type="number"
+            min="0"
+            step="1"
+            class="qty-pill item-total-qty"
+            style="border:none; outline:none;"
+            value="0"
+            data-field="quantite"
+          />
       </td>
       <td style="text-align:right; border: 1px solid #dee2e6;">
         <input
@@ -937,223 +1435,235 @@
       <td style="text-align:right; border: 1px solid #dee2e6;" data-field="totalHt">
         0,00
       </td>
+      <td style="border: 1px solid #dee2e6;">
+        <button 
+          type="button" 
+          class="btn btn-sm btn-primary" 
+          onclick="openDistributionModal(this)"
+        >
+          <i class="fas fa-share-alt"></i> Distribuer
+        </button>
+        <div class="distribution-container" style="display:none;"></div>
+      </td>
     `;
 
-    tbody.appendChild(tr);
+          tbody.appendChild(tr);
 
-    // Raccorder les nouveaux inputs à la logique de recalcul
-    const qtyInput = tr.querySelector('input[data-field="quantite"]');
-    const priceInput = tr.querySelector('input[data-field="prixUnitaire"]');
-    const recalcFn = window.__recalcBcTotals;
-    if (qtyInput && recalcFn) qtyInput.addEventListener('input', () => recalcFn());
-    if (priceInput && recalcFn) priceInput.addEventListener('input', () => recalcFn());
+          // Raccorder les nouveaux inputs à la logique de recalcul
+          const qtyInput = tr.querySelector('input[data-field="quantite"]');
+          const priceInput = tr.querySelector('input[data-field="prixUnitaire"]');
+          const recalcFn = window.__recalcBcTotals;
+          if (qtyInput && recalcFn) qtyInput.addEventListener('input', () => recalcFn());
+          if (priceInput && recalcFn) priceInput.addEventListener('input', () => recalcFn());
 
-    // Recalcule après ajout
-    if (recalcFn) recalcFn();
-  }
+          // Recalcule après ajout
+          if (recalcFn) recalcFn();
+        }
 
-  function updateMontantEnLettres(totalTtc) {
-    const el = document.getElementById('montantLettresValue');
-    if (!el || isNaN(totalTtc)) return;
+        function updateMontantEnLettres(totalTtc) {
+          const el = document.getElementById('montantLettresValue');
+          if (!el || isNaN(totalTtc)) return;
 
-    const rounded = Math.round((totalTtc + Number.EPSILON) * 100) / 100;
-    let dirhams = Math.floor(rounded);
-    let centimes = Math.round((rounded - dirhams) * 100);
+          const rounded = Math.round((totalTtc + Number.EPSILON) * 100) / 100;
+          let dirhams = Math.floor(rounded);
+          let centimes = Math.round((rounded - dirhams) * 100);
 
-    if (dirhams < 0) dirhams = 0;
-    if (centimes < 0) centimes = 0;
+          if (dirhams < 0) dirhams = 0;
+          if (centimes < 0) centimes = 0;
 
-    const dirhamsText = bcNumberToFrenchWords(dirhams).toUpperCase();
-    const centimesText = bcNumberToFrenchWords(centimes).toUpperCase();
+          const dirhamsText = bcNumberToFrenchWords(dirhams).toUpperCase();
+          const centimesText = bcNumberToFrenchWords(centimes).toUpperCase();
 
-    let result = `${dirhamsText} DIRHAM${dirhams !== 1 ? 'S' : ''}`;
-    if (centimes > 0) {
-      result += ` ET ${centimesText} CENTIME${centimes !== 1 ? 'S' : ''}`;
-    } else {
-      result += ' ET ZÉRO CENTIMES';
-    }
+          let result = `${dirhamsText} DIRHAM${dirhams !== 1 ? 'S' : ''}`;
+          if (centimes > 0) {
+            result += ` ET ${centimesText} CENTIME${centimes !== 1 ? 'S' : ''}`;
+          } else {
+            result += ' ET ZÉRO CENTIMES';
+          }
 
-    el.textContent = result;
-    document.getElementById('montantLettresInp').value = result;
-  }
+          el.textContent = result;
+          document.getElementById('montantLettresInp').value = result;
+        }
 
-  (function() {
-    const totalHtEl = document.getElementById('totalHtValue');
-    if (!totalHtEl) return;
+        (function () {
+          const totalHtEl = document.getElementById('totalHtValue');
+          if (!totalHtEl) return;
 
-    const remiseInput = document.getElementById('remiseInput');
-    const tvaInput = document.getElementById('tvaInput');
-    const netCommercialEl = document.getElementById('netCommercialValue');
-    const totalTtcEl = document.getElementById('totalTtcValue');
+          const remiseInput = document.getElementById('remiseInput');
+          const tvaInput = document.getElementById('tvaInput');
+          const netCommercialEl = document.getElementById('netCommercialValue');
+          const totalTtcEl = document.getElementById('totalTtcValue');
 
-    const montantRemiseEl = document.getElementById('montantRemiseValue');
-    const montantTvaEl = document.getElementById('montantTvaValue');
+          const montantRemiseEl = document.getElementById('montantRemiseValue');
+          const montantTvaEl = document.getElementById('montantTvaValue');
 
-    const formatNumber = (value) => {
-      return value.toLocaleString('fr-FR', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
+          const formatNumber = (value) => {
+            return value.toLocaleString('fr-FR', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            });
 
-    };
+          };
 
-    const recalc = () => {
-      // 1) Recalculate line totals and Total HT from inputs in the table
-      let rawTotalHt = 0;
-      const rows = document.querySelectorAll('.bc-row');
+          const recalc = () => {
+            // 1) Recalculate line totals and Total HT from inputs in the table
+            let rawTotalHt = 0;
+            const rows = document.querySelectorAll('.bc-row');
 
-      rows.forEach((tr) => {
-        const cells = tr.cells;
-        const qtyInput = tr.querySelector('input[data-field="quantite"]');
-        const priceInput = tr.querySelector('input[data-field="prixUnitaire"]');
-        const totalEl = tr.querySelector('[data-field="totalHt"]');
+            rows.forEach((tr) => {
+              const cells = tr.cells;
+              const qtyInput = tr.querySelector('input[data-field="quantite"]');
+              const priceInput = tr.querySelector('input[data-field="prixUnitaire"]');
+              const totalEl = tr.querySelector('[data-field="totalHt"]');
 
-        if (!qtyInput || !priceInput || !totalEl) return;
+              if (!qtyInput || !priceInput || !totalEl) return;
 
-        const qtyText = (qtyInput.value || '')
-          .trim()
-          .replace(/[^0-9.,-]/g, '')
-          .replace(/\s/g, '')
-          .replace(',', '.');
+              const qtyText = (qtyInput.value || '')
+                .trim()
+                .replace(/[^0-9.,-]/g, '')
+                .replace(/\s/g, '')
+                .replace(',', '.');
 
-        const priceText = (priceInput.value || '')
-          .trim()
-          .replace(/[^0-9.,-]/g, '')
-          .replace(/\s/g, '')
-          .replace(',', '.');
+              const priceText = (priceInput.value || '')
+                .trim()
+                .replace(/[^0-9.,-]/g, '')
+                .replace(/\s/g, '')
+                .replace(',', '.');
 
-        const q = parseFloat(qtyText || '0') || 0;
-        const p = parseFloat(priceText || '0') || 0;
-        const lineTotal = q * p;
+              const q = parseFloat(qtyText || '0') || 0;
+              const p = parseFloat(priceText || '0') || 0;
+              const lineTotal = q * p;
 
-        rawTotalHt += lineTotal;
-        totalEl.textContent = formatNumber(lineTotal);
-      });
+              rawTotalHt += lineTotal;
+              totalEl.textContent = formatNumber(lineTotal);
+            });
 
-      // Update Total HT display element
-      totalHtEl.setAttribute('data-total-ht', rawTotalHt);
-      totalHtEl.textContent = formatNumber(rawTotalHt);
+            // Update Total HT display element
+            totalHtEl.setAttribute('data-total-ht', rawTotalHt);
+            totalHtEl.textContent = formatNumber(rawTotalHt);
 
-      // 2) Recalculate remise / TVA / TTC from Total HT
-      let remise = parseFloat((remiseInput.value || '').replace(',', '.'));
-      let tva = parseFloat((tvaInput.value || '').replace(',', '.'));
+            // 2) Recalculate remise / TVA / TTC from Total HT
+            let remise = parseFloat((remiseInput.value || '').replace(',', '.'));
+            let tva = parseFloat((tvaInput.value || '').replace(',', '.'));
 
-      if (isNaN(remise) || remise < 0) remise = 0;
-      if (isNaN(tva) || tva < 0) tva = 0;
+            if (isNaN(remise) || remise < 0) remise = 0;
+            if (isNaN(tva) || tva < 0) tva = 0;
 
-      const montantRemise = rawTotalHt * remise / 100;
-      const netCommercial = rawTotalHt - montantRemise;
-      const montantTva = netCommercial * tva / 100;
-      const totalTtc = netCommercial + montantTva;
+            const montantRemise = rawTotalHt * remise / 100;
+            const netCommercial = rawTotalHt - montantRemise;
+            const montantTva = netCommercial * tva / 100;
+            const totalTtc = netCommercial + montantTva;
 
-      if (montantRemiseEl) {
-        montantRemiseEl.textContent = formatNumber(montantRemise);
-      }
-      if (netCommercialEl) {
-        netCommercialEl.textContent = formatNumber(netCommercial);
-      }
-      if (montantTvaEl) {
-        montantTvaEl.textContent = formatNumber(montantTva);
-      }
-      if (totalTtcEl) {
-        totalTtcEl.textContent = formatNumber(totalTtc);
-      }
+            if (montantRemiseEl) {
+              montantRemiseEl.textContent = formatNumber(montantRemise);
+            }
+            if (netCommercialEl) {
+              netCommercialEl.textContent = formatNumber(netCommercial);
+            }
+            if (montantTvaEl) {
+              montantTvaEl.textContent = formatNumber(montantTva);
+            }
+            if (totalTtcEl) {
+              totalTtcEl.textContent = formatNumber(totalTtc);
+            }
 
-      // 3) Mettre à jour le montant en lettres basé sur le TTC
-      updateMontantEnLettres(totalTtc);
-    };
+            // 3) Mettre à jour le montant en lettres basé sur le TTC
+            updateMontantEnLettres(totalTtc);
+          };
 
-    // Recompute when remise / TVA change
-    if (remiseInput) remiseInput.addEventListener('input', recalc);
-    if (tvaInput) tvaInput.addEventListener('input', recalc);
+          // Recompute when remise / TVA change
+          if (remiseInput) remiseInput.addEventListener('input', recalc);
+          if (tvaInput) tvaInput.addEventListener('input', recalc);
 
-    // Recompute when quantity or price inputs change
-    const editableCells = document.querySelectorAll('input[data-field="quantite"], input[data-field="prixUnitaire"]');
-    editableCells.forEach((el) => {
-      el.addEventListener('input', recalc);
-    });
+          // Recompute when quantity or price inputs change
+          const editableCells = document.querySelectorAll('input[data-field="quantite"], input[data-field="prixUnitaire"]');
+          editableCells.forEach((el) => {
+            el.addEventListener('input', recalc);
+          });
 
-    // Initial calculation to sync with current values
-    recalc();
-    // Expose recalc globally so addBcRow can reuse it for new lines
-    window.__recalcBcTotals = recalc;
-  })();
+          // Initial calculation to sync with current values
+          recalc();
+          // Expose recalc globally so addBcRow can reuse it for new lines
+          window.__recalcBcTotals = recalc;
+        })();
 
-  function collectPayload(){
-    const commandesItems = [];
-    document.querySelectorAll('#bcBody tr').forEach(tr => {
-      const cells = tr.cells;
-      const rawQty = (cells[3].querySelector('input')?.value || '').toString();
-      const rawPu = (cells[4].querySelector('input')?.value || '').toString();
-      const qtyVal = rawQty.trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-      const prixVal = rawPu.trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-      const quantite = parseFloat(qtyVal || '0') || 0;
-      const prixUnitaire = parseFloat(prixVal || '0') || 0;
-      commandesItems.push({
-        id: parseInt(tr.getAttribute('data-id')) || null,
-        designation: (cells[1].querySelector('input')?.value || '').trim(),
-        unite: (cells[2].querySelector('input')?.value || '').trim(),
-        quantite,
-        prixUnitaire,
-        totalHt: quantite * prixUnitaire
-      });
-    });
-    const supplierSelect = document.getElementById('fournisseurSelectBc');
-    const supplierVal = supplierSelect ? supplierSelect.value : '';
-    const dateInput = document.querySelector('input[name="date"]');
-    const dateVal = dateInput ? dateInput.value : null;
-    const remiseInputEl = document.getElementById('remiseInput');
-    const tvaInputEl = document.getElementById('tvaInput');
-    const montantLettresInp = document.getElementById('montantLettresInp');
-    const tauxRemise = remiseInputEl ? parseFloat((remiseInputEl.value || '').toString().replace(',', '.')) || 0 : 0;
-    const tauxTva = tvaInputEl ? parseFloat((tvaInputEl.value || '').toString().replace(',', '.')) || 0 : 0;
-    return {
-      supplier: supplierVal ? parseInt(supplierVal) : null,
-      date: dateVal || null,
-      tauxRemise,
-      tauxTva,
-      montantLettres: montantLettresInp ? montantLettresInp.value : '',
-      commandesItems
-    };
-  }
+        function collectPayload() {
+          const commandesItems = [];
+          document.querySelectorAll('#bcBody tr').forEach(tr => {
+            const cells = tr.cells;
+            const rawQty = (cells[3].querySelector('input')?.value || '').toString();
+            const rawPu = (cells[4].querySelector('input')?.value || '').toString();
+            const qtyVal = rawQty.trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+            const prixVal = rawPu.trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+            const quantite = parseFloat(qtyVal || '0') || 0;
+            const prixUnitaire = parseFloat(prixVal || '0') || 0;
+            commandesItems.push({
+              id: parseInt(tr.getAttribute('data-id')) || null,
+              designation: (cells[1].querySelector('input')?.value || '').trim(),
+              unite: (cells[2].querySelector('input')?.value || '').trim(),
+              quantite,
+              prixUnitaire,
+              totalHt: quantite * prixUnitaire,
+              chantierDistribution: tr.dataset.distribution ? JSON.parse(tr.dataset.distribution) : []
+            });
+          });
+          const supplierSelect = document.getElementById('fournisseurSelectBc');
+          const supplierVal = supplierSelect ? supplierSelect.value : '';
+          const dateInput = document.querySelector('input[name="date"]');
+          const dateVal = dateInput ? dateInput.value : null;
+          const remiseInputEl = document.getElementById('remiseInput');
+          const tvaInputEl = document.getElementById('tvaInput');
+          const montantLettresInp = document.getElementById('montantLettresInp');
+          const tauxRemise = remiseInputEl ? parseFloat((remiseInputEl.value || '').toString().replace(',', '.')) || 0 : 0;
+          const tauxTva = tvaInputEl ? parseFloat((tvaInputEl.value || '').toString().replace(',', '.')) || 0 : 0;
+          return {
+            supplier: supplierVal ? parseInt(supplierVal) : null,
+            date: dateVal || null,
+            tauxRemise,
+            tauxTva,
+            montantLettres: montantLettresInp ? montantLettresInp.value : '',
+            commandesItems
+          };
+        }
 
-  async function deleteBcRow(button) {
-    const row = button.closest('tr');
-    if (!row) return;
-    const id = parseInt(row.getAttribute('data-id'));
-    if (id) { 
-      if(!confirm('Confirmer la suppression de cette ligne ?')) return;
-    try {
-      const res = await fetch(`/achat/bc/article/${id}`, { method: 'DELETE' });
-      if (!res.ok) { throw new Error(`Suppression échouée (${res.status})`); }
-    } catch(e) {
-      alert(e.message);
-      return;
-    }
-    }
-    
-    const tbody = row.parentElement;
-    row.remove();
+        async function deleteBcRow(button) {
+          const row = button.closest('tr');
+          if (!row) return;
+          const id = parseInt(row.getAttribute('data-id'));
+          if (id) {
+            if (!confirm('Confirmer la suppression de cette ligne ?')) return;
+            try {
+              const res = await fetch(`/achat/bc/article/${id}`, { method: 'DELETE' });
+              if (!res.ok) { throw new Error(`Suppression échouée (${res.status})`); }
+            } catch (e) {
+              alert(e.message);
+              return;
+            }
+          }
 
-    // Renumber N° column
-    if (tbody) {
-      const rows = tbody.querySelectorAll('tr.bc-row');
-      rows.forEach((tr, index) => {
-        const numDiv = tr.querySelector('.num-circle');
-        if (numDiv) numDiv.textContent = index + 1;
-      });
-    }
+          const tbody = row.parentElement;
+          row.remove();
 
-    // Recalculate totals using the shared function
-    if (window.__recalcBcTotals) {
-      window.__recalcBcTotals();
-    }
-  }
+          // Renumber N° column
+          if (tbody) {
+            const rows = tbody.querySelectorAll('tr.bc-row');
+            rows.forEach((tr, index) => {
+              const numDiv = tr.querySelector('.num-circle');
+              if (numDiv) numDiv.textContent = index + 1;
+            });
+          }
 
-
+          // Recalculate totals using the shared function
+          if (window.__recalcBcTotals) {
+            window.__recalcBcTotals();
+          }
+        }
 
 
-</script>
+
+
+      </script>
 
 </body>
+
 </html>

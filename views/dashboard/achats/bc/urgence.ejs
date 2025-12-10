@@ -9,7 +9,7 @@
   
   
   <style>
-    /* Tableau compact et propre */
+    /* Make table styling consistent with demandeprix list */
     #dpTable {
       font-size: 0.9rem;
     }
@@ -23,12 +23,13 @@
       text-align: center;
     }
 
-    /* Largeurs fixes pour chaque colonne */
-    #dpTable th:nth-child(1), #dpTable td:nth-child(1) { width: 80px;  text-align: center; } /* Numéro */
-    #dpTable th:nth-child(2), #dpTable td:nth-child(2) { width: 110px; text-align: center; } /* Date */
-    #dpTable th:nth-child(3), #dpTable td:nth-child(3) { width: 220px; } /* Fournisseur */
-    #dpTable th:nth-child(4), #dpTable td:nth-child(4) { width: 90px;  text-align: center; } /* Articles */
-    #dpTable th:nth-child(5), #dpTable td:nth-child(5) { width: 260px; text-align: center; } /* Actions */
+    /* Column widths (adapted for 6-column BC table) */
+    #dpTable th:nth-child(1), #dpTable td:nth-child(1) { width: 80px; text-align: center; }
+    #dpTable th:nth-child(2), #dpTable td:nth-child(2) { width: 110px; text-align: center; }
+    #dpTable th:nth-child(3), #dpTable td:nth-child(3) { width: 220px; }
+    #dpTable th:nth-child(4), #dpTable td:nth-child(4) { width: 260px; }
+    #dpTable th:nth-child(5), #dpTable td:nth-child(5) { width: 90px; text-align: center; }
+    #dpTable th:nth-child(6), #dpTable td:nth-child(6) { width: 160px; text-align: center; }
 
     /* Boutons plus petits et alignés */
     .btn-group .btn {
@@ -36,37 +37,25 @@
       padding: 0.25rem 0.5rem;
     }
 
-    /* Icônes seules sur petits boutons pour gagner de la place */
     @media (max-width: 768px) {
       .btn-group .btn .fas { margin-right: 0 !important; }
       .btn-group .btn span.d-none.d-md-inline { display: none !important; }
     }
 
-    /* Sticky header propre */
+    /* Sticky header */
     #dpTable thead th {
       position: sticky;
       top: 0;
       z-index: 10;
       background: #f8f9fa !important;
     }
-      /* Chantier list: keep badges on one line, truncate long names */
-      .chantier-list {
-        display: flex;
-        gap: .4rem;
-        align-items: center;
-        flex-wrap: nowrap;
-        overflow: hidden;
-      }
-      .chantier-list .badge {
-        flex: 0 0 auto;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 160px;
-        display: inline-block;
-      }
-      .chantier-list .chantier-name { display: inline-block; vertical-align: middle; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .chantier-more { margin-left: .25rem; color: #6b7280; }
+
+    /* keep earlier visual touches for row selection */
+    #dpTable tbody tr:hover { background: #f8fafc; cursor: pointer; }
+    #dpTable tbody tr.row-selected { background: #e6f0ff; outline: 2px solid rgba(59,130,246,0.12); }
+
+    .badge-light.border { background: #ffffff; border-color:#e6e9ee; color:#111827; }
+    .badge-info { background:#eef2ff; color:#0f172a; border:1px solid #e0e7ff; }
   </style>
 </head>
 <body id="page-top">
@@ -129,35 +118,32 @@
                                 });
                               });
                               const chantierList = Array.from(chantierSet).slice(0,3);
-                              const fullChantiers = Array.from(chantierSet).join(', ');
                             %>
-                            <div class="chantier-list" title="<%= fullChantiers %>">
-                              <% if (chantierList.length === 0) { %>
-                                <span class="text-muted">—</span>
-                              <% } else { %>
-                                <% chantierList.forEach(function(cn){ %>
-                                  <span class="badge badge-light border"><i class="fas fa-hard-hat"></i> <span class="chantier-name"><%= cn %></span></span>
-                                <% }); %>
-                                <% if (chantierSet.size > 3) { %>
-                                  <small class="chantier-more">+<%= chantierSet.size - 3 %> autres</small>
-                                <% } %>
+                            <% if (chantierList.length === 0) { %>
+                              <span class="text-muted">—</span>
+                            <% } else { %>
+                              <% chantierList.forEach(function(cn){ %>
+                                <span class="badge badge-light border mr-1"><i class="fas fa-hard-hat"></i> <%= cn %></span>
+                              <% }); %>
+                              <% if (chantierSet.size > 3) { %>
+                                <small class="text-muted">+<%= chantierSet.size - 3 %> autres</small>
                               <% } %>
-                            </div>
+                            <% } %>
                           </td>
-                          <td class="text-center"><span class="badge badge-info"><%= Array.isArray(dp.commandesItems) ? dp.commandesItems.length : 0 %></span></td>
+                          <td class="text-center"><span class="badge badge-info px-2 py-1"><%= Array.isArray(dp.commandesItems) ? dp.commandesItems.length : 0 %></span></td>
                           <td>
-                            <div class="btn-group btn-group-sm" role="group">
-                              <a href="/achat/bc/<%= dp.id %>" class="btn btn-info" title="Voir">
-                                <i class="fas fa-eye"></i>
+                            <div class="btn-group btn-group-sm action-group" role="group" data-bc-id="<%= dp.id %>">
+                              <a href="/achat/bc/<%= dp.id %>" class="btn btn-light btn-view" title="Voir">
+                                <i class="fas fa-eye text-primary"></i><span class="sr-only">Voir</span>
                               </a>
-                              <a href="/achat/bc/<%= dp.id %>/edit" class="btn btn-warning" title="Éditer">
-                                <i class="fas fa-edit"></i>
+                              <a href="/achat/bc/<%= dp.id %>/edit" class="btn btn-light btn-edit" title="Éditer">
+                                <i class="fas fa-pen text-warning"></i><span class="sr-only">Éditer</span>
                               </a>
-                              <button class="btn btn-danger" title="PDF" onclick="downloadPDF(<%= dp.id %>)">
-                                <i class="fas fa-file-pdf"></i>
+                              <button type="button" class="btn btn-light btn-pdf" data-id="<%= dp.id %>" title="PDF">
+                                <i class="fas fa-file-pdf text-danger"></i><span class="sr-only">PDF</span>
                               </button>
-                              <button class="btn btn-outline-danger" title="Supprimer" onclick="deletebc(<%= dp.id %>, this)">
-                                <i class="fas fa-trash"></i>
+                              <button type="button" class="btn btn-light btn-delete" data-id="<%= dp.id %>" title="Supprimer">
+                                <i class="fas fa-trash-alt text-danger"></i><span class="sr-only">Supprimer</span>
                               </button>
                             </div>
                           </td>
@@ -229,6 +215,44 @@
                     }
                 }
       
+                // Row selection and keyboard navigation (desktop-like)
+                (function setupRowSelection(){
+                  const table = document.getElementById('dpTable');
+                  if (!table) return;
+                  const rows = Array.from(table.querySelectorAll('tbody tr[data-id]'));
+                  let selectedIndex = -1;
+
+                  function selectRow(idx){
+                    rows.forEach(r => r.classList.remove('row-selected'));
+                    if (idx >= 0 && idx < rows.length){
+                      rows[idx].classList.add('row-selected');
+                      rows[idx].scrollIntoView({ block: 'nearest', behavior: 'auto' });
+                      selectedIndex = idx;
+                    } else {
+                      selectedIndex = -1;
+                    }
+                  }
+
+                  rows.forEach((r, i) => {
+                    r.addEventListener('click', (e) => {
+                      selectRow(i);
+                    });
+                    r.addEventListener('dblclick', () => {
+                      const id = r.getAttribute('data-id');
+                      if (id) window.location.href = `/achat/bc/${id}/edit`;
+                    });
+                  });
+
+                  document.addEventListener('keydown', (e) => {
+                    if (['ArrowDown','ArrowUp','Enter'].indexOf(e.key) === -1) return;
+                    // ignore when typing inside inputs
+                    if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+                    if (e.key === 'ArrowDown') { selectRow(Math.min(selectedIndex + 1, rows.length -1)); e.preventDefault(); }
+                    else if (e.key === 'ArrowUp') { selectRow(Math.max(selectedIndex - 1, 0)); e.preventDefault(); }
+                    else if (e.key === 'Enter') { if (selectedIndex >=0) { const id = rows[selectedIndex].getAttribute('data-id'); if (id) window.location.href = `/achat/bc/${id}/edit`; } }
+                  });
+                })();
+
       
       
       

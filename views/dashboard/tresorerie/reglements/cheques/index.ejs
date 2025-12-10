@@ -303,12 +303,7 @@
                           <option value="Annulé">Annulé</option>
                           <option value="Treso">Treso</option>
                         </select>
-                        <select id="chantierFilter" class="form-control mr-2" style="font-size: 15px; width: 200px;">
-                          <option value="">-- Filtrer par chantier --</option>
-                          <% chantiers.forEach(chantier => { %>
-                            <option value="<%= chantier.nom %>"><%= chantier.nom ? chantier.nom : '-- Aucun --' %></option>
-                          <% }); %>
-                        </select>
+                      
                       </div>
     
                       <div class="form-group mr-2">
@@ -373,14 +368,83 @@
                                     </span>
                                   </td>
                                   <td contenteditable="true" data-name="dateReglement"><%= formatDateToDDMMYYYY(cheque.dateReglement) %></td>
-                                  <td data-name="chantier" class="chantier-cell">
-                                    <select class="chantier-select">
-                                      <option value="Aucun" <%= !cheque.chantier ? 'selected' : '' %>>Aucun</option>
-                                      <% chantiers.forEach(chantier => { %>
-                                        <option value="<%= chantier.nom %>" <%= cheque.chantier && cheque.chantier.nom === chantier.nom ? 'selected' : '' %>><%= chantier.nom %></option>
-                                      <% }); %>
-                                    </select>
-                                  </td>
+                                 <!-- In index.ejs - update the chantier cell -->
+                         <style>
+  .allocations-container {
+    max-height: 120px;
+    overflow-y: auto;
+    padding: 5px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+  }
+
+  .allocation-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* Vertically center items */
+    padding: 4px 6px;
+    margin: 2px 0;
+    border-radius: 3px;
+    font-size: 11px; /* Slightly smaller font */
+    white-space: nowrap; /* Prevent text wrapping */
+    min-width: 0; /* Allow text truncation */
+  }
+
+  .allocation-item span:first-child {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Show ... for long text */
+    padding-right: 8px; /* Space between name and amount */
+    flex: 1; /* Take available space */
+  }
+
+  .allocation-amount {
+    white-space: nowrap;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-left: 8px; /* Space between name and amount */
+    flex-shrink: 0; /* Prevent amount from shrinking */
+  }
+
+  /* Keep your existing scrollbar styles */
+  .allocations-container::-webkit-scrollbar {
+    width: 6px;
+  }
+  .allocations-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+  .allocations-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+  }
+  .allocations-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+</style>
+                               <td data-name="chantier" class="chantier-cell">
+  <% if (cheque.allocations && cheque.allocations.length > 0) { %>
+    <div class="allocations-container" style="max-height: 100px; overflow-y: auto;">
+      <% cheque.allocations.forEach(allocation => { %>
+        <div class="allocation-item">
+          <span><%= allocation.chantier ? allocation.chantier.nom : 'N/A' %></span>
+          <span class="allocation-amount"><%= allocation.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> DH</span>
+        </div>
+      <% }); %>
+    </div>
+  <% } else if (cheque.chantier) { %>
+    <!-- Display old style chantier if no allocations exist -->
+    <div class="allocations-container">
+      <div class="allocation-item">
+        <span><%= cheque.chantier.nom %></span>
+        <span class="allocation-amount"><%= cheque.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> DH</span>
+      </div>
+    </div>
+  <% } else { %>
+    <span class="text-muted">Aucun chantier</span>
+  <% } %>
+</td>
                                   <td contenteditable="true" data-name="obs"><%= cheque.obs %></td>
                                   <td>
                                     <button class="delete-row excel-delete-btn" title="Supprimer" aria-label="Supprimer"><i class="fas fa-trash"></i></button>
@@ -962,141 +1026,195 @@
   XLSX.writeFile(wb, "liste_cheques.xlsx");
 });
   // Download PDF functionality
-  document.getElementById("downloadPdfBtn")?.addEventListener("click", function () {
-    try {
-      const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-      const table = document.getElementById("editableTable");
-      const rows = table.querySelectorAll("tbody tr:not(:last-child)");
-      const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
-      const title = document.querySelector(".card-header h6").innerText;
+ document.getElementById("downloadPdfBtn")?.addEventListener("click", function () {
+  try {
+    // Initialize PDF in landscape mode
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
 
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(18);
-      doc.setTextColor(40, 40, 40);
-      doc.text(title, 10, 20);
+    const table = document.getElementById("editableTable");
+    const rows = table.querySelectorAll("tbody tr:not(:last-child)");
+    const headerCells = table.querySelectorAll("thead th");
+    const headers = Array.from(headerCells).slice(0, -1).map(th => th.innerText.trim());
+    const title = document.querySelector(".card-header h6")?.innerText.trim() || "Liste des Chèques";
+    const exportDate = new Date().toLocaleDateString('fr-FR');
 
-      const tableData = [];
-      rows.forEach(row => {
-        if (row.style.display !== "none") {
-          const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
-            let value = "";
-            const select = cell.querySelector("select");
-            if (select) {
-              value = select.value;
-            } else if (cell.innerText) {
-              value = cell.innerText.trim();
-            }
+    // Add header
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.setTextColor(40, 40, 40);
+    doc.text(title, doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Exporté le: ${exportDate}`, doc.internal.pageSize.getWidth() - 10, 15, { align: 'right' });
 
-            if (cell.dataset.name && ['dateEtablissement', 'dateEcheance', 'dateReglement'].includes(cell.dataset.name) && value) {
-              if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                const [year, month, day] = value.split('-');
-                value = `${day}/${month}/${year}`;
-              } else if (!value.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-                const date = new Date(value);
-                if (!isNaN(date.getTime())) {
-                  const day = String(date.getDate()).padStart(2, '0');
-                  const month = String(date.getMonth() + 1).padStart(2, '0');
-                  const year = date.getFullYear();
-                  value = `${day}/${month}/${year}`;
+    // Prepare table data
+    const tableData = [];
+    rows.forEach(row => {
+      if (row.style.display === "none") return;
+
+      const cells = row.querySelectorAll("td:not(:last-child)");
+      const rowData = Array.from(cells).map(cell => {
+        let value = "";
+        const select = cell.querySelector("select");
+        if (select) {
+          value = select.value;
+        } else if (cell.innerText) {
+          value = cell.innerText.trim();
+        }
+         if (cell.dataset.name === 'chantier') {
+        const allocations = [];
+        const allocationItems = cell.querySelectorAll('.allocation-item');
+        if (allocationItems.length > 0) {
+            allocationItems.forEach(item => {
+                const name = item.querySelector('span:first-child')?.textContent || '';
+                const amountText = item.querySelector('.allocation-amount')?.textContent || '';
+                // Extract and format the amount
+                const amount = parseFloat(amountText.replace(/[^\d,]/g, '').replace(',', '.'));
+                if (!isNaN(amount)) {
+                    const parts = amount.toFixed(2).split('.');
+                    const formattedAmount = `${parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ')}` + 
+                                         (parts[1] ? `,${parts[1]}` : '');
+                    allocations.push(`${name} ${formattedAmount} DH`);
+                } else {
+                    allocations.push(name);
                 }
-              }
-            }
-
-            if (cell.dataset.name === "montant" && value) {
-              let cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-              const number = parseFloat(cleaned);
-              if (!isNaN(number)) {
-                const parts = number.toFixed(2).split('.');
-                const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-                value = `${integerPart},${parts[1]}`;
-              }
-            }
-
-            return value || "";
-          });
-          tableData.push(rowData);
+            });
+            return allocations.join('\n');
         }
+    }
+
+        // Keep original date format
+        if (cell.dataset.name && ['dateEtablissement', 'dateEcheance', 'dateReglement'].includes(cell.dataset.name) && value) {
+          if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            const [year, month, day] = value.split('-');
+            value = `${day}/${month}/${year}`;
+          }
+        }
+        
+
+        // Keep original amount format
+        if (cell.dataset.name === "montant" && value) {
+          const num = parseFloat(value.replace(/[^\d,]/g, '').replace(',', '.'));
+          if (!isNaN(num)) {
+            const parts = num.toFixed(2).split('.');
+            value = `${parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ')}` + (parts[1] ? `,${parts[1]}` : '');
+          }
+        }
+
+        return value || "";
       });
 
-      doc.autoTable({
-        head: [headers],
-        body: tableData,
-        startY: 30,
-        theme: 'grid',
-        styles: {
-          font: 'helvetica',
-          fontSize: 8,
-          textColor: [40, 40, 40],
-          cellPadding: 2,
-          lineColor: [200, 200, 200],
-          lineWidth: 0.1,
-          minCellHeight: 10,
-          overflow: 'linebreak'
-        },
-        headStyles: {
-          fillColor: [22, 160, 133],
-          textColor: [255, 255, 255],
-          fontSize: 7,
-          fontStyle: 'bold',
-          halign: 'center',
-          cellPadding: 2
-        },
-        bodyStyles: {
-          fillColor: [255, 255, 255]
-        },
-        alternateRowStyles: {
-          fillColor: [245, 245, 245]
-        },
-        columnStyles: {
-          0: { cellWidth: 25, halign: 'left' },
-          1: { cellWidth: 40, halign: 'left', overflow: 'linebreak' },
-          2: { cellWidth: 25, halign: 'right' },
-          3: { cellWidth: 25, halign: 'center' },
-          4: { cellWidth: 20, halign: 'center' },
-          5: { cellWidth: 20, halign: 'left' },
-          6: { cellWidth: 25, halign: 'center' },
-          7: { cellWidth: 87, halign: 'left', overflow: 'linebreak' },
-          8: { cellWidth: 0, halign: 'left' },
-          9: { cellWidth: 0, halign: 'left' }
-        },
-        margin: { top: 30, left: 10, right: 10 },
-        tableWidth: 'wrap',
-        didDrawPage: function (data) {
-          console.log('Table Width:', data.table.width);
-          console.log('Page Width:', doc.internal.pageSize.width);
-        }
-      });
+      tableData.push(rowData);
+    });
 
-      const pageCount = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
+    // Calculate column widths based on content
+    const columnCount = headers.length;
+    const pageWidth = doc.internal.pageSize.getWidth() - 20; // 10mm margins on each side
+    const columnWidth = pageWidth / columnCount;
+    const columnStyles = {};
+
+    // Set equal width for all columns initially
+    headers.forEach((_, index) => {
+      // Adjust specific columns if needed
+      if (index === 0) { // Date column
+        columnStyles[index] = { cellWidth: 20, halign: 'center' };
+      } else if (index === 1) { // N° chèque
+        columnStyles[index] = { cellWidth: 25, halign: 'center' };
+      } else if (index === 2) { // Banque
+        columnStyles[index] = { cellWidth: 30, halign: 'left' };
+      } else if (index === 3) { // Bénéficiaire
+        columnStyles[index] = { cellWidth: 40, halign: 'left', overflow: 'linebreak' };
+      } else if (index === 4) { // Montant
+        columnStyles[index] = { cellWidth: 25, halign: 'right' };
+      } else if (index === 5) { // Échéance
+        columnStyles[index] = { cellWidth: 20, halign: 'center' };
+      } else if (index === 6) { // Statut
+        columnStyles[index] = { cellWidth: 25, halign: 'center' };
+      } else if (index === 7) { // Date Règlement
+        columnStyles[index] = { cellWidth: 25, halign: 'center' };
+      } 
+      else { // Other columns
+        columnStyles[index] = { display: 'hidden' };
+      }
+    });
+
+    // Generate PDF table
+    doc.autoTable({
+      head: [headers],
+      body: tableData,
+      startY: 25,
+      theme: 'grid',
+      styles: {
+        font: 'helvetica',
+        fontSize: 8,
+        textColor: [40, 40, 40],
+        cellPadding: 2,
+        lineColor: [200, 200, 200],
+        lineWidth: 0.1,
+        overflow: 'linebreak'
+      },
+      headStyles: {
+        fillColor: [22, 160, 133],
+        textColor: [255, 255, 255],
+        fontSize: 8,
+        fontStyle: 'bold',
+        halign: 'center',
+        cellPadding: 3
+      },
+      bodyStyles: {
+        minCellHeight: 6,
+        valign: 'middle'
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245]
+      },
+      columnStyles: columnStyles,
+      margin: { top: 25, left: 10, right: 10 },
+      didDrawPage: function(data) {
+        // Page number
+        const pageCount = doc.internal.getNumberOfPages();
         doc.setFontSize(8);
         doc.setTextColor(100);
-        doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
+        doc.text(
+          `Page ${data.pageNumber} sur ${pageCount}`,
+          doc.internal.pageSize.getWidth() - 10,
+          doc.internal.pageSize.getHeight() - 5,
+          { align: 'right' }
+        );
       }
+    });
 
-      let total = document.getElementById("total").innerText || "0";
-      total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-      const totalNumber = parseFloat(total);
-      if (!isNaN(totalNumber)) {
-        const parts = totalNumber.toFixed(2).split('.');
-        const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-        total = `${integerPart},${parts[1]}`;
-      }
-
-      const finalY = doc.lastAutoTable.finalY || 30;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.setTextColor(22, 160, 133);
-      doc.text(`Total: ${total} MAD`, 10, finalY + 15);
-
-      doc.save("liste_cheques.pdf");
-    } catch (err) {
-      console.error("PDF generation error:", err);
-      alert("Erreur lors de la génération du PDF. Veuillez vérifier la console.");
+    // Add total
+    let total = document.getElementById("total")?.textContent.trim() || "0";
+    // Apply the same French number formatting as montant
+    const totalNumber = parseFloat(total.replace(/[^\d,]/g, '').replace(',', '.'));
+    if (!isNaN(totalNumber)) {
+      const parts = totalNumber.toFixed(2).split('.');
+      total = `${parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ')}` + (parts[1] ? `,${parts[1]}` : '');
     }
-  });
+    
+    const finalY = doc.lastAutoTable.finalY || 30;
+    
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(255, 255, 255);
+    doc.setFillColor(22, 160, 133);
+    doc.rect(10, finalY + 5, doc.internal.pageSize.getWidth() - 20, 8, 'F');
+    const totalTextWidth = doc.getStringUnitWidth(`TOTAL: ${total} MAD`);
+    const x = (doc.internal.pageSize.getWidth() - totalTextWidth) / 2;
+    doc.text(`TOTAL: ${total} MAD`, x, finalY + 10, { align: 'center' });
+    // Save the PDF
+    doc.save("liste_cheques.pdf");
 
+  } catch (err) {
+    console.error("PDF generation error:", err);
+    alert("Erreur lors de la génération du PDF. Veuillez vérifier la console.");
+  }
+});
   // Enhanced toggleSelect function for statut with professional styling
   window.toggleSelect = function(spanElem) {
     console.log('toggleSelect triggered for:', spanElem.textContent);

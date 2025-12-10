@@ -350,15 +350,7 @@
                     <label for="date">Date:</label>
                     <input id="date" type="date" name="dateEcheance">
                 </div>
-                <div class="form-group">
-                    <label for="chantier">Chantier:</label>
-                    <select id="chantier" name="chantier" class="form-control">
-                        <option value="">Sélectionnez un chantier</option>
-                        <% chantiers.forEach(chant => { %>
-                            <option value="<%= chant.id %>"><%= chant.nom %></option>
-                        <% }) %>
-                    </select>
-                </div>
+               
                 <div class="form-group">
                     <label for="city">À (Ville):</label>
                     <input id="city" type="text" placeholder="Casablanca" name="ville">
@@ -368,6 +360,103 @@
                     <input id="account" type="text" placeholder="Numéro du chèque" name="numero">
                 </div>
             </div>
+                <div class="form-group" style="flex: 2;">
+                <label>Répartition par Chantier:</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <select id="allocChantierSelect" class="form-control">
+                        <option value="">Sélectionnez un chantier</option>
+                        <% chantiers.forEach(chant=> { %>
+                            <option value="<%= chant.id %>" data-name="<%= chant.nom %>">
+                                <%= chant.nom %>
+                            </option>
+                            <% }) %>
+                    </select>
+                    <input type="number" id="allocAmountInput" class="form-control" placeholder="Montant"
+                        style="width: 150px;">
+                    <button type="button" class="btn btn-info" onclick="addAllocation()">+</button>
+                </div>
+
+                <table class="table table-sm table-bordered" style="font-size: 12px;">
+                    <thead>
+                        <tr>
+                            <th>Chantier</th>
+                            <th>Montant</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allocationTableBody"></tbody>
+                </table>
+                <div style="font-size: 12px; font-weight: bold;">
+                    Reste à allouer: <span id="remainingAmountDisplay" class="text-danger">0.00</span> DH
+                </div>
+                <input type="hidden" name="allocations" id="allocationsInput">
+            </div>
+
+            <script>
+        let allocations = [];
+        function updateAllocationUI() {
+            const tbody = document.getElementById('allocationTableBody');
+            tbody.innerHTML = '';
+
+            let totalAllocated = 0;
+
+            allocations.forEach((alloc, index) => {
+                totalAllocated += parseFloat(alloc.amount);
+                const row = `
+                <tr>
+                    <td>${alloc.chantierName}</td>
+                    <td>${parseFloat(alloc.amount).toFixed(2)}</td>
+                    <td><button type="button" class="btn btn-danger btn-sm" onclick="removeAllocation(${index})">X</button></td>
+                </tr>
+            `;
+                tbody.innerHTML += row;
+            });
+            const amountInput = document.getElementById('amount').value;
+            // Handle potential French format (comma) or empty string
+            const totalCheque = parseFloat(amountInput.replace(',', '.') || 0);
+
+            const remaining = totalCheque - totalAllocated;
+
+            const remainingDisplay = document.getElementById('remainingAmountDisplay');
+            remainingDisplay.textContent = remaining.toFixed(2);
+
+            // Use a small epsilon for float comparison if needed, but for currency 2 decimals usually ok
+            if (Math.abs(remaining) < 0.01) {
+                remainingDisplay.className = 't ext-success';
+                remainingDisplay.textContent = "0.00"; // Force clean zero
+            } else {
+                remainingDisplay.className = 'text-danger';
+            }
+            document.getElementById('allocationsInput').value = JSON.stringify(allocations);
+        }
+
+        function addAllocation() {
+            const select = document.getElementById('allocChantierSelect');
+            const amountInput = document.getElementById('allocAmountInput');
+
+            const chantierId = select.value;
+            // Safe access to dataset
+            const selectedOption = select.options[select.selectedIndex];
+            const chantierName = selectedOption ? selectedOption.dataset.name : '';
+            const amount = parseFloat(amountInput.value);
+            if (!chantierId || !amount || amount <= 0) {
+                alert('Veuillez sélectionner un chantier et entrer un montant valide.');
+                return;
+            }
+            allocations.push({ chantierId, chantierName, amount });
+            updateAllocationUI();
+
+            select.value = '';
+            amountInput.value = '';
+        }
+        function removeAllocation(index) {
+            allocations.splice(index, 1);
+            updateAllocationUI();
+        }
+        // Update calculations when main amount changes
+        document.getElementById('amount').addEventListener('input', updateAllocationUI);
+    </script>
+
 
             <div class="footer-row">
                 <div>Signature:</div>

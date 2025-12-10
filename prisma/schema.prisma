@@ -13,47 +13,43 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
-  id        Int              @id @default(autoincrement())
-  email     String           @unique
-  password  String
-  name      String @unique
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+  password String
+  name     String @unique
 
- 
   JustifCaisse JustifCaisse[]
 
-  chantier    Chantier @relation(fields: [chantierId], references: [id])
-  chantierId  Int      // foreign key
-  demandeCaisse   DemandeCaisse[] 
-  demandeFourniture   DemandeFourniture[] 
-  role        String @default("grandadmin") // user, admin, grandadmin
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  chantier          Chantier            @relation(fields: [chantierId], references: [id])
+  chantierId        Int // foreign key
+  demandeCaisse     DemandeCaisse[]
+  demandeFourniture DemandeFourniture[]
+  role              String              @default("grandadmin") // user, admin, grandadmin
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
 }
 
-
 model DemandeCaisse {
-  id          Int           @id @default(autoincrement())
-  designation String?       /// e.g. "Caisse Mois ..."
-  numero      Int?
-  montantTotal     Float?      
-  dateDemande DateTime?
-  demandeur String?
-  color String?
+  id           Int       @id @default(autoincrement())
+  designation  String? /// e.g. "Caisse Mois ..."
+  numero       Int?
+  montantTotal Float?
+  dateDemande  DateTime?
+  demandeur    String?
+  color        String?
   // Relations
-  userId      Int
-  user        User          @relation(fields: [userId], references: [id])
+  userId       Int
+  user         User      @relation(fields: [userId], references: [id])
 
-  chantierId  Int?
-  chantier    Chantier?     @relation(fields: [chantierId], references: [id])
-  status String @default("En Attente") // Versée , Annulée , En Attente
+  chantierId Int?
+  chantier   Chantier? @relation(fields: [chantierId], references: [id])
+  status     String    @default("En Attente") // Versée , Annulée , En Attente
 
-  items       ItemCaisse[]  
-  
+  items ItemCaisse[]
 
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // ✅ numero unique per user
   @@unique([userId, numero])
@@ -63,130 +59,115 @@ model ItemCaisse {
   id              Int            @id @default(autoincrement())
   dateCaisse      DateTime?
   designation     String?
-  montant         Float?       
+  montant         Float?
   imputation      String?
-  validation String @default("En cours") // En cours , Refusée , Validée
-  responsable String?
+  validation      String         @default("En cours") // En cours , Refusée , Validée
+  responsable     String?
   demandeCaisseId Int?
-  validepar String?
-  demandeCaisse   DemandeCaisse?  @relation(fields: [demandeCaisseId], references: [id])
+  validepar       String?
+  demandeCaisse   DemandeCaisse? @relation(fields: [demandeCaisseId], references: [id])
 
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-
 model DemandeFourniture {
-  id          Int           @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   numero      Int?
   dateDemande DateTime?
-  demandeur String?
-  color String?
-  
+  demandeur   String?
+  color       String?
+
   // Relations
-  userId      Int
-  user        User          @relation(fields: [userId], references: [id])
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 
-  chantierId  Int?
-  chantier    Chantier?     @relation(fields: [chantierId], references: [id])
-  status String @default("En Attente") // En Attente // Commandé // Livré // Annulé
+  chantierId Int?
+  chantier   Chantier? @relation(fields: [chantierId], references: [id])
+  status     String    @default("En Attente") // En Attente // Commandé // Livré // Annulé
 
-  items       ItemFourniture[]  
-  
+  items ItemFourniture[]
 
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // ✅ numero unique per user
   @@unique([userId, numero])
 }
 
-model ItemFourniture{
-  id              Int            @id @default(autoincrement())
-  code String?
-  designation     String
-  unité String?
-  quantité String?
-  auPlutart  String?
-  auPlutot String?
-  lot String?
-  observation String?
-   validation  Boolean?  @default(true)
-  image           String?   // <-- ✅ image file path
- // En cours , Refusée , Validée
-  validepar String?
+model ItemFourniture {
+  id                  Int                @id @default(autoincrement())
+  code                String?
+  designation         String
+  unité              String?
+  quantité           String?
+  auPlutart           String?
+  auPlutot            String?
+  lot                 String?
+  observation         String?
+  validation          Boolean?           @default(true)
+  image               String? // <-- ✅ image file path
+  // En cours , Refusée , Validée
+  validepar           String?
   demandeFournitureId Int?
-  demandeFourniture   DemandeFourniture?  @relation(fields: [demandeFournitureId], references: [id])
+  demandeFourniture   DemandeFourniture? @relation(fields: [demandeFournitureId], references: [id])
 
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-
-
 model JustifCaisse {
-  id             Int           @id @default(autoincrement())
-  mois           Int            // 1-12
+  id             Int     @id @default(autoincrement())
+  mois           Int // 1-12
   annee          Int
-  designation    String?        // e.g. "Justification Caisse Mars 2025"
-  soldePrecedent Float?         @default(0)
-  totalRecettes  Float?         @default(0)
-  totalDepenses  Float?         @default(0)
-  soldeFinal     Float?         @default(0)
+  designation    String? // e.g. "Justification Caisse Mars 2025"
+  soldePrecedent Float?  @default(0)
+  totalRecettes  Float?  @default(0)
+  totalDepenses  Float?  @default(0)
+  soldeFinal     Float?  @default(0)
 
-
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-
-  // Relations
-  userId         Int
-  user           User           @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  chantierId     Int?
-  chantier       Chantier?      @relation(fields: [chantierId], references: [id])
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 
-    
+  // Relations
+  chantierId Int?
+  chantier   Chantier? @relation(fields: [chantierId], references: [id])
 
   // Demandes de caisse versées du mois précédent
 
-  recettes       RecetteCaisse[]
-  depenses       DepenseCaisse[]
+  recettes RecetteCaisse[]
+  depenses DepenseCaisse[]
 }
 
 model RecetteCaisse {
-  id              Int           @id @default(autoincrement())
-  source          String?       // Ex: "Demande Caisse #12 - Mars"
-  montant         Float?
-  dateRecette     DateTime?     @default(now())
+  id             Int          @id @default(autoincrement())
+  source         String? // Ex: "Demande Caisse #12 - Mars"
+  montant        Float?
+  dateRecette    DateTime?    @default(now())
   userId         Int
-  justifCaisseId  Int
-  justifCaisse    JustifCaisse  @relation(fields: [justifCaisseId], references: [id])
-
-  
+  justifCaisseId Int
+  justifCaisse   JustifCaisse @relation(fields: [justifCaisseId], references: [id])
 }
 
 model DepenseCaisse {
-  id              Int           @id @default(autoincrement())
-  natureDepense   String?
-  montantJustifie         Float?
-  montantNonJustifie         Float?
-  observation     String?
-  dateDepense     DateTime?     @default(now())
-  numeroPiece          String?
-  imputation String?
+  id                 Int       @id @default(autoincrement())
+  natureDepense      String?
+  montantJustifie    Float?
+  montantNonJustifie Float?
+  observation        String?
+  dateDepense        DateTime? @default(now())
+  numeroPiece        String?
+  imputation         String?
 
-
-  justifCaisseId  Int
-  justifCaisse    JustifCaisse  @relation(fields: [justifCaisseId], references: [id])
-   validation           Boolean?  @default(true)
-  validerPar String?
+  justifCaisseId Int
+  justifCaisse   JustifCaisse @relation(fields: [justifCaisseId], references: [id])
+  validation     Boolean?     @default(true)
+  validerPar     String?
 }
-
-
-
-   
-
 
 model Attestation {
   id             Int         @id @default(autoincrement())
@@ -194,300 +175,277 @@ model Attestation {
   fournisseurId  Int
   date           DateTime
   dateValidite   DateTime
-  status         String      // e.g. "pending", "valid", "invalid"
+  status         String // e.g. "pending", "valid", "invalid"
   demandeEnvoyee Boolean     @default(false)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 }
 
-
-
-
-
-
 model Affectation {
-  id         Int      @id @default(autoincrement())
-  chantier   String
-  montant    Float
-  
+  id       Int    @id @default(autoincrement())
+  chantier String
+  montant  Float
 }
-model Fournisseur {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String?
-  ice       String 
-  rib        String
-  agence    String?
-  banque    String?
-  objet String?
-  identifFiscal String
-  telFournisseur String
-  contact   String
-  telContact String
-  address   String?
-  attestations Attestation[] // One-to-many: a supplier can have many attestations
 
-  demandes     DemandeDePrix[]
-  prelevements Prelevement[]
-  cheques      Cheque[]
-  commandes    BondeCommande[]
-  effets       Effet[]
+model Fournisseur {
+  id             Int           @id @default(autoincrement())
+  name           String
+  email          String?
+  ice            String
+  rib            String
+  agence         String?
+  banque         String?
+  objet          String?
+  identifFiscal  String
+  telFournisseur String
+  contact        String
+  telContact     String
+  address        String?
+  attestations   Attestation[] // One-to-many: a supplier can have many attestations
+
+  demandes               DemandeDePrix[]
+  prelevements           Prelevement[]
+  cheques                Cheque[]
+  commandes              BondeCommande[]
+  effets                 Effet[]
   telepaimentPrelevement TelepaimentPrelevement[]
 
   payavenir Payavenir[]
   virements Virement[]
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
+
 model Cheque {
-  id                  Int      @id @default(autoincrement())
-  montant             Float? 
-  dateEtablissement   DateTime?
-  dateEcheance        DateTime?
-  statut              String   
+  id                Int       @id @default(autoincrement())
+  montant           Float?
+  dateEtablissement DateTime?
+  dateEcheance      DateTime?
+  statut            String
 
-  dateReglement       DateTime?
-  fournisseur         Fournisseur @relation(fields: [fournisseurId], references: [id])
-  fournisseurId       Int
-  beneficiaire        String
-    validation           Boolean?  @default(false)
-  banque              Banque   @relation("BanqueCheques", fields: [banqueId], references: [id])
-  banqueId            Int
-  chantier         Chantier? @relation("ChequesChantier", fields: [chantierId], references: [id])
-  chantierId       Int?
+  dateReglement DateTime?
+  fournisseur   Fournisseur @relation(fields: [fournisseurId], references: [id])
+  fournisseurId Int
+  beneficiaire  String
+  validation    Boolean?    @default(false)
+  banque        Banque      @relation("BanqueCheques", fields: [banqueId], references: [id])
+  banqueId      Int
+  chantier      Chantier?   @relation("ChequesChantier", fields: [chantierId], references: [id])
+  chantierId    Int?
 
-  numero              String   // remove the @unique here ❌
+  numero String // remove the @unique here ❌
 
-  obs                 String?
-  montantLettres      String?
-  ville               String?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  obs            String?
+  montantLettres String?
+  ville          String?
+  allocations    ChequeAllocation[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 
-  @@unique([banqueId, numero])   // ✅ compound unique constraint
+  @@unique([banqueId, numero]) // ✅ compound unique constraint
+}
+
+// Add this new model
+model ChequeAllocation {
+  id         Int      @id @default(autoincrement())
+  cheque     Cheque   @relation(fields: [chequeId], references: [id], onDelete: Cascade)
+  chequeId   Int
+  chantier   Chantier @relation(fields: [chantierId], references: [id])
+  chantierId Int
+  montant    Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 
 model Effet {
-  id                  Int      @id @default(autoincrement())
-  montant             Float? 
-  dateEtablissement   DateTime?
-  dateEcheance        DateTime?
-  statut              String   // en circulation, payé, impayé, annulé
+  id                Int         @id @default(autoincrement())
+  montant           Float?
+  dateEtablissement DateTime?
+  dateEcheance      DateTime?
+  statut            String // en circulation, payé, impayé, annulé
   // dateReglement is the date when the cheque was actually paid. NULL if it has not been paid yet.
-  dateReglement       DateTime?
-  fournisseur         Fournisseur @relation(fields: [fournisseurId], references: [id])
-  fournisseurId       Int
-  beneficiaire       String   // beneficiaire
-    validation           Boolean?  @default(false)
+  dateReglement     DateTime?
+  fournisseur       Fournisseur @relation(fields: [fournisseurId], references: [id])
+  fournisseurId     Int
+  beneficiaire      String // beneficiaire
+  validation        Boolean?    @default(false)
 
-  banque              Banque   @relation("BanqueEffets", fields: [banqueId], references: [id])
-  banqueId            Int
-  chantier         Chantier? @relation("EffetsChantier", fields: [chantierId], references: [id])
-  chantierId       Int?
-  numero           String      // ✅ Add this line if it's not already
-  obs String?
-  dateaujou DateTime?
-  montantLettres      String?
-  ville               String?
+  banque         Banque    @relation("BanqueEffets", fields: [banqueId], references: [id])
+  banqueId       Int
+  chantier       Chantier? @relation("EffetsChantier", fields: [chantierId], references: [id])
+  chantierId     Int?
+  numero         String // ✅ Add this line if it's not already
+  obs            String?
+  dateaujou      DateTime?
+  montantLettres String?
+  ville          String?
   // facture             Facture? @relation(fields: [factureId], references: [id])
   // factureId           Int?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  @@unique([banqueId, numero])   // ✅ compound unique constraint
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([banqueId, numero]) // ✅ compound unique constraint
 }
 
 model Prelevement {
-  id              Int      @id @default(autoincrement())
+  id              Int         @id @default(autoincrement())
   fournisseur     Fournisseur @relation(fields: [fournisseurId], references: [id])
   fournisseurId   Int
   dateEcheance    DateTime
   montant         Float
   dateFinEcheance DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 }
 
 model Payavenir {
-  id            Int      @id @default(autoincrement())
-  designation           String?
-  beneficiaire       String?   // beneficiaire
+  id            Int       @id @default(autoincrement())
+  designation   String?
+  beneficiaire  String? // beneficiaire
   montant       Float?
-  dateEcheance   DateTime?
-  statut String?
+  dateEcheance  DateTime?
+  statut        String?
   dateReglement DateTime?
-  obs String?  
-    validation           Boolean?  @default(false)
+  obs           String?
+  validation    Boolean?  @default(false)
 
-  fournisseur         Fournisseur @relation(fields: [fournisseurId], references: [id])
-  fournisseurId       Int
+  fournisseur   Fournisseur @relation(fields: [fournisseurId], references: [id])
+  fournisseurId Int
 
-  banque              Banque   @relation("BanquePayavenir", fields: [banqueId], references: [id])
-  banqueId            Int
-   chantier         Chantier? @relation("PayavenirChantier", fields: [chantierId], references: [id])
-  chantierId       Int?
+  banque       Banque    @relation("BanquePayavenir", fields: [banqueId], references: [id])
+  banqueId     Int
+  chantier     Chantier? @relation("PayavenirChantier", fields: [chantierId], references: [id])
+  chantierId   Int?
   chantierText String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
+
 model Recavenir {
-  id            Int      @id @default(autoincrement())
-  designation           String?
-  beneficiaire       String?   // beneficiaire
+  id            Int       @id @default(autoincrement())
+  designation   String?
+  beneficiaire  String? // beneficiaire
   montant       Float?
-  dateEcheance   DateTime?
-  statut String?
+  dateEcheance  DateTime?
+  statut        String?
   dateReglement DateTime?
-  obs String?  
-  client         Client @relation(fields: [clientId], references: [id])
-  clientId       Int
-  chantier         Chantier? @relation("RecavenirChantier", fields: [chantierId], references: [id])
-  chantierId       Int?
-  banque              Banque   @relation("BanqueRecavenir", fields: [banqueId], references: [id])
-  banqueId            Int
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  obs           String?
+  client        Client    @relation(fields: [clientId], references: [id])
+  clientId      Int
+  chantier      Chantier? @relation("RecavenirChantier", fields: [chantierId], references: [id])
+  chantierId    Int?
+  banque        Banque    @relation("BanqueRecavenir", fields: [banqueId], references: [id])
+  banqueId      Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
+
 model Virement {
-  id            Int      @id @default(autoincrement())
-  designation           String?
-  beneficiaire       String?   // beneficiaire
-  montant       Float?
+  id             Int          @id @default(autoincrement())
+  designation    String?
+  beneficiaire   String? // beneficiaire
+  montant        Float?
   date           DateTime?
-  dateReglement DateTime?
-  obs String?  
-  objet String?
-  cause String?
-  rtgs Boolean @default(false)
-  srbm Boolean @default(false)
-  instantane Boolean @default(false)
-  rib Int?
+  dateReglement  DateTime?
+  obs            String?
+  objet          String?
+  cause          String?
+  rtgs           Boolean      @default(false)
+  srbm           Boolean      @default(false)
+  instantane     Boolean      @default(false)
+  rib            Int?
   montantLettres String?
-  fournisseur         Fournisseur? @relation(fields: [fournisseurId], references: [id])
-  fournisseurId       Int?
-  banque              Banque   @relation("BanqueVirements", fields: [banqueId], references: [id])
-  banqueId            Int
-  chantier         Chantier? @relation("VirementsChantier", fields: [chantierId], references: [id])
-  chantierId       Int?
+  fournisseur    Fournisseur? @relation(fields: [fournisseurId], references: [id])
+  fournisseurId  Int?
+  banque         Banque       @relation("BanqueVirements", fields: [banqueId], references: [id])
+  banqueId       Int
+  chantier       Chantier?    @relation("VirementsChantier", fields: [chantierId], references: [id])
+  chantierId     Int?
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
+
 model Miseadis {
-  id              Int      @id @default(autoincrement())
-  beneficiaire    String?   // beneficiaire
-  montant         Float?
-  date            DateTime?
-  dateReglement   DateTime?
-  obs String?  
-  cin String?
-  objet String?
-  cause String?
+  id             Int       @id @default(autoincrement())
+  beneficiaire   String? // beneficiaire
+  montant        Float?
+  date           DateTime?
+  dateReglement  DateTime?
+  obs            String?
+  cin            String?
+  objet          String?
+  cause          String?
   montantLettres String?
-  banque              Banque   @relation("BanqueMiseadis", fields: [banqueId], references: [id])
-  banqueId            Int
-  chantier         Chantier? @relation("MiseadisChantier", fields: [chantierId], references: [id])
-  chantierId        Int?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-model Banque {
-  id         Int       @id @default(autoincrement())
-  name       String
-  rib        String 
-  agence     String
-  solde      Float
-  dateSolde  DateTime
-  positive   Float     @default(0.0)
-  negative   Float     @default(0.0)
-  dmlt       Float     @default(0.0)
-  cheques    Cheque[]  @relation("BanqueCheques")
-  effets     Effet[]   @relation("BanqueEffets")
-  payavenir Payavenir[] @relation("BanquePayavenir")
-  recavenir Recavenir[] @relation("BanqueRecavenir")
-  virements  Virement[] @relation("BanqueVirements")
-  miseadis  Miseadis[] @relation("BanqueMiseadis")
-  encaissementRecu EncaissementRecu[] @relation("BanqueEncaissementRecu")
-  telepaimentPrelevement TelepaimentPrelevement[] @relation("BanqueTelepaimentPrelevement")
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  banque         Banque    @relation("BanqueMiseadis", fields: [banqueId], references: [id])
+  banqueId       Int
+  chantier       Chantier? @relation("MiseadisChantier", fields: [chantierId], references: [id])
+  chantierId     Int?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
+model Banque {
+  id                     Int                      @id @default(autoincrement())
+  name                   String
+  rib                    String
+  agence                 String
+  solde                  Float
+  dateSolde              DateTime
+  positive               Float                    @default(0.0)
+  negative               Float                    @default(0.0)
+  dmlt                   Float                    @default(0.0)
+  cheques                Cheque[]                 @relation("BanqueCheques")
+  effets                 Effet[]                  @relation("BanqueEffets")
+  payavenir              Payavenir[]              @relation("BanquePayavenir")
+  recavenir              Recavenir[]              @relation("BanqueRecavenir")
+  virements              Virement[]               @relation("BanqueVirements")
+  miseadis               Miseadis[]               @relation("BanqueMiseadis")
+  encaissementRecu       EncaissementRecu[]       @relation("BanqueEncaissementRecu")
+  telepaimentPrelevement TelepaimentPrelevement[] @relation("BanqueTelepaimentPrelevement")
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+}
 
 model Client {
-  id             Int        @id @default(autoincrement())
-  name           String
-  email          String?
-  ice            String     @unique
-  identifFiscal  String
-  telClient      String
-  contact        String
-  telContact     String
-  address        String?
-  recavenir      Recavenir[]
-  chantier       Chantier[] @relation("ClientChantier")
+  id               Int                @id @default(autoincrement())
+  name             String
+  email            String?
+  ice              String             @unique
+  identifFiscal    String
+  telClient        String
+  contact          String
+  telContact       String
+  address          String?
+  recavenir        Recavenir[]
+  chantier         Chantier[]         @relation("ClientChantier")
   encaissementRecu EncaissementRecu[]
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-}
-
-model Chantier {
-  id              Int      @id @default(autoincrement())
-  nom             String @unique
-  objet           String?
-  montantContratHt Float?
-  natureContrat   String?
-  numContrat      String?
-  recavenir       Recavenir[] @relation("RecavenirChantier")
-  encaissementRecu EncaissementRecu[] @relation("EncaissementRecuChantier")
-  telepaimentPrelevement TelepaimentPrelevement[] @relation("TelepaimentPrelevementChantier")
-
-  clientId        Int?
-  client          Client?   @relation("ClientChantier", fields: [clientId], references: [id])
-
-  // Relations
-  users           User[]
-  demandeCaisse   DemandeCaisse[] 
-  bondeCommande   BondeCommande[]
-
-  demandes        DemandeFourniture[]
-  JustifCaisse JustifCaisse[]
-  items           ChantierItem[]   // 🔥 chantier has many invoice-like items
-
-  cheques         Cheque[]   @relation("ChequesChantier")
-  effets          Effet[]    @relation("EffetsChantier")
-  payavenir       Payavenir[] @relation("PayavenirChantier")
-  virements       Virement[] @relation("VirementsChantier")
-  miseadis        Miseadis[] @relation("MiseadisChantier")
-  caisse Caisse[] 
-
-
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
 }
 
 model Caisse {
-  id          Int       @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   // Mois représenté sous forme "2025-09-01" (on prend le 1er jour du mois pour simplifier)
-  month       DateTime  
-  ancienSolde Decimal   @default(0)
-  allocation  Decimal   @default(0)
+  month       DateTime
+  ancienSolde Decimal  @default(0)
+  allocation  Decimal  @default(0)
   // Calcul du disponible se fait au backend, pas stocké (ou tu peux le stocker en cache si tu veux)
 
   // Relation
-  chantier    Chantier  @relation(fields: [chantierId], references: [id])
-  chantierId  Int
+  chantier   Chantier @relation(fields: [chantierId], references: [id])
+  chantierId Int
 
   // Dépenses liées à ce mois
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([chantierId, month]) // Un seul enregistrement par chantier + mois
 }
-
-
 
 model ChantierItem {
   id            Int     @id @default(autoincrement())
@@ -499,34 +457,29 @@ model ChantierItem {
   prixUnitaire  Float
   totalHt       Float
 
-  chantierId    Int
-  chantier      Chantier @relation(fields: [chantierId], references: [id])
+  chantierId Int
+  chantier   Chantier @relation(fields: [chantierId], references: [id])
 }
-
 
 // Demande Fourniture : 
 
-
 model DemandeProduit {
-  id                  Int               @id @default(autoincrement())
-  designation         String
-  quantite            Int
-  unite               String?
-  dateTot             DateTime?
-  dateTard            DateTime?
-  qteDemandee         Int?
-  qteStockee          Int?
-  qtePrevue           Int?
-  qteRecue            Int?
-  lot                 String?
-  observation         String?
-  codeArticle         String?
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
+  id          Int       @id @default(autoincrement())
+  designation String
+  quantite    Int
+  unite       String?
+  dateTot     DateTime?
+  dateTard    DateTime?
+  qteDemandee Int?
+  qteStockee  Int?
+  qtePrevue   Int?
+  qteRecue    Int?
+  lot         String?
+  observation String?
+  codeArticle String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
-
-
-
 
 model TelepaimentPrelevement {
   id                Int         @id @default(autoincrement())
@@ -539,100 +492,148 @@ model TelepaimentPrelevement {
   observation       String?
   fournisseur       Fournisseur @relation(fields: [fournisseurId], references: [id])
   fournisseurId     Int
-  type              String? 
+  type              String?
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
-
-  
 }
-
 
 model EncaissementRecu {
-  id                Int         @id @default(autoincrement())
+  id                Int       @id @default(autoincrement())
   dateEtablissement DateTime
-  banque            Banque      @relation("BanqueEncaissementRecu", fields: [banqueId], references: [id])
+  banque            Banque    @relation("BanqueEncaissementRecu", fields: [banqueId], references: [id])
   banqueId          Int
   montant           Float
-  chantier          Chantier?   @relation("EncaissementRecuChantier", fields: [chantierId], references: [id])
+  chantier          Chantier? @relation("EncaissementRecuChantier", fields: [chantierId], references: [id])
   chantierId        Int?
-  client         Client @relation(fields: [clientId], references: [id])
-  clientId       Int
-  nDeFactureRG   String?
-  RG   String?
-  Ras_TVA    String?
-  Autres  String?
-  ResteAPayer String?
+  client            Client    @relation(fields: [clientId], references: [id])
+  clientId          Int
+  nDeFactureRG      String?
+  RG                String?
+  Ras_TVA           String?
+  Autres            String?
+  ResteAPayer       String?
   observation       String?
-  type              String? 
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-
-  
+  type              String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 }
-
-
 
 // 
 
 model DemandeDePrix {
-  id            Int      @id @default(autoincrement())
-  date          DateTime @default(now())
+  id            Int         @id @default(autoincrement())
+  date          DateTime    @default(now())
   fournisseur   Fournisseur @relation(fields: [fournisseurId], references: [id])
   fournisseurId Int
   articles      Article[]
   devisPath     String? // PDF path
-  sentByEmail   Boolean @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  sentByEmail   Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 }
+
 model Article {
-  id              Int      @id @default(autoincrement())
+  id              Int            @id @default(autoincrement())
   designation     String
   reference       String?
-  unite          String
+  unite           String
   quantite        Int
   prixUnitaire    Float?
   totalHt         Float?
-  delaiLivraison   String?
+  delaiLivraison  String?
   observation     String?
   demandeDePrix   DemandeDePrix? @relation(fields: [demandeDePrixId], references: [id])
   demandeDePrixId Int?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 }
 
 
+model Chantier {
+  id                     Int                      @id @default(autoincrement())
+  nom                    String                   @unique
+  objet                  String?
+  montantContratHt       Float?
+  natureContrat          String?
+  numContrat             String?
+  recavenir              Recavenir[]              @relation("RecavenirChantier")
+  encaissementRecu       EncaissementRecu[]       @relation("EncaissementRecuChantier")
+  telepaimentPrelevement TelepaimentPrelevement[] @relation("TelepaimentPrelevementChantier")
+  BondeCommandeChantierItem  BondeCommandeChantierItem[]
+
+  clientId Int?
+  client   Client? @relation("ClientChantier", fields: [clientId], references: [id])
+
+  // Relations
+  users         User[]
+  demandeCaisse DemandeCaisse[]
+  bondeCommande BondeCommande[]
+
+  demandes          DemandeFourniture[]
+  JustifCaisse      JustifCaisse[]
+  items             ChantierItem[] // 🔥 chantier has many invoice-like items
+  chequeAllocations ChequeAllocation[] // Add this line
+
+  cheques   Cheque[]    @relation("ChequesChantier")
+  effets    Effet[]     @relation("EffetsChantier")
+  payavenir Payavenir[] @relation("PayavenirChantier")
+  virements Virement[]  @relation("VirementsChantier")
+  miseadis  Miseadis[]  @relation("MiseadisChantier")
+  caisse    Caisse[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model BondeCommandeChantierItem {
+  id              Int           @id @default(autoincrement())
+  bondeCommande   BondeCommande @relation(fields: [bondeCommandeId], references: [id], onDelete: Cascade)
+  bondeCommandeId Int
+  chantier        Chantier      @relation(fields: [chantierId], references: [id])
+  chantierId      Int
+  item            commandesItems @relation(fields: [itemId], references: [id])
+  itemId          Int
+  montant         Float?
+  qty             Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 
 model BondeCommande {
-  id            Int      @id @default(autoincrement())
-  date          DateTime @default(now())
-  numero        Int
-  fournisseur   Fournisseur @relation(fields: [fournisseurId], references: [id])
-  fournisseurId Int
-  chantier      Chantier? @relation(fields: [chantierId], references: [id])
-  chantierId    Int?
-  demandeur   String?
-  commandesItems      commandesItems[]
-  totalHt         Float?
-  tauxRemise      Float?
-  netCommercial   Float?
-  tauxTva         Float?
-  totalTtc        Float?
-  montantLettre    String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                    Int                     @id @default(autoincrement())
+  date                  DateTime                @default(now())
+  numero                Int
+  fournisseur           Fournisseur             @relation(fields: [fournisseurId], references: [id])
+  fournisseurId         Int
+  BondeCommandeChantierItem BondeCommandeChantierItem[]
+  chantier              Chantier?               @relation(fields: [chantierId], references: [id])
+  chantierId            Int?
+  demandeur             String?
+  commandesItems        commandesItems[]
+  totalHt               Float?
+  tauxRemise            Float?
+  netCommercial         Float?
+  tauxTva               Float?
+  totalTtc              Float?
+  montantLettre         String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
 }
+
 model commandesItems {
-  id              Int      @id @default(autoincrement())
+  id              Int            @id @default(autoincrement())
   designation     String
-  unite          String
+  unite           String
   quantite        Int
   prixUnitaire    Float?
   totalHt         Float?
   bondeCommande   BondeCommande? @relation(fields: [bondeCommandeId], references: [id])
   bondeCommandeId Int?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  BondeCommandeChantierItem BondeCommandeChantierItem[]
+
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 }
-
-

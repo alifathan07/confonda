@@ -149,15 +149,29 @@
                 </a>
             </li>
             <hr class="sidebar-divider">
+             <li class="nav-item">
+                <a class="nav-link py-3" href="/achats/fourniture">
+                    <i class="fas fa-fw fa-truck" style="font-size: 17px;"></i>
+                    <span>Demande Fournitures</span>
+                </a>
+            </li>
+            <hr class="sidebar-divider">
+             <li class="nav-item">
+                <a class="nav-link py-3" href="/achats/caisse">
+                    <i class="fas fa-fw fa-cash-register" style="font-size: 17px;"></i>
+                    <span>Caisse</span>
+                </a>
+            </li>
     
+            <hr class="sidebar-divider">
             <li class="nav-item">
                 <a class="nav-link py-3" href="/achats">
                     <i class="fas fa-fw fa-shopping-cart" style="font-size: 17px;"></i>
                     <span>Achats</span>
                 </a>
             </li>
-    
             <hr class="sidebar-divider">
+           
     
             <li class="nav-item">
                 <a class="nav-link py-3" href="/ventes">
@@ -167,9 +181,16 @@
             </li>
           <% } else if (user && user.role === 'user') { %>
             <li class="nav-item">
-                <a class="nav-link py-3" href="/achats">
+                <a class="nav-link py-3" href="/achats/caisse">
+                    <i class="fas fa-fw fa-cash-register" style="font-size: 17px;"></i>
+                    <span>Caisse</span>
+                </a>
+            </li>
+            <hr class="sidebar-divider">
+             <li class="nav-item">
+                <a class="nav-link py-3" href="/achats/fourniture">
                     <i class="fas fa-fw fa-shopping-cart" style="font-size: 17px;"></i>
-                    <span>Achats</span>
+                    <span>Demande Fournitures</span>
                 </a>
             </li>
           <% } %>

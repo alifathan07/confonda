@@ -9,7 +9,7 @@ import expressMySQLSession from 'express-mysql-session';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
-const { $Enums } = prisma;import { dashboardRouter } from './routes/dashboard.js';
+const { $Enums } = prisma; import { dashboardRouter } from './routes/dashboard.js';
 import { authRouter } from './routes/auth.js';
 import PDFDocument from "pdfkit";
 import fs from "fs";
@@ -25,7 +25,7 @@ const __dirname = path.dirname(__filename);
 // Set EJS as the view engine
 
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));   
+app.set('views', path.join(__dirname, 'views'));
 const PORT = process.env.PORT || 3000;
 
 
