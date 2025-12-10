@@ -604,7 +604,6 @@ model BondeCommandeChantierItem {
 model BondeCommande {
   id                    Int                     @id @default(autoincrement())
   date                  DateTime                @default(now())
-  numero                Int
   fournisseur           Fournisseur             @relation(fields: [fournisseurId], references: [id])
   fournisseurId         Int
   BondeCommandeChantierItem BondeCommandeChantierItem[]

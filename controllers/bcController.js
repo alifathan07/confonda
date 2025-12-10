@@ -125,7 +125,6 @@ export const postBcDemandeFourniture = async (req, res) => {
       const newBc = await prisma.bondeCommande.create({
         data: {
           date: new Date(),
-          numero: baseNumero + offset++,
           fournisseurId,
           chantierId,
           demandeur,

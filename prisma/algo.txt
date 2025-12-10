@@ -231,3 +231,5 @@ Tasks :
         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
         ssh root@72.60.92.82
         voidx : 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
+
+        latest token : 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
