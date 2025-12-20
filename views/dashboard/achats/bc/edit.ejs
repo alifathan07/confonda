@@ -29,7 +29,7 @@
 
     body {
       font-family: 'Inter', sans-serif;
-      background: var(--gray-100);
+      background: #f2f4f7;
       color: var(--gray-800);
       margin: 0;
       padding: 0;
@@ -154,97 +154,217 @@
     /* Document Card */
     .doc-card {
       background: white;
-      border-radius: 20px;
+      border-radius: 10px;
       overflow: hidden;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-      margin: 0 auto;
-      max-width: 1000px;
+      margin: 1.25rem auto;
+      width: calc(100% - 4px);
+      max-width: 1200px;
+      border: 1px solid #cfd6df;
     }
 
     .doc-header {
-      padding: 2.5rem 2rem;
-      background: linear-gradient(135deg, var(--blue-light) 0%, white 70%);
-      border-bottom: 1px solid #dee2e6;
+      padding: 1.1rem 1.25rem 0.9rem;
+      background: white;
+      border-bottom: 1px solid #cfd6df;
     }
 
     .header-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 2rem;
+      gap: 10px;
+      align-items: stretch;
     }
 
     @media (min-width: 768px) {
       .header-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
       }
     }
 
-    .logo-title h1 {
-      font-size: 2rem;
-      font-weight: 800;
-      color: var(--gray-900);
-      margin: 0.8rem 0 0.4rem;
+    @media (min-width: 900px) {
+      .header-grid {
+        grid-template-columns: 1.35fr 0.45fr 1.35fr;
+      }
     }
 
-    .logo-title p {
-      color: var(--blue);
-      font-weight: 600;
-      font-size: 1rem;
+    .logo-title {
+      background: white;
+      border: 1px solid #9aa4b2;
+      border-radius: 10px;
+      padding: 0.9rem 1rem;
+    }
+
+    .logo-title h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--gray-900);
       margin: 0;
     }
 
+    .logo-title p {
+      margin: 0.35rem 0 0;
+      color: var(--gray-800);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
     .logo-img {
-      height: 70px;
+      height: 100px;
       object-fit: contain;
-      margin-bottom: 0.8rem;
+      margin-bottom: 0;
+    }
+
+    .qr-box {
+      border: 1px solid #9aa4b2;
+      border-radius: 8px;
+      padding: 0.75rem 0.9rem;
+      background: #fff;
+    }
+
+    .qr-box h5 {
+      font-size: 0.9rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+      color: var(--gray-900);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .qr-box img {
+      width: 95px;
+      height: 95px;
+      padding: 6px;
+      border: 1px solid #9aa4b2;
+      border-radius: 8px;
+      box-shadow: none;
+      background: white;
     }
 
     .fournisseur-box {
       background: white;
-      border: 2px solid var(--blue-light);
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: 0 4px 15px rgba(0, 82, 204, 0.08);
+      border: 1px solid #9aa4b2;
+      border-radius: 8px;
+      padding: 0.75rem 0.9rem;
+      box-shadow: none;
     }
 
-    .fournisseur-box h5 {
-      color: var(--blue);
-      font-weight: 700;
-      font-size: 1.1rem;
-      margin-bottom: 1rem;
-    }
-
-    .info-line {
+    .topline {
+      position: relative;
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 0.7rem;
-      font-size: 0.92rem;
+      justify-content: center;
+      min-height: 118px;
+      padding: 6px 0;
+      margin-bottom: 0.65rem;
     }
 
-    .info-line i {
-      color: var(--blue);
-      width: 18px;
-      font-size: 1rem;
+    .brand-title {
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      gap: 18px;
+    }
+
+    .brand-sep {
+      width: 6px;
+      height: 44px;
+      background: #A22C29;
+      flex: 0 0 6px;
+    }
+
+    .brand-title .logo-img {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 120px;
+      width: auto;
+    }
+
+    .topline > div:last-child {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      font-weight: 800;
+      color: #b45309;
+      font-size: 1.05rem;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-name {
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: #A22C29;
+      letter-spacing: 0.2px;
+      text-align: center;
+    }
+
+    .brand-sub {
+      font-size: 0.78rem;
+      color: #4b5563;
+      line-height: 1.2;
+      margin-top: 2px;
+      text-align: center;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 12px;
+      font-size: 0.85rem;
+      justify-items: center;
+      text-align: center;
+    }
+
+    .meta-item {
+      width: 100%;
+      text-align: center;
+    }
+
+    .meta-item strong {
+      display: inline-block;
+      min-width: 110px;
+      font-weight: 800;
+      color: #111827;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.5px;
     }
 
     /* Table Responsive Wrapper */
     .table-section {
       padding: 2rem;
-      overflow-x: auto;
+      background: white;
     }
 
     .table-container {
-      min-width: 800px;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
+      width: 100%;
+      overflow-x: visible;
+      overflow-y: visible;
     }
 
     .table-doc {
       width: 100%;
       border-collapse: collapse;
       font-size: 0.9rem;
-      min-width: 700px;
+      min-width: 0;
+    }
+
+    @media (max-width: 768px) {
+      .table-container {
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .table-doc {
+        min-width: 900px;
+      }
     }
 
     .table-doc thead th {
@@ -256,12 +376,17 @@
       font-size: 0.78rem;
       text-transform: uppercase;
       letter-spacing: 0.8px;
+      border: 1px solid #dee2e6;
     }
 
     .table-doc tbody td {
       padding: 1rem 0.8rem;
       border-bottom: 1px solid #eef1f5;
-      vertical-align: top;
+      vertical-align: middle;
+    }
+
+    .table-doc tbody tr:nth-child(even) {
+      background: #f9fafb;
     }
 
     .table-doc tbody tr:hover {
@@ -469,20 +594,40 @@
                     </button>
                   </div>
                 </div>
-              </div>
-
               <!-- Document -->
               <div class="doc-card">
 
                 <div class="doc-header">
+                  <div class="topline">
+                    <div class="brand-title">
+                      <img src="/img/logo-4.png" alt="Logo" class="logo-img" />
+                      <div class="brand-sep"></div>
+                      <div>
+                        <div class="brand-name">Construction et Fondation</div>
+                        <div class="brand-sub">Pour des constructions bien fondées
+</div>
+                      </div>
+                    </div>
+                    <div style="font-weight:800; color:#b45309; font-size: 1.05rem;"></div>
+                  </div>
+
                   <div class="header-grid">
-                    <div class="logo-title">
-                      <img src="/img/logo-4.png" alt="Logo" class="logo-img">
-                      <h1>Bon De Commande</h1>
+                    <div class="fournisseur-box">
                       <input type="date" name="date" value="<%= new Date(bc.date).toISOString().slice(0,10) %>" hidden>
-                      <p>N° <%=  bc.id %> • <%= new Date(bc.date).toLocaleDateString('fr-FR', {
-                            weekday: 'long' , day: 'numeric' , month: 'long' , year: 'numeric' }) %>
-                      </p>
+                      <div class="meta-grid">
+                        <div class="meta-item"><strong>Commande N° :</strong><%= bc.id %></div>
+                        <br>
+                        <div class="meta-item"><strong>Date :</strong> <%= new Date(bc.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) %></div>
+                      </div>
+                    </div>
+
+                    <div class="qr-box">
+                      <div style="text-align:center;">
+                        <img
+                          src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<%= encodeURIComponent(publicBcUrl || '') %>"
+                          alt="QR Code"
+                        />
+                      </div>
                     </div>
 
                     <div class="fournisseur-box">
@@ -535,8 +680,11 @@
                           <th style="width:6%; text-align:center; border: 1px solid #dee2e6;">N°</th>
                           <th style="width:34%; border: 1px solid #dee2e6;">Désignation</th>
                           <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Unité</th>
-                          <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Quantité</th>
-                          <th style="width:18%; text-align:center; border: 1px solid #dee2e6;">Prix unitaire HT</th>
+                          <th style="width:16%; text-align:center; border: 1px solid #dee2e6;">Reference</th>
+
+                          <th style="width:8%; text-align:center; border: 1px solid #dee2e6;">Quantité</th>
+                          <th style="width:14%; text-align:center; border: 1px solid #dee2e6;">Prix unitaire HT</th>
+                          <th style="width:10%; text-align:center; border: 1px solid #dee2e6;">Remise (%)</th>
                           <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Total HT</th>
                           <th style="width:20%; text-align:center; border: 1px solid #dee2e6;">Affectation</th>
                           <th style="width:6%; text-align:center; border: 1px solid #dee2e6;">Action</th>
@@ -567,10 +715,17 @@
                               <input type="text" class="form-control form-control-sm text-center"
                                 style="font-weight:600; border-radius: 999px; max-width: 110px; margin: 0 auto;"
                                 value="<%= item.unite || '' %>" data-field="unite" />
+
                             </td>
                             <td style="text-align:center; border: 1px solid #dee2e6;">
+                              <input type="text" min="0" step="0.01" class="qty-pill item-total-qty"
+                                style="border:none;  max-width: 110px; outline:none;" value="<%= (item.reference) %>"
+                                data-field="reference" />
+                            </td>
+
+                            <td style="text-align:center; border: 1px solid #dee2e6;">
                               <input type="number" min="0" step="1" class="qty-pill item-total-qty"
-                                style="border:none; outline:none;" value="<%= item.quantite || 0 %>"
+                                style="border:none;  max-width: 110px; outline:none;" value="<%= item.quantite || 0 %>"
                                 data-field="quantite" />
                             </td>
                             <td style="text-align:right; border: 1px solid #dee2e6;">
@@ -578,6 +733,11 @@
                                 style="border-radius: 10px; max-width: 140px; margin-left: auto;"
                                 value="<%= (item.prixUnitaire || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>"
                                 data-field="prixUnitaire" />
+                            </td>
+                            <td style="text-align:center; border: 1px solid #dee2e6;">
+                              <input type="number" min="0" step="0.01" class="form-control form-control-sm text-center"
+                                style="border-radius: 10px; max-width: 100px; margin: 0 auto;"
+                                value="<%= item.tauxRemise || 0 %>" data-field="remise" />
                             </td>
                             <td style="text-align:right; border: 1px solid #dee2e6;" data-field="totalHt">
                               <%= (item.totalHt || (item.prixUnitaire || 0) * (item.quantite ||
@@ -637,46 +797,6 @@
                             </td>
                           </tr>
                           <tr>
-                            <th class="text-right align-middle">Remise (%)</th>
-                            <td class="text-right">
-                              <div class="input-group input-group-sm justify-content-end"
-                                style="max-width: 180px; float: right;">
-                                <input type="number" step="0.01" min="0" class="form-control text-right"
-                                  id="remiseInput" value="<%= bc.tauxRemise || 0 %>" />
-                                <div class="input-group-append">
-                                  <span class="input-group-text">%</span>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                          <tr>
-                            <th class="text-right">Montant remise</th>
-                            <td class="text-right">
-                              <span id="montantRemiseValue">
-                                <% const _totalHtTmp=bc.totalHt || 0; %>
-                                  <% const _tauxRemiseTmp=bc.tauxRemise || 0; %>
-                                    <%= (_totalHtTmp * _tauxRemiseTmp / 100).toLocaleString('fr-FR', {
-                                      minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
-                                      <input type="number" name="montantRemise" id="montantRemise"
-                                        value="<%= bc.montantRemise || 0 %>" hidden />
-                              </span>
-                            </td>
-                          </tr>
-
-                          <tr>
-                            <th class="text-right">Net commercial</th>
-                            <td class="text-right">
-                              <span id="netCommercialValue" data-net-commercial="<%= bc.netCommercial || 0 %>">
-                                <%= (bc.netCommercial || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2 }) %>
-                              </span>
-
-                              <input type="number" name="netCommercial" id="netCommercial"
-                                value="<%= bc.netCommercial || 0 %>" hidden />
-                            </td>
-                          </tr>
-
-                          <tr>
                             <th class="text-right align-middle">TVA (%)</th>
                             <td class="text-right">
                               <div class="input-group input-group-sm justify-content-end"
@@ -693,15 +813,13 @@
                             <th class="text-right">Montant TVA</th>
                             <td class="text-right">
                               <span id="montantTvaValue">
-                                <% const _netTmp=bc.netCommercial || _totalHtTmp; %>
-                                  <% const _tauxTvaTmp=bc.tauxTva || 0; %>
-                                    <%= (_netTmp * _tauxTvaTmp / 100).toLocaleString('fr-FR', { minimumFractionDigits:
-                                      2, maximumFractionDigits: 2 }) %>
+                                <%= (bc.montantTva || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
                               </span>
                               <input type="number" name="montantTva" id="montantTva" value="<%= bc.montantTva || 0 %>"
                                 hidden />
                             </td>
                           </tr>
+
                           <tr>
                             <th class="text-right">Total TTC</th>
                             <td class="text-right font-weight-bold">
@@ -1246,7 +1364,7 @@
           const quantiteStr = quantiteRaw.toString().trim().replace(/\s/g, '').replace(/,/g, '.');
           const quantite = parseFloat(quantiteStr) || 0;
           const prixRaw = (prixUnitaireInput && prixUnitaireInput.value) || '0';
-          const prixStr = prixRaw.toString().trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(/,/g, '.');
+          const prixStr = prixRaw.toString().trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
           const prixUnitaire = parseFloat(prixStr) || 0;
 
           // Prepare distribution data
@@ -1266,7 +1384,8 @@
             designation,
             unite,
             quantite,
-            prixUnitaire
+            prixUnitaire,
+            tauxRemise: parseFloat((row.querySelector('input[data-field="remise"]')?.value || '0').toString().replace(',', '.')) || 0
           };
 
           if (itemId) {
@@ -1331,20 +1450,26 @@
               if (!Array.isArray(payload.commandesItems) || payload.commandesItems.length !== rows.length) {
                 // Rebuild commandesItems to match rows
                 payload.commandesItems = rows.map(r => {
-                  const cells = r.cells;
-                  const rawQty = (cells[3].querySelector('input')?.value || '').toString();
-                  const rawPu = (cells[4].querySelector('input')?.value || '').toString();
+                  const referenceVal = (r.querySelector('input[data-field="reference"]')?.value || '').toString();
+                  const rawQty = (r.querySelector('input[data-field="quantite"]')?.value || '').toString();
+                  const rawPu = (r.querySelector('input[data-field="prixUnitaire"]')?.value || '').toString();
+                  const rawRemiseValRow = (r.querySelector('input[data-field="remise"]')?.value || '').toString();
                   const qtyVal = rawQty.trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
                   const prixVal = rawPu.trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
                   const quantiteLocal = parseFloat(qtyVal || '0') || 0;
                   const prixUnitaireLocal = parseFloat(prixVal || '0') || 0;
+                  const tauxRemiseRow = parseFloat(rawRemiseValRow.trim().replace(',', '.')) || 0;
+                  const montantRemiseRow = quantiteLocal * prixUnitaireLocal * tauxRemiseRow / 100;
                   return {
                     id: parseInt(r.getAttribute('data-id')) || null,
-                    designation: (cells[1].querySelector('input')?.value || '').trim(),
-                    unite: (cells[2].querySelector('input')?.value || '').trim(),
+                    designation: (r.querySelector('input[data-field="designation"]')?.value || '').trim(),
+                    unite: (r.querySelector('input[data-field="unite"]')?.value || '').trim(),
+                    reference: referenceVal.trim(),
                     quantite: quantiteLocal,
                     prixUnitaire: prixUnitaireLocal,
-                    totalHt: quantiteLocal * prixUnitaireLocal,
+                    totalHt: quantiteLocal * prixUnitaireLocal - montantRemiseRow,
+                    tauxRemise: tauxRemiseRow,
+                    montantRemise: montantRemiseRow,
                     chantierDistribution: r.dataset.distribution ? JSON.parse(r.dataset.distribution) : []
                   };
                 });
@@ -1387,6 +1512,7 @@
           const index = tbody.querySelectorAll('tr.bc-row').length + 1;
           const tr = document.createElement('tr');
           tr.className = 'bc-row';
+          tr.setAttribute('data-distribution', '[]');
           tr.style.backgroundColor = index % 2 === 1 ? '#ffffff' : '#f9fafb';
           tr.style.border = '1px solid #dee2e6';
 
@@ -1413,6 +1539,15 @@
         />
       </td>
       <td style="text-align:center; border: 1px solid #dee2e6;">
+        <input
+          type="text"
+          class="form-control form-control-sm text-center"
+          style="font-weight:600; border-radius: 999px; max-width: 110px; margin: 0 auto;"
+          value=""
+          data-field="reference"
+        />
+      </td>
+      <td style="text-align:center; border: 1px solid #dee2e6;">
           <input
             type="number"
             min="0"
@@ -1432,18 +1567,24 @@
           data-field="prixUnitaire"
         />
       </td>
+      <td style="text-align:center; border: 1px solid #dee2e6;">
+        <input type="number" min="0" step="0.01" class="form-control form-control-sm text-center"
+          style="border-radius: 10px; max-width: 100px; margin: 0 auto;"
+          value="0" data-field="remise" />
+      </td>
       <td style="text-align:right; border: 1px solid #dee2e6;" data-field="totalHt">
         0,00
       </td>
       <td style="border: 1px solid #dee2e6;">
-        <button 
-          type="button" 
-          class="btn btn-sm btn-primary" 
-          onclick="openDistributionModal(this)"
-        >
+        <button type="button" class="btn btn-sm btn-primary" onclick="openDistributionModal(this)">
           <i class="fas fa-share-alt"></i> Distribuer
         </button>
         <div class="distribution-container" style="display:none;"></div>
+      </td>
+      <td style="text-align:center; border: 1px solid #dee2e6;">
+        <button type="button" onclick="deleteBcRow(this)" class="btn btn-sm btn-modern btn-danger">
+          <i class="fas fa-trash"></i>
+        </button>
       </td>
     `;
 
@@ -1452,9 +1593,11 @@
           // Raccorder les nouveaux inputs à la logique de recalcul
           const qtyInput = tr.querySelector('input[data-field="quantite"]');
           const priceInput = tr.querySelector('input[data-field="prixUnitaire"]');
+          const remiseInputRow = tr.querySelector('input[data-field="remise"]');
           const recalcFn = window.__recalcBcTotals;
           if (qtyInput && recalcFn) qtyInput.addEventListener('input', () => recalcFn());
           if (priceInput && recalcFn) priceInput.addEventListener('input', () => recalcFn());
+          if (remiseInputRow && recalcFn) remiseInputRow.addEventListener('input', () => recalcFn());
 
           // Recalcule après ajout
           if (recalcFn) recalcFn();
@@ -1489,14 +1632,18 @@
           const totalHtEl = document.getElementById('totalHtValue');
           if (!totalHtEl) return;
 
-          const remiseInput = document.getElementById('remiseInput');
           const tvaInput = document.getElementById('tvaInput');
-          const netCommercialEl = document.getElementById('netCommercialValue');
           const totalTtcEl = document.getElementById('totalTtcValue');
 
-          const montantRemiseEl = document.getElementById('montantRemiseValue');
-          const montantTvaEl = document.getElementById('montantTvaValue');
+          // Prevent mouse wheel / trackpad scroll from changing focused number inputs (e.g. remise 10 -> 9.99)
+          document.addEventListener('wheel', function (e) {
+            const el = document.activeElement;
+            if (el && el.tagName === 'INPUT' && el.type === 'number') {
+              e.preventDefault();
+            }
+          }, { passive: false });
 
+          const montantTvaEl = document.getElementById('montantTvaValue');
           const formatNumber = (value) => {
             return value.toLocaleString('fr-FR', {
               minimumFractionDigits: 2,
@@ -1506,18 +1653,18 @@
           };
 
           const recalc = () => {
-            // 1) Recalculate line totals and Total HT from inputs in the table
+            // 1) Recalculate per-line NET totals (after remise) and Total HT
             let rawTotalHt = 0;
+            let totalRemise = 0;
             const rows = document.querySelectorAll('.bc-row');
-
             rows.forEach((tr) => {
               const cells = tr.cells;
               const qtyInput = tr.querySelector('input[data-field="quantite"]');
               const priceInput = tr.querySelector('input[data-field="prixUnitaire"]');
+              const remiseInputRow = tr.querySelector('input[data-field="remise"]');
               const totalEl = tr.querySelector('[data-field="totalHt"]');
 
               if (!qtyInput || !priceInput || !totalEl) return;
-
               const qtyText = (qtyInput.value || '')
                 .trim()
                 .replace(/[^0-9.,-]/g, '')
@@ -1532,100 +1679,100 @@
 
               const q = parseFloat(qtyText || '0') || 0;
               const p = parseFloat(priceText || '0') || 0;
-              const lineTotal = q * p;
+              const lineBase = q * p;
 
-              rawTotalHt += lineTotal;
-              totalEl.textContent = formatNumber(lineTotal);
+              let remisePctRow = 0;
+              if (remiseInputRow) {
+                remisePctRow = parseFloat((remiseInputRow.value || '').toString().replace(',', '.')) || 0;
+                if (isNaN(remisePctRow) || remisePctRow < 0) remisePctRow = 0;
+              }
+
+              const lineRemise = lineBase * remisePctRow / 100;
+              const lineNet = lineBase - lineRemise;
+
+              rawTotalHt += lineBase;
+              totalRemise += lineRemise;
+              totalEl.textContent = formatNumber(lineNet);
+
+              tr.dataset.lineBase = String(lineBase);
+              tr.dataset.lineRemise = String(lineRemise);
+              tr.dataset.lineNet = String(lineNet);
             });
 
-            // Update Total HT display element
-            totalHtEl.setAttribute('data-total-ht', rawTotalHt);
-            totalHtEl.textContent = formatNumber(rawTotalHt);
+            // Update Total HT display element (sum of per-line nets)
+            const totalNetHt = rawTotalHt - totalRemise;
+            totalHtEl.setAttribute('data-total-ht', totalNetHt);
+            totalHtEl.textContent = formatNumber(totalNetHt);
 
-            // 2) Recalculate remise / TVA / TTC from Total HT
-            let remise = parseFloat((remiseInput.value || '').replace(',', '.'));
             let tva = parseFloat((tvaInput.value || '').replace(',', '.'));
-
-            if (isNaN(remise) || remise < 0) remise = 0;
             if (isNaN(tva) || tva < 0) tva = 0;
 
-            const montantRemise = rawTotalHt * remise / 100;
-            const netCommercial = rawTotalHt - montantRemise;
-            const montantTva = netCommercial * tva / 100;
-            const totalTtc = netCommercial + montantTva;
-
-            if (montantRemiseEl) {
-              montantRemiseEl.textContent = formatNumber(montantRemise);
-            }
-            if (netCommercialEl) {
-              netCommercialEl.textContent = formatNumber(netCommercial);
-            }
+            const montantTva = totalNetHt * tva / 100;
+            const totalTtc = totalNetHt + montantTva;
             if (montantTvaEl) {
               montantTvaEl.textContent = formatNumber(montantTva);
             }
             if (totalTtcEl) {
               totalTtcEl.textContent = formatNumber(totalTtc);
             }
-
-            // 3) Mettre à jour le montant en lettres basé sur le TTC
             updateMontantEnLettres(totalTtc);
           };
 
-          // Recompute when remise / TVA change
-          if (remiseInput) remiseInput.addEventListener('input', recalc);
+          // Recompute when TVA changes
           if (tvaInput) tvaInput.addEventListener('input', recalc);
 
-          // Recompute when quantity or price inputs change
-          const editableCells = document.querySelectorAll('input[data-field="quantite"], input[data-field="prixUnitaire"]');
+          // Recompute when quantity, price, or per-row remise inputs change
+          const editableCells = document.querySelectorAll('input[data-field="quantite"], input[data-field="prixUnitaire"], input[data-field="remise"]');
           editableCells.forEach((el) => {
             el.addEventListener('input', recalc);
           });
-
-          // Initial calculation to sync with current values
           recalc();
-          // Expose recalc globally so addBcRow can reuse it for new lines
           window.__recalcBcTotals = recalc;
         })();
 
         function collectPayload() {
           const commandesItems = [];
+          const tvaInputEl = document.getElementById('tvaInput');
+          const tauxTva = tvaInputEl ? parseFloat((tvaInputEl.value || '').toString().replace(',', '.')) || 0 : 0;
+          const montantLettresInp = document.getElementById('montantLettresInp');
           document.querySelectorAll('#bcBody tr').forEach(tr => {
-            const cells = tr.cells;
-            const rawQty = (cells[3].querySelector('input')?.value || '').toString();
-            const rawPu = (cells[4].querySelector('input')?.value || '').toString();
+            const referenceVal = (tr.querySelector('input[data-field="reference"]')?.value || '').toString();
+            const rawQty = (tr.querySelector('input[data-field="quantite"]')?.value || '').toString();
+            const rawPu = (tr.querySelector('input[data-field="prixUnitaire"]')?.value || '').toString();
+            const rawRemiseValRow = (tr.querySelector('input[data-field="remise"]')?.value || '').toString();
             const qtyVal = rawQty.trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
             const prixVal = rawPu.trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
             const quantite = parseFloat(qtyVal || '0') || 0;
             const prixUnitaire = parseFloat(prixVal || '0') || 0;
+            const tauxRemiseRow = parseFloat(rawRemiseValRow.trim().replace(',', '.')) || 0;
+            const montantRemiseRow = quantite * prixUnitaire * tauxRemiseRow / 100;
             commandesItems.push({
               id: parseInt(tr.getAttribute('data-id')) || null,
-              designation: (cells[1].querySelector('input')?.value || '').trim(),
-              unite: (cells[2].querySelector('input')?.value || '').trim(),
+              designation: (tr.querySelector('input[data-field="designation"]')?.value || '').trim(),
+              unite: (tr.querySelector('input[data-field="unite"]')?.value || '').trim(),
+              reference: referenceVal.trim(),
               quantite,
               prixUnitaire,
-              totalHt: quantite * prixUnitaire,
+              totalHt: quantite * prixUnitaire - montantRemiseRow,
+              tauxRemise: tauxRemiseRow,
+              montantRemise: montantRemiseRow,
+              tauxTva,
               chantierDistribution: tr.dataset.distribution ? JSON.parse(tr.dataset.distribution) : []
             });
           });
+
           const supplierSelect = document.getElementById('fournisseurSelectBc');
           const supplierVal = supplierSelect ? supplierSelect.value : '';
           const dateInput = document.querySelector('input[name="date"]');
           const dateVal = dateInput ? dateInput.value : null;
-          const remiseInputEl = document.getElementById('remiseInput');
-          const tvaInputEl = document.getElementById('tvaInput');
-          const montantLettresInp = document.getElementById('montantLettresInp');
-          const tauxRemise = remiseInputEl ? parseFloat((remiseInputEl.value || '').toString().replace(',', '.')) || 0 : 0;
-          const tauxTva = tvaInputEl ? parseFloat((tvaInputEl.value || '').toString().replace(',', '.')) || 0 : 0;
           return {
             supplier: supplierVal ? parseInt(supplierVal) : null,
             date: dateVal || null,
-            tauxRemise,
             tauxTva,
             montantLettres: montantLettresInp ? montantLettresInp.value : '',
             commandesItems
           };
         }
-
         async function deleteBcRow(button) {
           const row = button.closest('tr');
           if (!row) return;

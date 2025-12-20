@@ -488,8 +488,11 @@
                           <th style="width:5%; text-align:center; border: 1px solid #dee2e6;">N°</th>
                           <th style="width:25%; border: 1px solid #dee2e6;">Désignation</th>
                           <th style="width:10%; text-align:center; border: 1px solid #dee2e6;">Unité</th>
-                          <th style="width:10%; text-align:center; border: 1px solid #dee2e6;">Quantité</th>
+                          <th style="width:14%; text-align:center; border: 1px solid #dee2e6;">Reference</th>
+                          <th style="width:8%; text-align:center; border: 1px solid #dee2e6;">Quantité</th>
                           <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Prix unitaire HT</th>
+                          <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Remise (%)</th>
+
                           <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Total HT</th>
                           <th style="width:20%; text-align:center; border: 1px solid #dee2e6;">Affectation
                           </th>
@@ -521,34 +524,6 @@
                             <th class="text-right" style="border-top: none;">Total HT</th>
                             <td class="text-right" style="border-top: none;">
                               <span id="totalHtValue" data-total-ht="0">
-                                0,00
-                              </span>
-                            </td>
-                          </tr>
-                          <tr>
-                            <th class="text-right align-middle">Remise (%)</th>
-                            <td class="text-right">
-                              <div class="input-group input-group-sm justify-content-end"
-                                style="max-width: 180px; float: right;">
-                                <input type="number" step="0.01" min="0" class="form-control text-right"
-                                  id="remiseInput" value="0" />
-                                <div class="input-group-append">
-                                  <span class="input-group-text">%</span>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                          <tr>
-                            <th class="text-right">Montant remise</th>
-                            <td class="text-right">
-                              <span id="montantRemiseValue">0,00</span>
-                            </td>
-                          </tr>
-
-                          <tr>
-                            <th class="text-right">Net commercial</th>
-                            <td class="text-right">
-                              <span id="netCommercialValue" data-net-commercial="0">
                                 0,00
                               </span>
                             </td>
@@ -827,6 +802,7 @@
     function addBcRow() {
       const tbody = document.getElementById('bcBody');
       if (!tbody) return;
+      
 
       const index = tbody.querySelectorAll('tr.bc-row').length + 1;
       const tr = document.createElement('tr');
@@ -858,11 +834,20 @@
   </td>
   <td style="text-align:center; border: 1px solid #dee2e6;">
     <input
+      type="text"
+      class="form-control form-control-sm text-center"
+      style="font-weight:600; border-radius: 999px; max-width: 130px; margin: 0 auto;"
+      value=""
+      data-field="reference"
+    />
+  </td>
+  <td style="text-align:center; border: 1px solid #dee2e6;">
+    <input
       type="number"
       min="0"
       step="1"
       class="qty-pill item-total-qty"
-      style="border:none; outline:none;"
+      style="border:none; outline:none; max-width: 110px"
       value="0"
       data-field="quantite"
     />
@@ -876,9 +861,21 @@
       data-field="prixUnitaire"
     />
   </td>
+  <td style="text-align:center; border: 1px solid #dee2e6;">
+    <input
+      type="number"
+      min="0"
+      step="0.01"
+      class="form-control form-control-sm text-center"
+      style="border-radius: 10px; max-width: 100px; margin: 0 auto;"
+      value="0"
+      data-field="remise"
+    />
+  </td>
   <td style="text-align:right; border: 1px solid #dee2e6;" data-field="totalHt">
     0,00
   </td>
+
   <td style="border: 1px solid #dee2e6;">
     <button 
       type="button" 
@@ -904,9 +901,11 @@
       // Raccorder les nouveaux inputs à la logique de recalcul
       const qtyInput = tr.querySelector('input[data-field="quantite"]');
       const priceInput = tr.querySelector('input[data-field="prixUnitaire"]');
+      const remiseInputRow = tr.querySelector('input[data-field="remise"]');
       const recalcFn = window.__recalcBcTotals;
       if (qtyInput && recalcFn) qtyInput.addEventListener('input', () => recalcFn());
       if (priceInput && recalcFn) priceInput.addEventListener('input', () => recalcFn());
+      if (remiseInputRow && recalcFn) remiseInputRow.addEventListener('input', () => recalcFn());
 
       // Recalcule après ajout
       if (recalcFn) recalcFn();
@@ -947,12 +946,9 @@
       const totalHtEl = document.getElementById('totalHtValue');
       if (!totalHtEl) return;
 
-      const remiseInput = document.getElementById('remiseInput');
       const tvaInput = document.getElementById('tvaInput');
-      const netCommercialEl = document.getElementById('netCommercialValue');
       const totalTtcEl = document.getElementById('totalTtcValue');
 
-      const montantRemiseEl = document.getElementById('montantRemiseValue');
       const montantTvaEl = document.getElementById('montantTvaValue');
 
 
@@ -964,14 +960,16 @@
       };
 
       const recalc = () => {
-        // 1) Recalculate line totals and Total HT from inputs in the table
+        // 1) Recalculate line totals (base), line remise (amount per line) and Total HT from inputs in the table
         let rawTotalHt = 0;
+        let totalRemise = 0;
         const rows = document.querySelectorAll('.bc-row');
 
         rows.forEach((tr) => {
           const cells = tr.cells;
           const qtyInput = tr.querySelector('input[data-field="quantite"]');
           const priceInput = tr.querySelector('input[data-field="prixUnitaire"]');
+          const remiseInputRow = tr.querySelector('input[data-field="remise"]');
           const totalEl = tr.querySelector('[data-field="totalHt"]');
 
           if (!qtyInput || !priceInput || !totalEl) return;
@@ -990,34 +988,40 @@
 
           const q = parseFloat(qtyText || '0') || 0;
           const p = parseFloat(priceText || '0') || 0;
-          const lineTotal = q * p;
+          const lineBase = q * p;
 
-          rawTotalHt += lineTotal;
-          totalEl.textContent = formatNumber(lineTotal);
+          let remisePctRow = 0;
+          if (remiseInputRow) {
+            remisePctRow = parseFloat((remiseInputRow.value || '').toString().replace(',', '.')) || 0;
+            if (isNaN(remisePctRow) || remisePctRow < 0) remisePctRow = 0;
+          }
+          const lineRemise = lineBase * remisePctRow / 100;
+          const lineNet = lineBase - lineRemise;
+
+          rawTotalHt += lineBase;
+          totalRemise += lineRemise;
+
+          const netText = formatNumber(lineNet);
+          totalEl.textContent = netText;
+
+          // store for distribution calculations
+          tr.dataset.lineBase = String(lineBase);
+          tr.dataset.lineRemise = String(lineRemise);
+          tr.dataset.lineNet = String(lineNet);
         });
 
-        // Update Total HT display element
-        totalHtEl.setAttribute('data-total-ht', rawTotalHt);
-        totalHtEl.textContent = formatNumber(rawTotalHt);
+        // Update Total HT display element (sum of per-line nets)
+        const totalNetHt = rawTotalHt - totalRemise; // rawTotalHt was sum of base (we can compute from dataset)
+        totalHtEl.setAttribute('data-total-ht', totalNetHt);
+        totalHtEl.textContent = formatNumber(totalNetHt);
 
-        // 2) Recalculate remise / TVA / TTC from Total HT
-        let remise = parseFloat((remiseInput.value || '').replace(',', '.'));
+        // 2) Recalculate TVA / TTC from per-line net values
         let tva = parseFloat((tvaInput.value || '').replace(',', '.'));
-
-        if (isNaN(remise) || remise < 0) remise = 0;
         if (isNaN(tva) || tva < 0) tva = 0;
 
-        const montantRemise = rawTotalHt * remise / 100;
-        const netCommercial = rawTotalHt - montantRemise;
-        const montantTva = netCommercial * tva / 100;
-        const totalTtc = netCommercial + montantTva;
+        const montantTva = totalNetHt * tva / 100;
+        const totalTtc = totalNetHt + montantTva;
 
-        if (montantRemiseEl) {
-          montantRemiseEl.textContent = formatNumber(montantRemise);
-        }
-        if (netCommercialEl) {
-          netCommercialEl.textContent = formatNumber(netCommercial);
-        }
         if (montantTvaEl) {
           montantTvaEl.textContent = formatNumber(montantTva);
         }
@@ -1027,14 +1031,13 @@
 
         // 3) Mettre à jour le montant en lettres basé sur le TTC
         updateMontantEnLettres(totalTtc);
-      };
+      }; 
 
-      // Recompute when remise / TVA change
-      if (remiseInput) remiseInput.addEventListener('input', recalc);
+      // Recompute when TVA changes
       if (tvaInput) tvaInput.addEventListener('input', recalc);
 
-      // Recompute when quantity or price inputs change
-      const editableCells = document.querySelectorAll('input[data-field="quantite"], input[data-field="prixUnitaire"]');
+      // Recompute when quantity, price or per-row remise inputs change
+      const editableCells = document.querySelectorAll('input[data-field="quantite"], input[data-field="prixUnitaire"], input[data-field="remise"]');
       editableCells.forEach((el) => {
         el.addEventListener('input', recalc);
       });
@@ -1048,6 +1051,7 @@
     })();
     function openDistributionModal(button) {
       const row = button.closest('tr');
+      if (typeof window.__recalcBcTotals === 'function') window.__recalcBcTotals();
         // Resolve total quantity with multiple fallbacks (input, data-field cell, or text)
         let totalQty = 0;
         const totalQtyInput = row.querySelector('input[data-field="quantite"].item-total-qty') || row.querySelector('input[data-field="quantite"]') || row.querySelector('.item-total-qty');
@@ -1219,11 +1223,18 @@
 
           // [NEW] Auto-calculate Montant for this row
           const currentQty = parseFloat(this.value) || 0;
-          const newMontant = currentQty * unitPrice;
+          const baseDistrib = currentQty * unitPrice;
 
           // Find the montant input in the same row
           const row = this.closest('tr');
           const montantInput = row.querySelector('.chantier-montant-input');
+
+          // Use row dataset values to prorate the per-line remise
+          const rowBase = parseFloat(row.dataset.lineBase || '0') || 0;
+          const rowRemise = parseFloat(row.dataset.lineRemise || '0') || 0;
+          const shareRemise = rowBase ? (baseDistrib / rowBase) * rowRemise : 0;
+          const newMontant = baseDistrib - shareRemise;
+
           if (montantInput) {
             montantInput.value = newMontant.toFixed(2);
           }
@@ -1299,16 +1310,15 @@
 
     function collectPayload() {
       const commandesItems = [];
-      const remiseInputEl = document.getElementById('remiseInput');
       const tvaInputEl = document.getElementById('tvaInput');
-      const tauxRemise = remiseInputEl ? parseFloat((remiseInputEl.value || '').toString().replace(',', '.')) || 0 : 0;
       const tauxTva = tvaInputEl ? parseFloat((tvaInputEl.value || '').toString().replace(',', '.')) || 0 : 0;
       const montantLettre = document.getElementById('montantLettresInp')?.value || '';
 
       document.querySelectorAll('#bcBody tr').forEach(tr => {
         const cells = tr.cells;
-        const rawQty = (cells[3].querySelector('input')?.value || '').toString();
-        const rawPu = (cells[4].querySelector('input')?.value || '').toString();
+        const referenceVal = (tr.querySelector('input[data-field="reference"]')?.value || '').toString();
+        const rawQty = (tr.querySelector('input[data-field="quantite"]')?.value || '').toString();
+        const rawPu = (tr.querySelector('input[data-field="prixUnitaire"]')?.value || '').toString();
         const qtyVal = rawQty.trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
         const prixVal = rawPu.trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
         const quantite = parseFloat(qtyVal || '0') || 0;
@@ -1317,16 +1327,23 @@
         // Get distribution data
         const distributionData = tr.dataset.distribution ? JSON.parse(tr.dataset.distribution) : [];
 
+        // Per-row remise (in %)
+        const rawRemiseValRow = (tr.querySelector('input[data-field="remise"]')?.value || '').toString();
+        const tauxRemiseRow = parseFloat(rawRemiseValRow.trim().replace(',', '.')) || 0;
+        const montantRemiseRow = quantite * prixUnitaire * tauxRemiseRow / 100;
+
         commandesItems.push({
           id: null,
-          designation: (cells[1].querySelector('input')?.value || '').trim(),
-          unite: (cells[2].querySelector('input')?.value || '').trim(),
+          designation: (tr.querySelector('input[data-field="designation"]')?.value || '').trim(),
+          unite: (tr.querySelector('input[data-field="unite"]')?.value || '').trim(),
+          reference: referenceVal.trim(),
           quantite,
           prixUnitaire,
-          totalHt: quantite * prixUnitaire,
-          tauxRemise,
+          totalHt: quantite * prixUnitaire - montantRemiseRow, // NET after remise
+          tauxRemise: tauxRemiseRow,
+          montantRemise: montantRemiseRow,
           tauxTva,
-          chantierDistribution: distributionData  // Add this
+          chantierDistribution: distributionData
         });
         console.log("commandesItems:", commandesItems)
         console.log("distributionData" , distributionData)
@@ -1340,7 +1357,6 @@
       return {
         supplier: supplierVal ? parseInt(supplierVal) : null,
         date: dateVal || null,
-        tauxRemise,
         tauxTva,
         montantLettre,
         commandesItems

@@ -612,8 +612,6 @@ model BondeCommande {
   demandeur             String?
   commandesItems        commandesItems[]
   totalHt               Float?
-  tauxRemise            Float?
-  netCommercial         Float?
   tauxTva               Float?
   totalTtc              Float?
   montantLettre         String?
@@ -627,7 +625,10 @@ model commandesItems {
   unite           String
   quantite        Int
   prixUnitaire    Float?
+  tauxRemise     Float?
+  remise          Float?
   totalHt         Float?
+  reference      String?
   bondeCommande   BondeCommande? @relation(fields: [bondeCommandeId], references: [id])
   bondeCommandeId Int?
   BondeCommandeChantierItem BondeCommandeChantierItem[]

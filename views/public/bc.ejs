@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bon de Commande #<%= bc ? bc.id : '' %></title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+
+  <style>
+    :root {
+      --blue: #0052cc;
+      --blue-light: #f3f8ff;
+      --gray-100: #f8f9fc;
+      --gray-200: #e9ecef;
+      --gray-600: #6c757d;
+      --gray-800: #343a40;
+      --gray-900: #212529;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f2f4f7;
+      color: var(--gray-800);
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+    }
+
+    @page {
+      size: A4;
+      margin: 10mm;
+    }
+
+    :root {
+      --doc-border: #9aa4b2;
+      --doc-border-soft: #c3cbd6;
+      --doc-bg: #ffffff;
+      --doc-muted: #4b5563;
+      --doc-ink: #111827;
+    }
+
+    @media print {
+      body { background: white; padding: 15px; }
+      .doc-card { box-shadow: none; border: 1px solid #e5e7eb; margin: 0 auto; }
+      .table-container { overflow: visible !important; }
+    }
+
+    .doc-card {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+      margin: 1.25rem auto;
+      width: min(210mm, calc(100% - 24px));
+      border: 1px solid #cfd6df;
+    }
+
+    .doc-header {
+      padding: 1.1rem 1.25rem 0.9rem;
+      background: white;
+      border-bottom: 1px solid #cfd6df;
+    }
+
+    .header-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    @media (min-width: 900px) {
+      .header-grid { grid-template-columns: 1.35fr 0.45fr 1.35fr; }
+    }
+
+    .logo-title h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--gray-900);
+      margin: 0;
+    }
+
+    .logo-img {
+      height: 55px;
+      object-fit: contain;
+      margin-bottom: 0;
+    }
+
+    .topline {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 118px;
+      padding: 6px 0;
+      margin-bottom: 0.65rem;
+    }
+
+    .brand-title {
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      gap: 18px;
+    }
+
+    .brand-sep {
+      width: 6px;
+      height: 44px;
+      background: #A22C29;
+      flex: 0 0 6px;
+    }
+
+    .brand-title .logo-img {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 120px;
+      width: auto;
+    }
+
+    .brand-name {
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: #A22C29;
+      letter-spacing: 0.2px;
+      text-align: center;
+    }
+
+    .brand-sub {
+      font-size: 0.78rem;
+      color: #4b5563;
+      line-height: 1.2;
+      margin-top: 2px;
+      text-align: center;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 12px;
+      font-size: 0.85rem;
+    }
+
+    .meta-item strong {
+      display: inline-block;
+      min-width: 110px;
+      font-weight: 800;
+      color: #111827;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.5px;
+    }
+
+    .meta-item span {
+      color: var(--doc-ink);
+      font-weight: 700;
+    }
+
+    .logo-title p {
+      margin: 0.35rem 0 0;
+      color: var(--gray-600);
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .fournisseur-box {
+      background: white;
+      border: 1px solid #9aa4b2;
+      border-radius: 8px;
+      padding: 0.75rem 0.9rem;
+      box-shadow: none;
+    }
+
+    .fournisseur-box h5 {
+      font-size: 0.9rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+      color: var(--gray-900);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .info-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0.25rem 0;
+      color: var(--doc-ink);
+      font-size: 0.86rem;
+      line-height: 1.25;
+    }
+
+    .info-line i { color: var(--blue); }
+
+    .qr-box {
+      border: 1px solid var(--doc-border);
+      border-radius: 8px;
+      padding: 0.75rem 0.9rem;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qr-box img {
+      width: 82px;
+      height: 82px;
+      padding: 6px;
+      border: 1px solid var(--doc-border);
+      border-radius: 8px;
+      box-shadow: none;
+      background: white;
+    }
+
+    .table-section {
+      padding: 2rem;
+      background: white;
+    }
+
+    .table-container {
+      width: 100%;
+      overflow-x: visible;
+      overflow-y: visible;
+    }
+
+    .table-doc {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      min-width: 0;
+    }
+
+    @media (max-width: 768px) {
+      .table-container {
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .table-doc {
+        min-width: 900px;
+      }
+    }
+
+    .table-doc th {
+      background: var(--blue);
+      color: white;
+      padding: 0.9rem 0.8rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .table-doc td {
+      padding: 1rem 0.8rem;
+      border-bottom: 1px solid #eef1f5;
+      vertical-align: top;
+    }
+
+    .table-doc tbody tr:hover {
+      background: var(--blue-light);
+    }
+
+    .ref-cell {
+      max-width: 140px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin: 0 auto;
+    }
+
+    .table-doc tbody tr:nth-child(even) { background: #f9fafb; }
+
+    .badge-id {
+      background: var(--blue);
+      color: white;
+      font-weight: 700;
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      display: inline-block;
+      margin-left: 8px;
+    }
+
+    .signature-footer {
+      padding-top: 0;
+    }
+
+    .sig-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    @media (min-width: 768px) {
+      .sig-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .sig-cell {
+      border: 1px solid #9aa4b2;
+      border-radius: 8px;
+      padding: 0.9rem 1rem;
+      min-height: 100px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: #fff;
+    }
+
+    .sig-title {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: #111827;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .sig-img {
+      width: 200px;
+      height: 150px;
+      object-fit: contain;
+      object-position: left center;
+      display: block;
+      margin-top: 30px;
+    }
+
+    .sig-line {
+      margin-top: 18px;
+      height: 52px;
+      border-bottom: 1px solid #c3cbd6;
+    }
+  </style>
+</head>
+<body>
+
+  <%
+    const fmtMoney = (n) => (Number(n || 0)).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const fmtPct = (n) => (Number(n || 0)).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const tvaRate = Number(bc.tauxTva || 0);
+    const items = Array.isArray(bc.commandesItems) ? bc.commandesItems : [];
+    const computedLines = items.map((it) => {
+      const q = Number(it.quantite || 0);
+      const pu = Number(it.prixUnitaire || 0);
+      const base = q * pu;
+      const tauxRemise = Number(it.tauxRemise || 0);
+      const remiseAmt = base * (tauxRemise / 100);
+      const net = base - remiseAmt;
+      return {
+        ...it,
+        _base: base,
+        _remiseAmt: remiseAmt,
+        _net: net,
+      };
+    });
+    const computedTotalHt = computedLines.reduce((sum, it) => sum + (it._net || 0), 0);
+    const computedTva = computedTotalHt * (tvaRate / 100);
+    const computedTtc = computedTotalHt + computedTva;
+    const docDateStr = new Date(bc.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  %>
+
+  <div class="doc-card">
+    <div class="doc-header">
+      <div class="topline">
+        <div class="brand-title">
+          <img src="/img/logo-4.png" alt="Logo" class="logo-img" />
+          <div class="brand-sep"></div>
+          <div>
+            <div class="brand-name">Construction et Fondation</div>
+            <div class="brand-sub">Pour des constructions bien fondées
+</div>
+          </div>
+        </div>
+      </div>
+      <br>
+
+      <div class="header-grid">
+        <div class="fournisseur-box">
+          <div class="meta-grid"> 
+            <div class="meta-item"><strong>BC N° : <%= bc.id %></strong> </div>
+            <br>
+            <div class="meta-item"><strong>Date :<%= docDateStr %></strong></div>
+            <!-- <div class="meta-item"><strong>Devis N° :</strong> <span>—</span></div> -->
+          </div>
+        </div>
+
+        <div class="qr-box">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<%= encodeURIComponent(publicBcUrl || '') %>" alt="QR Code" />
+        </div>
+
+        <div class="fournisseur-box">
+          <div style="display:grid; grid-template-columns: 1fr; gap: 6px;">
+            <div class="info-line"><i class="fas fa-building"></i> <strong><%= bc.fournisseur?.name || '-' %></strong></div>
+            <div class="info-line"><i class="fas fa-envelope"></i> <span><%= bc.fournisseur?.email || '-' %></span></div>
+            <div class="info-line"><i class="fas fa-phone"></i> <span><%= bc.fournisseur?.telFournisseur || 'Non renseigné' %></span></div>
+            <div class="info-line"><i class="fas fa-hard-hat"></i> <span><strong><%= bc.chantier?.nom || '-' %></strong></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-section">
+      <div class="table-container">
+        <table class="table-doc">
+          <thead>
+            <tr>
+              <th style="width:6%; text-align:center; border: 1px solid #dee2e6;">N°</th>
+              <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Reference</th>
+              <th style="width:34%; border: 1px solid #dee2e6;">Désignation</th>
+              <th style="width:8%; text-align:center; border: 1px solid #dee2e6;">Quantité</th>
+              <th style="width:10%; text-align:center; border: 1px solid #dee2e6;">Unité</th>
+              <th style="width:12%; text-align:right; border: 1px solid #dee2e6;">Prix U. HT</th>
+              <th style="width:8%; text-align:center; border: 1px solid #dee2e6;">Remise (%)</th>
+              <th style="width:12%; text-align:right; border: 1px solid #dee2e6;">Total HT</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% computedLines.forEach((item, i) => { %>
+              <tr>
+                <td style="text-align:center;"><%= i + 1 %></td>
+                <td style="text-align:center;"><div class="ref-cell"><%= item.reference || '' %></div></td>
+                <td><%= item.designation || '' %></td>
+                <td style="text-align:center;"><%= item.quantite || 0 %></td>
+                <td style="text-align:center;"><%= item.unite || '' %></td>
+                <td style="text-align:right;"><%= fmtMoney(item.prixUnitaire || 0) %></td>
+                <td style="text-align:center;"><%= fmtPct(item.tauxRemise || 0) %></td>
+                <td style="text-align:right;"><%= fmtMoney(item._net || 0) %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Totals section (index.ejs style) -->
+    <div class="table-section" style="padding-top: 0;">
+      <div class="row justify-content-end">
+        <div class="col-md-6">
+          <table class="table table-sm mb-0">
+            <tbody>
+              <tr>
+                <th class="text-right" style="border-top: none;">Total HT</th>
+                <td class="text-right" style="border-top: none;"><%= fmtMoney(computedTotalHt) %></td>
+              </tr>
+              <tr>
+                <th class="text-right align-middle">TVA (%)</th>
+                <td class="text-right"><%= fmtPct(tvaRate) %></td>
+              </tr>
+              <tr>
+                <th class="text-right">Montant TVA</th>
+                <td class="text-right"><%= fmtMoney(computedTva) %></td>
+              </tr>
+              <tr>
+                <th class="text-right">Total TTC</th>
+                <td class="text-right font-weight-bold"><%= fmtMoney(computedTtc) %></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-section" style="padding-top: 0;">
+      <div class="fournisseur-box">
+        <h5><i class="fas fa-pen"></i> Montant en lettres</h5>
+        <div class="info-line"><span><strong><%= bc.montantLettre || '—' %></strong></span></div>
+      </div>
+    </div>
+
+    <div class="table-section signature-footer">
+      <div class="sig-grid">
+        <div class="sig-cell">
+          <div class="sig-title">Signature du direction</div>
+          <div class="sig-line"></div>
+        </div>
+        <div class="sig-cell">
+          <div class="sig-title">Le Responsable Achats</div>
+              <img class="sig-img" src="/img/signature.png" alt="Signature" style="width: 300px;" />
+
+          <div class="sig-line"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -3,8 +3,10 @@ import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
 import nodemailer from "nodemailer";
+import axios from "axios";
 import { fileURLToPath } from "url";
 import { log } from "console";
+import crypto from "crypto";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,6 +31,21 @@ const normalizeNumber = (value) => {
     .replace(',', '.');
   const n = parseFloat(cleaned);
   return Number.isNaN(n) ? 0 : n;
+};
+
+const PUBLIC_BC_SECRET = process.env.PUBLIC_BC_SECRET || 'confonda_public_bc_secret';
+
+const signPublicBcId = (id) => {
+  return crypto
+    .createHmac('sha256', PUBLIC_BC_SECRET)
+    .update(String(id))
+    .digest('hex');
+};
+
+const buildPublicBcUrl = (req, bcId) => {
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  const sig = signPublicBcId(bcId);
+  return `${baseUrl}/public/bc/${bcId}?sig=${sig}`;
 };
 
 
@@ -70,6 +87,7 @@ export const postBcDemandeFourniture = async (req, res) => {
         designation: true,
         unité: true,
         quantité: true,
+        lot : true
       },
     });
 
@@ -109,6 +127,8 @@ export const postBcDemandeFourniture = async (req, res) => {
           designation: a.designation,
           unite: a.unité || "",
           quantite: q,
+          reference : a.lot 
+           
         };
       });
 
@@ -141,6 +161,7 @@ export const postBcDemandeFourniture = async (req, res) => {
             chantierId,
             itemId: item.id,
             qty: item.quantite,
+            reference : item.lot,
             montant: null,
           },
         });
@@ -265,10 +286,13 @@ export const generateBcPDF = async (req, res) => {
     const colors = {
       blue: "#0052CC",
       blueLight: "#f3f8ff",
+      brand: "#A22C29",
       gray900: "#1f2937",
       gray800: "#374151",
       gray600: "#6b7280",
-      border: "#e5e7eb",
+      border: "#cfd6df",
+      borderSoft: "#c3cbd6",
+      rowBorder: "#eef1f5",
       white: "#ffffff",
       tableHeader: "#0052CC",
       rowEven: "#ffffff",
@@ -278,133 +302,137 @@ export const generateBcPDF = async (req, res) => {
     const logoPath = path.join(__dirname, "../public/img/logo-4.png");
     const signaturePath = path.join(__dirname, "../public/img/signature.png");
 
-    const headerHeight = 130;
-    const footerHeight = 180; // Demandeur/Chantier + Signatures
-    const rowHeight = 30;
-    const colWidths = [40, 190, 60, 70, 85, 70];
+    const headerHeight = 150;
+    const footerHeight = 120;
+    const rowHeight = 22;
+    const colWidths = [28, 55, 160, 45, 50, 60, 45, 72];
 
     // 4. Helper Functions
 
-    const drawHeader = () => {
+    const sanitizePdfNumber = (s) => String(s || "").replace(/[\u202F\u00A0]/g, " ");
+    const fmtMoney = (n) => sanitizePdfNumber(Number(n || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    const fmtPct = (n) => sanitizePdfNumber(Number(n || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+
+    const tvaRate = normalizeNumber(bc.tauxTva || 0);
+    const items = Array.isArray(bc.commandesItems) ? bc.commandesItems : [];
+    const computedTotalHt = normalizeNumber(bc.totalHt ?? 0);
+    const computedTtc = normalizeNumber(bc.totalTtc ?? 0);
+    const computedTva = normalizeNumber((computedTtc || 0) - (computedTotalHt || 0));
+    const docDateStr = new Date(bc.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
+    const publicBcUrl = buildPublicBcUrl(req, bc.id);
+
+    const drawHeader = async () => {
       const y = margin;
 
-      // Background for header
-      doc.rect(margin - 10, y - 10, contentWidth + 20, headerHeight)
-        .fillOpacity(0.15).fill(colors.blueLight).fillOpacity(1);
+      // Topline (logo left, centered brand block)
+      const toplineY = y;
+      const toplineH = 70;
 
-      // Logo
       if (fs.existsSync(logoPath)) {
         try {
-          doc.image(logoPath, margin, y + 10, { width: 80 });
+          doc.image(logoPath, margin, toplineY + 2, { height: 60 });
         } catch (e) {
           console.error("Error loading logo:", e);
         }
       }
 
-      // Title
-      doc.font("Helvetica-Bold").fontSize(24).fillColor(colors.gray900)
-        .text("Bon de Commande", margin, y + 80);
+      // Centered brand text + vertical separator (mimic bc.ejs)
+      const centerX = margin + contentWidth / 2;
+      const sepW = 6;
+      const sepH = 44;
+      const sepX = centerX - sepW / 2;
+      const sepY = toplineY + 12;
+      doc.rect(sepX, sepY, sepW, sepH).fill(colors.brand);
 
-      // Date & ID
-      const dateStr = new Date(bc.date).toLocaleDateString("fr-FR", {
-        weekday: "long", day: "numeric", month: "long", year: "numeric"
-      });
-      doc.font("Helvetica-Bold").fontSize(10).fillColor(colors.blue)
-        .text(`N° ${bc.id} • ${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)}`, margin, y + 110);
-
-      // Supplier Box
-      const supplierBoxW = 220;
-      const supplierBoxH = 110;
-      const supplierBoxX = pageWidth - margin - supplierBoxW;
-      const supplierBoxY = y + 10;
-
-      // Box container
-      doc.save()
-        .lineWidth(1.5).strokeColor(colors.blue)
-        .roundedRect(supplierBoxX, supplierBoxY, supplierBoxW, supplierBoxH, 10).stroke();
-      doc.fillColor(colors.white)
-        .roundedRect(supplierBoxX, supplierBoxY, supplierBoxW, supplierBoxH, 10).fill();
-
-      // Header of box
-      const boxHeaderH = 28;
-      doc.fillColor(colors.blue)
-        .roundedRect(supplierBoxX, supplierBoxY, supplierBoxW, boxHeaderH, 10).fill();
-      // Fix corners for header
-      doc.rect(supplierBoxX, supplierBoxY + 10, supplierBoxW, boxHeaderH - 10).fill(colors.blue);
-      doc.roundedRect(supplierBoxX, supplierBoxY, supplierBoxW, boxHeaderH, 10).fill(colors.blue);
-
-      doc.font("Helvetica-Bold").fontSize(10).fillColor(colors.white)
-        .text("Fournisseur", supplierBoxX + 10, supplierBoxY + 8);
-
-      // Supplier Info
-      const infoY = supplierBoxY + boxHeaderH + 10;
-      doc.font("Helvetica-Bold").fontSize(10).fillColor(colors.gray900)
-        .text(bc.fournisseur?.name || "-", supplierBoxX + 10, infoY, { width: supplierBoxW - 20 });
-
+      doc.font("Helvetica-Bold").fontSize(13).fillColor(colors.brand)
+        .text("Construction et Fondation", centerX + 14, toplineY + 18, { align: "left" });
       doc.font("Helvetica").fontSize(9).fillColor(colors.gray600)
-        .text(bc.fournisseur?.email || "-", supplierBoxX + 10, infoY + 20, { width: supplierBoxW - 20 });
+        .text("Pour des constructions bien fondées", centerX + 14, toplineY + 36, { align: "left" });
 
-      doc.font("Helvetica").fontSize(9).fillColor(colors.gray600)
-        .text(bc.fournisseur?.telFournisseur || "Non renseigné", supplierBoxX + 10, infoY + 35, { width: supplierBoxW - 20 });
+      // Header grid (3 boxes)
+      const gridY = toplineY + toplineH + 12;
+      const gap = 10;
+      const boxW = (contentWidth - gap * 2) / 3;
+      const boxH = 68;
 
-      doc.restore();
+      // Meta (left)
+      doc.roundedRect(margin, gridY, boxW, boxH, 8).lineWidth(1).stroke(colors.border);
+      doc.font("Helvetica-Bold").fontSize(11).fillColor(colors.gray900)
+        .text(`BC N° : ${bc.id}`, margin + 10, gridY + 14, { width: boxW - 20 });
+      doc.font("Helvetica-Bold").fontSize(11).fillColor(colors.gray900)
+        .text(`Date : ${docDateStr}`, margin + 10, gridY + 38, { width: boxW - 20 });
+
+      // QR (center)
+      const qrX = margin + boxW + gap;
+      doc.roundedRect(qrX, gridY, boxW, boxH, 8).lineWidth(1).stroke(colors.border);
+      try {
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(publicBcUrl || "")}`;
+        const qrResp = await axios.get(qrUrl, { responseType: "arraybuffer" });
+        const imgSize = 54;
+        const imgX = qrX + (boxW - imgSize) / 2;
+        const imgY = gridY + 7;
+        doc.image(Buffer.from(qrResp.data), imgX, imgY, { width: imgSize, height: imgSize });
+      } catch (e) {
+        doc.font("Helvetica").fontSize(7.5).fillColor(colors.gray600)
+          .text(publicBcUrl, qrX + 8, gridY + 26, { width: boxW - 16, align: "center", ellipsis: true });
+      }
+
+      // Fournisseur (right)
+      const cliX = margin + (boxW + gap) * 2;
+      doc.roundedRect(cliX, gridY, boxW, boxH, 8).lineWidth(1).stroke(colors.border);
+      const lineW = boxW - 16;
+      doc.font("Helvetica-Bold").fontSize(9.5).fillColor(colors.gray900)
+        .text(bc.fournisseur?.name || "-", cliX + 8, gridY + 8, { width: lineW, ellipsis: true });
+      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray600)
+        .text(bc.fournisseur?.email || "-", cliX + 8, gridY + 24, { width: lineW, ellipsis: true });
+      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray600)
+        .text(bc.fournisseur?.telFournisseur || "Non renseigné", cliX + 8, gridY + 38, { width: lineW, ellipsis: true });
+      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray800)
+        .text(bc.chantier?.nom || "-", cliX + 8, gridY + 52, { width: lineW, ellipsis: true });
     };
 
     const drawFooter = (yPosition) => {
-      // If yPosition is not provided, place at bottom of page
       const startY = yPosition || (pageHeight - margin - footerHeight);
+      const gap = 12;
+      const sigW = (contentWidth - gap) / 2;
+      const sigH = 86;
 
-      // Demandeur & Chantier Boxes
-      const boxW = (contentWidth - 20) / 2;
-      const boxH = 60;
+      // Signature du direction (left)
+      doc.roundedRect(margin, startY, sigW, sigH, 8).lineWidth(1).stroke(colors.borderSoft);
+      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
+        .text("SIGNATURE DU DIRECTION", margin + 10, startY + 10);
+      doc.moveTo(margin + 10, startY + sigH - 18).lineTo(margin + sigW - 10, startY + sigH - 18)
+        .lineWidth(1).stroke(colors.borderSoft);
 
-      // Demandeur
-      doc.roundedRect(margin, startY, boxW, boxH, 8).lineWidth(1).stroke(colors.border);
-      doc.font("Helvetica-Bold").fontSize(10).fillColor(colors.blue)
-        .text("Demandeur", margin + 10, startY + 10);
-      doc.font("Helvetica-Bold").fontSize(10).fillColor(colors.gray900)
-        .text(bc.demandeur || "-", margin + 10, startY + 30, { width: boxW - 20 });
-
-      // Chantier
-      doc.roundedRect(margin + boxW + 20, startY, boxW, boxH, 8).lineWidth(1).stroke(colors.border);
-      doc.font("Helvetica-Bold").fontSize(10).fillColor(colors.blue)
-        .text("Chantier", margin + boxW + 30, startY + 10);
-      doc.font("Helvetica-Bold").fontSize(10).fillColor(colors.gray900)
-        .text(bc.chantier?.nom || "-", margin + boxW + 30, startY + 30, { width: boxW - 20 });
-
-      // Signatures
-      const sigY = startY + boxH + 15;
-      const sigH = 80;
-      const sigW = (contentWidth - 20) / 2;
-
-      // Cachet & Signature Fournisseur
-      doc.roundedRect(margin, sigY, sigW, sigH, 8).lineWidth(1).stroke("#c3d4e9");
-      doc.font("Helvetica-Bold").fontSize(9).fillColor(colors.gray600)
-        .text("CACHET & SIGNATURE DU FOURNISSEUR", margin, sigY + sigH - 20, { width: sigW, align: "center" });
-
-      // Responsable Achats
-      const sig2X = margin + sigW + 20;
-      doc.roundedRect(sig2X, sigY, sigW, sigH, 8).lineWidth(1).stroke("#c3d4e9");
+      // Le Responsable Achats (right)
+      const sig2X = margin + sigW + gap;
+      doc.roundedRect(sig2X, startY, sigW, sigH, 8).lineWidth(1).stroke(colors.borderSoft);
+      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
+        .text("LE RESPONSABLE ACHATS", sig2X + 10, startY + 10);
 
       if (fs.existsSync(signaturePath)) {
         try {
-          doc.image(signaturePath, sig2X + (sigW - 100) / 2, sigY + 10, { width: 100, height: 50, fit: [100, 50] });
+          const fitW = sigW - 20;
+          const fitH = 60;
+          const imgX = sig2X + (sigW - fitW) / 2;
+          const imgY = startY + 22;
+          doc.image(signaturePath, imgX, imgY, { fit: [fitW, fitH], align: "center", valign: "center" });
         } catch (e) {
           console.error("Error loading signature:", e);
         }
       }
 
-      doc.font("Helvetica-Bold").fontSize(9).fillColor(colors.gray600)
-        .text("LE RESPONSABLE ACHATS", sig2X, sigY + sigH - 20, { width: sigW, align: "center" });
+      doc.moveTo(sig2X + 10, startY + sigH - 18).lineTo(sig2X + sigW - 10, startY + sigH - 18)
+        .lineWidth(1).stroke(colors.borderSoft);
     };
 
     const drawTableHeader = (y) => {
       doc.rect(margin, y, contentWidth, rowHeight).fill(colors.tableHeader);
-      const headers = ["N°", "Désignation", "Unité", "Quantité", "P.U. HT", "Total HT"];
+      const headers = ["N°", "Reference", "Désignation", "Quantité", "Unité", "Prix U. HT", "Remise (%)", "Total HT"];
       let x = margin;
       headers.forEach((h, i) => {
-        doc.font("Helvetica-Bold").fontSize(9).fillColor(colors.white)
-          .text(h, x + 5, y + 10, { width: colWidths[i] - 10, align: i === 0 || i >= 3 ? "center" : "left" });
+        doc.font("Helvetica-Bold").fontSize(8).fillColor(colors.white)
+          .text(h, x + 4, y + 7, { width: colWidths[i] - 8, align: i === 2 ? "left" : "center" });
         x += colWidths[i];
       });
       return y + rowHeight;
@@ -417,44 +445,58 @@ export const generateBcPDF = async (req, res) => {
       let x = margin;
       // Borders
       colWidths.forEach(w => {
-        doc.rect(x, y, w, rowHeight).lineWidth(0.5).stroke(colors.border);
+        doc.rect(x, y, w, rowHeight).lineWidth(0.6).stroke(colors.rowBorder);
         x += w;
       });
 
       x = margin;
 
       // N°
-      doc.circle(x + 20, y + 15, 10).fill(colors.blue);
-      doc.font("Helvetica-Bold").fontSize(9).fillColor(colors.white)
-        .text(String(index + 1), x, y + 10, { width: colWidths[0], align: "center" });
+      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray900)
+        .text(String(index + 1), x, y + 7, { width: colWidths[0], align: "center" });
       x += colWidths[0];
 
-      // Désignation
-      doc.font("Helvetica-Bold").fontSize(9).fillColor(colors.gray900)
-        .text(item.designation || "-", x + 5, y + 10, { width: colWidths[1] - 10, lineBreak: false, ellipsis: true });
+      // Reference
+      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
+        .text(item.reference || "", x, y + 7, { width: colWidths[1], align: "center", ellipsis: true });
       x += colWidths[1];
 
-      // Unité
-      doc.font("Helvetica").fontSize(9).fillColor(colors.gray800)
-        .text(item.unite || "-", x, y + 10, { width: colWidths[2], align: "center" });
+      // Désignation
+      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray900)
+        .text(item.designation || "-", x + 4, y + 7, { width: colWidths[2] - 8, ellipsis: true });
       x += colWidths[2];
 
       // Quantité
-      doc.roundedRect(x + 10, y + 6, colWidths[3] - 20, 18, 9).fill("#e2e8f0");
-      doc.font("Helvetica-Bold").fontSize(9).fillColor(colors.gray900)
-        .text(String(item.quantite || 0), x, y + 10, { width: colWidths[3], align: "center" });
+      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray900)
+        .text(String(item.quantite || 0), x, y + 7, { width: colWidths[3], align: "center" });
       x += colWidths[3];
 
-      // P.U.
-      const pu = (item.prixUnitaire || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      doc.font("Helvetica").fontSize(9).fillColor(colors.gray900)
-        .text(pu, x, y + 10, { width: colWidths[4] - 5, align: "right" });
+      // Unité
+      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
+        .text(item.unite || "", x, y + 7, { width: colWidths[4], align: "center" });
       x += colWidths[4];
 
-      // Total HT
-      const total = ((item.quantite || 0) * (item.prixUnitaire || 0)).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      doc.font("Helvetica").fontSize(9).fillColor(colors.gray900)
-        .text(total, x, y + 10, { width: colWidths[5] - 5, align: "right" });
+      // Prix U.
+      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray900)
+        .text(fmtMoney(item.prixUnitaire || 0), x, y + 7, { width: colWidths[5] - 6, align: "right" });
+      x += colWidths[5];
+
+      // Remise
+      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
+        .text(fmtPct(item.tauxRemise || 0), x, y + 7, { width: colWidths[6], align: "center" });
+      x += colWidths[6];
+
+      // Total HT (net)
+      const itemTotalHt = (() => {
+        const stored = normalizeNumber(item.totalHt ?? 0);
+        if (stored) return stored;
+        const q = normalizeNumber(item.quantite || 0);
+        const pu = normalizeNumber(item.prixUnitaire || 0);
+        const remiseAmt = normalizeNumber(item.remise ?? 0);
+        return (q * pu) - remiseAmt;
+      })();
+      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray900)
+        .text(fmtMoney(itemTotalHt), x, y + 7, { width: colWidths[7] - 6, align: "right" });
 
       return y + rowHeight;
     };
@@ -463,20 +505,11 @@ export const generateBcPDF = async (req, res) => {
       const totalsWidth = 250;
       const totalsX = pageWidth - margin - totalsWidth;
 
-      const totalHt = bc.totalHt || 0;
-      const tauxRemise = bc.tauxRemise || 0;
-      const montantRemise = totalHt * tauxRemise / 100;
-      const netCommercial = totalHt - montantRemise;
-      const tauxTva = bc.tauxTva || 20;
-      const montantTva = netCommercial * tauxTva / 100;
-      const totalTtc = netCommercial + montantTva;
-
       const lines = [
-        { label: "Total HT", value: totalHt },
-        { label: `Remise (${tauxRemise}%)`, value: -montantRemise },
-        { label: "Net Commercial", value: netCommercial },
-        { label: `TVA (${tauxTva}%)`, value: montantTva },
-        { label: "Total TTC", value: totalTtc, bold: true, size: 12 },
+        { label: "Total HT", value: computedTotalHt },
+        { label: `TVA (${fmtPct(tvaRate)}%)`, value: computedTva },
+        { label: "Montant TVA", value: computedTva },
+        { label: "Total TTC", value: computedTtc, bold: true, size: 12 },
       ];
 
       const boxHeight = lines.length * 20 + 20;
@@ -491,7 +524,7 @@ export const generateBcPDF = async (req, res) => {
           .fillColor(line.bold ? colors.blue : colors.gray900)
           .text(line.label, totalsX + 10, currentY);
 
-        const valStr = Math.abs(line.value).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " MAD";
+        const valStr = fmtMoney(Math.abs(line.value)) + " MAD";
         doc.text(valStr, totalsX + 10, currentY, { width: totalsWidth - 20, align: "right" });
 
         currentY += 20;
@@ -501,27 +534,26 @@ export const generateBcPDF = async (req, res) => {
     };
 
     const drawMontantLettres = (y) => {
-      const height = 40;
+      const height = 48;
       doc.roundedRect(margin, y, contentWidth, height, 8)
-        .fill(colors.blueLight).stroke("#dbeafe");
+        .fillAndStroke("#f3f4f6", colors.border);
 
-      doc.font("Helvetica-Bold").fontSize(10).fillColor(colors.blue)
-        .text("Montant en lettres :", margin + 15, y + 14);
+      doc.font("Helvetica-Bold").fontSize(10).fillColor(colors.gray900)
+        .text("Montant en lettres", margin + 15, y + 10);
 
-      doc.font("Helvetica-Oblique").fontSize(10).fillColor(colors.gray900)
-        .text(bc.montantLettre || "—", margin + 130, y + 14);
+      doc.font("Helvetica-Bold").fontSize(10).fillColor(colors.gray900)
+        .text(bc.montantLettre || "—", margin + 15, y + 28, { width: contentWidth - 30 });
 
       return y + height;
     };
 
     // 5. Main Render Logic
 
-    let currentY = margin + headerHeight + 20;
-    drawHeader();
+    let currentY = margin + headerHeight + 18;
+    await drawHeader();
 
     // Table Logic
-    const items = bc.commandesItems || [];
-    const isMultiPage = items.length > 7;
+    const isMultiPage = items.length > 12;
 
     currentY = drawTableHeader(currentY);
 
@@ -540,8 +572,8 @@ export const generateBcPDF = async (req, res) => {
 
       if (isMultiPage && (currentY + spaceNeeded > effectivePageHeight - footerZoneHeight)) {
         doc.addPage();
-        drawHeader();
-        currentY = margin + headerHeight + 20;
+        await drawHeader();
+        currentY = margin + headerHeight + 18;
         currentY = drawTableHeader(currentY);
       }
 
@@ -549,8 +581,8 @@ export const generateBcPDF = async (req, res) => {
     }
 
     // Totals & Montant en lettres
-    const totalsHeight = 140;
-    const montantHeight = 50;
+    const totalsHeight = 120;
+    const montantHeight = 60;
     const bottomBlockHeight = totalsHeight + montantHeight;
 
     // Check if we have space for Totals + Montant + Footer
@@ -565,8 +597,8 @@ export const generateBcPDF = async (req, res) => {
     if (spaceRemaining < spaceNeededForEnd) {
       if (isMultiPage) {
         doc.addPage();
-        drawHeader();
-        currentY = margin + headerHeight + 20;
+        await drawHeader();
+        currentY = margin + headerHeight + 18;
       }
       // If !isMultiPage, we hope it fits. If it really doesn't, PDFKit might just overflow or we should force a page.
       // But requirement says "all items are rendered on a single page". It doesn't say "totals must be on same page as items if items <= 7".
@@ -758,12 +790,19 @@ export const sendBcEmail = async (req, res) => {
       cellX += colWidths[3];
 
       // Prix unitaire
-      const pu = (item.prixUnitaire || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const pu = sanitizePdfNumber((item.prixUnitaire || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
       doc.font("Helvetica").fontSize(8.5).fillColor(gray900).text(pu, cellX + 8, rowY + 10, { width: colWidths[4] - 16, align: "right" });
       cellX += colWidths[4];
 
       // Total HT
-      const total = ((item.quantite || 0) * (item.prixUnitaire || 0)).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const total = sanitizePdfNumber((() => {
+        const stored = Number(item.totalHt || 0);
+        if (stored) return stored;
+        const q = Number(item.quantite || 0);
+        const pu2 = Number(item.prixUnitaire || 0);
+        const remiseAmt = Number(item.remise || 0);
+        return (q * pu2) - remiseAmt;
+      })().toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
       doc.font("Helvetica").fontSize(8.5).fillColor(gray900).text(total, cellX + 8, rowY + 10, { width: colWidths[5] - 16, align: "right" });
 
       y += rowHeight;
@@ -777,17 +816,12 @@ export const sendBcEmail = async (req, res) => {
     const totalsX = pageWidth - margin - totalsWidth;
 
     const totalHt = bc.totalHt || 0;
-    const tauxRemise = bc.tauxRemise || 0;
-    const montantRemise = totalHt * tauxRemise / 100;
-    const netCommercial = totalHt - montantRemise;
-    const tauxTva = bc.tauxTva || 20;
-    const montantTva = netCommercial * tauxTva / 100;
-    const totalTtc = netCommercial + montantTva;
+    const tauxTva = bc.tauxTva || 0;
+    const totalTtc = bc.totalTtc || 0;
+    const montantTva = totalTtc - totalHt;
 
     const totals = [
       { label: "Total HT", value: totalHt },
-      { label: `Remise (${tauxRemise} %)`, value: -montantRemise },
-      { label: "Net commercial", value: netCommercial },
       { label: `TVA (${tauxTva} %)`, value: montantTva },
       { label: "Total TTC", value: totalTtc, bold: true }
     ];
@@ -811,10 +845,10 @@ export const sendBcEmail = async (req, res) => {
         .fillColor(gray900)
         .text(t.label, totalsX, lineY + (t.bold ? 6 : 4));
 
-      const valStr = Math.abs(t.value).toLocaleString("fr-FR", {
+      const valStr = sanitizePdfNumber(Math.abs(t.value).toLocaleString("fr-FR", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
-      });
+      }));
 
       doc.font(t.bold ? "Helvetica-Bold" : "Helvetica")
         .fontSize(t.bold ? 13 : 10)
@@ -866,13 +900,16 @@ export const sendBcEmail = async (req, res) => {
     // =========================
     // SIGNATURES (background AFTER everything else)
     // =========================
-    doc.rect(margin - 10, y - 20, contentWidth + 20, 130)
+    // Define signature sizes first so the background can be sized dynamically
+    const sigW = (contentWidth - 40) / 2; // signature box width
+    // Increase the signature box height on the email PDF so the signature can be displayed larger.
+    // Edit this number if you want a taller or shorter signature box.
+    const sigH = 140;
+    const sigBgH = sigH + 40; // background height to fit the signature boxes comfortably
+    doc.rect(margin - 10, y - 20, contentWidth + 20, sigBgH)
       .fillOpacity(0.15)
       .fill(blueLight)
       .fillOpacity(1);
-
-    const sigW = (contentWidth - 40) / 2;
-    const sigH = 100;
 
     // Fournisseur signature box
     doc.roundedRect(margin, y, sigW, sigH, 12)
@@ -881,7 +918,7 @@ export const sendBcEmail = async (req, res) => {
       .fill("#ffffff");
 
     doc.font("Helvetica-Bold").fontSize(9).fillColor(gray600)
-      .text("CACHET & SIGNATURE DU FOURNISSEUR", margin, y + sigH + 10, {
+      .text("VISA DIRECTION ", margin, y + sigH + 10, {
         width: sigW, align: "center"
       });
 
@@ -894,12 +931,14 @@ export const sendBcEmail = async (req, res) => {
 
     if (fs.existsSync(signaturePath)) {
       try {
-        doc.image(signaturePath, sig2X + 20, y + 10, {
-          width: sigW - 40,
-          height: sigH - 30,
-          align: "center",
-          valign: "center"
-        });
+        // Fit the signature to the box and center it.
+        // Make this bigger by reducing the padding subtractors (smaller subtraction = bigger image).
+        // Example: near-full box size -> const fitW = sigW - 6; const fitH = sigH - 12
+        const fitW = sigW - 6; // smaller subtraction -> larger width
+        const fitH = sigH - 12; // smaller subtraction -> larger height
+        const imgX = sig2X + (sigW - fitW) / 2;
+        const imgY = y + 8;
+        doc.image(signaturePath, imgX, imgY, { fit: [fitW, fitH], align: 'center', valign: 'center' });
       } catch (_) { }
     }
 
@@ -923,7 +962,7 @@ export const viewBc = async (req, res) => {
       include: {
         commandesItems: true,
         fournisseur: true,
-        chantier: true,
+        chantier: true, 
       }
     });
     if (!bc) {
@@ -946,8 +985,9 @@ export const editBc = async (req, res) => {
           include: {
             BondeCommandeChantierItem: {   // ✅ correct relation name
               include: { chantier: true }  // Include chantier details
-            }
-          }
+            }, 
+          },
+         
         },
         fournisseur: true,
       }
@@ -958,7 +998,8 @@ export const editBc = async (req, res) => {
       return res.status(404).json({ success: false, error: "Bon de commande non trouvée" });
     }
     const fournisseurs = await prisma.fournisseur.findMany()
-    res.render('dashboard/achats/bc/edit', { bc, fournisseurs, chantiers });
+    const publicBcUrl = buildPublicBcUrl(req, bc.id);
+    res.render('dashboard/achats/bc/edit', { bc, fournisseurs, chantiers, publicBcUrl });
   } catch (err) {
     console.error('Erreur affichage bon de commande:', err);
     res.status(500).json({ success: false, error: "Erreur serveur" });
@@ -967,7 +1008,7 @@ export const editBc = async (req, res) => {
 export const updateBc = async (req, res) => {
   try {
     const { id } = req.params;
-    const { supplier, date, montantLettres, tauxRemise, tauxTva, commandesItems = [] } = req.body || {};
+    const { supplier, date, montantLettres, tauxTva, commandesItems = [] } = req.body || {};
 
     const bcId = parseInt(id);
     const fournisseurId = parseInt(supplier);
@@ -992,9 +1033,12 @@ export const updateBc = async (req, res) => {
         id: Number(l.id),
         designation: String(l.designation || "").trim(),
         unite: String(l.unite || ""),
+        reference: String(l.reference || ""),
         quantite: Number.parseInt(l.quantite) || 0,
         prixUnitaire: normalizeNumber(l.prixUnitaire),
-        chantierDistribution: l.chantierDistribution || [] // Capture distribution
+        tauxRemise: normalizeNumber(l.tauxRemise),
+        montantRemise: normalizeNumber(l.montantRemise),
+        chantierDistribution: l.chantierDistribution || []
       }))
       .filter((l) => Number.isInteger(l.id) && l.id > 0);
 
@@ -1003,9 +1047,12 @@ export const updateBc = async (req, res) => {
       .map((l) => ({
         designation: String(l?.designation || "").trim(),
         unite: String(l?.unite || ""),
+        reference: String(l?.reference || ""),
         quantite: Number.parseInt(l?.quantite) || 0,
         prixUnitaire: normalizeNumber(l?.prixUnitaire),
-        chantierDistribution: l?.chantierDistribution || [] // Capture distribution
+        tauxRemise: normalizeNumber(l?.tauxRemise),
+        montantRemise: normalizeNumber(l?.montantRemise),
+        chantierDistribution: l?.chantierDistribution || []
       }))
       .filter((l) => l.designation);
 
@@ -1014,15 +1061,15 @@ export const updateBc = async (req, res) => {
     allLines.forEach((l) => {
       const q = l.quantite || 0;
       const p = l.prixUnitaire || 0;
-      totalHt += q * p;
+      const r = l.montantRemise || 0;
+      totalHt += (q * p) - r;
     });
 
-    const remiseRate = parseFloat(tauxRemise) || 0;
+    // In this new model, totalHt is already the "Net Commercial" sum of all lines
+    // We ignore a global "tauxRemise" on the BC header because discounts are per-line.
     const tvaRate = parseFloat(tauxTva) || 0;
-    const montantRemise = totalHt * (remiseRate > 0 ? remiseRate : 0) / 100;
-    const netCommercial = totalHt - montantRemise;
-    const montantTva = netCommercial * (tvaRate > 0 ? tvaRate : 0) / 100;
-    const totalTtc = netCommercial + montantTva;
+    const montantTva = totalHt * (tvaRate > 0 ? tvaRate : 0) / 100;
+    const totalTtc = totalHt + montantTva;
 
     // First, perform the main update on BC and items (create/update fields)
     // We ignore distribution in this step
@@ -1031,9 +1078,7 @@ export const updateBc = async (req, res) => {
       data: {
         date: jsDate,
         fournisseur: { connect: { id: fournisseurId } },
-        totalHt,
-        tauxRemise: remiseRate,
-        netCommercial,
+        totalHt, // This is effectively Net Commercial
         tauxTva: tvaRate,
         totalTtc,
         montantLettre: montantLettres,
@@ -1041,18 +1086,24 @@ export const updateBc = async (req, res) => {
           create: toCreate.map(l => ({
             designation: l.designation,
             unite: l.unite,
+            reference: l.reference,
             quantite: l.quantite,
             prixUnitaire: l.prixUnitaire,
-            totalHt: l.quantite * l.prixUnitaire
+            tauxRemise: l.tauxRemise,
+            remise: l.montantRemise,
+            totalHt: (l.quantite || 0) * (l.prixUnitaire || 0) - (l.montantRemise || 0)
           })),
           update: existing.map((l) => ({
             where: { id: l.id },
             data: {
               designation: l.designation,
               unite: l.unite,
+              reference: l.reference,
               quantite: l.quantite,
               prixUnitaire: l.prixUnitaire,
-              totalHt: (l.quantite || 0) * (l.prixUnitaire || 0),
+              tauxRemise: l.tauxRemise,
+              remise: l.montantRemise,
+              totalHt: (l.quantite || 0) * (l.prixUnitaire || 0) - (l.montantRemise || 0),
             },
           })),
         },
@@ -1077,8 +1128,8 @@ export const updateBc = async (req, res) => {
       let sourceData = existing.find(e => e.id === item.id);
 
       // 2. If not found (meaning it was just created), try to find in 'toCreate' by details
-      // This is a heuristic: matching by designation + amounts. Ideally we'd have a temp ID, but this usually works.
       if (!sourceData) {
+        // Heuristic match
         sourceData = toCreate.find(c =>
           c.designation === item.designation &&
           Math.abs(c.quantite - item.quantite) < 0.001 &&
@@ -1209,7 +1260,7 @@ export const createBcForm = async (req, res) => {
 };
 export const storeBc = async (req, res) => {
   try {
-    const { supplier, date, tauxRemise, montantLettre, tauxTva, commandesItems = [], distributionData = [] } = req.body || {};
+    const { supplier, date, montantLettre, tauxTva, commandesItems = [], distributionData = [] } = req.body || {};
 
     const fournisseurId = parseInt(supplier);
     const jsDate = new Date(date);
@@ -1227,9 +1278,15 @@ export const storeBc = async (req, res) => {
       .map((l) => ({
         designation: String(l?.designation || "").trim(),
         unite: String(l?.unite || ""),
+        reference: String(l?.reference || ""),
         quantite: Number.parseInt(l?.quantite) || 0,
         prixUnitaire: normalizeNumber(l?.prixUnitaire),
+        tauxRemise: normalizeNumber(l?.tauxRemise),
+        montantRemise: normalizeNumber(l?.montantRemise),
+
         chantierDistribution: l?.chantierDistribution || [],
+
+
       }))
       .filter((l) => l.designation);
 
@@ -1237,26 +1294,21 @@ export const storeBc = async (req, res) => {
     toCreate.forEach((l) => {
       const q = l.quantite || 0;
       const p = l.prixUnitaire || 0;
-      totalHt += q * p;
+      const re = l.montantRemise || 0;
+      totalHt += q * p - re;
     });
 
-    const remiseRate = parseFloat(tauxRemise) || 0;
     const tvaRate = parseFloat(tauxTva) || 0;
-    const montantRemise = totalHt * (remiseRate > 0 ? remiseRate : 0) / 100;
-    const netCommercial = totalHt - montantRemise;
-    const montantTva = netCommercial * (tvaRate > 0 ? tvaRate : 0) / 100;
-    const totalTtc = netCommercial + montantTva;
+    const montantTva = totalHt * (tvaRate > 0 ? tvaRate : 0) / 100;
+    const totalTtc = totalHt + montantTva;
 
-    const numero = Date.now();
+
 
     // Step 1: Create BC + items
     const bc = await prisma.bondeCommande.create({
       data: {
         date: jsDate,
-        numero,
         totalHt,
-        tauxRemise: remiseRate,
-        netCommercial,
         tauxTva: tvaRate,
         totalTtc,
         montantLettre,
@@ -1265,9 +1317,12 @@ export const storeBc = async (req, res) => {
           create: toCreate.map((l) => ({
             designation: l.designation,
             unite: l.unite,
+            reference: l.reference,
             quantite: l.quantite,
             prixUnitaire: l.prixUnitaire,
-            totalHt: (l.quantite || 0) * (l.prixUnitaire || 0),
+            tauxRemise: l.tauxRemise,
+            remise: l.montantRemise,
+            totalHt: (l.quantite || 0) * (l.prixUnitaire || 0) - (l.montantRemise || 0),
           })),
         },
       },
@@ -1311,11 +1366,21 @@ export const updateBcItem = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Item ID invalide' });
     }
 
-    const { designation, unite, quantite, prixUnitaire } = req.body || {};
+    const { designation, unite, quantite, prixUnitaire, tauxRemise,  } = req.body || {};
 
     // Ensure item exists
     const item = await prisma.commandesItems.findUnique({ where: { id: itemId } });
     if (!item) return res.status(404).json({ success: false, error: 'Article introuvable' });
+
+    // Calculate derived values if needed
+    // Note: We expect the frontend to send valid numbers, but we re-calculate amounts for safety
+    const safeQty = quantite !== undefined ? (parseInt(quantite) || 0) : item.quantite;
+    const safePu = prixUnitaire !== undefined ? normalizeNumber(prixUnitaire) : item.prixUnitaire;
+    const safeRate = tauxRemise !== undefined ? normalizeNumber(tauxRemise) : (item.tauxRemise || 0);
+
+    const baseAmount = safeQty * safePu;
+    const remiseAmount = baseAmount * (safeRate / 100);
+    const totalHt = baseAmount - remiseAmount;
 
     // Update item fields
     const updatedItem = await prisma.commandesItems.update({
@@ -1323,8 +1388,11 @@ export const updateBcItem = async (req, res) => {
       data: {
         designation: designation !== undefined ? designation : item.designation,
         unite: unite !== undefined ? unite : item.unite,
-        quantite: quantite !== undefined ? parseInt(quantite) || 0 : item.quantite,
-        prixUnitaire: prixUnitaire !== undefined ? normalizeNumber(prixUnitaire) : item.prixUnitaire,
+        quantite: safeQty,
+        prixUnitaire: safePu,
+        tauxRemise: safeRate,
+        remise: remiseAmount,
+        totalHt: totalHt
       }
     });
 

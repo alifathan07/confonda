@@ -7,9 +7,11 @@ import methodOverride from 'method-override';
 import session from 'express-session';
 import expressMySQLSession from 'express-mysql-session';
 import { PrismaClient } from '@prisma/client';
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
-const { $Enums } = prisma; import { dashboardRouter } from './routes/dashboard.js';
+const { $Enums } = prisma; 
+import { dashboardRouter } from './routes/dashboard.js';
 import { authRouter } from './routes/auth.js';
 import PDFDocument from "pdfkit";
 import fs from "fs";
@@ -31,9 +33,8 @@ const PORT = process.env.PORT || 3000;
 
 // Serve static files from SB Admin 2 folder
 app.use(express.static(path.join(__dirname, 'public')));
-// ✅ Serve uploaded images
+// Serve uploaded images
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
 
 const MySQLStore = expressMySQLSession(session);
 const sessionStore = new MySQLStore({
@@ -57,14 +58,56 @@ app.use(session({
     }
 }));
 
+const PUBLIC_BC_SECRET = process.env.PUBLIC_BC_SECRET || 'confonda_public_bc_secret';
 
-// Basic route to render index.ejss
+function signPublicBcId(id) {
+    return crypto
+        .createHmac('sha256', PUBLIC_BC_SECRET)
+        .update(String(id))
+        .digest('hex');
+}
 
+// Public BC view (NO AUTH) - accessed via signed URL /public/bc/:id?sig=...
+app.get('/public/bc/:id', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const sig = (req.query.sig || '').toString();
+        if (!id || Number.isNaN(id)) {
+            return res.status(400).send('ID invalide');
+        }
+        const expected = signPublicBcId(id);
+        if (!sig || sig !== expected) {
+            return res.status(403).send('Lien invalide');
+        }
+
+        const bc = await prisma.bondeCommande.findUnique({
+            where: { id },
+            include: {
+                commandesItems: {
+                    include: {
+                        BondeCommandeChantierItem: { include: { chantier: true } }
+                    }
+                },
+                fournisseur: true,
+                chantier: true,
+            }
+        });
+
+        if (!bc) {
+            return res.status(404).send('Bon de commande non trouvé');
+        }
+
+        const publicBcUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+        // Render dedicated public template (no dashboard sidebar/topbar)
+        return res.render('public/bc', { bc, publicBcUrl });
+    } catch (e) {
+        console.error('Erreur public BC:', e);
+        return res.status(500).send('Erreur serveur');
+    }
+});
 
 app.use(authRouter);
 app.use(dashboardRouter);
-// Dashboard route
-
 
 // Start the server
 app.listen(PORT, () => {

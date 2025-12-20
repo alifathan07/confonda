@@ -334,7 +334,7 @@
                     <input type="text" id="payee" name="beneficiaire" placeholder="Nom du bénéficiaire" autocomplete="off" class="form-control">
                             <ul id="suggestions" class="autocomplete-list"></ul>
 
-                            <script>
+                            <script>                                
                             const fournisseurs = <%-JSON.stringify(fournisseurs) %>;
                             const payeeInput = document.getElementById('payee');
                             const suggestions = document.getElementById('suggestions');

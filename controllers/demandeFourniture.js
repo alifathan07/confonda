@@ -59,6 +59,9 @@ export const createDemandeFourniture = async (req, res) => {
   res.render("dashboard/achats/fourniture/create", { user, today, numero });
 };
 
+
+
+
 /* -------------------------- STORE -------------------------- */
 // controllers/demandeFournitureController.js
 
