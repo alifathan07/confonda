@@ -87,7 +87,8 @@ export const postBcDemandeFourniture = async (req, res) => {
         designation: true,
         unité: true,
         quantité: true,
-        lot : true
+        lot : true,
+        imputation : true
       },
     });
 
@@ -127,7 +128,8 @@ export const postBcDemandeFourniture = async (req, res) => {
           designation: a.designation,
           unite: a.unité || "",
           quantite: q,
-          reference : a.lot 
+          reference : a.lot ,
+          imputation : a.imputation
            
         };
       });
@@ -161,7 +163,7 @@ export const postBcDemandeFourniture = async (req, res) => {
             chantierId,
             itemId: item.id,
             qty: item.quantite,
-            reference : item.lot,
+        
             montant: null,
           },
         });
@@ -508,7 +510,6 @@ export const generateBcPDF = async (req, res) => {
       const lines = [
         { label: "Total HT", value: computedTotalHt },
         { label: `TVA (${fmtPct(tvaRate)}%)`, value: computedTva },
-        { label: "Montant TVA", value: computedTva },
         { label: "Total TTC", value: computedTtc, bold: true, size: 12 },
       ];
 
@@ -1035,6 +1036,7 @@ export const updateBc = async (req, res) => {
         unite: String(l.unite || ""),
         reference: String(l.reference || ""),
         quantite: Number.parseInt(l.quantite) || 0,
+        imputation : String(l.imputation || ""),
         prixUnitaire: normalizeNumber(l.prixUnitaire),
         tauxRemise: normalizeNumber(l.tauxRemise),
         montantRemise: normalizeNumber(l.montantRemise),
@@ -1049,6 +1051,7 @@ export const updateBc = async (req, res) => {
         unite: String(l?.unite || ""),
         reference: String(l?.reference || ""),
         quantite: Number.parseInt(l?.quantite) || 0,
+        imputation : String(l?.imputation || ""),
         prixUnitaire: normalizeNumber(l?.prixUnitaire),
         tauxRemise: normalizeNumber(l?.tauxRemise),
         montantRemise: normalizeNumber(l?.montantRemise),
@@ -1063,6 +1066,7 @@ export const updateBc = async (req, res) => {
       const p = l.prixUnitaire || 0;
       const r = l.montantRemise || 0;
       totalHt += (q * p) - r;
+
     });
 
     // In this new model, totalHt is already the "Net Commercial" sum of all lines
@@ -1070,7 +1074,7 @@ export const updateBc = async (req, res) => {
     const tvaRate = parseFloat(tauxTva) || 0;
     const montantTva = totalHt * (tvaRate > 0 ? tvaRate : 0) / 100;
     const totalTtc = totalHt + montantTva;
-
+    
     // First, perform the main update on BC and items (create/update fields)
     // We ignore distribution in this step
     await prisma.bondeCommande.update({
@@ -1088,6 +1092,7 @@ export const updateBc = async (req, res) => {
             unite: l.unite,
             reference: l.reference,
             quantite: l.quantite,
+            imputation : l.imputation,
             prixUnitaire: l.prixUnitaire,
             tauxRemise: l.tauxRemise,
             remise: l.montantRemise,
@@ -1100,6 +1105,7 @@ export const updateBc = async (req, res) => {
               unite: l.unite,
               reference: l.reference,
               quantite: l.quantite,
+              imputation : l.imputation,
               prixUnitaire: l.prixUnitaire,
               tauxRemise: l.tauxRemise,
               remise: l.montantRemise,
@@ -1280,6 +1286,7 @@ export const storeBc = async (req, res) => {
         unite: String(l?.unite || ""),
         reference: String(l?.reference || ""),
         quantite: Number.parseInt(l?.quantite) || 0,
+        imputation : String(l?.imputation || ""),
         prixUnitaire: normalizeNumber(l?.prixUnitaire),
         tauxRemise: normalizeNumber(l?.tauxRemise),
         montantRemise: normalizeNumber(l?.montantRemise),
@@ -1319,6 +1326,7 @@ export const storeBc = async (req, res) => {
             unite: l.unite,
             reference: l.reference,
             quantite: l.quantite,
+            imputation : l.imputation,
             prixUnitaire: l.prixUnitaire,
             tauxRemise: l.tauxRemise,
             remise: l.montantRemise,
@@ -1366,7 +1374,7 @@ export const updateBcItem = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Item ID invalide' });
     }
 
-    const { designation, unite, quantite, prixUnitaire, tauxRemise,  } = req.body || {};
+    const { designation, unite, quantite, prixUnitaire, tauxRemise  } = req.body || {};
 
     // Ensure item exists
     const item = await prisma.commandesItems.findUnique({ where: { id: itemId } });

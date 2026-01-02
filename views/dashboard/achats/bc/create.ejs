@@ -30,7 +30,7 @@
 
     body {
       font-family: 'Inter', sans-serif;
-      background: var(--gray-100);
+      background: #f2f4f7;
       color: var(--gray-800);
       margin: 0;
       padding: 0;
@@ -155,57 +155,186 @@
     /* Document Card */
     .doc-card {
       background: white;
-      border-radius: 20px;
+      border-radius: 10px;
       overflow: hidden;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-      margin: 0 auto;
-      max-width: 1000px;
+      margin: 1.25rem auto;
+      width: calc(100% - 4px);
+      max-width: 1200px;
+      border: 1px solid #cfd6df;
     }
 
     .doc-header {
-      padding: 2.5rem 2rem;
-      background: linear-gradient(135deg, var(--blue-light) 0%, white 70%);
-      border-bottom: 1px solid #dee2e6;
+      padding: 1.1rem 1.25rem 0.9rem;
+      background: white;
+      border-bottom: 1px solid #cfd6df;
     }
 
     .header-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 2rem;
+      gap: 10px;
+      align-items: stretch;
     }
 
     @media (min-width: 768px) {
       .header-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
       }
     }
 
-    .logo-title h1 {
-      font-size: 2rem;
-      font-weight: 800;
-      color: var(--gray-900);
-      margin: 0.8rem 0 0.4rem;
+    @media (min-width: 900px) {
+      .header-grid {
+        grid-template-columns: 1.35fr 0.45fr 1.35fr;
+      }
     }
 
-    .logo-title p {
-      color: var(--blue);
-      font-weight: 600;
-      font-size: 1rem;
+    .logo-title {
+      background: white;
+      border: 1px solid #9aa4b2;
+      border-radius: 10px;
+      padding: 0.9rem 1rem;
+    }
+
+    .logo-title h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--gray-900);
       margin: 0;
     }
 
+    .logo-title p {
+      margin: 0.35rem 0 0;
+      color: var(--gray-800);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
     .logo-img {
-      height: 70px;
+      height: 100px;
       object-fit: contain;
-      margin-bottom: 0.8rem;
+      margin-bottom: 0;
+    }
+
+    .qr-box {
+      border: 1px solid #9aa4b2;
+      border-radius: 8px;
+      padding: 0.75rem 0.9rem;
+      background: #fff;
+    }
+
+    .qr-box h5 {
+      font-size: 0.9rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+      color: var(--gray-900);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .qr-box img {
+      width: 95px;
+      height: 95px;
+      padding: 6px;
+      border: 1px solid #9aa4b2;
+      border-radius: 8px;
+      box-shadow: none;
+      background: white;
     }
 
     .fournisseur-box {
       background: white;
-      border: 2px solid var(--blue-light);
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: 0 4px 15px rgba(0, 82, 204, 0.08);
+      border: 1px solid #9aa4b2;
+      border-radius: 8px;
+      padding: 0.75rem 0.9rem;
+      box-shadow: none;
+    }
+
+    .topline {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 118px;
+      padding: 6px 0;
+      margin-bottom: 0.65rem;
+    }
+
+    .brand-title {
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      gap: 18px;
+    }
+
+    .brand-sep {
+      width: 6px;
+      height: 44px;
+      background: #A22C29;
+      flex: 0 0 6px;
+    }
+
+    .brand-title .logo-img {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 120px;
+      width: auto;
+    }
+
+    .topline > div:last-child {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      font-weight: 800;
+      color: #b45309;
+      font-size: 1.05rem;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-name {
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: #A22C29;
+      letter-spacing: 0.2px;
+      text-align: center;
+    }
+
+    .brand-sub {
+      font-size: 0.78rem;
+      color: #4b5563;
+      line-height: 1.2;
+      margin-top: 2px;
+      text-align: center;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 12px;
+      font-size: 0.85rem;
+      justify-items: center;
+      text-align: center;
+    }
+
+    .meta-item {
+      width: 100%;
+      text-align: center;
+    }
+
+    .meta-item strong {
+      display: inline-block;
+      min-width: 110px;
+      font-weight: 800;
+      color: #111827;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.5px;
     }
 
     .fournisseur-box h5 {
@@ -232,20 +361,32 @@
     /* Table Responsive Wrapper */
     .table-section {
       padding: 2rem;
-      overflow-x: auto;
+      background: white;
     }
 
     .table-container {
-      min-width: 800px;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
+      width: 100%;
+      overflow-x: visible;
+      overflow-y: visible;
     }
 
     .table-doc {
       width: 100%;
       border-collapse: collapse;
       font-size: 0.9rem;
-      min-width: 700px;
+      min-width: 0;
+    }
+
+    @media (max-width: 768px) {
+      .table-container {
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .table-doc {
+        min-width: 900px;
+      }
     }
 
     .table-doc thead th {
@@ -257,12 +398,17 @@
       font-size: 0.78rem;
       text-transform: uppercase;
       letter-spacing: 0.8px;
+      border: 1px solid #dee2e6;
     }
 
     .table-doc tbody td {
       padding: 1rem 0.8rem;
       border-bottom: 1px solid #eef1f5;
-      vertical-align: top;
+      vertical-align: middle;
+    }
+
+    .table-doc tbody tr:nth-child(even) {
+      background: #f9fafb;
     }
 
     .table-doc tbody tr:hover {
@@ -398,6 +544,41 @@
         font-size: 0.88rem;
       }
     }
+
+    .additional-info {
+      padding: 1.5rem 2rem;
+      background: #f8fbff;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .additional-info-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+      .additional-info-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .info-box {
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.2rem;
+    }
+
+    .info-box h6 {
+      color: var(--blue);
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
   </style>
 </head>
 
@@ -405,198 +586,236 @@
 
   <div id="wrapper">
     <%- include('../../../layouts/sidebar') %>
-      <div id="content-wrapper" class="d-flex flex-column">
-        <div id="content">
-          <%- include('../../../layouts/topbar') %>
+    <div id="content-wrapper" class="d-flex flex-column"> 
+      <div id="content">
+        <%- include('../../../layouts/topbar') %>
 
-            <div class="container-fluid px-3 px-md-4">
+        <div class="container-fluid px-3 px-md-4">
 
-              <!-- Action Bar -->
-              <div class="action-bar no-print">
-                <div
-                  class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-                  <h1 style="font-size: 1.2rem;">
-                    <i class="fas fa-file-invoice-dollar"></i> Nouveau Bon de Commande
-                  </h1>
-                  <div class="d-flex flex-wrap gap-1">
-                    <button onclick="sendEmail()" class="btn btn-sm btn-modern btn-send d-flex align-items-center gap-1"
-                      id="btnSend">
-                      <i class="fas fa-paper-plane"></i> <span>Envoyer</span>
-                    </button>
-                    <button class="btn btn-sm btn-modern btn-outline d-flex align-items-center gap-1" title="PDF"
-                      onclick="downloadPDF()">
-                      <i class="fas fa-file-pdf"></i> <span>PDF</span>
-                    </button>
-                    <button id="btnSaveBc" class="btn btn-sm btn-modern btn-save d-flex align-items-center gap-1"
-                      title="Créer le bon de commande">
-                      <i class="fas fa-save"></i> <span>Créer</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Document -->
-              <div class="doc-card">
-
-                <div class="doc-header">
-                  <div class="header-grid">
-                    <div class="logo-title">
-                      <img src="/img/logo-4.png" alt="Logo" class="logo-img">
-                      <h1>Nouveau Bon De Commande</h1>
-                      <input type="date" name="date" value="<%= new Date().toISOString().slice(0,10) %>" hidden>
-                      <p>Nouveau bon de commande</p>
-                    </div>
-
-                    <div class="fournisseur-box">
-                      <h5 class="mb-3"><i class="fas fa-building"></i> Fournisseur</h5>
-                      <select id="fournisseurSelectBc" class="form-control mb-3" name="supplier">
-                        <option value="">-- Choisir un fournisseur --</option>
-                        <% fournisseurs.forEach(f=> { %>
-                          <option value="<%= f.id %>">
-                            <%= f.name %>
-                              <%= f.ville ? '- ' + f.ville : '' %>
-                          </option>
-                          <% }) %>
-                      </select>
-                      <div class="small">
-                        <div class="info-line"><i class="fas fa-user-tie"></i> <strong id="fourNameBc"></strong></div>
-                        <div class="info-line"><i class="fas fa-envelope"></i> <span id="fourEmailBc"></span></div>
-                        <div class="info-line"><i class="fas fa-phone"></i> <span id="fourTelBc">Non renseigné</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-12 mt-3">
-                  <div class="fournisseur-box">
-                    <h5 class="mb-3"><i class="fas fa-hard-hat"></i> Chantiers</h5>
-                      <div>
-                      <select id="chantierSelect" multiple>
-                          <% chantiers.forEach(ch=> { %>
-                            <option value="<%= ch.id %>"><%= ch.nom %></option>
-                          <% }) %>
-                        </select>
-                      </div>
-                  </div>
-                </div>
-
-                <div class="table-section">
-                  <div class="table-container">
-                    <table class="table-doc">
-                      <thead>
-                        <tr>
-                          <th style="width:5%; text-align:center; border: 1px solid #dee2e6;">N°</th>
-                          <th style="width:25%; border: 1px solid #dee2e6;">Désignation</th>
-                          <th style="width:10%; text-align:center; border: 1px solid #dee2e6;">Unité</th>
-                          <th style="width:14%; text-align:center; border: 1px solid #dee2e6;">Reference</th>
-                          <th style="width:8%; text-align:center; border: 1px solid #dee2e6;">Quantité</th>
-                          <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Prix unitaire HT</th>
-                          <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Remise (%)</th>
-
-                          <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Total HT</th>
-                          <th style="width:20%; text-align:center; border: 1px solid #dee2e6;">Affectation
-                          </th>
-                          <th style="width:6%; text-align:center; border: 1px solid #dee2e6;">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody id="bcBody">
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <!-- Bouton Ajouter ligne -->
-                <div class="table-section" style="padding-top: 0;" class="no-print">
-                  <div class="text-center no-print">
-                    <button type="button" onclick="addBcRow()" class="btn btn-modern btn-add-line">
-                      Ajouter une ligne
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Totals section -->
-                <div class="table-section" style="padding-top: 0;">
-                  <div class="row justify-content-end">
-                    <div class="col-md-6">
-                      <table class="table table-sm mb-0">
-                        <tbody>
-                          <tr>
-                            <th class="text-right" style="border-top: none;">Total HT</th>
-                            <td class="text-right" style="border-top: none;">
-                              <span id="totalHtValue" data-total-ht="0">
-                                0,00
-                              </span>
-                            </td>
-                          </tr>
-
-                          <tr>
-                            <th class="text-right align-middle">TVA (%)</th>
-                            <td class="text-right">
-                              <div class="input-group input-group-sm justify-content-end"
-                                style="max-width: 180px; float: right;">
-                                <input type="number" step="0.01" min="0" class="form-control text-right" id="tvaInput"
-                                  value="0" />
-                                <div class="input-group-append">
-                                  <span class="input-group-text">%</span>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                          <tr>
-                            <th class="text-right">Montant TVA</th>
-                            <td class="text-right">
-                              <span id="montantTvaValue">0,00</span>
-                            </td>
-                          </tr>
-                          <tr>
-                            <th class="text-right">Total TTC</th>
-                            <td class="text-right font-weight-bold">
-                              <span id="totalTtcValue" data-total-ttc="0">
-                                0,00
-                              </span>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Montant en lettres -->
-                <div class="table-section" style="padding-top: 0;">
-                  <div class="row">
-                    <div class="col-12">
-                      <div class="montant-lettres-box">
-                        <span class="montant-lettres-label">Montant en lettres :</span>
-                        <span class="montant-lettres-value fw-bold" id="montantLettresValue">&nbsp;</span>
-
-                        <!-- L'input qui contient la vraie valeur pour le formulaire / backend -->
-                        <input type="hidden" name="montantLettre" id="montantLettresInp" value="">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="signature-area">
-                  <div class="signature-grid">
-                    <div class="sig-box">
-                      <h6>Signature du direction</h6>
-                      <div class="sig-line"></div>
-                    </div>
-                    <div class="sig-box">
-                      <h6>Le Responsable Achats</h6>
-                      <div class="sig-line">
-                        <img src="/img/signature.png" alt="logo-pw" style="width: 240px; height: 150px;">
-
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
+          <!-- Action Bar -->
+          <div class="action-bar no-print">
+            <div
+              class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+              <h1 style="font-size: 1.2rem;">
+                <i class="fas fa-file-invoice-dollar"></i> Nouveau Bon de Commande
+              </h1>
+              <div class="d-flex flex-wrap gap-1">
+                <button onclick="sendEmail()" class="btn btn-sm btn-modern btn-send d-flex align-items-center gap-1"
+                  id="btnSend">
+                  <i class="fas fa-paper-plane"></i> <span>Envoyer</span>
+                </button>
+                <button class="btn btn-sm btn-modern btn-outline d-flex align-items-center gap-1" title="PDF"
+                  onclick="downloadPDF()">
+                  <i class="fas fa-file-pdf"></i> <span>PDF</span>
+                </button>
+                <button id="btnSaveBc" class="btn btn-sm btn-modern btn-save d-flex align-items-center gap-1"
+                  title="Créer le bon de commande">
+                  <i class="fas fa-save"></i> <span>Créer</span>
+                </button>
               </div>
             </div>
+          </div>
+
+          <!-- Document -->
+          <div class="doc-card">
+
+            <div class="doc-header">
+              <div class="topline">
+                <div class="brand-title">
+                  <img src="/img/logo-4.png" alt="Logo" class="logo-img" />
+                  <div class="brand-sep"></div>
+                  <div>
+                    <div class="brand-name">Construction et Fondation</div>
+                    <div class="brand-sub">Pour des constructions bien fondées</div>
+                  </div>
+                </div>
+                <div style="font-weight:800; color:#b45309; font-size: 1.05rem;"></div>
+              </div>
+
+              <div class="header-grid">
+                <div class="fournisseur-box">
+                  <input type="date" name="date" value="<%= new Date().toISOString().slice(0,10) %>" hidden>
+                  <div class="meta-grid">
+                    <div class="meta-item"><strong>Commande N° :</strong>—</div>
+                    <br>
+                    <div class="meta-item"><strong>Date :</strong> <%= new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) %></div>
+                  </div>
+                </div>
+
+                <div class="qr-box">
+                  <div style="text-align:center;">
+                    <img
+                      src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<%= encodeURIComponent('BC_EN_CREATION') %>"
+                      alt="QR Code"
+                    />
+                  </div>
+                </div>
+
+                <div class="fournisseur-box">
+                  <h5 class="mb-3"><i class="fas fa-building"></i> Fournisseur</h5>
+                  <select id="fournisseurSelectBc" class="form-control mb-3" name="supplier">
+                    <option value="">-- Choisir un fournisseur --</option>
+                    <% fournisseurs.forEach(f=> { %>
+                      <option value="<%= f.id %>">
+                        <%= f.name %>
+                          <%= f.ville ? '- ' + f.ville : '' %>
+                      </option>
+                      <% }) %>
+                  </select>
+                  <div class="small">
+                    <div class="info-line"><i class="fas fa-user-tie"></i> <strong id="fourNameBc"></strong></div>
+                    <div class="info-line"><i class="fas fa-envelope"></i> <span id="fourEmailBc"></span></div>
+                    <div class="info-line"><i class="fas fa-phone"></i> <span id="fourTelBc">Non renseigné</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 mt-3">
+              <div class="fournisseur-box">
+                <h5 class="mb-3"><i class="fas fa-hard-hat"></i> Chantiers</h5>
+                <div id="chantierCheckboxes">
+                  <select id="chantierSelect" class="form-control" multiple size="6" style="min-height:120px;">
+                    <% chantiers.forEach(ch=> { %>
+                      <option value="<%= ch.id %>"><%= ch.nom %></option>
+                    <% }) %>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="table-section">
+              <div class="table-container">
+                <table class="table-doc">
+                  <thead>
+                    <tr>
+                      <th style="width:6%; text-align:center; border: 1px solid #dee2e6;">N°</th>
+                      <th style="width:34%; border: 1px solid #dee2e6;">Désignation</th>
+                      <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Unité</th>
+                      <th style="width:16%; text-align:center; border: 1px solid #dee2e6;">Reference</th>
+
+                      <th style="width:8%; text-align:center; border: 1px solid #dee2e6;">Quantité</th>
+                      <th style="width:8%; text-align:center; border: 1px solid #dee2e6;">Imputation</th>
+                      <th style="width:14%; text-align:center; border: 1px solid #dee2e6;">Prix unitaire HT</th>
+                      <th style="width:10%; text-align:center; border: 1px solid #dee2e6;">Remise (%)</th>
+                      <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Total HT</th>
+                      <th style="width:20%; text-align:center; border: 1px solid #dee2e6;">Affectation</th>
+
+                      <th style="width:6%; text-align:center; border: 1px solid #dee2e6;">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bcBody">
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Bouton Ajouter ligne -->
+            <div class="table-section" style="padding-top: 0;" class="no-print">
+              <div class="text-center no-print">
+                <button type="button" onclick="addBcRow()" class="btn btn-modern btn-add-line">
+                  Ajouter une ligne
+                </button>
+              </div>
+            </div>
+
+            <!-- Totals section -->
+            <div class="table-section" style="padding-top: 0;">
+              <div class="row justify-content-end">
+                <div class="col-md-6">
+                  <table class="table table-sm mb-0">
+                    <tbody>
+                      <tr>
+                        <th class="text-right" style="border-top: none;">Total HT</th>
+                        <td class="text-right" style="border-top: none;">
+                          <span id="totalHtValue" data-total-ht="0">
+                            0,00
+                          </span>
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <th class="text-right align-middle">TVA (%)</th>
+                        <td class="text-right">
+                          <div class="input-group input-group-sm justify-content-end"
+                            style="max-width: 180px; float: right;">
+                            <input type="number" step="0.01" min="0" class="form-control text-right" id="tvaInput"
+                              value="0" />
+                            <div class="input-group-append">
+                              <span class="input-group-text">%</span>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <th class="text-right">Montant TVA</th>
+                        <td class="text-right">
+                          <span id="montantTvaValue">0,00</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <th class="text-right">Total TTC</th>
+                        <td class="text-right font-weight-bold">
+                          <span id="totalTtcValue" data-total-ttc="0">
+                            0,00
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Montant en lettres -->
+            <div class="table-section" style="padding-top: 0;">
+              <div class="row">
+                <div class="col-12">
+                  <div class="montant-lettres-box">
+                    <span class="montant-lettres-label">Montant en lettres :</span>
+                    <span class="montant-lettres-value fw-bold" id="montantLettresValue">&nbsp;</span>
+
+                    <!-- L'input qui contient la vraie valeur pour le formulaire / backend -->
+                    <input type="hidden" name="montantLettre" id="montantLettresInp" value="">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="additional-info">
+              <div class="additional-info-grid">
+                <div class="info-box">
+                  <h6><i class="fas fa-hard-hat"></i> Chantier</h6>
+                  <div class="info-line">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span><strong id="selectedChantiersLabel">Non renseigné</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="signature-area">
+                <div class="signature-grid">
+                  <div class="sig-box">
+                    <h6>Signature du direction</h6>
+                    <div class="sig-line"></div>
+                  </div>
+                  <div class="sig-box">
+                    <h6>Le Responsable Achats</h6>
+                    <div class="sig-line">
+                      <img src="/img/signature.png" alt="logo-pw" style="width: 240px; height: 150px;">
+
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
         </div>
       </div>
+    </div>
   </div>
 
   <!-- Scripts -->
@@ -620,9 +839,7 @@
         });
       }
     })();
-  </script>
 
-  <script>
     // Fournisseurs data for BC edit (UI only)
     const fournisseursDataBc = <%- JSON.stringify(fournisseurs.map(f => ({
       id: String(f.id),
@@ -644,6 +861,28 @@
           if (telEl) telEl.textContent = f.tel || 'Non renseigné';
         }
       });
+    }
+
+    (function () {
+      const chantierSelectEl = document.getElementById('chantierSelect');
+      const label = document.getElementById('selectedChantiersLabel');
+      if (!chantierSelectEl || !label) return;
+
+      const updateLabel = () => {
+        const selected = Array.from(chantierSelectEl.selectedOptions || []).map(o => (o.textContent || '').trim()).filter(Boolean);
+        label.textContent = selected.length ? selected.join(', ') : 'Non renseigné';
+      };
+
+      chantierSelectEl.addEventListener('change', updateLabel);
+      updateLabel();
+    })();
+
+    function sendEmail() {
+      alert('Veuillez d\'abord créer le bon de commande.');
+    }
+
+    function downloadPDF() {
+      alert('Veuillez d\'abord créer le bon de commande.');
     }
 
     // Gestion de la sauvegarde du bon de commande
@@ -802,7 +1041,6 @@
     function addBcRow() {
       const tbody = document.getElementById('bcBody');
       if (!tbody) return;
-      
 
       const index = tbody.querySelectorAll('tr.bc-row').length + 1;
       const tr = document.createElement('tr');
@@ -852,6 +1090,19 @@
       data-field="quantite"
     />
   </td>
+
+  <td style="text-align:center; border: 1px solid #dee2e6;">
+    <input
+      type="text"
+      min="0"
+      step="0.01"
+      class="qty-pill item-total-qty"
+      style="border:none; outline:none; max-width: 110px"
+      value=""
+      data-field="imputation"
+    />
+  </td>
+
   <td style="text-align:right; border: 1px solid #dee2e6;">
     <input
       type="text"
@@ -889,7 +1140,7 @@
   <td style="text-align:center; border: 1px solid #dee2e6;">
     <button 
       type="button" 
-      class="btn btn-sm btn-danger" 
+      class="btn btn-sm btn-modern btn-danger" 
       onclick="deleteBcRow(this)"
     >
       <i class="fas fa-trash"></i>
@@ -1322,6 +1573,7 @@
         const qtyVal = rawQty.trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
         const prixVal = rawPu.trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
         const quantite = parseFloat(qtyVal || '0') || 0;
+        const imputation = (tr.querySelector('input[data-field="imputation"]')?.value || '').toString();
         const prixUnitaire = parseFloat(prixVal || '0') || 0;
 
         // Get distribution data
@@ -1338,6 +1590,7 @@
           unite: (tr.querySelector('input[data-field="unite"]')?.value || '').trim(),
           reference: referenceVal.trim(),
           quantite,
+          imputation,
           prixUnitaire,
           totalHt: quantite * prixUnitaire - montantRemiseRow, // NET after remise
           tauxRemise: tauxRemiseRow,

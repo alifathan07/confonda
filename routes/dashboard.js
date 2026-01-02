@@ -27,6 +27,12 @@ import { createDemandeFourniture, deleteDemandeFourniture, downloadImageFournitu
 import { fileURLToPath } from 'url';
 import { EditDemandePrix, listDemandePrix, postDemandePrixViaFourniture, updateDemandePrix, viewDemandePrix, deleteDemandePrix, deleteArticle, createDemandePrix, storeDemandePrix, generateDemandePrixPDF, sendDemandePrixEmail } from '../controllers/demandeprixController.js';
 import { editBc, postBcDemandeFourniture, updateBc, viewBc, deleteBcItem, createBcForm, storeBc, generateBcPDF, sendBcEmail, listBc, deleteBc, updateBcItemDistribution, updateBcItem } from '../controllers/bcController.js';
+import { bmceDelete, bmceDownload, bmcePay, bmcePreview, bmceUpload, indexVirementPay } from '../controllers/virementpayController.js';
+
+const virementpayUpload = multer({
+  dest: 'uploads/',
+  limits: { fileSize: 10 * 1024 * 1024 }
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -423,6 +429,26 @@ dashboardRouter.post('/api/bc/:id/send-email', sendBcEmail);
 dashboardRouter.post('/achats/bc/create-from-demande', postBcDemandeFourniture);
 dashboardRouter.get("/achat/bon-commande", listBc);
 dashboardRouter.delete("/achat/bc/:id", deleteBc)
+
+
+
+// virement payment 
+dashboardRouter.get("/virementpay", indexVirementPay);
+dashboardRouter.get("/virementpay/bmce" ,bmcePay)
+dashboardRouter.post('/virementpay/bmce/upload', (req, res, next) => {
+  virementpayUpload.single('excelFile')(req, res, (err) => {
+    if (err) {
+      if (req.session) {
+        req.session.virementpay_bmce_error = err.message || 'Erreur upload fichier.';
+      }
+      return res.redirect('/virementpay/bmce');
+    }
+    return next();
+  });
+}, bmceUpload);
+dashboardRouter.get('/virementpay/bmce/files/:fileId', bmcePreview);
+dashboardRouter.get('/virementpay/bmce/files/:fileId/download', bmceDownload);
+dashboardRouter.post('/virementpay/bmce/files/:fileId/delete', bmceDelete);
 
 
 

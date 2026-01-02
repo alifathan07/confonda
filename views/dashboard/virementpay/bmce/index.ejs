@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="Virement Pay BMCE" />
+  <meta name="author" content="Confonda" />
+  <title>Virement Pay - BMCE</title>
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body id="page-top">
+  <div id="wrapper">
+    <%- include('../../../layouts/sidebar') %>
+
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <%- include('../../../layouts/topbar') %>
+
+        <div class="container-fluid">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h1 class="h3 mb-1 text-gray-800">Virement Pay</h1>
+              <div class="text-sm text-gray-500">BMCE - Upload payroll Excel, preview, then download bank template</div>
+            </div>
+            <a href="/virementpay" class="btn btn-light btn-sm">
+              <i class="fas fa-arrow-left mr-1"></i>
+              Banques
+            </a>
+          </div>
+
+          <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger" role="alert">
+              <i class="fas fa-exclamation-triangle mr-1"></i>
+              <%= error %>
+            </div>
+          <% } %>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+            <div class="lg:col-span-1">
+              <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="font-semibold text-gray-800">Importer un fichier</div>
+                  <div class="text-xs text-gray-500">.xlsx / .xls / .csv / .ods</div>
+                </div>
+
+                <form action="/virementpay/bmce/upload" method="POST" enctype="multipart/form-data" class="space-y-3">
+                                      <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Fichier Excel</label>
+                    <input name="excelFile" type="file" accept=".xlsx,.xls,.csv,.ods" required class="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-gray-200 rounded-lg" />
+                    <div class="mt-2 text-xs text-gray-500">Après l’upload: le fichier sera ajouté à la liste et ses lignes seront stockées.</div>
+                  </div>
+
+                  <input type="hidden" name="payrollDate" id="payrollDateHidden" />
+                  <input type="hidden" name="companyName" id="companyNameHidden" />
+                  <input type="hidden" name="companyRib" id="companyRibHidden" />
+                  <input type="hidden" name="obs" id="obsHidden" />
+
+
+                  <button type="button" class="btn btn-primary btn-block" data-toggle="modal" data-target="#payrollDateModal">
+                    <i class="fas fa-upload mr-1"></i>
+                    Uploader
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <div class="lg:col-span-2">
+              <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <div class="font-semibold text-gray-800">Fichiers importés</div>
+                  <div class="text-xs text-gray-500">Preview: 20 lignes / page</div>
+                </div>
+
+                <% const fileRows = (typeof files !== 'undefined' && Array.isArray(files)) ? files : []; %>
+
+                <% if (fileRows.length === 0) { %>
+                  <div class="border border-dashed border-gray-200 rounded-xl p-6 text-center">
+                    <div class="text-gray-700 font-medium mb-1">Aucun fichier importé</div>
+                    <div class="text-sm text-gray-500">Upload un fichier Excel pour commencer.</div>
+                  </div>
+                <% } else { %>
+                  <div class="table-responsive">
+                    <table class="table table-bordered mb-0" width="100%" cellspacing="0">
+                      <thead class="bg-gray-50">
+                        <tr>
+                          <th>Nom</th>
+                          <th>Date</th>
+                          <th>Lignes</th>
+                          <th>Statut</th>
+                          <th style="width: 220px;">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% fileRows.forEach((f) => { %>
+                          <tr>
+                            <td class="font-medium text-gray-800"><%= f.originalName || f.name || ('Fichier #' + f.id) %></td>
+                            <td class="text-gray-600"><%= f.createdAt ? new Date(f.createdAt).toLocaleString('fr-FR') : '-' %></td>
+                            <td class="text-gray-600"><%= (typeof f.totalRows !== 'undefined' && f.totalRows !== null) ? f.totalRows : '-' %></td>
+                            <td>
+                              <% const st = (f.status || 'Prêt'); %>
+                              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700"><%= st %></span>
+                            </td>
+                            <td>
+                              <div class="flex flex-wrap gap-2">
+                                <a class="btn btn-sm btn-outline-primary" href="/virementpay/bmce/files/<%= f.id %>">
+                                  <i class="fas fa-eye mr-1"></i>
+                                  Voir
+                                </a>
+                                <a class="btn btn-sm btn-outline-success" href="/virementpay/bmce/files/<%= f.id %>/download">
+                                  <i class="fas fa-file-excel mr-1"></i>
+                                  Télécharger
+                                </a>
+                                <form action="/virementpay/bmce/files/<%= f.id %>/delete" method="POST" class="m-0">
+                                  <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer ce fichier ?');">
+                                    <i class="fas fa-trash mr-1"></i>
+                                    Supprimer
+                                  </button>
+                                </form>
+                              </div>
+                            </td>
+                          </tr>
+                        <% }) %>
+                      </tbody>
+                    </table>
+                  </div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="payrollDateModal" tabindex="-1" role="dialog" aria-labelledby="payrollDateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content rounded-xl">
+        <div class="modal-header">
+          <h5 class="modal-title" id="payrollDateModalLabel">plus de donnee</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <label class="block text-sm font-medium text-gray-700 mb-1" for="payrollDateInput">Date Ordre  </label>
+          <input type="date" id="payrollDateInput" class="form-control" required />
+          
+          <div class="mt-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="companyNameInput">Nom de l'entreprise</label>
+            <input type="text" id="companyNameInput" value="CONFONDA " class="form-control" />
+          </div>
+          
+          <div class="mt-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="companyRibInput">RIB de l'entreprise</label>
+            <input type="text" id="companyRibInput" value="<%= BmceRib?.rib || '' %>" class="form-control" />
+          </div>
+          
+          <div class="mt-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="obsInput">LIBELLE OPERATIONS</label>
+            <input type="text" id="obsInput" class="form-control" />
+          </div>
+
+        </div>
+
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-primary" id="confirmUploadBtn">Confirmer & Uploader</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/vendor/jquery-easing/jquery.easing.m7in.js"></script>
+  <script src="/js/sb-admin-2.min.js"></script>
+  <script>
+    (function () {
+      var confirmBtn = document.getElementById('confirmUploadBtn');
+      var dateInput = document.getElementById('payrollDateInput');
+
+      
+      var companyNameInput = document.getElementById('companyNameInput');
+      var companyRibInput = document.getElementById('companyRibInput');
+      var obsInput = document.getElementById('obsInput');
+      var hidden = document.getElementById('payrollDateHidden');
+      var companyNameHidden = document.getElementById('companyNameHidden');
+      var companyRibHidden = document.getElementById('companyRibHidden');
+      var obsHidden = document.getElementById('obsHidden');
+      var form = document.querySelector('form[action="/virementpay/bmce/upload"]');
+
+      if (!confirmBtn || !dateInput || !hidden || !companyNameHidden || !companyRibHidden || !obsHidden || !form) return;
+
+      confirmBtn.addEventListener('click', function () {
+        var v = (dateInput.value || '').trim();
+        var v2 = (companyNameInput.value || '').trim();
+        var v3 = (companyRibInput.value || '').trim();
+        var v4 = (obsInput.value || '').trim();
+        
+        if (!v) {
+          alert('Merci de choisir une date.');
+          return;
+        }
+        if (!v2) {
+          alert('Merci de saisir le nom de l\'entreprise.');
+          return;
+        }
+        if (!v3) {
+          alert('Merci de saisir le RIB de l\'entreprise.');
+          return;
+        }
+        if (!v4) {
+          alert('Merci de saisir les observations.');
+          return;
+        }
+        
+        hidden.value = v;
+        companyNameHidden.value = v2;
+        companyRibHidden.value = v3;
+        obsHidden.value = v4;
+
+        console.log('Submitting with values:', { v, v2, v3, v4 });
+        
+        form.submit();
+      });
+    })();
+  </script>
+</body>
+
+</html>

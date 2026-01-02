@@ -683,6 +683,7 @@
                           <th style="width:16%; text-align:center; border: 1px solid #dee2e6;">Reference</th>
 
                           <th style="width:8%; text-align:center; border: 1px solid #dee2e6;">Quantité</th>
+                          <th style="width:8%; text-align:center; border: 1px solid #dee2e6;">Imputation</th>
                           <th style="width:14%; text-align:center; border: 1px solid #dee2e6;">Prix unitaire HT</th>
                           <th style="width:10%; text-align:center; border: 1px solid #dee2e6;">Remise (%)</th>
                           <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Total HT</th>
@@ -727,6 +728,11 @@
                               <input type="number" min="0" step="1" class="qty-pill item-total-qty"
                                 style="border:none;  max-width: 110px; outline:none;" value="<%= item.quantite || 0 %>"
                                 data-field="quantite" />
+                            </td>
+                            <td style="text-align:center; border: 1px solid #dee2e6;">
+                              <input type="text" min="0" step="0.01" class="qty-pill item-total-qty"
+                                style="border:none;  max-width: 110px; outline:none;" value="<%= (item.imputation) %>"
+                                data-field="imputation" />
                             </td>
                             <td style="text-align:right; border: 1px solid #dee2e6;">
                               <input type="text" class="form-control form-control-sm text-right"
@@ -1558,6 +1564,16 @@
             data-field="quantite"
           />
       </td>
+      <td style="text-align:center; border: 1px solid #dee2e6;">
+        <input
+          type="text"
+          class="form-control form-control-sm text-center"
+          style="font-weight:600; border-radius: 999px; max-width: 110px; margin: 0 auto;"
+          value=""
+          data-field="imputation"
+        />
+      </td>
+
       <td style="text-align:right; border: 1px solid #dee2e6;">
         <input
           type="text"
@@ -1743,6 +1759,7 @@
             const qtyVal = rawQty.trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
             const prixVal = rawPu.trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
             const quantite = parseFloat(qtyVal || '0') || 0;
+            const imputationVal = (tr.querySelector('input[data-field="imputation"]')?.value || '').toString();
             const prixUnitaire = parseFloat(prixVal || '0') || 0;
             const tauxRemiseRow = parseFloat(rawRemiseValRow.trim().replace(',', '.')) || 0;
             const montantRemiseRow = quantite * prixUnitaire * tauxRemiseRow / 100;
@@ -1752,6 +1769,7 @@
               unite: (tr.querySelector('input[data-field="unite"]')?.value || '').trim(),
               reference: referenceVal.trim(),
               quantite,
+              imputation : imputationVal.trim(),
               prixUnitaire,
               totalHt: quantite * prixUnitaire - montantRemiseRow,
               tauxRemise: tauxRemiseRow,

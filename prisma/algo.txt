@@ -233,3 +233,30 @@ Tasks :
         voidx : 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
 
         latest token : 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
+
+Paie Tasks : 
+
+        Ignore full header 1 
+        ignore the row 1 
+
+        App View 
+
+        nom -> Nom Benificer
+        chnage columns arrengements 
+        chaneg olumns name 
+        smaller to big -> montent virement or net 
+        max data shown is 20 in the table 
+        each data with total , 
+        take considiration of the rest after 20 put it normaly 
+
+        Excel View After Downlaod 
+
+        Header : 
+                Logo etc 
+        
+
+        
+
+
+
+

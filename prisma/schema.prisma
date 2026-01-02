@@ -100,6 +100,7 @@ model ItemFourniture {
   code                String?
   designation         String
   unité              String?
+  imputation String? 
   quantité           String?
   auPlutart           String?
   auPlutot            String?
@@ -109,6 +110,7 @@ model ItemFourniture {
   image               String? // <-- ✅ image file path
   // En cours , Refusée , Validée
   validepar           String?
+
   demandeFournitureId Int?
   demandeFourniture   DemandeFourniture? @relation(fields: [demandeFournitureId], references: [id])
 
@@ -624,6 +626,7 @@ model commandesItems {
   designation     String
   unite           String
   quantite        Int
+  imputation      String?
   prixUnitaire    Float?
   tauxRemise     Float?
   remise          Float?
@@ -637,3 +640,6 @@ model commandesItems {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 }
+
+
+

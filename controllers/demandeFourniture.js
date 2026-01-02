@@ -124,6 +124,7 @@ export const storeDemandeFourniture = async (req, res) => {
             auPlutart: it.auPlutart || null,
             lot: (it.lot || "").trim() || null,
             observation: (it.observation || "").trim() || null,
+            imputation: (it.imputation || "").trim() || null,
             image: it.tempImage || null,
           })),
         },
@@ -131,7 +132,7 @@ export const storeDemandeFourniture = async (req, res) => {
       include: { items: true },
     });
 
-    return res.redirect(`/achats/fourniture/${demandeFourniture.id}`);
+    return res.json({ success: true, redirect: `/achats/fourniture/${demandeFourniture.id}` });
   } catch (error) {
     console.error("storeDemandeFourniture error:", error);
     return res.status(500).json({ success: false, error: `Erreur serveur : ${error.message}` });

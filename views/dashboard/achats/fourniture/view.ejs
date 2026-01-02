@@ -67,6 +67,7 @@
                         <th rowspan="2">Désignations</th>
                         <th rowspan="2">Unité</th>
                         <th rowspan="2">Quantité</th>
+                        <th rowspan="2">Imputation</th>
                         <th colspan="2">Date de livraison</th>
                         <th rowspan="2">Reference</th>
                         <th rowspan="2">Recommandations et Observations</th>
@@ -85,6 +86,7 @@
                           <td><input type="text"   class="form-control" value="<%= item.designation ?? '' %>"></td>
                           <td><input type="text"   class="form-control" value="<%= item.unité ?? '' %>"></td>
                           <td><input type="number" class="form-control" value="<%= item.quantité ?? '' %>" min="1"></td>
+                          <td><input type="text"   class="form-control" value="<%= item.imputation ?? '' %>"></td>
                           <td><input type="date"   class="form-control"
                                     value="<%= item.auPlutot ? new Date(item.auPlutot).toISOString().split('T')[0] : '' %>"></td>
                           <td><input type="date"   class="form-control"
@@ -151,6 +153,7 @@
                         <th rowspan="2">Désignations</th>
                         <th rowspan="2">Unité</th>
                         <th rowspan="2">Quantité</th>
+                        <th rowspan="2">Imputation</th>
                         <th colspan="2">Date de livraison</th>
                         <th rowspan="2">Reference</th>
                         <th rowspan="2">Recommandations et Observations</th>
@@ -172,6 +175,7 @@
                           <td><input type="text" class="form-control" value="<%= item.designation ?? '' %>"></td>
                           <td><input type="text" class="form-control" value="<%= item.unité ?? '' %>"></td>
                           <td><input type="number" class="form-control" value="<%= item.quantité ?? '' %>" min="1"></td>
+                          <td><input type="text" class="form-control" value="<%= item.imputation ?? '' %>"></td>
                           <td><input type="date" class="form-control"
                                     value="<%= item.auPlutot ? new Date(item.auPlutot).toISOString().split('T')[0] : '' %>"></td>
                           <td><input type="date" class="form-control"
@@ -263,6 +267,7 @@
         <th rowspan="2">Désignations</th>
         <th rowspan="2">Unité</th>
         <th rowspan="2">Quantité</th>
+        <th rowspan="2">Imputation</th>
         <th colspan="2">Date de livraison</th>
         <th rowspan="2">Reference</th>
         <th rowspan="2">Recommandations et Observations</th>
@@ -279,6 +284,7 @@
           <td><%= item.designation ?? '' %></td>
           <td><%= item.unité ?? '' %></td>
           <td><%= item.quantité ?? '' %></td>
+          <td><%= item.imputation ?? '' %></td>
           <td><%= item.auPlutot ? new Date(item.auPlutot).toLocaleDateString('fr-FR') : '' %></td>
           <td><%= item.auPlutart ? new Date(item.auPlutart).toLocaleDateString('fr-FR') : '' %></td>
           <td><%= item.lot ?? '' %></td>

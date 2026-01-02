@@ -77,8 +77,10 @@
                       <th rowspan="2">Désignations</th>
                       <th rowspan="2">Unité</th>
                       <th rowspan="2">Quantité</th>
+                      <th rowspan="2">Imputation</th>
+
                       <th colspan="2">Date de livraison</th>
-                      <th rowspan="2">LOT</th>
+                      <th rowspan="2">Reference</th>
                       <th rowspan="2">Recommandations et Observations</th>
                        <th rowspan="2">Validation</th>
                       <th rowspan="2">Validé Par </th>
@@ -98,6 +100,8 @@
                         <td><input type="text"   name="items[<%= idx %>][designation]" class="form-control" value="<%= item.designation %>"></td>
                         <td><input type="text"   name="items[<%= idx %>][unité]"       class="form-control" value="<%= item.unité ?? '' %>"></td>
                         <td><input type="number" name="items[<%= idx %>][quantité]"    class="form-control" value="<%= item.quantité %>"></td>
+                        <td><input type="text" name="items[<%= idx %>][imputation]"    class="form-control" value="<%= item.imputation %>"></td>
+
                         <td><input type="date"   name="items[<%= idx %>][auPlutot]"    class="form-control"
                                    value="<%= item.auPlutot ? new Date(item.auPlutot).toISOString().split('T')[0] : '' %>"></td>
                         <td><input type="date"   name="items[<%= idx %>][auPlutart]"   class="form-control"
@@ -324,8 +328,10 @@
                           <th rowspan="2">Désignations</th>
                           <th rowspan="2">Unité</th>
                           <th rowspan="2">Quantité</th>
+                          <th rowspan="2">Imputation</th>
+                          
                           <th colspan="2">Date de livraison</th>
-                          <th rowspan="2">LOT</th>
+                          <th rowspan="2">Reference</th>
                           <th rowspan="2">Recommandations et Observations</th>
                           <th rowspan="2">Validation</th>
                           <th rowspan="2">Validé Par</th>
@@ -346,6 +352,8 @@
                             <td><input type="text" name="items[<%= idx %>][designation]" class="form-control" value="<%= item.designation %>"></td>
                             <td><input type="text" name="items[<%= idx %>][unité]" class="form-control" value="<%= item.unité ?? '' %>"></td>
                             <td><input type="number" name="items[<%= idx %>][quantité]" class="form-control" value="<%= item.quantité %>"></td>
+                             <td><input type="text" name="items[<%= idx %>][imputation]" class="form-control" value="<%= item.imputation %>"></td>
+
                             <td><input type="date" name="items[<%= idx %>][auPlutot]" class="form-control"
                                       value="<%= item.auPlutot ? new Date(item.auPlutot).toISOString().split('T')[0] : '' %>"></td>
                             <td><input type="date" name="items[<%= idx %>][auPlutart]" class="form-control"
@@ -449,8 +457,10 @@
                       <th rowspan="2">Désignations</th>
                       <th rowspan="2">Unité</th>
                       <th rowspan="2">Quantité</th>
+                      <th rowspan="2">Imputation</th>
+
                       <th colspan="2">Date de livraison</th>
-                      <th rowspan="2">LOT</th>
+                      <th rowspan="2">Reference</th>
                       <th rowspan="2">Recommandations et Observations</th>
                        <th rowspan="2">Validation</th>
                       <th rowspan="2">Validé Par </th>
@@ -470,6 +480,7 @@
                         <td><input type="text"   name="items[<%= idx %>][designation]" class="form-control" value="<%= item.designation %>"></td>
                         <td><input type="text"   name="items[<%= idx %>][unité]"       class="form-control" value="<%= item.unité ?? '' %>"></td>
                         <td><input type="number" name="items[<%= idx %>][quantité]"    class="form-control" value="<%= item.quantité %>"></td>
+                        <td><input type="text" name="items[<%= idx %>][imputation]"    class="form-control" value="<%= item.imputation%>"></td>
                         <td><input type="date"   name="items[<%= idx %>][auPlutot]"    class="form-control"
                                    value="<%= item.auPlutot ? new Date(item.auPlutot).toISOString().split('T')[0] : '' %>"></td>
                         <td><input type="date"   name="items[<%= idx %>][auPlutart]"   class="form-control"

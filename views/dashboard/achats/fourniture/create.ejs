@@ -85,6 +85,7 @@
               <th rowspan="2">Désignations</th>
               <th rowspan="2">Unité</th>
               <th rowspan="2">Quantité</th>
+              <th rowspan="2">Imputation</th>
               <th colspan="2">Date de livraison</th>
               <th rowspan="2">Reference</th>
               <th rowspan="2">Recommandations et Observations</th>
@@ -99,14 +100,15 @@
           </thead>
           <tbody>
             <tr>
-  <td><input type="text" name="items[0][code]" class="form-control" value=""></td>
-  <td><input type="text" name="items[0][designation]" class="form-control" value=""></td>
-  <td><input type="text" name="items[0][unité]" class="form-control" value=""></td>
-  <td><input type="number" name="items[0][quantité]" class="form-control" value=""></td>
-  <td><input type="date" name="items[0][auPlutot]" class="form-control"></td>
-  <td><input type="date" name="items[0][auPlutart]" class="form-control"></td>
-  <td><input type="text" name="items[0][lot]" class="form-control"></td>
-  <td><input type="text" name="items[0][observation]" class="form-control"></td>
+  <td><input type="text" name="codeArticle[]" class="form-control" value=""></td>
+  <td><input type="text" name="designation[]" class="form-control" value=""></td>
+  <td><input type="text" name="unite[]" class="form-control" value=""></td>
+  <td><input type="number" name="qteDemandee[]" class="form-control" value=""></td>
+  <td><input type="text" name="imputation[]" class="form-control" value=""></td>
+  <td><input type="date" name="dateTôt[]" class="form-control"></td>
+  <td><input type="date" name="dateTard[]" class="form-control"></td>
+  <td><input type="text" name="lot[]" class="form-control"></td>
+  <td><input type="text" name="observation[]" class="form-control" value=""></td>
   <td>
     <div class="d-flex justify-content-end">
       <button type="button" class="btn btn-md btn-danger deleteRow">
@@ -129,7 +131,7 @@
   </div>
   <div class="mb-4 text-right">
      
-      <button type="submit" form="demandeForm" name="action" value="submit" class="btn btn-primary" onclick="saveDemande()">
+      <button type="submit" form="demandeForm" name="action" value="submit" class="btn btn-primary" onclick="saveDemande(event)">
         Enregistrer la Demande
       </button>
       <a href="/demande-fourniture" class="btn btn-danger">Annuler</a>
@@ -140,26 +142,27 @@
       const tableBody = $("#productsTable tbody");
   
       // Add Row
-      $("#addRow").on("click", function() {
+      $(document).on("click", ".addRow", function() {
+        const rowCount = $("#productsTable tbody tr").length;
         const row = `
           <tr>
             <td><input type="text" name="codeArticle[]" class="form-control" value=""></td>
             <td><input type="text" name="designation[]" class="form-control" value=""></td>
             <td><input type="text" name="unite[]" class="form-control" value=""></td>
             <td><input type="number" name="qteDemandee[]" class="form-control" value=""></td>
+            <td><input type="text" name="imputation[]" class="form-control" value=""></td>
             <td><input type="date" name="dateTôt[]" class="form-control"></td>
             <td><input type="date" name="dateTard[]" class="form-control"></td>
             <td><input type="text" name="lot[]" class="form-control"></td>
-            <td><input type="text" name="observation[]" class="form-control"></td>
-            
+            <td><input type="text" name="observation[]" class="form-control" value=""></td>
             <td>
               <div class="d-flex justify-content-end">
                 <button type="button" class="btn btn-md btn-danger deleteRow">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                  <button type="button" id="addRow" class="btn btn-md btn-primary">
-                    <i class="fas fa-plus"></i> 
-                  </button>
+                  <i class="fas fa-trash"></i>
+                </button>
+                <button type="button" class="btn btn-md btn-primary addRow">
+                  <i class="fas fa-plus"></i> 
+                </button>
               </div>
             </td>
           </tr>`;
@@ -171,8 +174,81 @@
         $(this).closest("tr").remove();
       });
     });
-    const saveDemande = () => {
-      document.getElementById('demandeForm').submit();
+    const saveDemande = (e) => {
+      if (e) e.preventDefault(); // Prevent default form submission if event is passed
+      
+      // Convert parallel arrays to items array format
+      const items = [];
+      const codeArticles = $('input[name="codeArticle[]"]').map(function() { return $(this).val(); }).get();
+      const designations = $('input[name="designation[]"]').map(function() { return $(this).val(); }).get();
+      const unites = $('input[name="unite[]"]').map(function() { return $(this).val(); }).get();
+      const qteDemandees = $('input[name="qteDemandee[]"]').map(function() { return $(this).val(); }).get();
+      const imputations = $('input[name="imputation[]"]').map(function() { return $(this).val(); }).get();
+      const dateTots = $('input[name="dateTôt[]"]').map(function() { return $(this).val(); }).get();
+      const dateTards = $('input[name="dateTard[]"]').map(function() { return $(this).val(); }).get();
+      const lots = $('input[name="lot[]"]').map(function() { return $(this).val(); }).get();
+      const observations = $('input[name="observation[]"]').map(function() { return $(this).val(); }).get();
+      
+      // Debug logging
+      console.log('Collected data:', {
+        codeArticles,
+        designations,
+        unites,
+        qteDemandees,
+        imputations,
+        dateTots,
+        dateTards,
+        lots,
+        observations
+      });
+      
+      for (let i = 0; i < designations.length; i++) {
+        if (designations[i] || qteDemandees[i]) {
+          items.push({
+            code: codeArticles[i] || '',
+            designation: designations[i] || '',
+            unité: unites[i] || '',
+            quantité: qteDemandees[i] || '0',
+            imputation: imputations[i] || '',
+            auPlutot: dateTots[i] || '',
+            auPlutart: dateTards[i] || '',
+            lot: lots[i] || '',
+            observation: observations[i] || ''
+          });
+        }
+      }
+      
+      // Debug logging
+      console.log('Items array:', items);
+      
+      // Get form data
+      const formData = {
+        date: $('#date').val(),
+        numero: $('#numero').val(),
+        items: items
+      };
+      
+      console.log('Form data to submit:', formData);
+      
+      // Submit via AJAX
+      $.ajax({
+        url: '/achats/demande/fourniture',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function(response) {
+          console.log('Success:', response);
+          if (response.success) {
+            window.location.href = response.redirect || '/achats/fourniture';
+          } else {
+            alert('Erreur: ' + (response.error || response.message || 'Erreur inconnue'));
+          }
+        },
+        error: function(xhr, status, error) {
+          console.error('Error:', xhr.responseText);
+          alert('Erreur serveur: ' + (xhr.responseJSON?.error || xhr.responseText || error));
+        }
+      });
     }
   </script>
   
