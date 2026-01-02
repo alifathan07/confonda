@@ -126,6 +126,55 @@
       width: auto;
     }
 
+    @media (max-width: 576px) {
+      .doc-card {
+        width: calc(100% - 16px);
+        margin: 0.5rem auto;
+        border-radius: 8px;
+      }
+
+      .doc-header {
+        padding: 0.9rem 0.9rem 0.75rem;
+      }
+
+      .table-section {
+        padding: 1rem;
+      }
+
+      .topline {
+        min-height: 0;
+        padding: 0;
+      }
+
+      .brand-title {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .brand-title .logo-img {
+        position: static;
+        transform: none;
+        height: 70px;
+      }
+
+      .brand-sep {
+        width: 60px;
+        height: 4px;
+      }
+
+      .brand-name {
+        font-size: 0.98rem;
+      }
+
+      .brand-sub {
+        font-size: 0.75rem;
+      }
+
+      .meta-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .brand-name {
       font-size: 1.02rem;
       font-weight: 800;
@@ -334,6 +383,15 @@
       object-position: left center;
       display: block;
       margin-top: 30px;
+    }
+
+    @media (max-width: 576px) {
+      .sig-img {
+        width: 100% !important;
+        max-width: 260px;
+        height: auto;
+        margin-top: 12px;
+      }
     }
 
     .sig-line {

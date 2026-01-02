@@ -15,6 +15,7 @@ import { dashboardRouter } from './routes/dashboard.js';
 import { authRouter } from './routes/auth.js';
 import PDFDocument from "pdfkit";
 import fs from "fs";
+import { generateBcPDF } from './controllers/bcController.js';
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -72,12 +73,19 @@ app.get('/public/bc/:id', async (req, res) => {
     try {
         const id = parseInt(req.params.id);
         const sig = (req.query.sig || '').toString();
+        const view = (req.query.view || '').toString();
         if (!id || Number.isNaN(id)) {
             return res.status(400).send('ID invalide');
         }
         const expected = signPublicBcId(id);
         if (!sig || sig !== expected) {
             return res.status(403).send('Lien invalide');
+        }
+
+        // Default behavior: auto-download PDF
+        // Optional: open HTML preview with ?view=1
+        if (view !== '1') {
+            return generateBcPDF(req, res);
         }
 
         const bc = await prisma.bondeCommande.findUnique({
