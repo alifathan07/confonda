@@ -192,7 +192,7 @@ const buildBmceWorksheet = ({
     setLabelValue(5, "NOMBRE TOTAL D'OPERATIONS (en chiffres)", String(Array.isArray(items) ? items.length : 0));
 
     const totalAmount = (Array.isArray(items) ? items : []).reduce((sum, r) => sum + parseAmount(r?.[2]), 0);
-    const totalText = `${formatBmceAmount(totalAmount)} – ${amountToFrenchMad(totalAmount)}`;
+    const totalText = `${formatBmceAmount(totalAmount)} (${amountToFrenchMad(totalAmount)})`;
     setLabelValue(6, "MONTANT TOTAL D'OPERATIONS (en chiffres & Lettres)", totalText);
     setLabelValue(7, 'LIBELLE OPERATIONS', obs || '');
     ws.mergeCells('A8:C8');
@@ -251,17 +251,72 @@ const buildBmceWorksheet = ({
         ws.getRow(rowIdx).height = 22;
     });
 
-    const footerRow = startRow + 22;
-    ws.mergeCells(`A${footerRow}:C${footerRow}`);
-    ws.getCell(`A${footerRow}`).value = 'Authentification Signatures "Cachet Agence":';
-    ws.getCell(`A${footerRow}`).font = fontBold;
-    ws.getCell(`A${footerRow}`).alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
-    applyBorderRange(footerRow, 1, footerRow, 3, borderThin);
+    const itemCount = Array.isArray(items) ? items.length : 0;
+    const tableEndRow = itemCount ? (startRow + itemCount - 1) : headerRow;
+
+    // Amount box centered under the beneficiaries table
+    const amountBoxRow = tableEndRow + 1;
+    ws.mergeCells(`A${amountBoxRow}:C${amountBoxRow}`);
+    ws.getCell(`A${amountBoxRow}`).value = formatBmceAmount(totalAmount);
+    ws.getCell(`A${amountBoxRow}`).font = { ...fontBold, size: 13 };
+    ws.getCell(`A${amountBoxRow}`).alignment = { vertical: 'middle', horizontal: 'center', wrapText: false };
+    applyBorderRange(amountBoxRow, 1, amountBoxRow, 3, borderMedium);
+    ['A', 'B', 'C'].forEach((col) => {
+        ws.getCell(`${col}${amountBoxRow}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
+    });
+    ws.getRow(amountBoxRow).height = 26;
+
+    const footerStartRow = amountBoxRow + 2;
+    const footerEndRow = footerStartRow + 4;
+
+    for (let r = footerStartRow; r <= footerEndRow; r++) {
+        ws.mergeCells(`B${r}:C${r}`);
+        ['A', 'B', 'C'].forEach((col) => {
+            ws.getCell(`${col}${r}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
+        });
+        ws.getRow(r).height = 24;
+    }
+
+    ws.getCell(`A${footerStartRow}`).value = 'Signatures autorisées :';
+    ws.getCell(`A${footerStartRow}`).font = fontBold;
+    ws.getCell(`A${footerStartRow}`).alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+
+    ws.getCell(`B${footerStartRow}`).value = 'Authentification Signatures "Cachet Agence":';
+    ws.getCell(`B${footerStartRow}`).font = fontBold;
+    ws.getCell(`B${footerStartRow}`).alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+
+    for (let r = footerStartRow; r <= footerEndRow; r++) {
+        const isTop = r === footerStartRow;
+        const isBottom = r === footerEndRow;
+
+        // A column: left outer border + vertical divider on the right
+        ws.getCell(`A${r}`).border = {
+            top: isTop ? { style: 'thin' } : undefined,
+            left: { style: 'thin' },
+            bottom: isBottom ? { style: 'thin' } : undefined,
+            right: { style: 'thin' },
+        };
+
+        // B:C merged region: only top/bottom outer borders, plus divider on the left
+        ws.getCell(`B${r}`).border = {
+            top: isTop ? { style: 'thin' } : undefined,
+            left: { style: 'thin' },
+            bottom: isBottom ? { style: 'thin' } : undefined,
+            right: undefined,
+        };
+
+        // Column C: right outer border
+        ws.getCell(`C${r}`).border = {
+            top: isTop ? { style: 'thin' } : undefined,
+            left: undefined,
+            bottom: isBottom ? { style: 'thin' } : undefined,
+            right: { style: 'thin' },
+        };
+    }
 
     // Add a neat outer border around the main blocks
     applyBorderRange(1, 1, 8, 3, borderMedium);
-    const tableEndRow = startRow + Math.max((Array.isArray(items) ? items.length : 0) - 1, 0);
-    applyBorderRange(headerRow, 1, Math.max(tableEndRow, headerRow), 3, borderThin);
+    applyBorderRange(headerRow, 1, tableEndRow, 3, borderThin);
 };
 
 

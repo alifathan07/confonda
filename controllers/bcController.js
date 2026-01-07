@@ -258,7 +258,11 @@ export const generateBcPDF = async (req, res) => {
       where: { id: bcId },
       include: {
         fournisseur: true,
-        commandesItems: true,
+        commandesItems: {
+          include: {
+            BondeCommandeChantierItem: { include: { chantier: true } }
+          }
+        },
         chantier: true,
       },
     });
@@ -305,7 +309,7 @@ export const generateBcPDF = async (req, res) => {
     const signaturePath = path.join(__dirname, "../public/img/signature.png");
 
     const headerHeight = 150;
-    const footerHeight = 120;
+    const footerHeight = 184;
     const rowHeight = 22;
     const colWidths = [28, 55, 160, 45, 50, 60, 45, 72];
 
@@ -389,9 +393,50 @@ export const generateBcPDF = async (req, res) => {
         .text(bc.fournisseur?.email || "-", cliX + 8, gridY + 24, { width: lineW, ellipsis: true });
       doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray600)
         .text(bc.fournisseur?.telFournisseur || "Non renseigné", cliX + 8, gridY + 38, { width: lineW, ellipsis: true });
-      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray800)
-        .text(bc.chantier?.nom || "-", cliX + 8, gridY + 52, { width: lineW, ellipsis: true });
     };
+
+
+      const drawChantier = (yPosition) => {
+        const startY = yPosition ?? (pageHeight - margin - footerHeight);
+        const gap = 12;
+        const cardW = (contentWidth - gap) / 2;
+        const cardH = 86;
+
+        const chantierX = margin;
+        const livraisonX = margin + cardW + gap;
+
+        // Card 1: Chantier
+        doc.roundedRect(chantierX, startY, cardW, cardH, 8).lineWidth(1).stroke(colors.borderSoft);
+        doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
+          .text("CHANTIER", chantierX + 10, startY + 10, { width: cardW - 20 });
+        doc.font("Helvetica").fontSize(9).fillColor(colors.gray800)
+          .text((() => {
+            const names = new Set();
+            if (bc.chantier?.nom) names.add(bc.chantier.nom);
+            (bc.commandesItems || []).forEach(it => {
+              (it.BondeCommandeChantierItem || []).forEach(bcci => {
+                if (bcci?.chantier?.nom) names.add(bcci.chantier.nom);
+              });
+            });
+            return Array.from(names).join(', ') || "-";
+          })(), chantierX + 10, startY + 30, { width: cardW - 20, ellipsis: true });
+
+        // Card 2: Livraison (date + lieu in the same card)
+        doc.roundedRect(livraisonX, startY, cardW, cardH, 8).lineWidth(1).stroke(colors.borderSoft);
+        doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
+          .text("LIVRAISON", livraisonX + 10, startY + 10, { width: cardW - 20 });
+
+        const dateLivStr = bc.dateLivraison
+          ? new Date(bc.dateLivraison).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+          : "-";
+        doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
+          .text(`Date : ${dateLivStr}`, livraisonX + 10, startY + 30, { width: cardW - 20, ellipsis: true });
+        doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
+          .text(`Lieu : ${bc.lieuLivraison || "-"}`, livraisonX + 10, startY + 48, { width: cardW - 20, ellipsis: true });
+
+        return { startY, cardH };
+      };
+
 
     const drawFooter = (yPosition) => {
       const startY = yPosition || (pageHeight - margin - footerHeight);
@@ -399,32 +444,35 @@ export const generateBcPDF = async (req, res) => {
       const sigW = (contentWidth - gap) / 2;
       const sigH = 86;
 
+      const chantier = drawChantier(startY);
+      const sigStartY = chantier.startY + chantier.cardH + gap;
+
       // Signature du direction (left)
-      doc.roundedRect(margin, startY, sigW, sigH, 8).lineWidth(1).stroke(colors.borderSoft);
+      doc.roundedRect(margin, sigStartY, sigW, sigH, 8).lineWidth(1).stroke(colors.borderSoft);
       doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
-        .text("SIGNATURE DU DIRECTION", margin + 10, startY + 10);
-      doc.moveTo(margin + 10, startY + sigH - 18).lineTo(margin + sigW - 10, startY + sigH - 18)
+        .text("SIGNATURE DU DIRECTION", margin + 10, sigStartY + 10);
+      doc.moveTo(margin + 10, sigStartY + sigH - 18).lineTo(margin + sigW - 10, sigStartY + sigH - 18)
         .lineWidth(1).stroke(colors.borderSoft);
 
       // Le Responsable Achats (right)
       const sig2X = margin + sigW + gap;
-      doc.roundedRect(sig2X, startY, sigW, sigH, 8).lineWidth(1).stroke(colors.borderSoft);
+      doc.roundedRect(sig2X, sigStartY, sigW, sigH, 8).lineWidth(1).stroke(colors.borderSoft);
       doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
-        .text("LE RESPONSABLE ACHATS", sig2X + 10, startY + 10);
+        .text("LE RESPONSABLE ACHATS", sig2X + 10, sigStartY + 10);
 
       if (fs.existsSync(signaturePath)) {
         try {
           const fitW = sigW - 20;
           const fitH = 60;
           const imgX = sig2X + (sigW - fitW) / 2;
-          const imgY = startY + 22;
+          const imgY = sigStartY + 22;
           doc.image(signaturePath, imgX, imgY, { fit: [fitW, fitH], align: "center", valign: "center" });
         } catch (e) {
           console.error("Error loading signature:", e);
         }
       }
 
-      doc.moveTo(sig2X + 10, startY + sigH - 18).lineTo(sig2X + sigW - 10, startY + sigH - 18)
+      doc.moveTo(sig2X + 10, sigStartY + sigH - 18).lineTo(sig2X + sigW - 10, sigStartY + sigH - 18)
         .lineWidth(1).stroke(colors.borderSoft);
     };
 
@@ -454,50 +502,50 @@ export const generateBcPDF = async (req, res) => {
       x = margin;
 
       // N°
-      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray900)
-        .text(String(index + 1), x, y + 7, { width: colWidths[0], align: "center" });
+      doc.font("Helvetica").fontSize(8).fillColor(colors.gray900)
+        .text(String(index + 1), x + 4, y + 7, { width: colWidths[0] - 12, align: "center" });
       x += colWidths[0];
 
       // Reference
-      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
-        .text(item.reference || "", x, y + 7, { width: colWidths[1], align: "center", ellipsis: true });
+      doc.font("Helvetica").fontSize(8).fillColor(colors.gray800)
+        .text(item.reference || "", x + 4, y + 7, { width: colWidths[1] - 8, align: "left", ellipsis: true });
       x += colWidths[1];
 
       // Désignation
-      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray900)
+      doc.font("Helvetica").fontSize(8).fillColor(colors.gray900)
         .text(item.designation || "-", x + 4, y + 7, { width: colWidths[2] - 8, ellipsis: true });
       x += colWidths[2];
 
       // Quantité
-      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray900)
-        .text(String(item.quantite || 0), x, y + 7, { width: colWidths[3], align: "center" });
+      doc.font("Helvetica").fontSize(8).fillColor(colors.gray900)
+        .text(String(item.quantite ?? 0), x, y + 7, { width: colWidths[3], align: "center" });
       x += colWidths[3];
 
       // Unité
-      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
-        .text(item.unite || "", x, y + 7, { width: colWidths[4], align: "center" });
+      doc.font("Helvetica").fontSize(8).fillColor(colors.gray800)
+        .text(item.unite || "", x, y + 7, { width: colWidths[4], align: "center", ellipsis: true });
       x += colWidths[4];
 
       // Prix U.
-      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray900)
-        .text(fmtMoney(item.prixUnitaire || 0), x, y + 7, { width: colWidths[5] - 6, align: "right" });
+      doc.font("Helvetica").fontSize(8).fillColor(colors.gray900)
+        .text(fmtMoney(item.prixUnitaire ?? 0), x, y + 7, { width: colWidths[5] - 6, align: "right" });
       x += colWidths[5];
 
       // Remise
-      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
-        .text(fmtPct(item.tauxRemise || 0), x, y + 7, { width: colWidths[6], align: "center" });
+      doc.font("Helvetica").fontSize(8).fillColor(colors.gray800)
+        .text(fmtPct(item.tauxRemise ?? 0), x, y + 7, { width: colWidths[6], align: "center" });
       x += colWidths[6];
 
       // Total HT (net)
       const itemTotalHt = (() => {
-        const stored = normalizeNumber(item.totalHt ?? 0);
+        const stored = normalizeNumber(item.totalHt);
         if (stored) return stored;
-        const q = normalizeNumber(item.quantite || 0);
-        const pu = normalizeNumber(item.prixUnitaire || 0);
-        const remiseAmt = normalizeNumber(item.remise ?? 0);
+        const q = normalizeNumber(item.quantite);
+        const pu = normalizeNumber(item.prixUnitaire);
+        const remiseAmt = normalizeNumber(item.remise);
         return (q * pu) - remiseAmt;
       })();
-      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray900)
+      doc.font("Helvetica").fontSize(8).fillColor(colors.gray900)
         .text(fmtMoney(itemTotalHt), x, y + 7, { width: colWidths[7] - 6, align: "right" });
 
       return y + rowHeight;
@@ -554,9 +602,10 @@ export const generateBcPDF = async (req, res) => {
     await drawHeader();
 
     // Table Logic
-    const isMultiPage = items.length > 12;
+    const maxRowsPerPage = 20;
 
     currentY = drawTableHeader(currentY);
+    let rowsOnPage = 0;
 
     for (let i = 0; i < items.length; i++) {
       // Check for overflow
@@ -564,21 +613,16 @@ export const generateBcPDF = async (req, res) => {
       // We reserve space for the footer if we are on the last page (or potentially last)
       // But if isMultiPage is false, we try to squeeze it in (it should fit by design for <= 7 items)
 
-      const spaceNeeded = rowHeight;
-      // If we are in multi-page mode, we need to ensure we don't hit the footer area
-      // If we are NOT in multi-page mode, we just print (assuming it fits)
-
-      const effectivePageHeight = pageHeight - margin;
-      const footerZoneHeight = footerHeight + 50; // Buffer
-
-      if (isMultiPage && (currentY + spaceNeeded > effectivePageHeight - footerZoneHeight)) {
+      if (rowsOnPage >= maxRowsPerPage) {
         doc.addPage();
         await drawHeader();
         currentY = margin + headerHeight + 18;
         currentY = drawTableHeader(currentY);
+        rowsOnPage = 0;
       }
 
       currentY = drawTableRow(currentY, items[i], i);
+      rowsOnPage += 1;
     }
 
     // Totals & Montant en lettres
@@ -612,15 +656,24 @@ export const generateBcPDF = async (req, res) => {
     }
 
     // Draw Totals
-    currentY = drawTotals(currentY);
-    currentY += 10;
+    const totalsBoxHeight = (3 * 20) + 20;
+    const montantBoxHeight = 48;
+    const endGap = 12;
 
-    // Draw Montant en lettres
-    currentY = drawMontantLettres(currentY);
+    const footerY = pageHeight - margin - footerHeight;
+    const montantY = footerY - endGap - montantBoxHeight;
+    const totalsY = montantY - endGap - totalsBoxHeight;
 
-    // Draw Footer at bottom of the current (last) page
-    // We use the fixed footer height to position it at the bottom
-    drawFooter();
+    // If the end block doesn't fit on this page, move it entirely to the next page
+    if (currentY + 20 > totalsY) {
+      doc.addPage();
+      await drawHeader();
+      currentY = margin + headerHeight + 18;
+    }
+
+    drawTotals(totalsY);
+    drawMontantLettres(montantY);
+    drawFooter(footerY);
 
     doc.end();
 
@@ -955,26 +1008,26 @@ export const sendBcEmail = async (req, res) => {
   }
 };
 
-export const viewBc = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const bc = await prisma.bondeCommande.findUnique({
-      where: { id: parseInt(id) },
-      include: {
-        commandesItems: true,
-        fournisseur: true,
-        chantier: true, 
-      }
-    });
-    if (!bc) {
-      return res.status(404).json({ success: false, error: "Bon de commande non trouvée" });
-    }
-    res.render('dashboard/achats/bc/index', { bc });
-  } catch (err) {
-    console.error('Erreur affichage bon de commande:', err);
-    res.status(500).json({ success: false, error: "Erreur serveur" });
-  }
-};
+// export const viewBc = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const bc = await prisma.bondeCommande.findUnique({
+//       where: { id: parseInt(id) },
+//       include: {
+//         commandesItems: true,
+//         fournisseur: true,
+//         chantier: true, 
+//       }
+//     });
+//     if (!bc) {
+//       return res.status(404).json({ success: false, error: "Bon de commande non trouvée" });
+//     }
+//     res.render('dashboard/achats/bc/index', { bc });
+//   } catch (err) {
+//     console.error('Erreur affichage bon de commande:', err);
+//     res.status(500).json({ success: false, error: "Erreur serveur" });
+//   }
+// };
 export const editBc = async (req, res) => {
   try {
     const { id } = req.params;
@@ -1009,7 +1062,7 @@ export const editBc = async (req, res) => {
 export const updateBc = async (req, res) => {
   try {
     const { id } = req.params;
-    const { supplier, date, montantLettres, tauxTva, commandesItems = [] } = req.body || {};
+    const { supplier, date, dateLivraison, lieuLivraison, modeReg, delaiReg, montantLettres, tauxTva, commandesItems = [] } = req.body || {};
 
     const bcId = parseInt(id);
     const fournisseurId = parseInt(supplier);
@@ -1086,6 +1139,10 @@ export const updateBc = async (req, res) => {
         tauxTva: tvaRate,
         totalTtc,
         montantLettre: montantLettres,
+        dateLivraison,
+        lieuLivraison,
+        modeReg,
+        delaiReg,
         commandesItems: {
           create: toCreate.map(l => ({
             designation: l.designation,
@@ -1258,6 +1315,7 @@ export const createBcForm = async (req, res) => {
   try {
     const fournisseurs = await prisma.fournisseur.findMany();
     const chantiers = await prisma.chantier.findMany();
+    console.log("Headers:", req.headers);
     res.render('dashboard/achats/bc/create', { fournisseurs, chantiers });
   } catch (error) {
     console.error("Erreur affichage formulaire BC:", error);
@@ -1266,7 +1324,7 @@ export const createBcForm = async (req, res) => {
 };
 export const storeBc = async (req, res) => {
   try {
-    const { supplier, date, montantLettre, tauxTva, commandesItems = [], distributionData = [] } = req.body || {};
+    const { supplier, date, dateLivraison, lieuLivraison, modeReg, delaiReg,  montantLettre, tauxTva, commandesItems = [], distributionData = [] } = req.body || {};
 
     const fournisseurId = parseInt(supplier);
     const jsDate = new Date(date);
@@ -1319,6 +1377,12 @@ export const storeBc = async (req, res) => {
         tauxTva: tvaRate,
         totalTtc,
         montantLettre,
+        dateLivraison,
+        lieuLivraison,
+        delaiReg,
+        modeReg,
+        
+
         fournisseur: { connect: { id: fournisseurId } },
         commandesItems: {
           create: toCreate.map((l) => ({
@@ -1360,7 +1424,9 @@ export const storeBc = async (req, res) => {
       success: true,
       message: "Bon de commande créé avec succès",
       bc,
+
     });
+    console.log(modeReg , delaiReg)
   } catch (error) {
     console.error("Erreur création BC:", error);
     res.status(500).json({ success: false, error: "Erreur serveur" });

@@ -616,6 +616,10 @@ model BondeCommande {
   totalHt               Float?
   tauxTva               Float?
   totalTtc              Float?
+  dateLivraison String? 
+  lieuLivraison String? 
+  modeReg String?
+  delaiReg String?
   montantLettre         String?
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt
@@ -642,4 +646,12 @@ model commandesItems {
 }
 
 
+
+model Fourniture_list { 
+  id              Int           @id @default(autoincrement())
+  designation String? 
+  reference String? 
+  unite String? 
+  prixUnitaire Float?
+}
 

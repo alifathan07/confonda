@@ -558,6 +558,43 @@
       align-items: center;
       gap: 8px;
     }
+
+    .bc-extra-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    @media (min-width: 992px) {
+      .bc-extra-grid {
+        flex-direction: row;
+        align-items: stretch;
+      }
+    }
+
+    .bc-extra-field {
+      flex: 0 0 320px;
+      min-width: 260px;
+      background: var(--blue-light);
+      border: 1px solid #dbeafe;
+      border-radius: 12px;
+      padding: 0.9rem;
+    }
+
+    .bc-extra-label {
+      font-weight: 800;
+      color: #1e3a8a;
+      font-size: 0.85rem;
+      margin-bottom: 0.45rem;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .bc-extra-input {
+      border-radius: 10px !important;
+      border: 1px solid #cfd6df;
+      box-shadow: none !important;
+    }
   </style>
 </head>
 
@@ -615,7 +652,7 @@
                     <div class="fournisseur-box">
                       <input type="date" name="date" value="<%= new Date(bc.date).toISOString().slice(0,10) %>" hidden>
                       <div class="meta-grid">
-                        <div class="meta-item"><strong>Commande N° :</strong><%= bc.id %></div>
+                        <div class="meta-item"><strong>BC N° :</strong><%= bc.id %></div>
                         <br>
                         <div class="meta-item"><strong>Date :</strong> <%= new Date(bc.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) %></div>
                       </div>
@@ -655,20 +692,60 @@
                   </div>
                 </div>
 
+                <div class="col-12 mt-3">
+                  <div class="fournisseur-box">
+                    <h5 class="mb-3"><i class="fas fa-wallet"></i> Règlement</h5>
+                    <div class="bc-extra-grid">
+                      <div class="bc-extra-field" style="flex: 1 1 320px;">
+                        <div class="bc-extra-label">Mode de règlement</div>
+                        <select id="modeReglement" name="modeReg" class="form-control bc-extra-input">
+                          <option value="">-- Choisir --</option>
+                          <option value="virement" <%= bc.modeReg === 'virement' ? 'selected' : '' %>>Virement</option>
+                          <option value="cheque" <%= bc.modeReg === 'cheque' ? 'selected' : '' %>>Chèque</option>
+                          <option value="effets" <%= bc.modeReg === 'effets' ? 'selected' : '' %>>Effets</option>
+                        </select>
+                      </div>
+
+                      <div class="bc-extra-field" style="flex: 1 1 320px;">
+                        <div class="bc-extra-label">Délais de règlement</div>
+                        <select id="delaisReglement" name="delaiReg" class="form-control bc-extra-input">
+                          <option value="">-- Choisir --</option>
+                          <option value="a_vue" <%= bc.delaiReg === 'a_vue' ? 'selected' : '' %>>À vue</option>
+                          <option value="30_jours" <%= bc.delaiReg === '30_jours' ? 'selected' : '' %>>30 jours</option>
+                          <option value="60_jours" <%= bc.delaiReg === '60_jours' ? 'selected' : '' %>>60 jours</option>
+                          <option value="90_jours" <%= bc.delaiReg === '90_jours' ? 'selected' : '' %>>90 jours</option>
+                          <option value="120_jours" <%= bc.delaiReg === '120_jours' ? 'selected' : '' %>>120 jours</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
                 <div class="col-12 mt-3">
                   <div class="fournisseur-box">
                     <h5 class="mb-3"><i class="fas fa-hard-hat"></i> Chantiers</h5>
-                        <div id="chantierCheckboxes">
-                          <!-- Multi-select + tags for chantiers -->
-                          <select id="chantierSelect" class="form-control" multiple size="6" style="min-height:120px;">
-                            <% chantiers.forEach(ch=> {
-                                const isUsed = bc.commandesItems.some(item => (item.BondeCommandeChantierItem || []).some(bcci => bcci.chantierId === ch.id));
-                              %>
-                              <option value="<%= ch.id %>" data-chantier-name="<%= ch.nom %>" <%= isUsed ? 'selected' : '' %>><%= ch.nom %></option>
-                            <% }) %>
-                          </select>
-                        </div>
+                    <div class="bc-extra-grid">
+                      <div id="chantierCheckboxes" style="flex: 1 1 520px; min-width: 260px;">
+                        <!-- Multi-select + tags for chantiers -->
+                        <select id="chantierSelect" class="form-control" multiple size="6" style="min-height:120px;">
+                          <% chantiers.forEach(ch=> {
+                              const isUsed = bc.commandesItems.some(item => (item.BondeCommandeChantierItem || []).some(bcci => bcci.chantierId === ch.id));
+                            %>
+                            <option value="<%= ch.id %>" data-chantier-name="<%= ch.nom %>" <%= isUsed ? 'selected' : '' %>><%= ch.nom %></option>
+                          <% }) %>
+                        </select>
+                      </div>
+
+                      <div class="bc-extra-field">
+                        <div class="bc-extra-label">Date de livraison</div>
+                        <input id="dateLivraison" type="date" class="form-control bc-extra-input" value="<%= bc.dateLivraison ? new Date(bc.dateLivraison).toISOString().slice(0,10) : '' %>" />
+                      </div>
+
+                      <div class="bc-extra-field">
+                        <div class="bc-extra-label">Lieu de livraison</div>
+                        <input id="lieuLivraison" type="text" class="form-control bc-extra-input" placeholder="Ex: Dépôt / Chantier / Adresse" value="<%= bc.lieuLivraison || '' %>" />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -785,7 +862,6 @@
                     </button>
                   </div>
                 </div>
-
 
                 <!-- Totals section -->
                 <div class="table-section" style="padding-top: 0;">
@@ -1157,6 +1233,12 @@
           const rawPrice = (priceInput && priceInput.value ? priceInput.value : '').toString().trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
           const unitPrice = parseFloat(rawPrice || '0') || 0;
 
+          // Discount (taux de remise) from the row and discounted unit price for distribution
+          const remiseInput = row.querySelector('input[data-field="remise"]');
+          const rawRemise = (remiseInput && remiseInput.value ? remiseInput.value : '').toString().trim().replace(',', '.');
+          const tauxRemise = Math.max(0, parseFloat(rawRemise || '0') || 0);
+          const unitPriceRemise = unitPrice * (1 - (tauxRemise / 100));
+
           if (totalQty <= 0) {
             alert('Veuillez d\'abord entrer une quantité totale pour cet article.');
             return;
@@ -1299,7 +1381,8 @@
             remEl.style.color = remainingInit < 0 ? 'red' : 'green';
           }
 
-          setupDistributionListeners(totalQty, unitPrice);
+          // Use discounted unit price for distribution montant
+          setupDistributionListeners(totalQty, unitPriceRemise);
 
           // Attach listener to quantity input to refresh modal if qty is changed while modal is open
           if (totalQtyInput) {
@@ -1320,7 +1403,7 @@
           }
         };
 
-        window.setupDistributionListeners = function (totalQty, unitPrice) {
+        window.setupDistributionListeners = function (totalQty, unitPriceRemise) {
           const qtyInputs = document.querySelectorAll('.chantier-qty-input');
           qtyInputs.forEach(input => {
             input.addEventListener('input', function () {
@@ -1339,9 +1422,9 @@
                 remEl.style.color = 'green';
               }
 
-              // Auto-calculate Montant
+              // Auto-calculate Montant using discounted unit price
               const currentQty = parseFloat(this.value) || 0;
-              const newMontant = currentQty * unitPrice;
+              const newMontant = currentQty * (unitPriceRemise || 0);
               const row = this.closest('tr');
               const montantInput = row.querySelector('.chantier-montant-input');
               if (montantInput) {
@@ -1706,6 +1789,25 @@
               const lineRemise = lineBase * remisePctRow / 100;
               const lineNet = lineBase - lineRemise;
 
+              // Keep saved distribution montants in sync with current PU/remise (qty stays the same)
+              const puRemise = p * (1 - (remisePctRow / 100));
+              if (tr.dataset.distribution) {
+                try {
+                  const dist = JSON.parse(tr.dataset.distribution);
+                  if (Array.isArray(dist)) {
+                    const updated = dist.map(d => {
+                      const qtyDist = parseFloat((d && d.qty != null ? d.qty : 0).toString()) || 0;
+                      return {
+                        chantierId: d.chantierId,
+                        qty: qtyDist,
+                        montant: qtyDist * puRemise
+                      };
+                    });
+                    tr.dataset.distribution = JSON.stringify(updated);
+                  }
+                } catch (e) { }
+              }
+
               rawTotalHt += lineBase;
               totalRemise += lineRemise;
               totalEl.textContent = formatNumber(lineNet);
@@ -1751,10 +1853,15 @@
           const tvaInputEl = document.getElementById('tvaInput');
           const tauxTva = tvaInputEl ? parseFloat((tvaInputEl.value || '').toString().replace(',', '.')) || 0 : 0;
           const montantLettresInp = document.getElementById('montantLettresInp');
+          const dateLivraison = document.getElementById('dateLivraison')?.value || null;
+          const lieuLivraison = (document.getElementById('lieuLivraison')?.value || '').toString().trim();
+          const modeReg = (document.getElementById('modeReglement')?.value || '').toString().trim() || null;
+          const delaiReg = (document.getElementById('delaisReglement')?.value || '').toString().trim() || null;
           document.querySelectorAll('#bcBody tr').forEach(tr => {
             const referenceVal = (tr.querySelector('input[data-field="reference"]')?.value || '').toString();
             const rawQty = (tr.querySelector('input[data-field="quantite"]')?.value || '').toString();
             const rawPu = (tr.querySelector('input[data-field="prixUnitaire"]')?.value || '').toString();
+
             const rawRemiseValRow = (tr.querySelector('input[data-field="remise"]')?.value || '').toString();
             const qtyVal = rawQty.trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
             const prixVal = rawPu.trim().replace(/[^0-9.,-]/g, '').replace(/\s/g, '').replace(',', '.');
@@ -1763,6 +1870,28 @@
             const prixUnitaire = parseFloat(prixVal || '0') || 0;
             const tauxRemiseRow = parseFloat(rawRemiseValRow.trim().replace(',', '.')) || 0;
             const montantRemiseRow = quantite * prixUnitaire * tauxRemiseRow / 100;
+
+            // Recompute distribution montants using current discounted unit price
+            const prixUnitaireRemise = prixUnitaire * (1 - (Math.max(0, tauxRemiseRow) / 100));
+            let distributionData = [];
+            if (tr.dataset.distribution) {
+              try {
+                const dist = JSON.parse(tr.dataset.distribution);
+                if (Array.isArray(dist)) {
+                  distributionData = dist.map(d => {
+                    const qtyDist = parseFloat((d && d.qty != null ? d.qty : 0).toString()) || 0;
+                    return {
+                      chantierId: d.chantierId,
+                      qty: qtyDist,
+                      montant: qtyDist * prixUnitaireRemise
+                    };
+                  });
+                }
+              } catch (e) { distributionData = []; }
+            }
+
+            // Keep dataset in sync too
+            tr.dataset.distribution = JSON.stringify(distributionData);
             commandesItems.push({
               id: parseInt(tr.getAttribute('data-id')) || null,
               designation: (tr.querySelector('input[data-field="designation"]')?.value || '').trim(),
@@ -1775,7 +1904,7 @@
               tauxRemise: tauxRemiseRow,
               montantRemise: montantRemiseRow,
               tauxTva,
-              chantierDistribution: tr.dataset.distribution ? JSON.parse(tr.dataset.distribution) : []
+              chantierDistribution: distributionData
             });
           });
 
@@ -1786,11 +1915,16 @@
           return {
             supplier: supplierVal ? parseInt(supplierVal) : null,
             date: dateVal || null,
+            dateLivraison,
+            lieuLivraison,
+            modeReg,
+            delaiReg,
             tauxTva,
             montantLettres: montantLettresInp ? montantLettresInp.value : '',
             commandesItems
           };
         }
+
         async function deleteBcRow(button) {
           const row = button.closest('tr');
           if (!row) return;

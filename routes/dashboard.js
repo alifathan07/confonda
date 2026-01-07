@@ -26,7 +26,7 @@ import { addJustifCaisse, addJustifCaisseAdminAuto, adminUserList, createJustifC
 import { createDemandeFourniture, deleteDemandeFourniture, downloadImageFourniture, editDemandeFourniture, indexDemandeFourniture, storeDemandeFourniture, updateDemandeFourniture, updateValidationFourniture, uploadFour, uploadImageFourniture, uploadTempImage, validateAllFourniture, viewDemandeFourniture } from '../controllers/demandeFourniture.js';
 import { fileURLToPath } from 'url';
 import { EditDemandePrix, listDemandePrix, postDemandePrixViaFourniture, updateDemandePrix, viewDemandePrix, deleteDemandePrix, deleteArticle, createDemandePrix, storeDemandePrix, generateDemandePrixPDF, sendDemandePrixEmail } from '../controllers/demandeprixController.js';
-import { editBc, postBcDemandeFourniture, updateBc, viewBc, deleteBcItem, createBcForm, storeBc, generateBcPDF, sendBcEmail, listBc, deleteBc, updateBcItemDistribution, updateBcItem } from '../controllers/bcController.js';
+import { editBc, postBcDemandeFourniture, updateBc, deleteBcItem, createBcForm, storeBc, generateBcPDF, sendBcEmail, listBc, deleteBc, updateBcItemDistribution, updateBcItem } from '../controllers/bcController.js';
 import { bmceDelete, bmceDownload, bmcePay, bmcePreview, bmceUpload, indexVirementPay } from '../controllers/virementpayController.js';
 
 const virementpayUpload = multer({
@@ -414,7 +414,8 @@ dashboardRouter.post('/achats/bon-commande/create-from-demande', postBcDemandeFo
 
 /// Routers de Bon de commande :
 dashboardRouter.get('/achat/bc/create', createBcForm);
-dashboardRouter.get("/achat/bc/:id", viewBc);
+dashboardRouter.post("/achat/bc", storeBc);
+// dashboardRouter.get("/achat/bc/:id", viewBc);
 dashboardRouter.get("/achat/bc/:id/edit", editBc);
 dashboardRouter.put("/achat/bc/:id", updateBc);
 // Update a single item (designation, unite, quantite, prixUnitaire)
@@ -422,7 +423,7 @@ dashboardRouter.put('/achat/bc/item/:itemId', updateBcItem);
 // Update distribution for a single commandesItems (AJAX)
 dashboardRouter.patch('/achat/bc/item/:itemId/distribution', updateBcItemDistribution);
 dashboardRouter.delete("/achat/bc/article/:id", deleteBcItem);
-dashboardRouter.post("/achat/bc", storeBc);
+
 dashboardRouter.get('/achat/bc/:id/pdf', generateBcPDF);
 dashboardRouter.post('/api/bc/:id/send-email', sendBcEmail);
 

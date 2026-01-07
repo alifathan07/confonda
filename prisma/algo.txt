@@ -260,3 +260,12 @@ Paie Tasks :
 
 
 
+
+
+
+Add after supplier : mode reglement : virement , cheque , effets 
+add Delais de reglement : a vue , 30 jours, 60 jours, 90 jours, 120 jours
+
+
+
+Lieu De livraison // date de livrison 
