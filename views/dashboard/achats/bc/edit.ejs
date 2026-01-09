@@ -344,8 +344,15 @@
 
     .table-container {
       width: 100%;
+<<<<<<< HEAD
       overflow-x: visible;
       overflow-y: visible;
+=======
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+>>>>>>> 193a56d (latest chnages)
     }
 
     .table-doc {
@@ -356,6 +363,7 @@
     }
 
     @media (max-width: 768px) {
+<<<<<<< HEAD
       .table-container {
         overflow-x: auto;
         overflow-y: hidden;
@@ -364,6 +372,23 @@
 
       .table-doc {
         min-width: 900px;
+=======
+      .table-doc {
+        min-width: 760px;
+      }
+
+      .table-doc thead th,
+      .table-doc tbody td {
+        padding: 0.75rem 0.6rem;
+        font-size: 0.82rem;
+        white-space: nowrap;
+      }
+
+      .table-doc thead th:nth-child(2),
+      .table-doc tbody td:nth-child(2) {
+        white-space: normal;
+        min-width: 240px;
+>>>>>>> 193a56d (latest chnages)
       }
     }
 

@@ -61,7 +61,11 @@ export const postBcDemandeFourniture = async (req, res) => {
     }
 
     const demandeIdInt = parseInt(demandeId);
+<<<<<<< HEAD
 
+=======
+S
+>>>>>>> 193a56d (latest chnages)
     // Group items by fournisseur
     const itemsByFournisseur = items.reduce((acc, { itemId, fournisseurId }) => {
       const fid = parseInt(fournisseurId);
