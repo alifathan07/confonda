@@ -425,6 +425,17 @@ export const updateDemandeCaisseItemValidation = async (req, res) => {
       res.json({ success: false, error: 'Erreur lors de la mise à jour de la validation de l\'item.' });
     }
 };
+export const deleteDemandeCaisse = async(req , res) => {
+    const id = parseInt(req.params.id);
+    try {
+        await prisma.demandeCaisse.delete({ where: { id } });
+        await prisma.itemCaisse.deleteMany({ where: { demandeCaisseId: id } });
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting demandeCaisse:', error);
+        res.json({ success: false, error: 'Erreur lors de la suppression de la demandeCaisse.' });
+    }
+}
 
 
 
@@ -824,6 +835,8 @@ export const generateDemandeExcel = async (req, res) => {
     res.status(500).send('Erreur lors de la génération de l\'Excel');
   }
 };
+
+
 
 
                  
