@@ -352,20 +352,25 @@
                     <input id="account" type="text" placeholder="Numéro du chèque" name="numero">
                 </div>
             </div>
-                <div class="form-group" style="flex: 2;">
+               <div class="form-group" style="flex: 2;">
                 <label>Répartition par Chantier:</label>
                 <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                    <select id="allocChantierSelect" class="form-control" style="width: 220px;">
-                        <option value="">Sélectionnez un chantier</option>
-                        <% chantiers.forEach(chant=> { %>
-                            <option value="<%= chant.id %>" data-name="<%= chant.nom %>">
-                                <%= chant.nom %>
-                            </option>
-                            <% }) %>
-                    </select>
-                    <input type="number" id="allocAmountInput" class="form-control" placeholder="Montant"
-                        style="width: 150px;">
-                    <button type="button" class="btn btn-info" onclick="addAllocation()">+</button>
+                    <div style="flex-grow: 5;">
+        <select id="allocChantierSelect" class="form-control custom-select">
+            <option value="" >Sélectionnez un chantier</option>
+            <% chantiers.forEach(chant=> { %>
+            <option value="<%= chant.id %>" data-name="<%= chant.nom %>">
+                <%= chant.nom %>
+            </option>
+            <% }) %>
+        </select>
+                    </div>
+                    <div style="flex-grow: 2;">
+                        <input type="number" id="allocAmountInput" class="form-control" placeholder="Montant">
+                    </div>
+                    <div style="flex-grow: 1;">
+                        <button type="button" class="btn btn-info" onclick="addAllocation()">+</button>
+                    </div>
                 </div>
 
                 <table class="table table-sm table-bordered" style="font-size: 12px;">
