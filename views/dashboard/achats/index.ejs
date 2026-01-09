@@ -216,28 +216,49 @@
             <% if (user.role === 'grandadmin' || user.role === 'admin') { %>
             <div class="achat-buttons d-flex flex-wrap justify-content-center gap-4">
              
-              <a href="/achats/devis" class="achat-card shadow">
-                <div class="card-icon-wrapper">
+              <a href="#" class="achat-card shadow text-muted" style="opacity: 0.6; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+                <div class="card-icon-wrapper bg-light">
                   <i class="fas fa-file-invoice-dollar"></i>
                 </div>
                 <span class="card-title">Devis</span>
-                <small class="card-subtitle">Gérer les devis</small>
+                <small class="card-subtitle">
+                  <span class="badge badge-warning">Bientôt disponible</span><br>
+                  <small class="text-muted">(Cliquez pour plus d'informations)</small>
+                </small>
+
+                <div class="position-absolute p-2 bg-white shadow" style="top: 100%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s ease;">
+                  <p class="mb-0">Cette fonctionnalité est en cours de développement et sera bientôt disponible.</p>
+                </div>
               </a>
 
-              <a href="/achats/commandes" class="achat-card shadow">
-                <div class="card-icon-wrapper">
+              <a href="#" class="achat-card shadow text-muted" style="opacity: 0.6; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+                <div class="card-icon-wrapper bg-light">
                   <i class="fas fa-clipboard-list"></i>
                 </div>
                 <span class="card-title">Commandes</span>
-                <small class="card-subtitle">Suivi des commandes</small>
+                <small class="card-subtitle">
+                  <span class="badge badge-warning">Bientôt disponible</span><br>
+                  <small class="text-muted">(Cliquez pour plus d'informations)</small>
+                </small>
+
+                <div class="position-absolute p-2 bg-white shadow" style="top: 100%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s ease;">
+                  <p class="mb-0">Cette fonctionnalité est en cours de développement et sera bientôt disponible.</p>
+                </div>
               </a>
 
-              <a href="/achats/factures" class="achat-card shadow">
-                <div class="card-icon-wrapper">
+              <a href="#" class="achat-card shadow text-muted" style="opacity: 0.6; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+                <div class="card-icon-wrapper bg-light">
                   <i class="fas fa-file-invoice"></i>
                 </div>
                 <span class="card-title">Factures</span>
-                <small class="card-subtitle">Gestion des factures</small>
+                <small class="card-subtitle">
+                  <span class="badge badge-warning">Bientôt disponible</span><br>
+                  <small class="text-muted">(Cliquez pour plus d'informations)</small>
+                </small>
+
+                <div class="position-absolute p-2 bg-white shadow" style="top: 100%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s ease;">
+                  <p class="mb-0">Cette fonctionnalité est en cours de développement et sera bientôt disponible.</p>
+                </div>
               </a>
 
               <a href="/achats/fournisseurs" class="achat-card shadow">
