@@ -346,9 +346,7 @@
           try {
             if (confirm('Êtes-vous sûr de vouloir supprimer cette demande ?')) {
               const res = await fetch(`/achats/demandes/caisse/delete/${id}`, {
-                headers: {
-                  'Content-Type': 'application/json'
-                },
+                
                 method: 'DELETE'
               });
               if (res.ok) {

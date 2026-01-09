@@ -428,8 +428,10 @@ export const updateDemandeCaisseItemValidation = async (req, res) => {
 export const deleteDemandeCaisse = async(req , res) => {
     const id = parseInt(req.params.id);
     try {
-        await prisma.demandeCaisse.delete({ where: { id } });
-        await prisma.itemCaisse.deleteMany({ where: { demandeCaisseId: id } });
+        await prisma.$transaction([
+          prisma.itemCaisse.deleteMany({ where: { demandeCaisseId: id } }),
+          prisma.demandeCaisse.delete({ where: { id } }),
+        ]);
         res.json({ success: true });
     } catch (error) {
         console.error('Error deleting demandeCaisse:', error);

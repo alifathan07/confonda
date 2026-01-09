@@ -338,7 +338,7 @@ dashboardRouter.post("/demandes/caisse/:id", addCaisseItem);
 dashboardRouter.patch("/achats/demandes/caisse/updateStatus/:id", updateDemandeCaisseStatut);
 dashboardRouter.patch("/achats/demandes/caisse/updateValidation/:id", updateDemandeCaisseItemValidation);
 dashboardRouter.get('/achats/demandes/caisse/:id/pdf', generateDemandePdf);
-dashboardRouter.delete('/achats/demandes/caisse/:id', deleteDemandeCaisse);
+dashboardRouter.delete('/achats/demandes/caisse/delete/:id', deleteDemandeCaisse);
 dashboardRouter.get('/achats/demandes/caisse/:id/excel', generateDemandeExcel);
 
 
