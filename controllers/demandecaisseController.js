@@ -197,40 +197,56 @@ export const viewDemandeCaisse = async (req, res) => {
   export const updateDemandeCaisseItem = async (req, res) => {
     const id = req.params.id;
     try {
+      const itemId = parseInt(id);
+      const updateData = {};
+
+      if (typeof req.body.dateCaisse !== 'undefined' && req.body.dateCaisse !== '') {
+        updateData.dateCaisse = new Date(req.body.dateCaisse);
+      }
+      if (typeof req.body.designation !== 'undefined') {
+        updateData.designation = req.body.designation;
+      }
+      if (typeof req.body.montant !== 'undefined' && req.body.montant !== '') {
+        updateData.montant = parseFloat(req.body.montant);
+      }
+      if (typeof req.body.imputation !== 'undefined') {
+        updateData.imputation = req.body.imputation;
+      }
+
       const item = await prisma.itemCaisse.update({
-        where: {
-          id: parseInt(id),
-        },
-        data: {
-          dateCaisse: new Date(req.body.dateCaisse),
-          designation: req.body.designation,
-          montant: parseFloat(req.body.montant),
-          imputation: req.body.imputation,
-        },
+        where: { id: itemId },
+        data: updateData,
       });
-      const demandeCaisse = await prisma.demandeCaisse.findUnique({
-        where: {
-          id: item.demandeCaisseId,
-        },
-      });
+
       const items = await prisma.itemCaisse.findMany({
-        where: {
-          demandeCaisseId: item.demandeCaisseId,
-        },
+        where: { demandeCaisseId: item.demandeCaisseId },
       });
-      const montantTotal = items.reduce((sum, item) => sum + parseFloat(item.montant), 0);
+      const montantTotal = items.reduce((sum, it) => sum + parseFloat(it.montant), 0);
       await prisma.demandeCaisse.update({
-        where: {
-          id: item.demandeCaisseId,
-        },
-        data: {
-          montantTotal: montantTotal,
-        },
+        where: { id: item.demandeCaisseId },
+        data: { montantTotal },
       });
-      res.redirect(`/achats/demandes/caisse/${item.demandeCaisseId}`);
+
+      const wantsJson =
+        req.xhr ||
+        (req.headers.accept && req.headers.accept.includes('application/json')) ||
+        (req.headers['content-type'] && req.headers['content-type'].includes('application/json'));
+
+      if (wantsJson) {
+        return res.json({ success: true, item, montantTotal });
+      }
+
+      return res.redirect(`/achats/demandes/caisse/${item.demandeCaisseId}`);
     } catch (error) {
       console.error('Error updating item:', error);
-      res.status(500).send('Erreur lors de la mise à jour de l\'item.');
+      const wantsJson =
+        req.xhr ||
+        (req.headers.accept && req.headers.accept.includes('application/json')) ||
+        (req.headers['content-type'] && req.headers['content-type'].includes('application/json'));
+      if (wantsJson) {
+        return res.status(500).json({ success: false, error: "Erreur lors de la mise à jour de l'item." });
+      }
+      return res.status(500).send('Erreur lors de la mise à jour de l\'item.');
     }
   };
 export const addCaisseItem = async (req, res) => {
@@ -425,6 +441,21 @@ export const updateDemandeCaisseItemValidation = async (req, res) => {
       res.json({ success: false, error: 'Erreur lors de la mise à jour de la validation de l\'item.' });
     }
 };
+export const updateDemandeCaisseValidationAll = async (req, res) => {
+  const id = parseInt(req.params.id);
+  const { validation } = req.body;
+  try {
+    const items = await prisma.itemCaisse.updateMany({
+      where: { demandeCaisseId: id },
+      data: { validation , validepar: req.session.user.name },
+    }); 
+    console.log("validation success ");
+    res.status(200).json({ success: true, items , validation });
+  } catch (error) {
+    console.error('Error updating demandeCaisse validation:', error);
+    res.json({ success: false, error: 'Erreur lors de la mise à jour de la validation de la demandeCaisse.' });
+  }
+}
 export const deleteDemandeCaisse = async(req , res) => {
     const id = parseInt(req.params.id);
     try {

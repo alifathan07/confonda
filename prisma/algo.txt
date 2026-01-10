@@ -232,7 +232,7 @@ Tasks :
         ssh root@72.60.92.82
         voidx : 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
 
-        latest token : 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
+        latest token : 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
 
 Paie Tasks : 
 
