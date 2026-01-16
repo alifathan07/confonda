@@ -344,15 +344,10 @@
 
     .table-container {
       width: 100%;
-<<<<<<< HEAD
-      overflow-x: visible;
-      overflow-y: visible;
-=======
       max-width: 100%;
       overflow-x: auto;
       overflow-y: hidden;
       -webkit-overflow-scrolling: touch;
->>>>>>> 193a56d (latest chnages)
     }
 
     .table-doc {
@@ -363,16 +358,6 @@
     }
 
     @media (max-width: 768px) {
-<<<<<<< HEAD
-      .table-container {
-        overflow-x: auto;
-        overflow-y: hidden;
-        -webkit-overflow-scrolling: touch;
-      }
-
-      .table-doc {
-        min-width: 900px;
-=======
       .table-doc {
         min-width: 760px;
       }
@@ -388,7 +373,6 @@
       .table-doc tbody td:nth-child(2) {
         white-space: normal;
         min-width: 240px;
->>>>>>> 193a56d (latest chnages)
       }
     }
 
@@ -495,6 +479,8 @@
       border: 2px dashed #c3d4e9;
       border-radius: 16px;
       background: white;
+      display: flex;
+      flex-direction: column;
     }
 
     .sig-box h6 {
@@ -510,6 +496,9 @@
       height: 80px;
       border-bottom: 3px solid #e2e8f0;
       margin: 1.2rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     /* Mobile adjustments */
@@ -620,6 +609,50 @@
       border: 1px solid #cfd6df;
       box-shadow: none !important;
     }
+
+    .bc-two-cols {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+      align-items: stretch;
+    }
+
+    .bc-two-cols > .bc-col {
+      flex: 1 1 520px;
+      min-width: 320px;
+    }
+
+    .bc-two-cols .fournisseur-box {
+      height: 100%;
+    }
+
+    .bc-input {
+      border-radius: 12px !important;
+      border: 1px solid #cfd6df !important;
+      box-shadow: none !important;
+      min-height: 42px;
+    }
+
+    .bc-readonly {
+      background: #f8fafc !important;
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    /* Choices.js chantier selector styling (keep consistent with inputs) */
+    .choices__inner {
+      border-radius: 12px !important;
+      border: 1px solid #cfd6df !important;
+      min-height: 42px;
+      box-shadow: none !important;
+    }
+
+    .choices__list--multiple .choices__item {
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-weight: 700;
+    }
   </style>
 </head>
 
@@ -717,14 +750,14 @@
                   </div>
                 </div>
 
-                <div class="row mt-3">
-                  <div class="col-12 col-lg-6 mb-3 mb-lg-0">
+                <div class="bc-two-cols">
+                  <div class="bc-col">
                     <div class="fournisseur-box">
                       <h5 class="mb-3"><i class="fas fa-wallet"></i> Règlement</h5>
                       <div class="bc-extra-grid">
                         <div class="bc-extra-field" style="flex: 1 1 320px;">
                           <div class="bc-extra-label">Mode de règlement</div>
-                          <select id="modeReglement" name="modeReg" class="form-control bc-extra-input">
+                          <select id="modeReglement" name="modeReg" class="form-control bc-extra-input bc-input">
                             <option value="">-- Choisir --</option>
                             <option value="virement" <%= bc.modeReg === 'virement' ? 'selected' : '' %>>Virement</option>
                             <option value="cheque" <%= bc.modeReg === 'cheque' ? 'selected' : '' %>>Chèque</option>
@@ -734,11 +767,12 @@
 
                         <div class="bc-extra-field" style="flex: 1 1 320px;">
                           <div class="bc-extra-label">Délais de règlement</div>
-                          <select id="delaisReglement" name="delaiReg" class="form-control bc-extra-input">
+                          <select id="delaisReglement" name="delaiReg" class="form-control bc-extra-input bc-input">
                             <option value="">-- Choisir --</option>
                             <option value="a_vue" <%= bc.delaiReg === 'a_vue' ? 'selected' : '' %>>À vue</option>
                             <option value="30_jours" <%= bc.delaiReg === '30_jours' ? 'selected' : '' %>>30 jours</option>
                             <option value="60_jours" <%= bc.delaiReg === '60_jours' ? 'selected' : '' %>>60 jours</option>
+
                             <option value="90_jours" <%= bc.delaiReg === '90_jours' ? 'selected' : '' %>>90 jours</option>
                             <option value="120_jours" <%= bc.delaiReg === '120_jours' ? 'selected' : '' %>>120 jours</option>
                           </select>
@@ -747,13 +781,14 @@
                     </div>
                   </div>
 
-                  <div class="col-12 col-lg-6">
+                  <div class="bc-col">
                     <div class="fournisseur-box">
                       <h5 class="mb-3"><i class="fas fa-hard-hat"></i> Chantiers</h5>
                       <div class="bc-extra-grid">
                         <div id="chantierCheckboxes" style="flex: 1 1 520px; min-width: 260px;">
                           <!-- Multi-select + tags for chantiers -->
                           <select id="chantierSelect" class="form-control" multiple size="6" style="min-height:120px;">
+
                             <% chantiers.forEach(ch=> {
                                 const isUsed = bc.commandesItems.some(item => (item.BondeCommandeChantierItem || []).some(bcci => bcci.chantierId === ch.id));
                               %>
@@ -764,12 +799,12 @@
 
                         <div class="bc-extra-field">
                           <div class="bc-extra-label">Date de livraison</div>
-                          <input id="dateLivraison" type="date" class="form-control bc-extra-input" value="<%= bc.dateLivraison ? new Date(bc.dateLivraison).toISOString().slice(0,10) : '' %>" />
+                          <input id="dateLivraison" type="date" class="form-control bc-extra-input bc-input" value="<%= bc.dateLivraison ? new Date(bc.dateLivraison).toISOString().slice(0,10) : '' %>" />
                         </div>
 
                         <div class="bc-extra-field">
                           <div class="bc-extra-label">Lieu de livraison</div>
-                          <input id="lieuLivraison" type="text" class="form-control bc-extra-input" placeholder="Ex: Dépôt / Chantier / Adresse" value="<%= bc.lieuLivraison || '' %>" />
+                          <input id="lieuLivraison" type="text" class="form-control bc-extra-input bc-input" placeholder="Ex: Dépôt / Chantier / Adresse" value="<%= bc.lieuLivraison || '' %>" />
                         </div>
                       </div>
                     </div>
@@ -964,32 +999,25 @@
                   <div class="additional-info-grid">
                     <div class="info-box">
                       <h6><i class="fas fa-user"></i> Utilisateur</h6>
-                      <div class="info-line">
-                        <i class="fas fa-id-badge"></i>
-                        <span><strong>
-                            <%= typeof bonCommande !=='undefined' ? bonCommande.demandeur : (bc ? bc.demandeur : '' ) %>
-                          </strong></span>
+                      <div class="form-group mb-0">
+                        <label class="bc-extra-label" style="margin-bottom: 0.45rem;">Nom</label>
+                        <input type="text" class="form-control bc-input bc-readonly" readonly value="<%= (typeof bonCommande !=='undefined' ? bonCommande.demandeur : (bc ? bc.demandeur : '' )) || '' %>" />
                       </div>
                     </div>
 
                     <div class="info-box">
                       <h6><i class="fas fa-hard-hat"></i> Chantier</h6>
-                      <div class="info-line">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <% const chantierNames=new Set(); bc.commandesItems.forEach(item=> {
-                          item.BondeCommandeChantierItem.forEach(bcci => {
-                          if (bcci.chantier && bcci.chantier.nom) {
-                          chantierNames.add(bcci.chantier.nom);
-                          }
-                          });
-                          });
-                          %>
-
-                          <span><strong>
-                              <%= Array.from(chantierNames).join(', ') || ' Non renseigné' %>
-                            </strong></span>
-
-
+                      <% const chantierNames=new Set(); bc.commandesItems.forEach(item=> {
+                        item.BondeCommandeChantierItem.forEach(bcci => {
+                        if (bcci.chantier && bcci.chantier.nom) {
+                        chantierNames.add(bcci.chantier.nom);
+                        }
+                        });
+                        });
+                        %>
+                      <div class="form-group mb-0">
+                        <label class="bc-extra-label" style="margin-bottom: 0.45rem;">Nom</label>
+                        <input type="text" class="form-control bc-input bc-readonly" readonly value="<%= (Array.from(chantierNames).join(', ') || 'Non renseigné') %>" />
                       </div>
                     </div>
                   </div>
