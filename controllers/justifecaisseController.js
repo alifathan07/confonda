@@ -674,6 +674,7 @@ export const saveAllData = async (req, res) => {
 // Fetch all justifCaisse
 export const getAllJustifCaisse = async (req, res) => {
   try {
+    
     const justifCaisse = await prisma.justifCaisse.findMany({
       where: { userId: req.session.user.id, chantierId: parseInt(req.params.chantierId) },
       select: {
@@ -704,10 +705,12 @@ export const getAllJustifCaisse = async (req, res) => {
     const chantier = await prisma.chantier.findUnique({
       where: { id: parseInt(req.params.chantierId) },
     });
+    const userId = req.session.user.id;
     res.render("dashboard/achats/caisse/justifecaisse/index", {
       justifCaisse,
       lastDesignation,
-      chantier: chantier.id
+      chantier: chantier.id,
+      userId
     });
   } catch (error) {
     console.error(error);
@@ -1376,6 +1379,78 @@ export const addJustifCaisseAdminAuto = async (req, res) => {
       // Default if none exist
       const now = new Date();
       nextMois = now.getMonth() + 1;
+      nextAnnee = now.getFullYear();
+    }
+
+    const moisStr = [
+      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+    ][nextMois - 1];
+
+    const designation = `Justification Caisse ${moisStr} ${nextAnnee}`;
+
+    // Calculate previous solde
+    const soldePrecedent = await getPreviousSolde(parseInt(userId), chantierId, nextMois, nextAnnee);
+
+    // Create the new record
+    const justifCaisse = await prisma.justifCaisse.create({
+      data: {
+        mois: nextMois,
+        annee: nextAnnee,
+        designation,
+        soldePrecedent,
+        userId: parseInt(userId),
+        chantierId,
+      },
+    });
+
+    res.json({ success: true, justifCaisse });
+  } catch (error) {
+    console.error("Error in addJustifCaisseAdmin:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+
+
+
+
+export const addJustifCaisseUserFirstTime = async (req, res) => {
+  try {
+    const userId = parseInt(req.body.userId);
+    const chantierId = parseInt(req.body.chantierId);
+    const mois = parseInt(req.body.mois);
+
+    
+    // Validate userId
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(userId) },
+    });
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Utilisateur non trouvé.' });
+    }
+    if (!chantierId || Number.isNaN(chantierId)) {
+      return res.status(400).json({ success: false, error: 'chantierId manquant ou invalide.' });
+    }
+
+    // Get the last JustifCaisse for this user and chantier
+    const last = await prisma.justifCaisse.findFirst({
+      where: { userId: parseInt(userId), chantierId },
+      orderBy: [{ annee: 'desc' }, { mois: 'desc' }],
+    });
+
+    let nextMois, nextAnnee;
+    if (last) {
+      nextMois = last.mois + 1;
+      nextAnnee = last.annee;
+      if (nextMois > 12) {
+        nextMois = 1;
+        nextAnnee++;
+      }
+    } else {
+      // Default if none exist
+      const now = new Date();
+      nextMois = mois;
       nextAnnee = now.getFullYear();
     }
 

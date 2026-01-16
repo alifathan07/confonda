@@ -22,7 +22,7 @@ import { deleteEncaissement, indexHis, saveEncaissement, updateHistoryBanque } f
 import { deleteTelePai, indexTelePai, storeTelePai, updateTelePai } from '../controllers/telepay_prelevController.js';
 import { createEncaissement, indexEncaissement, updateEncaissement } from '../controllers/encaisementController.js';
 import { addCaisseItem, createDemandeCaisse, deleteDemandeCaisse, deleteDemandeCaisseItem, generateDemandeExcel, generateDemandePdf, indexDemandeCaisse, storeDemandeCaisse, updateDemandeCaisseItem, updateDemandeCaisseItemValidation, updateDemandeCaisseStatut, updateDemandeCaisseValidationAll, viewDemandeCaisse } from '../controllers/demandecaisseController.js';
-import { addJustifCaisse, addJustifCaisseAdminAuto, adminUserList, createJustifCaisse, createJustifCaisseAdmin, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteJustifeCaisse, deleteRecette, generateJustifCaisseExcel, generateJustifCaissePDF, getAllJustifCaisse, justifeCaisseListUser, listChantierUser, saveAllData, saveRecettesAdmin, updateDepenceValidation, updateSoldePrecedentAdmin, validateAllDepenses, viewJustifCaisse, viewJustifCaisseAdmin } from '../controllers/justifecaisseController.js';
+import { addJustifCaisse, addJustifCaisseAdminAuto, addJustifCaisseUserFirstTime, adminUserList, createJustifCaisse, createJustifCaisseAdmin, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteJustifeCaisse, deleteRecette, generateJustifCaisseExcel, generateJustifCaissePDF, getAllJustifCaisse, justifeCaisseListUser, listChantierUser, saveAllData, saveRecettesAdmin, updateDepenceValidation, updateSoldePrecedentAdmin, validateAllDepenses, viewJustifCaisse, viewJustifCaisseAdmin } from '../controllers/justifecaisseController.js';
 import { createDemandeFourniture, deleteDemandeFourniture, downloadImageFourniture, editDemandeFourniture, indexDemandeFourniture, storeDemandeFourniture, updateDemandeFourniture, updateValidationFourniture, uploadFour, uploadImageFourniture, uploadTempImage, validateAllFourniture, viewDemandeFourniture } from '../controllers/demandeFourniture.js';
 import { fileURLToPath } from 'url';
 import { EditDemandePrix, listDemandePrix, postDemandePrixViaFourniture, updateDemandePrix, viewDemandePrix, deleteDemandePrix, deleteArticle, createDemandePrix, storeDemandePrix, generateDemandePrixPDF, sendDemandePrixEmail } from '../controllers/demandeprixController.js';
@@ -366,6 +366,7 @@ dashboardRouter.get("/achats/caisse/justif/:chantierId", getAllJustifCaisse);
 
 dashboardRouter.post('/achats/add/justifeAuto', addJustifCaisse);
 dashboardRouter.post('/achats/add/justifeAutoAdmin/:userId', addJustifCaisseAdminAuto);
+dashboardRouter.post('/achats/add/justifeAutoUser', addJustifCaisseUserFirstTime);
 dashboardRouter.delete('/achats/caisse/justifecaisse/:id', deleteJustifeCaisse);
 dashboardRouter.get('/achats/caisse/admin', isAdmin, adminUserList);
 dashboardRouter.get('/achats/caisse/admin/:id', isAdmin, justifeCaisseListUser);
