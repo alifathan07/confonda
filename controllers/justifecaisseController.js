@@ -64,7 +64,9 @@ const recalculateAndUpdateTotals = async (justifCaisseId) => {
 export const createJustifCaisse = async (req, res) => {
   try {
     const user = req.session.user;
-    if (!user || !user.name || !user.chantierId) {
+    const chantierIdRaw = req.query.chantierId ?? req.body?.chantierId;
+    const chantierId = chantierIdRaw ? parseInt(chantierIdRaw) : NaN;
+    if (!user || !user.name || !chantierIdRaw || Number.isNaN(chantierId)) {
       console.error("User session invalid:", req.session.user);
       return res
         .status(403)
@@ -72,7 +74,7 @@ export const createJustifCaisse = async (req, res) => {
     }
 
     const lastJustif = await prisma.justifCaisse.findFirst({
-      where: { userId: user.id, chantierId: user.chantierId },
+      where: { userId: user.id, chantierId },
       orderBy: { id: "desc" },
       select: { designation: true },
     });
@@ -111,11 +113,11 @@ export const createJustifCaisse = async (req, res) => {
     const designation = `Justif.Caisse ${nextMonth} ${nextYear}`;
 
     const chantier = await prisma.chantier.findUnique({
-      where: { id: user.chantierId },
+      where: { id: chantierId },
     });
 
     if (!chantier) {
-      console.error("Chantier not found for ID:", user.chantierId);
+      console.error("Chantier not found for ID:", chantierId);
       return res.status(404).render("error", { error: "Chantier non trouvé" });
     }
 
@@ -152,12 +154,14 @@ export const addJustifCaisse = async (req, res) => {
     if (!user) {
       return res.status(403).json({ success: false, error: "Utilisateur non authentifié" });
     }
+    const chantierId = parseInt(req.body.chantierId);
+    if (!chantierId || Number.isNaN(chantierId)) {
+      return res.status(400).json({ success: false, error: "chantierId manquant ou invalide" });
+    }
 
-    const chantier = user.chantierId;
-
-    // Get the last JustifCaisse for this chantier
+    // Get the last JustifCaisse for this user + chantier
     const last = await prisma.justifCaisse.findFirst({
-      where: { chantierId: chantier },
+      where: { userId: user.id, chantierId: chantierId },
       orderBy: [{ annee: 'desc' }, { mois: 'desc' }],
     });
 
@@ -184,7 +188,7 @@ export const addJustifCaisse = async (req, res) => {
     const designation = `Justification Caisse ${moisStr} ${nextAnnee}`;
 
     // Calculate previous solde
-    const soldePrecedent = await getPreviousSolde(user.id, chantier, nextMois, nextAnnee);
+    const soldePrecedent = await getPreviousSolde(user.id, chantierId, nextMois, nextAnnee);
 
     // Create the new record
     const justifCaisse = await prisma.justifCaisse.create({
@@ -194,7 +198,7 @@ export const addJustifCaisse = async (req, res) => {
         designation,
         soldePrecedent,
         userId: user.id,
-        chantierId: chantier,
+        chantierId: chantierId,
       },
     });
 
@@ -422,7 +426,7 @@ export const deleteRecette = async (req, res) => {
   try {
     const { id } = req.params;
     const admin = req.session.user;
-    
+
     const recette = await prisma.recetteCaisse.findUnique({ where: { id: parseInt(id) } });
     if (!recette) {
       return res.status(403).json({ success: false, error: "Aucune Caisse" });
@@ -433,7 +437,7 @@ export const deleteRecette = async (req, res) => {
     // Update totals using helper
     const { totalRecettes, totalDepenses, soldeFinal } = await recalculateAndUpdateTotals(recette.justifCaisseId);
 
-    res.json({ 
+    res.json({
       success: true,
       totals: { totalRecettes, totalDepenses, soldeFinal }
     });
@@ -524,7 +528,7 @@ export const createOrUpdateDepenses = async (req, res) => {
       soldeFinal,
     });
 
-    res.json({ 
+    res.json({
       success: true,
       totals: { totalRecettes, totalDepenses, soldeFinal }
     });
@@ -542,14 +546,14 @@ export const deleteDepense = async (req, res) => {
     const depense = await prisma.depenseCaisse.findUnique({ where: { id: parseInt(id) } });
     if (!depense || depense.userId !== user.id) {
       return res.status(403).json({ success: false, error: 'Accès refusé — vous n\'êtes pas autorisé à supprimer cette dépense.' });
-    } 
+    }
 
     await prisma.depenseCaisse.delete({ where: { id: parseInt(id) } });
 
     // Recalculate totals using helper
     const { totalRecettes, totalDepenses, soldeFinal } = await recalculateAndUpdateTotals(depense.justifCaisseId);
 
-    res.json({ 
+    res.json({
       success: true,
       totals: { totalRecettes, totalDepenses, soldeFinal }
     });
@@ -576,7 +580,7 @@ export const saveAllData = async (req, res) => {
     // Parse designation (e.g., "Mars-2025" -> mois: 3, annee: 2025)
     let moisStr = designation.split("-")[0];
     let anneeStr = designation.split("-")[1];
-    
+
     if (!moisStr || !anneeStr) {
       const latestJustifCaisse = await prisma.justifCaisse.findFirst({
         where: { userId: user.id },
@@ -587,7 +591,7 @@ export const saveAllData = async (req, res) => {
         anneeStr = latestJustifCaisse.designation.split("-")[1];
       }
     }
-    
+
     const moisIndex = [
       "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
       "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
@@ -595,7 +599,7 @@ export const saveAllData = async (req, res) => {
     if (moisIndex === -1) {
       return res.status(400).json({ success: false, error: "Mois invalide" });
     }
-    
+
     const mois = moisIndex + 1;
     const annee = parseInt(anneeStr);
 
@@ -657,7 +661,7 @@ export const saveAllData = async (req, res) => {
     // Recalculate totals using helper
     const { totalRecettes, totalDepenses, soldeFinal } = await recalculateAndUpdateTotals(justifCaisse.id);
 
-    res.json({ 
+    res.json({
       success: true,
       totals: { totalRecettes, totalDepenses, soldeFinal }
     });
@@ -671,7 +675,7 @@ export const saveAllData = async (req, res) => {
 export const getAllJustifCaisse = async (req, res) => {
   try {
     const justifCaisse = await prisma.justifCaisse.findMany({
-      where: { userId: req.session.user.id },
+      where: { userId: req.session.user.id, chantierId: parseInt(req.params.chantierId) },
       select: {
         id: true,
         mois: true,
@@ -688,7 +692,7 @@ export const getAllJustifCaisse = async (req, res) => {
       ],
     });
     const lastDesignation = await prisma.justifCaisse.findFirst({
-      where: { userId: req.session.user.id },
+      where: { userId: req.session.user.id, chantierId: parseInt(req.params.chantierId) },
       select: {
         designation: true,
       },
@@ -697,9 +701,13 @@ export const getAllJustifCaisse = async (req, res) => {
         { mois: "desc" },
       ],
     });
+    const chantier = await prisma.chantier.findUnique({
+      where: { id: parseInt(req.params.chantierId) },
+    });
     res.render("dashboard/achats/caisse/justifecaisse/index", {
       justifCaisse,
-      lastDesignation
+      lastDesignation,
+      chantier: chantier.id
     });
   } catch (error) {
     console.error(error);
@@ -720,19 +728,12 @@ export const deleteJustifeCaisse = async (req, res) => {
 
 export const adminUserList = async (req, res) => {
   try {
-    const users = await prisma.user.findMany({
-      where: {
-        role: "user",
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        chantier: true
-      },
-    });
+    const users = await prisma.user.findMany();
     res.render("dashboard/achats/caisse/justifecaisse/userlist", {
       users,
+      justifs: [],
+      chantiers: [],
+      selectedUserId: null,
     });
   } catch (error) {
     console.error(error);
@@ -742,11 +743,14 @@ export const adminUserList = async (req, res) => {
 
 export const justifeCaisseListUser = async (req, res) => {
   try {
-    const userId = req.params.id;
+    const userId = parseInt(req.params.id);
+    
+    if (!userId || isNaN(userId)) {
+      return res.status(400).render("error", { error: "ID utilisateur invalide" });
+    }
+
     const justifCaisse = await prisma.justifCaisse.findMany({
-      where: {
-        userId: parseInt(userId),
-      },
+      where: { userId },
       select: {
         id: true,
         mois: true,
@@ -756,14 +760,17 @@ export const justifeCaisseListUser = async (req, res) => {
         soldeFinal: true,
         totalDepenses: true,
         totalRecettes: true,
+        chantier: { select: { id: true, nom: true } },
+        user: { select: { id: true, name: true } },
       },
       orderBy: [
         { annee: "desc" },
         { mois: "desc" },
       ],
     });
+
     const lastDesignation = await prisma.justifCaisse.findFirst({
-      where: { userId: parseInt(userId) },
+      where: { userId },
       select: {
         designation: true,
       },
@@ -772,43 +779,55 @@ export const justifeCaisseListUser = async (req, res) => {
         { mois: "desc" },
       ],
     });
+    // Get all chantiers for filter dropdown
+    const chantiers = await prisma.chantier.findMany();
+    console.log('Chantiers found:', chantiers.length);
+
     res.render("dashboard/achats/caisse/justifecaisse/listjustife", {
       justifCaisse,
+      lastDesignation,
       userId,
-      lastDesignation
+      chantiers,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, error: error.message });
+    console.error("Error in justifeCaisseListUser:", error);
+    res.status(500).render("error", { error: "Erreur lors du chargement des justifications de caisse" });
   }
 };
+
+// Controller
+
 
 // Controller
 export const createJustifCaisseAdmin = async (req, res) => {
   try {
     const { userId } = req.params;
+    const chantierIdRaw = req.query?.chantierId ?? req.body?.chantierId;
+    const chantierId = chantierIdRaw !== undefined && chantierIdRaw !== null && chantierIdRaw !== "" ? parseInt(chantierIdRaw) : NaN;
 
     // Fetch the user
     const userRecord = await prisma.user.findUnique({
       where: { id: parseInt(userId) },
     });
 
-    if (!userRecord || !userRecord.name || !userRecord.chantierId) {
+    if (!userRecord || !userRecord.name) {
       console.error("User invalid or missing data:", userRecord);
       return res
         .status(403)
         .render("error", { error: "Utilisateur non authentifié ou données manquantes" });
     }
 
-    // Find the last Justif for this user and chantier
-    const lastJustif = await prisma.justifCaisse.findFirst({
-      where: {
-        userId: parseInt(userId),
-        chantierId: userRecord.chantierId,
-      },
-      orderBy: { id: "desc" },
-      select: { designation: true },
-    });
+    // Find the last Justif for this user and the selected chantier (if provided)
+    const lastJustif = (!Number.isNaN(chantierId))
+      ? await prisma.justifCaisse.findFirst({
+        where: {
+          userId: parseInt(userId),
+          chantierId,
+        },
+        orderBy: { id: "desc" },
+        select: { designation: true },
+      })
+      : null;
 
     const months = [
       "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -842,14 +861,9 @@ export const createJustifCaisseAdmin = async (req, res) => {
     const designation = `${nextMonth}-${nextYear}`;
 
     // Fetch chantier
-    const chantier = await prisma.chantier.findUnique({
-      where: { id: userRecord.chantierId },
-    });
 
-    if (!chantier) {
-      console.error("Chantier not found for ID:", userRecord.chantierId);
-      return res.status(404).render("error", { error: "Chantier non trouvé" });
-    }
+
+    const chantiers = await prisma.chantier.findMany();
 
     const defaultJustifCaisse = {
       soldePrecedent: 0,
@@ -864,9 +878,10 @@ export const createJustifCaisseAdmin = async (req, res) => {
 
     res.render("dashboard/achats/caisse/justifecaisse/adminpart", {
       user: { ...userRecord, recettes: [], depenses: [] },
-      chantier,
+      chantiers,
       justifCaisse: defaultJustifCaisse,
       designation,
+      chantierId: !Number.isNaN(chantierId) ? chantierId : null,
     });
   } catch (error) {
     console.error("Error in createJustifCaisseAdmin:", error);
@@ -928,19 +943,34 @@ export const viewJustifCaisse = async (req, res) => {
     res.status(500).render("error", { error: "Erreur lors du chargement des détails" });
   }
 };
-
 export const viewJustifCaisseAdmin = async (req, res) => {
   try {
     const { id, userId } = req.params;
+
+    // --- Validate userId ---
+    const parsedUserId = parseInt(userId, 10);
+    if (isNaN(parsedUserId)) {
+      return res.status(400).render("error", { error: "ID utilisateur invalide" });
+    }
+
+    // --- Validate id (if not 'new') ---
+    let parsedId = null;
+    if (id !== "new") {
+      parsedId = parseInt(id, 10);
+      if (isNaN(parsedId)) {
+        return res.status(400).render("error", { error: "ID justification invalide" });
+      }
+    }
+
     const admin = req.session.user;
 
-    // Verify if admin
+    // --- Verify admin ---
     if (!["admin", "grandadmin"].includes(admin.role)) {
       return res.status(403).render("error", { error: "Accès refusé — réservé à l’administrateur." });
     }
 
-    // Fetch the user
-    const user = await prisma.user.findUnique({ where: { id: parseInt(userId) } });
+    // --- Fetch the user ---
+    const user = await prisma.user.findUnique({ where: { id: parsedUserId } });
     if (!user) {
       return res.status(404).render("error", { error: "Utilisateur non trouvé" });
     }
@@ -950,13 +980,14 @@ export const viewJustifCaisseAdmin = async (req, res) => {
       "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
     ];
 
-    let justifCaisse, formattedRecettes = [], formattedDepenses = [], designation;
+    let justifCaisse = null;
+    let formattedRecettes = [], formattedDepenses = [], designation = "";
 
     if (id === "new") {
-      // Handle new justification creation
+      // --- Handle new justification creation ---
       const lastJustif = await prisma.justifCaisse.findFirst({
         where: {
-          userId: parseInt(userId),
+          userId: parsedUserId,
           chantierId: user.chantierId,
         },
         orderBy: { id: "desc" },
@@ -964,6 +995,7 @@ export const viewJustifCaisseAdmin = async (req, res) => {
       });
 
       let nextMonth, nextYear;
+
       if (lastJustif && lastJustif.designation) {
         const designationText = lastJustif.designation.trim();
         const foundMonth = months.find(m => designationText.includes(m));
@@ -987,7 +1019,7 @@ export const viewJustifCaisseAdmin = async (req, res) => {
       designation = `${nextMonth}-${nextYear}`;
       justifCaisse = {
         id: null,
-        soldePrecedent: await getPreviousSolde(parseInt(userId), user.chantierId, months.indexOf(nextMonth) + 1, nextYear),
+        soldePrecedent: await getPreviousSolde(parsedUserId, user.chantierId, months.indexOf(nextMonth) + 1, nextYear),
         totalRecettes: 0,
         totalDepenses: 0,
         soldeFinal: 0,
@@ -995,10 +1027,11 @@ export const viewJustifCaisseAdmin = async (req, res) => {
         annee: nextYear,
         designation,
       };
+
     } else {
-      // Fetch existing justification
+      // --- Fetch existing justification ---
       justifCaisse = await prisma.justifCaisse.findUnique({
-        where: { id: parseInt(id) },
+        where: { id: parsedId },
         include: {
           user: { select: { name: true } },
           chantier: { select: { nom: true } },
@@ -1011,15 +1044,14 @@ export const viewJustifCaisseAdmin = async (req, res) => {
         return res.status(404).render("error", { error: "Justification non trouvée" });
       }
 
-      // Recalculate totals to ensure accuracy
+      // --- Recalculate totals to ensure accuracy ---
       const { totalRecettes, totalDepenses, soldeFinal } = await recalculateAndUpdateTotals(justifCaisse.id);
 
-      // Update justifCaisse object for rendering
       justifCaisse.totalRecettes = totalRecettes;
       justifCaisse.totalDepenses = totalDepenses;
       justifCaisse.soldeFinal = soldeFinal;
 
-      // Format for frontend
+      // --- Format for frontend ---
       formattedRecettes = justifCaisse.recettes.map((r) => ({
         _id: r.id,
         dateRecette: r.dateRecette,
@@ -1044,32 +1076,38 @@ export const viewJustifCaisseAdmin = async (req, res) => {
       designation = justifCaisse.designation;
     }
 
-    // Fetch chantier
-    const chantier = await prisma.chantier.findUnique({
-      where: { id: user.chantierId },
-    });
-
-    if (!chantier) {
-      return res.status(404).render("error", { error: "Chantier non trouvé" });
-    }
+    // --- Fetch chantiers ---
+    const chantiers = await prisma.chantier.findMany();
 
     res.render("dashboard/achats/caisse/justifecaisse/adminpart", {
       user: { ...user, recettes: formattedRecettes, depenses: formattedDepenses },
       justifCaisse,
-      chantier,
+      chantiers,
       designation,
     });
+
   } catch (error) {
     console.error(error);
     res.status(500).render("error", { error: "Erreur lors du chargement des détails" });
   }
 };
 
+
+
 export const saveRecettesAdmin = async (req, res) => {
   try {
     const { userId, id } = req.params;
-    const { responsable, chantier, designation, items, justifId, soldePrecedent } = req.body;
+    const { responsable, chantierId, designation, items, justifId, soldePrecedent } = req.body;
     const admin = req.session.user;
+
+    const parsedSoldePrecedent =
+      soldePrecedent !== undefined && soldePrecedent !== null && soldePrecedent !== ""
+        ? parseFloat(soldePrecedent)
+        : null;
+
+    if (parsedSoldePrecedent !== null && (Number.isNaN(parsedSoldePrecedent) || parsedSoldePrecedent < 0)) {
+      return res.status(400).json({ success: false, error: "Solde précédent invalide." });
+    }
 
     // Verify admin role
     if (!["admin", "grandadmin"].includes(admin.role)) {
@@ -1083,9 +1121,9 @@ export const saveRecettesAdmin = async (req, res) => {
     }
 
     // Validate chantier
-    const chantierRecord = await prisma.chantier.findFirst({ where: { nom: chantier } });
-    if (!chantierRecord) {
-      return res.status(400).json({ success: false, error: 'Chantier invalide.' });
+    const chantier = await prisma.chantier.findUnique({ where: { id: parseInt(chantierId) } });
+    if (!chantier) {
+      return res.status(404).json({ success: false, error: 'Chantier non trouvé.' });
     }
 
     // Validate designation
@@ -1109,7 +1147,7 @@ export const saveRecettesAdmin = async (req, res) => {
     let justifCaisse = await prisma.justifCaisse.findFirst({
       where: {
         userId: parseInt(userId),
-        chantierId: chantierRecord.id,
+        chantierId: chantier.id,
         mois,
         annee,
       },
@@ -1117,10 +1155,10 @@ export const saveRecettesAdmin = async (req, res) => {
 
     if (!justifCaisse) {
       let finalSoldePrecedent;
-      if (soldePrecedent !== undefined && !isNaN(parseFloat(soldePrecedent))) {
-        finalSoldePrecedent = parseFloat(soldePrecedent);
+      if (parsedSoldePrecedent !== null) {
+        finalSoldePrecedent = parsedSoldePrecedent;
       } else {
-        finalSoldePrecedent = await getPreviousSolde(parseInt(userId), chantierRecord.id, mois, annee);
+        finalSoldePrecedent = await getPreviousSolde(parseInt(userId), chantier.id, mois, annee);
       }
 
       justifCaisse = await prisma.justifCaisse.create({
@@ -1130,11 +1168,18 @@ export const saveRecettesAdmin = async (req, res) => {
           designation: `${moisStr}-${annee}`,
           soldePrecedent: finalSoldePrecedent,
           userId: parseInt(userId),
-          chantierId: chantierRecord.id,
+          chantierId: parseInt(chantierId),
         },
       });
-    } else if (id !== "new" && parseInt(justifId) !== justifCaisse.id) {
+    } else if (id !== "new" && justifId && parseInt(justifId) !== justifCaisse.id) {
       return res.status(400).json({ success: false, error: 'justifId ne correspond pas à la justification existante.' });
+    }
+
+    if (justifCaisse && parsedSoldePrecedent !== null) {
+      justifCaisse = await prisma.justifCaisse.update({
+        where: { id: justifCaisse.id },
+        data: { soldePrecedent: parsedSoldePrecedent },
+      });
     }
 
     // Update or create recettes
@@ -1187,10 +1232,115 @@ export const saveRecettesAdmin = async (req, res) => {
   }
 };
 
+export const updateSoldePrecedentAdmin = async (req, res) => {
+  try {
+    const { userId, id } = req.params;
+    const { chantierId, designation, justifId, soldePrecedent } = req.body;
+    const admin = req.session.user;
+
+    const parsedSoldePrecedent =
+      soldePrecedent !== undefined && soldePrecedent !== null && soldePrecedent !== ""
+        ? parseFloat(soldePrecedent)
+        : null;
+
+    if (parsedSoldePrecedent === null || Number.isNaN(parsedSoldePrecedent) || parsedSoldePrecedent < 0) {
+      return res.status(400).json({ success: false, error: "Solde précédent invalide." });
+    }
+
+    if (!["admin", "grandadmin"].includes(admin.role)) {
+      return res.status(403).json({ success: false, error: "Accès refusé — réservé à l’administrateur." });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: parseInt(userId) } });
+    if (!user) {
+      return res.status(404).json({ success: false, error: "Utilisateur non trouvé." });
+    }
+
+    if (!chantierId || !designation) {
+      return res.status(400).json({ success: false, error: "Données manquantes ou invalides." });
+    }
+
+    const chantierRecord = await prisma.chantier.findFirst({ where: { id: parseInt(chantierId) } });
+    if (!chantierRecord) {
+      return res.status(400).json({ success: false, error: "Chantier invalide." });
+    }
+
+    const [moisStr, anneeStr] = designation.split("-");
+    const moisIndex = [
+      "Janvier",
+      "Février",
+      "Mars",
+      "Avril",
+      "Mai",
+      "Juin",
+      "Juillet",
+      "Août",
+      "Septembre",
+      "Octobre",
+      "Novembre",
+      "Décembre",
+    ].indexOf(moisStr);
+    if (moisIndex === -1 || !anneeStr || Number.isNaN(parseInt(anneeStr))) {
+      return res.status(400).json({ success: false, error: "Designation invalide." });
+    }
+    const mois = moisIndex + 1;
+    const annee = parseInt(anneeStr);
+
+    let justifCaisse = await prisma.justifCaisse.findFirst({
+      where: {
+        userId: parseInt(userId),
+        chantierId: parseInt(chantierId),
+        mois,
+        annee,
+      },
+    });
+
+    if (!justifCaisse) {
+      justifCaisse = await prisma.justifCaisse.create({
+        data: {
+          mois,
+          annee,
+          designation: `${moisStr}-${annee}`,
+          soldePrecedent: parsedSoldePrecedent,
+          userId: parseInt(userId),
+          chantierId: parseInt(chantierId),
+        },
+      });
+    } else if (id !== "new" && justifId && parseInt(justifId) !== justifCaisse.id) {
+      return res.status(400).json({ success: false, error: "justifId ne correspond pas à la justification existante." });
+    }
+
+    justifCaisse = await prisma.justifCaisse.update({
+      where: { id: justifCaisse.id },
+      data: {
+        soldePrecedent: parsedSoldePrecedent,
+        designation: `${moisStr}-${annee}`,
+      },
+    });
+
+    const { totalRecettes, totalDepenses, soldeFinal } = await recalculateAndUpdateTotals(justifCaisse.id);
+
+    return res.json({
+      success: true,
+      justifId: justifCaisse.id,
+      totals: {
+        totalRecettes,
+        totalDepenses,
+        soldeFinal,
+      },
+    });
+  } catch (error) {
+    console.error("Error in updateSoldePrecedentAdmin:", error);
+    return res.status(500).json({ success: false, error: "Erreur lors de la mise à jour du solde précédent." });
+  }
+};
+
 export const addJustifCaisseAdminAuto = async (req, res) => {
   try {
     const { userId } = req.params;
     const admin = req.session.user;
+    const chantierIdRaw = req.body?.chantierId ?? req.query?.chantierId;
+    const chantierId = chantierIdRaw ? parseInt(chantierIdRaw, 10) : NaN;
 
     // Verify admin role
     if (!["admin", "grandadmin"].includes(admin.role)) {
@@ -1201,11 +1351,12 @@ export const addJustifCaisseAdminAuto = async (req, res) => {
     const user = await prisma.user.findUnique({
       where: { id: parseInt(userId) },
     });
-    if (!user || !user.chantierId) {
-      return res.status(404).json({ success: false, error: 'Utilisateur non trouvé ou chantier manquant.' });
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Utilisateur non trouvé.' });
     }
-
-    const chantierId = user.chantierId;
+    if (!chantierIdRaw || Number.isNaN(chantierId)) {
+      return res.status(400).json({ success: false, error: 'chantierId manquant ou invalide.' });
+    }
 
     // Get the last JustifCaisse for this user and chantier
     const last = await prisma.justifCaisse.findFirst({
@@ -1284,9 +1435,9 @@ export const updateDepenceValidation = async (req, res) => {
     // Recalculate totals using helper
     const { totalRecettes, totalDepenses, soldeFinal } = await recalculateAndUpdateTotals(depense.justifCaisseId);
 
-    res.status(200).json({ 
-      success: true, 
-      validation: depense.validation, 
+    res.status(200).json({
+      success: true,
+      validation: depense.validation,
       validerPar: depense.validerPar,
       totals: { totalRecettes, totalDepenses, soldeFinal }
     });
@@ -1329,8 +1480,8 @@ export const validateAllDepenses = async (req, res) => {
     // Recalculate totals using helper
     const { totalRecettes, totalDepenses, soldeFinal } = await recalculateAndUpdateTotals(parseInt(justifId));
 
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       validerPar: admin.name,
       message: `${depenses.count} dépense(s) validée(s)`,
       totals: { totalRecettes, totalDepenses, soldeFinal }
@@ -1434,7 +1585,7 @@ export const generateJustifCaissePDF = async (req, res) => {
 
     // ========== HEADER SECTION ==========
     let currentY = MARGIN;
-    
+
     // Logo
     const logoSize = 160;
     const logoPath = path.join(__dirname, '../public/img/logo-4.png');
@@ -1448,7 +1599,7 @@ export const generateJustifCaissePDF = async (req, res) => {
       .fontSize(SIZES.TITLE)
       .fillColor(COLORS.PRIMARY)
       .text('JUSTIFICATIFS DE CAISSE', 0, currentY, { align: 'center', width: PAGE_WIDTH });
-    
+
     currentY += SIZES.TITLE + SPACING.TITLE_TO_META;
 
     // ===== METADATA GRID =====
@@ -1456,23 +1607,23 @@ export const generateJustifCaissePDF = async (req, res) => {
     const metaStartX = MARGIN + 40;
 
     doc.font(FONTS.BOLD).fontSize(SIZES.BODY).fillColor('#444')
-       .text('Chantier:', metaStartX, currentY, { width: gridColWidth, continued: true })
-       .font(FONTS.REGULAR).text(` ${justifCaisse.chantier?.nom || '-'}`, { width: gridColWidth });
+      .text('Chantier:', metaStartX, currentY, { width: gridColWidth, continued: true })
+      .font(FONTS.REGULAR).text(` ${justifCaisse.chantier?.nom || '-'}`, { width: gridColWidth });
 
     doc.font(FONTS.BOLD)
-       .text('Responsable :', metaStartX + gridColWidth, currentY, { width: gridColWidth, continued: true })
-       .font(FONTS.REGULAR).text(` ${justifCaisse.user?.name || '-'}`, { width: gridColWidth });
+      .text('Responsable :', metaStartX + gridColWidth, currentY, { width: gridColWidth, continued: true })
+      .font(FONTS.REGULAR).text(` ${justifCaisse.user?.name || '-'}`, { width: gridColWidth });
 
     doc.font(FONTS.BOLD)
-       .text('Mois:', metaStartX + 2 * gridColWidth, currentY, { width: gridColWidth, continued: true })
-       .font(FONTS.REGULAR).text(` ${lastTwoWords || '-'}`, { width: gridColWidth });
+      .text('Mois:', metaStartX + 2 * gridColWidth, currentY, { width: gridColWidth, continued: true })
+      .font(FONTS.REGULAR).text(` ${lastTwoWords || '-'}`, { width: gridColWidth });
 
     currentY += SPACING.META_LINE_HEIGHT + SPACING.META_TO_INFO;
 
     // ===== INFO BOX =====
     const infoBoxHeight = SPACING.INFO_BOX_HEIGHT;
     doc.rect(MARGIN, currentY, PAGE_WIDTH - 2 * MARGIN, infoBoxHeight)
-       .fillAndStroke(COLORS.WHITE, COLORS.BORDER);
+      .fillAndStroke(COLORS.WHITE, COLORS.BORDER);
 
     const infoPadding = SPACING.INFO_BOX_PADDING;
     const col1X = MARGIN + infoPadding;
@@ -1481,22 +1632,22 @@ export const generateJustifCaissePDF = async (req, res) => {
 
     // First row of info
     doc.font(FONTS.BOLD).fontSize(SIZES.BODY).fillColor('#444')
-       .text('Total Recettes:', col1X, infoTextY, { continued: true })
-       .font(FONTS.REGULAR).text(` ${Number(justifCaisse.totalRecettes ?? 0).toFixed(2)} MAD`);
+      .text('Total Recettes:', col1X, infoTextY, { continued: true })
+      .font(FONTS.REGULAR).text(` ${Number(justifCaisse.totalRecettes ?? 0).toFixed(2)} MAD`);
 
     doc.font(FONTS.BOLD)
-       .text('Total Dépenses:', col2X, infoTextY, { continued: true })
-       .font(FONTS.REGULAR).text(` ${Number(justifCaisse.totalDepenses ?? 0).toFixed(2)} MAD`);
+      .text('Total Dépenses:', col2X, infoTextY, { continued: true })
+      .font(FONTS.REGULAR).text(` ${Number(justifCaisse.totalDepenses ?? 0).toFixed(2)} MAD`);
 
     // Second row of info
     const secondRowY = infoTextY + SPACING.INFO_LINE_HEIGHT;
     doc.font(FONTS.BOLD)
-       .text('Solde Précédent:', col1X, secondRowY, { continued: true })
-       .font(FONTS.REGULAR).text(` ${Number(justifCaisse.soldePrecedent ?? 0).toFixed(2)} MAD`);
+      .text('Solde Précédent:', col1X, secondRowY, { continued: true })
+      .font(FONTS.REGULAR).text(` ${Number(justifCaisse.soldePrecedent ?? 0).toFixed(2)} MAD`);
 
     doc.font(FONTS.BOLD)
-       .text('Solde Final:', col2X, secondRowY, { continued: true })
-       .font(FONTS.REGULAR).text(` ${Number(justifCaisse.soldeFinal ?? 0).toFixed(2)} MAD`);
+      .text('Solde Final:', col2X, secondRowY, { continued: true })
+      .font(FONTS.REGULAR).text(` ${Number(justifCaisse.soldeFinal ?? 0).toFixed(2)} MAD`);
 
     currentY += infoBoxHeight + SPACING.INFO_TO_TABLE;
 
@@ -1508,21 +1659,21 @@ export const generateJustifCaissePDF = async (req, res) => {
 
       // Table title
       doc.font(FONTS.BOLD).fontSize(SIZES.SUBTITLE).fillColor(COLORS.PRIMARY)
-         .text(title, 0, startY, { align: 'center', width: PAGE_WIDTH });
+        .text(title, 0, startY, { align: 'center', width: PAGE_WIDTH });
 
       let y = startY + SPACING.TABLE_TITLE_TO_HEADER;
 
       // Header row
       doc.rect(tableX, y, tableWidth, SPACING.TABLE_HEADER_HEIGHT)
-         .fillAndStroke('#F5F5F5', COLORS.BORDER);
-      
+        .fillAndStroke('#F5F5F5', COLORS.BORDER);
+
       let x = tableX;
       columns.forEach((col, i) => {
         doc.font(FONTS.BOLD).fontSize(SIZES.BODY).fillColor('#444')
-           .text(col.header, x + 6, y + 9, { 
-             width: colWidths[i] - 12, 
-             align: col.align || 'left' 
-           });
+          .text(col.header, x + 6, y + 9, {
+            width: colWidths[i] - 12,
+            align: col.align || 'left'
+          });
         if (i > 0) drawLine(x, y, x, y + SPACING.TABLE_HEADER_HEIGHT);
         x += colWidths[i];
       });
@@ -1537,10 +1688,10 @@ export const generateJustifCaissePDF = async (req, res) => {
         columns.forEach((col, j) => {
           const text = col.getText(item);
           doc.font(FONTS.REGULAR).fontSize(SIZES.BODY).fillColor('#444')
-             .text(text, x + 6, y + 9, { 
-               width: colWidths[j] - 12, 
-               align: col.align || 'left' 
-             });
+            .text(text, x + 6, y + 9, {
+              width: colWidths[j] - 12,
+              align: col.align || 'left'
+            });
           if (j > 0) drawLine(x, y, x, y + ROW_HEIGHT);
           x += colWidths[j];
         });
@@ -1552,24 +1703,24 @@ export const generateJustifCaissePDF = async (req, res) => {
       if (totalCols.length > 0) {
         const totalRowHeight = ROW_HEIGHT + 2;
         doc.rect(tableX, y, tableWidth, totalRowHeight).fillAndStroke('#F5F5F5', COLORS.BORDER);
-        
+
         x = tableX;
         columns.forEach((col, j) => {
           if (col.total) {
-            const sum = items.reduce((acc, it) => 
+            const sum = items.reduce((acc, it) =>
               acc + Number(col.sum ? col.sum(it) : 0), 0
             );
             doc.font(FONTS.BOLD).fontSize(SIZES.BODY).fillColor('#444')
-               .text(sum.toFixed(2), x + 6, y + 9, { 
-                 width: colWidths[j] - 12, 
-                 align: col.align || 'right' 
-               });
+              .text(sum.toFixed(2), x + 6, y + 9, {
+                width: colWidths[j] - 12,
+                align: col.align || 'right'
+              });
           } else if (j === 0) {
             doc.font(FONTS.BOLD).fontSize(SIZES.BODY).fillColor('#444')
-               .text('TOTAL', x + 6, y + 9, { 
-                 width: colWidths[j] - 12, 
-                 align: 'left' 
-               });
+              .text('TOTAL', x + 6, y + 9, {
+                width: colWidths[j] - 12,
+                align: 'left'
+              });
           }
           if (j > 0) drawLine(x, y, x, y + totalRowHeight);
           x += colWidths[j];
@@ -1582,73 +1733,73 @@ export const generateJustifCaissePDF = async (req, res) => {
 
     // ===== DÉPENSES TABLE =====
     const depensesColumns = [
-      { 
-        header: 'Date', 
-        width: 75, 
-        getText: d => new Date(d.dateDepense).toLocaleDateString('fr-FR') 
+      {
+        header: 'Date',
+        width: 75,
+        getText: d => new Date(d.dateDepense).toLocaleDateString('fr-FR')
       },
 
-       { 
-        header: 'N° Piece', 
-        width: 55, 
-        getText: d => d.numeroPiece || '-', 
-  
+      {
+        header: 'N° Piece',
+        width: 55,
+        getText: d => d.numeroPiece || '-',
+
       },
-      { 
-        header: 'Nature de la Dépense', 
-        width: 200, 
-        getText: d => d.natureDepense || '-' 
+      {
+        header: 'Nature de la Dépense',
+        width: 200,
+        getText: d => d.natureDepense || '-'
       },
-       { 
-        header: 'Imputation', 
-        width: 75, 
-        getText: d => d.imputation || '-', 
-    
+      {
+        header: 'Imputation',
+        width: 75,
+        getText: d => d.imputation || '-',
+
       },
-     
-      { 
-        header: 'Justifié', 
-        width: 75, 
-        getText: d => Number(d.montantJustifie ?? 0).toFixed(2), 
-        align: 'right', 
-        total: true, 
-        sum: d => Number(d.montantJustifie ?? 0) 
+
+      {
+        header: 'Justifié',
+        width: 75,
+        getText: d => Number(d.montantJustifie ?? 0).toFixed(2),
+        align: 'right',
+        total: true,
+        sum: d => Number(d.montantJustifie ?? 0)
       },
-      { 
-        header: 'Non Justifié', 
-        width: 75, 
-        getText: d => Number(d.montantNonJustifie ?? 0).toFixed(2), 
-        align: 'right', 
-        total: true, 
-        sum: d => Number(d.montantNonJustifie ?? 0) 
+      {
+        header: 'Non Justifié',
+        width: 75,
+        getText: d => Number(d.montantNonJustifie ?? 0).toFixed(2),
+        align: 'right',
+        total: true,
+        sum: d => Number(d.montantNonJustifie ?? 0)
       },
-      
+
     ];
 
     currentY = drawCenteredTable(
-      justifCaisse.depenses || [], 
-      'Dépenses', 
-      currentY, 
+      justifCaisse.depenses || [],
+      'Dépenses',
+      currentY,
       depensesColumns
     );
 
     // ===== FOOTER =====
     doc.rect(0, footerY, PAGE_WIDTH, FOOTER_HEIGHT).fill(COLORS.PRIMARY);
     const footerTextY = footerY + (FOOTER_HEIGHT - 40) / 2;
-    
+
     doc.font(FONTS.REGULAR).fontSize(SIZES.SMALL).fillColor(COLORS.WHITE)
-       .text(
-         '82, angle Bd Abdelmoumen et rue Soumaya Imm. Shahrazad III, 2ème étage Casablanca', 
-         0, 
-         footerTextY, 
-         { align: 'center', width: PAGE_WIDTH }
-       )
-       .text(
-         'Tél: 0522-23-39-70 | Fax: 0522-23-42-60 | Capital: 18 500 000 DH | ICE: 001526422000063', 
-         0, 
-         footerTextY + 16, 
-         { align: 'center', width: PAGE_WIDTH }
-       );
+      .text(
+        '82, angle Bd Abdelmoumen et rue Soumaya Imm. Shahrazad III, 2ème étage Casablanca',
+        0,
+        footerTextY,
+        { align: 'center', width: PAGE_WIDTH }
+      )
+      .text(
+        'Tél: 0522-23-39-70 | Fax: 0522-23-42-60 | Capital: 18 500 000 DH | ICE: 001526422000063',
+        0,
+        footerTextY + 16,
+        { align: 'center', width: PAGE_WIDTH }
+      );
 
     doc.end();
 
@@ -1784,7 +1935,11 @@ export const generateJustifCaisseExcel = async (req, res) => {
   }
 };
 
-
+export const listChantierUser = async (req, res) => {
+  const user = req.session.user;
+  const chantiers = await prisma.chantier.findMany();
+  res.render('dashboard/achats/caisse/justifecaisse/chantierlist', { chantiers })
+}
 
 
 

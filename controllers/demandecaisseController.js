@@ -13,12 +13,13 @@ export const indexDemandeCaisse = async (req, res) => {
     include: {
       user: true,
       items: true,
-      chantier: true
+      chantier: true,
     },
     orderBy: {
       id: 'desc',
     },
   });
+  const chantiers = await prisma.chantier.findMany()
 
   // Sort so that 'En Attente' comes first
   const sortedDemande = demande.sort((a, b) => {
@@ -27,15 +28,14 @@ export const indexDemandeCaisse = async (req, res) => {
     return 0;
   });
 
-  const chantiers = await prisma.chantier.findMany();
   const users = await prisma.user.findMany({
     where: { role: 'user' }
   });
 
   res.render('dashboard/achats/caisse/demande/index', {
     demande: sortedDemande,
-    chantiers,
-    users
+    users,
+    chantiers
   });
 };
 
@@ -44,16 +44,14 @@ export const createDemandeCaisse = async(req , res) => {
     const user = await prisma.user.findUnique({
         where: {
             id: req.session.user.id
-        },
-        include: {
-            chantier: true
         }
     })
     const today = new Date().toISOString().split('T')[0];
-    
+    const chantiers = await prisma.chantier.findMany()
+
     
  
-    res.render('dashboard/achats/caisse/demande/create' , { user , today } )
+    res.render('dashboard/achats/caisse/demande/create' , { user , today , chantiers } )
 }
   export const storeDemandeCaisse = async (req, res) => {
       try {
@@ -63,7 +61,7 @@ export const createDemandeCaisse = async(req , res) => {
         console.log('Request body:', { demandeur, chantier, designation, items });
     
         // Validate session
-        if (!req.session?.user?.id || !req.session?.user?.chantierId) {
+        if (!req.session?.user?.id) {
           console.error('Session validation failed:', req.session?.user);
           return res.status(401).json({ success: false, error: 'Utilisateur non authentifié ou chantier manquant.' });
         }
@@ -78,6 +76,10 @@ export const createDemandeCaisse = async(req , res) => {
         if (!items || !Array.isArray(items) || items.length === 0) {
           console.error('Invalid items:', items);
           return res.status(400).json({ success: false, error: 'Les items doivent être un tableau non vide.' });
+        }
+        if (!chantier) {
+          console.error('Chantier missing');
+          return res.status(400).json({ success: false, error: 'Le chantier est requis.' });
         }
     
         // Validate items
@@ -115,7 +117,7 @@ export const createDemandeCaisse = async(req , res) => {
             numero,
             demandeur: demandeur || null,
             user: { connect: { id: req.session.user.id } },
-            chantier: { connect: { id: req.session.user.chantierId } },
+            chantier: { connect: { id: parseInt(chantier) } },
             color: 'blue',
             items: {
               create: items.map((item, index) => {
@@ -152,15 +154,12 @@ export const viewDemandeCaisse = async (req, res) => {
       include: {
         items: true,
         user: true,
-        chantier: true
+        chantier: true,
       },
     });
     const user = await prisma.user.findUnique({
         where: {
             id: req.session.user.id
-        },
-        include: {
-            chantier: true
         }
     })
     
@@ -213,18 +212,28 @@ export const viewDemandeCaisse = async (req, res) => {
         updateData.imputation = req.body.imputation;
       }
 
-      const item = await prisma.itemCaisse.update({
-        where: { id: itemId },
-        data: updateData,
-      });
+      const { item, montantTotal } = await prisma.$transaction(async (tx) => {
+        const item = await tx.itemCaisse.update({
+          where: { id: itemId },
+          data: updateData,
+        });
 
-      const items = await prisma.itemCaisse.findMany({
-        where: { demandeCaisseId: item.demandeCaisseId },
-      });
-      const montantTotal = items.reduce((sum, it) => sum + parseFloat(it.montant), 0);
-      await prisma.demandeCaisse.update({
-        where: { id: item.demandeCaisseId },
-        data: { montantTotal },
+        if (!item.demandeCaisseId) {
+          throw new Error('Item is not linked to a DemandeCaisse.');
+        }
+
+        const sum = await tx.itemCaisse.aggregate({
+          _sum: { montant: true },
+          where: { demandeCaisseId: item.demandeCaisseId },
+        });
+        const montantTotal = sum._sum.montant ?? 0;
+
+        await tx.demandeCaisse.update({
+          where: { id: item.demandeCaisseId },
+          data: { montantTotal },
+        });
+
+        return { item, montantTotal };
       });
 
       const wantsJson =

@@ -53,29 +53,38 @@ export const createDemandeFourniture = async (req, res) => {
   const numero = (last[0]?.numero || 0) + 1;
   const user = await prisma.user.findUnique({
     where: { id: req.session.user.id },
-    include: { chantier: true },
   });
+  const chantiers = await prisma.chantier.findMany();
   const today = new Date().toISOString().slice(0, 10);
-  res.render("dashboard/achats/fourniture/create", { user, today, numero });
+  res.render("dashboard/achats/fourniture/create", { user, today, numero, chantiers });
 };
-
-
-
 
 /* -------------------------- STORE -------------------------- */
 // controllers/demandeFournitureController.js
 
 export const storeDemandeFourniture = async (req, res) => {
   try {
-    const { date, numero, items } = req.body;
+    const { date, numero, items, chantierId: chantierIdRaw } = req.body;
+
+    const chantierId = chantierIdRaw ? parseInt(chantierIdRaw, 10) : NaN;
+    if (!chantierIdRaw || Number.isNaN(chantierId)) {
+      return res.status(400).json({ success: false, error: "Chantier manquant ou invalide." });
+    }
 
     const user = await prisma.user.findUnique({
       where: { id: req.session.user.id },
-      include: { chantier: true },
     });
 
-    if (!user?.chantierId) {
-      return res.status(400).json({ success: false, error: "Utilisateur ou chantier non trouvé." });
+    if (!user) {
+      return res.status(400).json({ success: false, error: "Utilisateur non trouvé." });
+    }
+
+    const chantier = await prisma.chantier.findUnique({
+      where: { id: chantierId },
+      select: { id: true },
+    });
+    if (!chantier) {
+      return res.status(400).json({ success: false, error: "Chantier non trouvé." });
     }
 
     // ---- validation -------------------------------------------------
@@ -111,7 +120,7 @@ export const storeDemandeFourniture = async (req, res) => {
         numero: parseInt(numero, 10),
         demandeur: user.name,
         user: { connect: { id: req.session.user.id } },
-        chantier: { connect: { id: user.chantierId } },
+        chantier: { connect: { id: chantierId } },
         status: "En Attente",
         color: "blue",
         items: {

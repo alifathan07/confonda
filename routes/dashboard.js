@@ -22,11 +22,11 @@ import { deleteEncaissement, indexHis, saveEncaissement, updateHistoryBanque } f
 import { deleteTelePai, indexTelePai, storeTelePai, updateTelePai } from '../controllers/telepay_prelevController.js';
 import { createEncaissement, indexEncaissement, updateEncaissement } from '../controllers/encaisementController.js';
 import { addCaisseItem, createDemandeCaisse, deleteDemandeCaisse, deleteDemandeCaisseItem, generateDemandeExcel, generateDemandePdf, indexDemandeCaisse, storeDemandeCaisse, updateDemandeCaisseItem, updateDemandeCaisseItemValidation, updateDemandeCaisseStatut, updateDemandeCaisseValidationAll, viewDemandeCaisse } from '../controllers/demandecaisseController.js';
-import { addJustifCaisse, addJustifCaisseAdminAuto, adminUserList, createJustifCaisse, createJustifCaisseAdmin, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteJustifeCaisse, deleteRecette, generateJustifCaisseExcel, generateJustifCaissePDF, getAllJustifCaisse, justifeCaisseListUser, saveAllData, saveRecettesAdmin, updateDepenceValidation, validateAllDepenses, viewJustifCaisse, viewJustifCaisseAdmin } from '../controllers/justifecaisseController.js';
+import { addJustifCaisse, addJustifCaisseAdminAuto, adminUserList, createJustifCaisse, createJustifCaisseAdmin, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteJustifeCaisse, deleteRecette, generateJustifCaisseExcel, generateJustifCaissePDF, getAllJustifCaisse, justifeCaisseListUser, listChantierUser, saveAllData, saveRecettesAdmin, updateDepenceValidation, updateSoldePrecedentAdmin, validateAllDepenses, viewJustifCaisse, viewJustifCaisseAdmin } from '../controllers/justifecaisseController.js';
 import { createDemandeFourniture, deleteDemandeFourniture, downloadImageFourniture, editDemandeFourniture, indexDemandeFourniture, storeDemandeFourniture, updateDemandeFourniture, updateValidationFourniture, uploadFour, uploadImageFourniture, uploadTempImage, validateAllFourniture, viewDemandeFourniture } from '../controllers/demandeFourniture.js';
 import { fileURLToPath } from 'url';
 import { EditDemandePrix, listDemandePrix, postDemandePrixViaFourniture, updateDemandePrix, viewDemandePrix, deleteDemandePrix, deleteArticle, createDemandePrix, storeDemandePrix, generateDemandePrixPDF, sendDemandePrixEmail } from '../controllers/demandeprixController.js';
-import { editBc, postBcDemandeFourniture, updateBc, deleteBcItem, createBcForm, storeBc, generateBcPDF, sendBcEmail, listBc, deleteBc, updateBcItemDistribution, updateBcItem } from '../controllers/bcController.js';
+import { editBc, postBcDemandeFourniture, updateBc, deleteBcItem, createBcForm, storeBc, generateBcPDF, sendBcEmail, listBc, deleteBc, updateBcItemDistribution, updateBcItem, importBcInfo } from '../controllers/bcController.js';
 import { bmceDelete, bmceDownload, bmcePay, bmcePreview, bmceUpload, indexVirementPay } from '../controllers/virementpayController.js';
 
 const virementpayUpload = multer({
@@ -351,7 +351,8 @@ dashboardRouter.get("/achats/caisse/justifecaisse/create", createJustifCaisse);
 
 // View details
 dashboardRouter.get("/achats/caisse/justifecaisse/:id", viewJustifCaisse);
-
+// reccetes in user dashboard 
+dashboardRouter.get("/achats/caisse/chantierlist", listChantierUser);
 // Handle recettes
 dashboardRouter.post("/achats/caisse/justification/recettes", createOrUpdateRecettes);
 dashboardRouter.delete("/achats/caisse/justification/recettes/:id", deleteRecette);
@@ -361,7 +362,8 @@ dashboardRouter.get("/achats/caisse/justification/recettes/:id/excel", generateJ
 dashboardRouter.post("/achats/caisse/justification/depenses", createOrUpdateDepenses);
 dashboardRouter.delete("/achats/caisse/justification/depenses/:id", deleteDepense);
 dashboardRouter.post("/achats/caisse/justification/save-all", saveAllData);
-dashboardRouter.get("/achats/caisse/justifecaisse", getAllJustifCaisse);
+dashboardRouter.get("/achats/caisse/justif/:chantierId", getAllJustifCaisse);
+
 dashboardRouter.post('/achats/add/justifeAuto', addJustifCaisse);
 dashboardRouter.post('/achats/add/justifeAutoAdmin/:userId', addJustifCaisseAdminAuto);
 dashboardRouter.delete('/achats/caisse/justifecaisse/:id', deleteJustifeCaisse);
@@ -372,6 +374,7 @@ dashboardRouter.get('/achats/caisse/admin/create/:userId', isAdmin, createJustif
 dashboardRouter.get('/achats/caisse/admin/:userId/:id', isAdmin, viewJustifCaisseAdmin);
 // dashboardRouter.get('/achats/caisse/admin/:userId/:id', isAdmin, updateJustifCaisseAdmin);
 dashboardRouter.post('/achats/caisse/admin/:userId/:id/recettes', isAdmin, saveRecettesAdmin);
+dashboardRouter.patch('/achats/caisse/admin/:userId/:id/solde-precedent', isAdmin, updateSoldePrecedentAdmin);
 
 
 dashboardRouter.patch('/achats/caisse/justification/depenses/:id', updateDepenceValidation);
@@ -432,6 +435,9 @@ dashboardRouter.post('/api/bc/:id/send-email', sendBcEmail);
 dashboardRouter.post('/achats/bc/create-from-demande', postBcDemandeFourniture);
 dashboardRouter.get("/achat/bon-commande", listBc);
 dashboardRouter.delete("/achat/bc/:id", deleteBc)
+// import bc to list 
+dashboardRouter.post('/achat/bc/import', upload.single('excelFile'), importBcInfo);
+
 
 
 

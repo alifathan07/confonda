@@ -7,6 +7,8 @@ import axios from "axios";
 import { fileURLToPath } from "url";
 import { log } from "console";
 import crypto from "crypto";
+import { numberToFrenchWords } from "../utils/utils.js";
+import ExcelJS from 'exceljs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -87,8 +89,8 @@ export const postBcDemandeFourniture = async (req, res) => {
         designation: true,
         unité: true,
         quantité: true,
-        lot : true,
-        imputation : true
+        lot: true,
+        imputation: true
       },
     });
 
@@ -104,8 +106,18 @@ export const postBcDemandeFourniture = async (req, res) => {
     );
 
     const createdBcIds = [];
-    const baseNumero = Date.now();
-    let offset = 0;
+
+    // Compute next BC numero (numero is a String in Prisma schema)
+    const recentBcs = await prisma.bondeCommande.findMany({
+      select: { numero: true },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+    });
+    const currentMaxNumero = recentBcs.reduce((max, bc) => {
+      const n = parseInt(bc?.numero, 10);
+      return Number.isNaN(n) ? max : Math.max(max, n);
+    }, 0);
+    let nextNumero = currentMaxNumero + 1;
 
     for (const [fournisseurIdStr, itemIdsForFournisseur] of Object.entries(itemsByFournisseur)) {
       const fournisseurId = parseInt(fournisseurIdStr);
@@ -128,9 +140,9 @@ export const postBcDemandeFourniture = async (req, res) => {
           designation: a.designation,
           unite: a.unité || "",
           quantite: q,
-          reference : a.lot ,
-          imputation : a.imputation
-           
+          reference: a.lot,
+          imputation: a.imputation
+
         };
       });
 
@@ -147,6 +159,7 @@ export const postBcDemandeFourniture = async (req, res) => {
       const newBc = await prisma.bondeCommande.create({
         data: {
           date: new Date(),
+          numero: String(nextNumero++),
           fournisseurId,
           chantierId,
           demandeur,
@@ -163,7 +176,7 @@ export const postBcDemandeFourniture = async (req, res) => {
             chantierId,
             itemId: item.id,
             qty: item.quantite,
-        
+
             montant: null,
           },
         });
@@ -225,6 +238,7 @@ export const listBc = async (req, res) => {
           }
         },
         fournisseur: true,
+
         // include direct chantier relation if present
         chantier: true,
       },
@@ -243,10 +257,10 @@ export const listBc = async (req, res) => {
   }
 };
 
-
 export const generateBcPDF = async (req, res) => {
   const { id } = req.params;
   const bcId = parseInt(id, 10);
+  const isMultiPage = true; // Use multi-page logic by default
 
   if (Number.isNaN(bcId)) {
     return res.status(400).json({ success: false, error: "ID invalide" });
@@ -396,46 +410,46 @@ export const generateBcPDF = async (req, res) => {
     };
 
 
-      const drawChantier = (yPosition) => {
-        const startY = yPosition ?? (pageHeight - margin - footerHeight);
-        const gap = 12;
-        const cardW = (contentWidth - gap) / 2;
-        const cardH = 86;
+    const drawChantier = (yPosition) => {
+      const startY = yPosition ?? (pageHeight - margin - footerHeight);
+      const gap = 12;
+      const cardW = (contentWidth - gap) / 2;
+      const cardH = 86;
 
-        const chantierX = margin;
-        const livraisonX = margin + cardW + gap;
+      const chantierX = margin;
+      const livraisonX = margin + cardW + gap;
 
-        // Card 1: Chantier
-        doc.roundedRect(chantierX, startY, cardW, cardH, 8).lineWidth(1).stroke(colors.borderSoft);
-        doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
-          .text("CHANTIER", chantierX + 10, startY + 10, { width: cardW - 20 });
-        doc.font("Helvetica").fontSize(9).fillColor(colors.gray800)
-          .text((() => {
-            const names = new Set();
-            if (bc.chantier?.nom) names.add(bc.chantier.nom);
-            (bc.commandesItems || []).forEach(it => {
-              (it.BondeCommandeChantierItem || []).forEach(bcci => {
-                if (bcci?.chantier?.nom) names.add(bcci.chantier.nom);
-              });
+      // Card 1: Chantier
+      doc.roundedRect(chantierX, startY, cardW, cardH, 8).lineWidth(1).stroke(colors.borderSoft);
+      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
+        .text("CHANTIER", chantierX + 10, startY + 10, { width: cardW - 20 });
+      doc.font("Helvetica").fontSize(9).fillColor(colors.gray800)
+        .text((() => {
+          const names = new Set();
+          if (bc.chantier?.nom) names.add(bc.chantier.nom);
+          (bc.commandesItems || []).forEach(it => {
+            (it.BondeCommandeChantierItem || []).forEach(bcci => {
+              if (bcci?.chantier?.nom) names.add(bcci.chantier.nom);
             });
-            return Array.from(names).join(', ') || "-";
-          })(), chantierX + 10, startY + 30, { width: cardW - 20, ellipsis: true });
+          });
+          return Array.from(names).join(', ') || "-";
+        })(), chantierX + 10, startY + 30, { width: cardW - 20, ellipsis: true });
 
-        // Card 2: Livraison (date + lieu in the same card)
-        doc.roundedRect(livraisonX, startY, cardW, cardH, 8).lineWidth(1).stroke(colors.borderSoft);
-        doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
-          .text("LIVRAISON", livraisonX + 10, startY + 10, { width: cardW - 20 });
+      // Card 2: Livraison (date + lieu in the same card)
+      doc.roundedRect(livraisonX, startY, cardW, cardH, 8).lineWidth(1).stroke(colors.borderSoft);
+      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
+        .text("LIVRAISON", livraisonX + 10, startY + 10, { width: cardW - 20 });
 
-        const dateLivStr = bc.dateLivraison
-          ? new Date(bc.dateLivraison).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-          : "-";
-        doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
-          .text(`Date : ${dateLivStr}`, livraisonX + 10, startY + 30, { width: cardW - 20, ellipsis: true });
-        doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
-          .text(`Lieu : ${bc.lieuLivraison || "-"}`, livraisonX + 10, startY + 48, { width: cardW - 20, ellipsis: true });
+      const dateLivStr = bc.dateLivraison
+        ? new Date(bc.dateLivraison).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+        : "-";
+      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
+        .text(`Date : ${dateLivStr}`, livraisonX + 10, startY + 30, { width: cardW - 20, ellipsis: true });
+      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
+        .text(`Lieu : ${bc.lieuLivraison || "-"}`, livraisonX + 10, startY + 48, { width: cardW - 20, ellipsis: true });
 
-        return { startY, cardH };
-      };
+      return { startY, cardH };
+    };
 
 
     const drawFooter = (yPosition) => {
@@ -691,322 +705,8 @@ export const generateBcPDF = async (req, res) => {
 
 // Replace your current sendBcEmail with this one
 export const sendBcEmail = async (req, res) => {
-  const { id } = req.params;
-  const { email } = req.body || {};
-  const bcId = parseInt(id, 10);
-
-  if (!email) {
-    return res.status(400).json({ success: false, error: "Email destinataire manquant" });
-  }
-  if (Number.isNaN(bcId)) {
-    return res.status(400).json({ success: false, error: "ID invalide" });
-  }
-
-  try {
-    const bc = await prisma.bondeCommande.findUnique({
-      where: { id: bcId },
-      include: { fournisseur: true, commandesItems: true, chantier: true },
-    });
-
-    if (!bc) return res.status(404).json({ success: false, error: "Bon de commande non trouvé" });
-
-    // === Generate PDF identical to generateBcPDF ===
-    const chunks = [];
-    const doc = new PDFDocument({ size: "A4", margin: 50 });
-    doc.on("data", (chunk) => chunks.push(chunk));
-    doc.on("end", async () => {
-      const pdfBuffer = Buffer.concat(chunks);
-
-      try {
-        await mailTransporter.sendMail({
-          from: process.env.SMTP_FROM || process.env.SMTP_USER,
-          to: email,
-          subject: `Bon de Commande #${bc.id}`,
-          text: `Bonjour,\n\nVeuillez trouver ci-joint le bon de commande #${bc.id}.\n\nCordialement,`,
-          attachments: [
-            {
-              filename: `bonCommande_${bc.id}.pdf`,
-              content: pdfBuffer,
-            },
-          ],
-        });
-        res.json({ success: true });
-      } catch (mailErr) {
-        console.error("Erreur envoi email:", mailErr);
-        res.status(500).json({ success: false, error: "Erreur envoi email" });
-      }
-    });
-
-    const pageWidth = 595.28;
-    const margin = 50;
-    const contentWidth = pageWidth - margin * 2;
-
-    const blue = "#0052CC";
-    const blueLight = "#f3f8ff";
-    const gray900 = "#1f2937";
-    const gray800 = "#374151";
-    const gray600 = "#6b7280";
-    const borderColor = "#e5e7eb";
-
-    const logoPath = path.join(__dirname, "../public/img/logo-4.png");
-    const signaturePath = path.join(__dirname, "../public/img/signature.png");
-
-    let y = margin;
-
-    // HEADER BACKGROUND
-    const headerHeight = 150;
-    doc.rect(margin - 10, y - 10, contentWidth + 20, headerHeight)
-      .fillOpacity(0.15)
-      .fill(blueLight)
-      .fillOpacity(1);
-
-    // Logo
-    if (fs.existsSync(logoPath)) {
-      try { doc.image(logoPath, margin, y + 10, { width: 80 }); } catch (_) { }
-    }
-
-    // Title
-    doc.font("Helvetica-Bold").fontSize(28).fillColor(gray900)
-      .text("Bon de Commande", margin, y + 100);
-
-    const dateStr = new Date(bc.date).toLocaleDateString("fr-FR", {
-      weekday: "long", day: "numeric", month: "long", year: "numeric"
-    });
-    doc.font("Helvetica-Bold").fontSize(11).fillColor(blue)
-      .text(`N° ${bc.id} • ${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)}`, margin, doc.y + 8);
-
-    // SUPPLIER BOX
-    const supplierBox = { x: pageWidth - margin - 220, y: y + 15, w: 220, h: 125 };
-    doc.save()
-      .lineWidth(2).strokeColor(blue)
-      .roundedRect(supplierBox.x, supplierBox.y, supplierBox.w, supplierBox.h, 14).stroke();
-    doc.fillColor("#F8FBFF").roundedRect(supplierBox.x, supplierBox.y, supplierBox.w, supplierBox.h, 14).fill();
-
-    const headerHeightBox = 32;
-    doc.fillColor(blue).roundedRect(supplierBox.x, supplierBox.y, supplierBox.w, headerHeightBox, 14).fill();
-    doc.font("Helvetica-Bold").fontSize(11).fillColor("#ffffff").text("Fournisseur", supplierBox.x + 15, supplierBox.y + 10);
-    doc.moveTo(supplierBox.x + 10, supplierBox.y + headerHeightBox + 5)
-      .lineTo(supplierBox.x + supplierBox.w - 10, supplierBox.y + headerHeightBox + 5)
-      .lineWidth(1).strokeColor("#d1d9e6").stroke();
-
-    doc.font("Helvetica-Bold").fontSize(10).fillColor(gray900)
-      .text(bc.fournisseur?.name || "-", supplierBox.x + 15, supplierBox.y + headerHeightBox + 15, { width: 190 });
-    doc.font("Helvetica").fontSize(9).fillColor(gray600)
-      .text(bc.fournisseur?.email || "-", supplierBox.x + 15, supplierBox.y + headerHeightBox + 35, { width: 190 });
-    doc.font("Helvetica").fontSize(9).fillColor(gray600)
-      .text(bc.fournisseur?.telFournisseur || "Non renseigné", supplierBox.x + 15, supplierBox.y + headerHeightBox + 52, { width: 190 });
-    doc.restore();
-
-    y += headerHeight + 30;
-
-    // TABLE
-    const colWidths = [40, 190, 60, 70, 85, 50];
-    const rowHeight = 30;
-    const tableTop = y;
-
-    doc.rect(margin, y, contentWidth, rowHeight).fill(blue);
-    const headers = ["N°", "Désignation", "Unité", "Quantité", "Prix unitaire HT", "Total HT"];
-    let x = margin;
-    headers.forEach((h, i) => {
-      doc.font("Helvetica-Bold").fontSize(8).fillColor("#ffffff")
-        .text(h.toUpperCase(), x + 8, y + 10, { width: colWidths[i] - 5, align: i === 0 || i >= 3 ? "center" : "left" });
-      x += colWidths[i];
-    });
-
-    y += rowHeight;
-
-    bc.commandesItems.forEach((item, idx) => {
-      const rowY = y;
-      const bg = idx % 2 === 0 ? "#ffffff" : "#f9fafb";
-      doc.rect(margin, rowY, contentWidth, rowHeight).fill(bg);
-
-      let cellX = margin;
-      colWidths.forEach(w => { doc.rect(cellX, rowY, w, rowHeight).lineWidth(0.5).stroke(borderColor); cellX += w; });
-      cellX = margin;
-
-      // N° circle
-      doc.circle(cellX + 20, rowY + 15, 12).fill(blue);
-      doc.font("Helvetica-Bold").fontSize(10).fillColor("#fff").text(String(idx + 1), cellX + 13, rowY + 10, { width: 14, align: "center" });
-      cellX += colWidths[0];
-
-      // Désignation
-      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(gray900).text(item.designation || "-", cellX + 8, rowY + 10, { width: colWidths[1] - 16 });
-      cellX += colWidths[1];
-
-      // Unité
-      doc.font("Helvetica").fontSize(8.5).fillColor(gray800).text(item.unite || "-", cellX + 8, rowY + 10, { width: colWidths[2] - 16, align: "center" });
-      cellX += colWidths[2];
-
-      // Quantité pill
-      const qty = String(item.quantite || 0);
-      doc.roundedRect(cellX + 10, rowY + 8, 50, 16, 8).fill("#e2e8f0");
-      doc.font("Helvetica-Bold").fontSize(9).fillColor(gray900).text(qty, cellX + 10, rowY + 10, { width: 50, align: "center" });
-      cellX += colWidths[3];
-
-      // Prix unitaire
-      const pu = sanitizePdfNumber((item.prixUnitaire || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-      doc.font("Helvetica").fontSize(8.5).fillColor(gray900).text(pu, cellX + 8, rowY + 10, { width: colWidths[4] - 16, align: "right" });
-      cellX += colWidths[4];
-
-      // Total HT
-      const total = sanitizePdfNumber((() => {
-        const stored = Number(item.totalHt || 0);
-        if (stored) return stored;
-        const q = Number(item.quantite || 0);
-        const pu2 = Number(item.prixUnitaire || 0);
-        const remiseAmt = Number(item.remise || 0);
-        return (q * pu2) - remiseAmt;
-      })().toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-      doc.font("Helvetica").fontSize(8.5).fillColor(gray900).text(total, cellX + 8, rowY + 10, { width: colWidths[5] - 16, align: "right" });
-
-      y += rowHeight;
-    });
-    y += 30;
-
-    // =========================
-    // TOTALS BOX
-    // =========================
-    const totalsWidth = 270;
-    const totalsX = pageWidth - margin - totalsWidth;
-
-    const totalHt = bc.totalHt || 0;
-    const tauxTva = bc.tauxTva || 0;
-    const totalTtc = bc.totalTtc || 0;
-    const montantTva = totalTtc - totalHt;
-
-    const totals = [
-      { label: "Total HT", value: totalHt },
-      { label: `TVA (${tauxTva} %)`, value: montantTva },
-      { label: "Total TTC", value: totalTtc, bold: true }
-    ];
-
-    // 1. Calculate total block height
-    const totalRowsHeight = totals.length * 22 + 10;   // adjust padding
-    const blockY = y - 4;                              // start a bit above
-    const blockX = totalsX - 10;
-    const blockWidth = totalsWidth + 20;
-
-    // 2. Draw one big rounded rectangle
-    doc.roundedRect(blockX, blockY, blockWidth, totalRowsHeight, 10)
-      .fillAndStroke("#f0f7ff", "#dbeafe");
-
-    // 3. Print each total line INSIDE the same shape
-    totals.forEach((t, i) => {
-      const lineY = y + i * 22;
-
-      doc.font(t.bold ? "Helvetica-Bold" : "Helvetica")
-        .fontSize(t.bold ? 11 : 10)
-        .fillColor(gray900)
-        .text(t.label, totalsX, lineY + (t.bold ? 6 : 4));
-
-      const valStr = sanitizePdfNumber(Math.abs(t.value).toLocaleString("fr-FR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }));
-
-      doc.font(t.bold ? "Helvetica-Bold" : "Helvetica")
-        .fontSize(t.bold ? 13 : 10)
-        .fillColor(t.bold ? blue : gray900)
-        .text(valStr + " MAD", totalsX, lineY + (t.bold ? 6 : 4), {
-          width: totalsWidth - 20,
-          align: "right"
-        });
-    });
-
-
-    y += totals.length * 22 + 30;
-
-    // =========================
-    // MONTANT EN LETTRES
-    // =========================
-    doc.roundedRect(margin, y, contentWidth, 40, 12)
-      .fill("#f8fbff")
-      .stroke("#dbeafe");
-
-    doc.font("Helvetica-Bold").fontSize(10).fillColor("#1e40af")
-      .text("Montant en lettres :", margin + 20, y + 14);
-
-    doc.font("Helvetica-Oblique").fontSize(10).fillColor(gray900)
-      .text(bc.montantLettre || "—", margin + 140, y + 14, { width: contentWidth - 160 });
-
-    y += 70;
-
-    // =========================
-    // USER + CHANTIER BOXES
-    // =========================
-    const boxW = (contentWidth - 30) / 2;
-    const boxH = 80;
-
-    // User
-    doc.roundedRect(margin, y, boxW, boxH, 12).lineWidth(2).stroke("#e2e8f0").fill("#ffffff");
-    doc.font("Helvetica-Bold").fontSize(10).fillColor(blue).text("Demandeur", margin + 20, y + 20);
-    doc.font("Helvetica-Bold").fontSize(11).fillColor(gray900)
-      .text(bc.demandeur || "-", margin + 20, y + 45, { width: boxW - 40 });
-
-    // Chantier
-    doc.roundedRect(margin + boxW + 30, y, boxW, boxH, 12).lineWidth(2).stroke("#e2e8f0").fill("#ffffff");
-    doc.font("Helvetica-Bold").fontSize(10).fillColor(blue).text("Chantier", margin + boxW + 50, y + 20);
-    doc.font("Helvetica-Bold").fontSize(11).fillColor(gray900)
-      .text(bc.chantier?.nom || "Non renseigné", margin + boxW + 50, y + 45, { width: boxW - 40 });
-
-    y += boxH + 50;
-
-    // =========================
-    // SIGNATURES (background AFTER everything else)
-    // =========================
-    // Define signature sizes first so the background can be sized dynamically
-    const sigW = (contentWidth - 40) / 2; // signature box width
-    // Increase the signature box height on the email PDF so the signature can be displayed larger.
-    // Edit this number if you want a taller or shorter signature box.
-    const sigH = 140;
-    const sigBgH = sigH + 40; // background height to fit the signature boxes comfortably
-    doc.rect(margin - 10, y - 20, contentWidth + 20, sigBgH)
-      .fillOpacity(0.15)
-      .fill(blueLight)
-      .fillOpacity(1);
-
-    // Fournisseur signature box
-    doc.roundedRect(margin, y, sigW, sigH, 12)
-      .lineWidth(2)
-      .stroke("#c3d4e9")
-      .fill("#ffffff");
-
-    doc.font("Helvetica-Bold").fontSize(9).fillColor(gray600)
-      .text("VISA DIRECTION ", margin, y + sigH + 10, {
-        width: sigW, align: "center"
-      });
-
-    // Responsable achats
-    const sig2X = margin + sigW + 40;
-    doc.roundedRect(sig2X, y, sigW, sigH, 12)
-      .lineWidth(2)
-      .stroke("#c3d4e9")
-      .fill("#ffffff");
-
-    if (fs.existsSync(signaturePath)) {
-      try {
-        // Fit the signature to the box and center it.
-        // Make this bigger by reducing the padding subtractors (smaller subtraction = bigger image).
-        // Example: near-full box size -> const fitW = sigW - 6; const fitH = sigH - 12
-        const fitW = sigW - 6; // smaller subtraction -> larger width
-        const fitH = sigH - 12; // smaller subtraction -> larger height
-        const imgX = sig2X + (sigW - fitW) / 2;
-        const imgY = y + 8;
-        doc.image(signaturePath, imgX, imgY, { fit: [fitW, fitH], align: 'center', valign: 'center' });
-      } catch (_) { }
-    }
-
-    doc.font("Helvetica-Bold").fontSize(9).fillColor(gray600)
-      .text("LE RESPONSABLE ACHATS", sig2X, y + sigH + 10, {
-        width: sigW, align: "center"
-      });
-
-    doc.end();
-  } catch (err) {
-    console.error("Erreur génération PDF BC (email):", err);
-    res.status(500).json({ success: false, error: "Erreur serveur" });
-  }
 };
+
 
 // export const viewBc = async (req, res) => {
 //   try {
@@ -1039,9 +739,9 @@ export const editBc = async (req, res) => {
           include: {
             BondeCommandeChantierItem: {   // ✅ correct relation name
               include: { chantier: true }  // Include chantier details
-            }, 
+            },
           },
-         
+
         },
         fournisseur: true,
       }
@@ -1089,7 +789,7 @@ export const updateBc = async (req, res) => {
         unite: String(l.unite || ""),
         reference: String(l.reference || ""),
         quantite: Number.parseInt(l.quantite) || 0,
-        imputation : String(l.imputation || ""),
+        imputation: String(l.imputation || ""),
         prixUnitaire: normalizeNumber(l.prixUnitaire),
         tauxRemise: normalizeNumber(l.tauxRemise),
         montantRemise: normalizeNumber(l.montantRemise),
@@ -1104,7 +804,7 @@ export const updateBc = async (req, res) => {
         unite: String(l?.unite || ""),
         reference: String(l?.reference || ""),
         quantite: Number.parseInt(l?.quantite) || 0,
-        imputation : String(l?.imputation || ""),
+        imputation: String(l?.imputation || ""),
         prixUnitaire: normalizeNumber(l?.prixUnitaire),
         tauxRemise: normalizeNumber(l?.tauxRemise),
         montantRemise: normalizeNumber(l?.montantRemise),
@@ -1127,7 +827,7 @@ export const updateBc = async (req, res) => {
     const tvaRate = parseFloat(tauxTva) || 0;
     const montantTva = totalHt * (tvaRate > 0 ? tvaRate : 0) / 100;
     const totalTtc = totalHt + montantTva;
-    
+
     // First, perform the main update on BC and items (create/update fields)
     // We ignore distribution in this step
     await prisma.bondeCommande.update({
@@ -1149,7 +849,7 @@ export const updateBc = async (req, res) => {
             unite: l.unite,
             reference: l.reference,
             quantite: l.quantite,
-            imputation : l.imputation,
+            imputation: l.imputation,
             prixUnitaire: l.prixUnitaire,
             tauxRemise: l.tauxRemise,
             remise: l.montantRemise,
@@ -1162,7 +862,7 @@ export const updateBc = async (req, res) => {
               unite: l.unite,
               reference: l.reference,
               quantite: l.quantite,
-              imputation : l.imputation,
+              imputation: l.imputation,
               prixUnitaire: l.prixUnitaire,
               tauxRemise: l.tauxRemise,
               remise: l.montantRemise,
@@ -1324,7 +1024,7 @@ export const createBcForm = async (req, res) => {
 };
 export const storeBc = async (req, res) => {
   try {
-    const { supplier, date, dateLivraison, lieuLivraison, modeReg, delaiReg,  montantLettre, tauxTva, commandesItems = [], distributionData = [] } = req.body || {};
+    const { supplier, date, dateLivraison, lieuLivraison, modeReg, delaiReg, montantLettre, tauxTva, commandesItems = [], distributionData = [] } = req.body || {};
 
     const fournisseurId = parseInt(supplier);
     const jsDate = new Date(date);
@@ -1344,7 +1044,7 @@ export const storeBc = async (req, res) => {
         unite: String(l?.unite || ""),
         reference: String(l?.reference || ""),
         quantite: Number.parseInt(l?.quantite) || 0,
-        imputation : String(l?.imputation || ""),
+        imputation: String(l?.imputation || ""),
         prixUnitaire: normalizeNumber(l?.prixUnitaire),
         tauxRemise: normalizeNumber(l?.tauxRemise),
         montantRemise: normalizeNumber(l?.montantRemise),
@@ -1367,12 +1067,22 @@ export const storeBc = async (req, res) => {
     const montantTva = totalHt * (tvaRate > 0 ? tvaRate : 0) / 100;
     const totalTtc = totalHt + montantTva;
 
-
+    const recentBcs = await prisma.bondeCommande.findMany({
+      select: { numero: true },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+    });
+    const currentMaxNumero = recentBcs.reduce((max, bc) => {
+      const n = parseInt(bc?.numero, 10);
+      return Number.isNaN(n) ? max : Math.max(max, n);
+    }, 0);
+    const nextNumero = currentMaxNumero + 1;
 
     // Step 1: Create BC + items
     const bc = await prisma.bondeCommande.create({
       data: {
         date: jsDate,
+        numero: String(nextNumero),
         totalHt,
         tauxTva: tvaRate,
         totalTtc,
@@ -1381,7 +1091,7 @@ export const storeBc = async (req, res) => {
         lieuLivraison,
         delaiReg,
         modeReg,
-        
+
 
         fournisseur: { connect: { id: fournisseurId } },
         commandesItems: {
@@ -1390,7 +1100,7 @@ export const storeBc = async (req, res) => {
             unite: l.unite,
             reference: l.reference,
             quantite: l.quantite,
-            imputation : l.imputation,
+            imputation: l.imputation,
             prixUnitaire: l.prixUnitaire,
             tauxRemise: l.tauxRemise,
             remise: l.montantRemise,
@@ -1426,7 +1136,7 @@ export const storeBc = async (req, res) => {
       bc,
 
     });
-    console.log(modeReg , delaiReg)
+    console.log(modeReg, delaiReg)
   } catch (error) {
     console.error("Erreur création BC:", error);
     res.status(500).json({ success: false, error: "Erreur serveur" });
@@ -1440,7 +1150,7 @@ export const updateBcItem = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Item ID invalide' });
     }
 
-    const { designation, unite, quantite, prixUnitaire, tauxRemise  } = req.body || {};
+    const { designation, unite, quantite, prixUnitaire, tauxRemise } = req.body || {};
 
     // Ensure item exists
     const item = await prisma.commandesItems.findUnique({ where: { id: itemId } });
@@ -1476,3 +1186,278 @@ export const updateBcItem = async (req, res) => {
     return res.status(500).json({ success: false, error: 'Erreur serveur' });
   }
 };
+
+
+
+export const importBcInfo = async (req, res) => {
+  console.log('🚀 Starting Excel import for Bon de Commande ...');
+
+  if (!req.file) {
+    return res.status(400).send('No file uploaded.');
+  }
+
+  const filePath = req.file.path;
+  const workbook = new ExcelJS.Workbook();
+
+  try {
+    await workbook.xlsx.readFile(filePath);
+    const worksheet = workbook.worksheets[0];
+
+    if (!worksheet) {
+      return res.status(400).send('No worksheet found in Excel file.');
+    }
+
+    // ---------- HEADER DETECTION ----------
+    let headerRow = null;
+    let columnMap = {};
+
+    const normalizeHeader = (s) =>
+      (s || '')
+        .toString()
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ');
+
+    for (let rowNum = 1; rowNum <= Math.min(10, worksheet.rowCount); rowNum++) {
+      const row = worksheet.getRow(rowNum);
+      const headerValues = [];
+
+      for (let col = 1; col <= row.cellCount; col++) {
+        headerValues.push(normalizeHeader(row.getCell(col).text));
+      }
+
+      const expectedHeaders = [
+        'bc',
+        'date de cde',
+        'designation',
+        'reference',
+        'fournisseur',
+        'unite',
+        'qty',
+        'pu.ht',
+        'total.ht',
+        'taux de tva',
+        'taxe',
+        'total.ttc',
+        'chantier',
+      ];
+
+      const matchCount = expectedHeaders.filter(h =>
+        headerValues.some(v => v.includes(h))
+      ).length;
+
+      if (matchCount >= 4) {
+        headerRow = rowNum;
+
+        for (let col = 1; col <= row.cellCount; col++) {
+          const h = normalizeHeader(row.getCell(col).text);
+
+          if (h.includes('bc')) columnMap.bc = col;
+          else if (h.includes('date') && h.includes('cde')) {
+            columnMap.dateCde = col;
+            columnMap.date = col;
+          } else if (h.includes('designation')) columnMap.designation = col;
+          else if (h.includes('reference')) columnMap.reference = col;
+          else if (h.includes('fournisseur')) columnMap.fournisseur = col;
+          else if (h.includes('unite')) columnMap.unite = col;
+          else if (h.includes('qty') || h.includes('quantite')) columnMap.qty = col;
+          else if (h.includes('pu') && h.includes('ht')) columnMap.puHt = col;
+          else if (h.includes('total') && h.includes('ht')) columnMap.totalHt = col;
+          else if (h.includes('tva')) columnMap.tauxTva = col;
+          else if (h.includes('taxe')) columnMap.taxe = col;
+          else if (h.includes('ttc')) {
+            columnMap.totalTtc = col;
+            columnMap.montant = col;
+          } else if (h.includes('chantier')) columnMap.chantier = col;
+        }
+        break;
+      }
+    }
+
+    if (!headerRow) {
+      return res.status(400).send('No valid header row found.');
+    }
+
+    // ---------- HELPERS ----------
+    const parseExcelDate = (v) => {
+      if (!v) return null;
+      if (v instanceof Date) return v;
+      if (typeof v === 'number') return new Date((v - 25569) * 86400 * 1000);
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? null : d;
+    };
+
+    const parseExcelNumber = (v) => {
+      if (v === null || v === undefined || v === '') return null;
+      if (typeof v === 'number') return v;
+      const n = parseFloat(v.toString().replace(',', '.'));
+      return isNaN(n) ? null : n;
+    };
+
+    // ---------- ROW PARSING ----------
+    const bc = [];
+    const validationIssues = [];
+    let processedRows = 0;
+
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber <= headerRow) return;
+
+      processedRows++;
+      if (processedRows % 1000 === 0) {
+        console.log(`⏳ Parsed ${processedRows} rows`);
+      }
+
+      const numero = row.getCell(columnMap.bc).text?.trim();
+      const fournisseur = row.getCell(columnMap.fournisseur).text?.trim();
+      const date = parseExcelDate(row.getCell(columnMap.dateCde).value);
+      const totalHt = parseExcelNumber(row.getCell(columnMap.totalHt).value);
+      const totalTtc = parseExcelNumber(row.getCell(columnMap.totalTtc).value);
+
+      if (!numero || !fournisseur || !date || totalHt === null || totalTtc === null) {
+        validationIssues.push({ rowNumber, numero, fournisseur });
+        return;
+      }
+
+      bc.push({
+        rowNumber,
+        numero,
+        fournisseur,
+        date,
+        designation: columnMap.designation ? row.getCell(columnMap.designation).text?.trim() : null,
+        qty: parseExcelNumber(columnMap.qty ? row.getCell(columnMap.qty).value : null),
+        puHt: parseExcelNumber(columnMap.puHt ? row.getCell(columnMap.puHt).value : null),
+        totalHt,
+        totalTtc,
+        reference: columnMap.reference ? row.getCell(columnMap.reference).text?.trim() : null,
+        unite: columnMap.unite ? row.getCell(columnMap.unite).text?.trim() : null,
+        tauxTva: parseExcelNumber(columnMap.tauxTva ? row.getCell(columnMap.tauxTva).value : null),
+        taxe: parseExcelNumber(columnMap.taxe ? row.getCell(columnMap.taxe).value : null),
+        chantier: columnMap.chantier ? row.getCell(columnMap.chantier).text?.trim() : null,
+      });
+    });
+
+    // ---------- GROUP BY BC ----------
+    const groupedBc = bc.reduce((acc, r) => {
+      // Create a unique key using both BC number and supplier to avoid merging identical BC numbers from different suppliers
+      const key = `${r.numero}_${r.fournisseur || 'unknown'}`;
+
+      if (!acc[key]) {
+        acc[key] = {
+          numero: r.numero,
+          date: r.date,
+          fournisseurName: r.fournisseur,
+          tauxTva: r.tauxTva,
+          items: [],
+          totalHtSum: 0,
+          totalTtcSum: 0,
+        };
+      }
+      acc[key].items.push(r);
+      acc[key].totalHtSum += r.totalHt || 0;
+      acc[key].totalTtcSum += r.totalTtc || 0;
+      return acc;
+    }, {});
+
+    const bcList = Object.values(groupedBc);
+
+    // ---------- CACHE DB DATA ----------
+    const fournisseursDb = await prisma.fournisseur.findMany();
+    const fournisseurMap = new Map(
+      fournisseursDb.map(f => [f.name.toLowerCase(), f])
+    );
+
+    const chantiersDb = await prisma.chantier.findMany();
+    const chantierMap = new Map(
+      chantiersDb.map(c => [c.nom.toLowerCase(), c])
+    );
+
+    let successCount = 0;
+    let totalLinesInserted = 0;
+
+    // ---------- DB INSERT ----------
+    for (const bcGroup of bcList) {
+      // ... existing supplier lookup logic ...
+      let fournisseur = fournisseurMap.get(bcGroup.fournisseurName.toLowerCase());
+
+      if (!fournisseur) {
+        fournisseur = await prisma.fournisseur.create({
+          data: {
+            name: bcGroup.fournisseurName,
+            ice: ' ',
+            identifFiscal: ' ',
+            rib: ' ',
+            telFournisseur: ' ',
+            contact: ' ',
+            telContact: ' ',
+          }
+        });
+        fournisseurMap.set(bcGroup.fournisseurName.toLowerCase(), fournisseur);
+      }
+
+      const savedBc = await prisma.bondeCommande.create({
+        data: {
+          date: bcGroup.date,
+          totalHt: bcGroup.totalHtSum,
+          totalTtc: bcGroup.totalTtcSum,
+          tauxTva: bcGroup.tauxTva,
+          numero: bcGroup.numero,
+          dateLivraison: new Date().toISOString().split('T')[0], // Use current date for default if needed, or remove hardcoded "2026-01-11"
+          lieuLivraison: 'casablanca',
+          modeReg: 'espece',
+          delaiReg: '15',
+          montantLettre: numberToFrenchWords(Math.round(bcGroup.totalTtcSum)),
+          fournisseur: { connect: { id: fournisseur.id } },
+        }
+      });
+
+      for (const itemRow of bcGroup.items) {
+        const createdItem = await prisma.commandesItems.create({
+          data: {
+            designation: itemRow.designation || 'Article',
+            unite: itemRow.unite || 'U',
+            quantite: itemRow.qty || 0,
+            prixUnitaire: itemRow.puHt || 0,
+            totalHt: itemRow.totalHt || 0,
+            reference: itemRow.reference,
+            bondeCommande: { connect: { id: savedBc.id } },
+          }
+        });
+
+        if (itemRow.chantier) {
+          const chantier = chantierMap.get(itemRow.chantier.toLowerCase());
+          if (chantier) {
+            await prisma.bondeCommandeChantierItem.create({
+              data: {
+                bondeCommandeId: savedBc.id,
+                itemId: createdItem.id,
+                chantierId: chantier.id,
+                qty: itemRow.qty || 0,
+                montant: itemRow.totalHt || 0,
+              }
+            });
+          }
+        }
+        totalLinesInserted++;
+      }
+
+      successCount++;
+    }
+
+    res.send({
+      message: 'bc uploaded with validation report.',
+      totalRows: bc.length,
+      insertedbc: successCount,
+      insertedLines: totalLinesInserted,
+      validationIssues,
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error during Excel import.');
+  } finally {
+    fs.unlink(filePath, () => { });
+  }
+};
+

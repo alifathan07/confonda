@@ -70,6 +70,18 @@
               <label for="user">User</label>
               <input type="text" class="form-control" id="user" name="user" value="<%= user.name %>" readonly>
             </div>
+
+            <div class="form-group">
+              <label for="chantierId">Chantier</label>
+              <select class="form-control" id="chantierId" name="chantierId" required>
+                <option value="">Sélectionner un chantier</option>
+                <% if (typeof chantiers !== 'undefined' && chantiers.length > 0) { %>
+                  <% chantiers.forEach(c => { %>
+                    <option value="<%= c.id %>"><%= c.nom %></option>
+                  <% }) %>
+                <% } %>
+              </select>
+            </div>
         
         </div>
 
@@ -225,6 +237,7 @@
       const formData = {
         date: $('#date').val(),
         numero: $('#numero').val(),
+        chantierId: $('#chantierId').val(),
         items: items
       };
       

@@ -21,8 +21,7 @@ model User {
 
   JustifCaisse JustifCaisse[]
 
-  chantier          Chantier            @relation(fields: [chantierId], references: [id])
-  chantierId        Int // foreign key
+  
   demandeCaisse     DemandeCaisse[]
   demandeFourniture DemandeFourniture[]
   role              String              @default("grandadmin") // user, admin, grandadmin
@@ -143,6 +142,8 @@ model JustifCaisse {
 
   recettes RecetteCaisse[]
   depenses DepenseCaisse[]
+  
+  @@index([userId, annee(sort: Desc), mois(sort: Desc)])
 }
 
 model RecetteCaisse {
@@ -567,7 +568,7 @@ model Chantier {
   client   Client? @relation("ClientChantier", fields: [clientId], references: [id])
 
   // Relations
-  users         User[]
+ 
   demandeCaisse DemandeCaisse[]
   bondeCommande BondeCommande[]
 
@@ -620,6 +621,7 @@ model BondeCommande {
   lieuLivraison String? 
   modeReg String?
   delaiReg String?
+  numero String?
   montantLettre         String?
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt

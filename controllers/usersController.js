@@ -5,24 +5,23 @@ import bcrypt from "bcryptjs";
 export const listUsers = async (req, res) => {
   try {
     const currentUser = req.session.user;
-    const users = await prisma.user.findMany({
-        include: { chantier: true },
-    });
-    const chantiers = await prisma.chantier.findMany();
+    const users = await prisma.user.findMany();
     
     // Format data to match frontend expectations
+    
    
-    res.render("dashboard/users/index", { users: users, chantiers: chantiers, currentUser: currentUser });
+    res.render("dashboard/users/index", { users: users, currentUser: currentUser });
     console.log(currentUser);
     
   } catch (error) {
     console.error("Error listing users:", error);
     res.status(500).json({ error: "Failed to fetch users" });
   }
+  
 };
 export const addUser = async (req, res) => {
     try {
-        const { name, email, password, role, chantierId } = req.body;
+        const { name, email, password, role } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = await prisma.user.create({
             data: {
@@ -30,7 +29,6 @@ export const addUser = async (req, res) => {
                 email,
                 password: hashedPassword,
                 role : role,
-                chantierId  : parseInt(chantierId),
             },
         });
         res.redirect("/users");
@@ -42,7 +40,7 @@ export const addUser = async (req, res) => {
 
 export const editUser = async (req, res) => {
   try {
-    const { id, name, email, password, chantierId, role } = req.body;
+    const { id, name, email, password, role } = req.body;
 
     // Find the user
     const user = await prisma.user.findUnique({ where: { id: parseInt(id) } });
@@ -55,7 +53,6 @@ export const editUser = async (req, res) => {
       name,
       email,
       password : password ? await bcrypt.hash(password, 10) : user.password,
-      chantierId : parseInt(chantierId),
       role,
     };
 
@@ -90,3 +87,4 @@ export const deleteUser = async (req, res) => {
         res.status(500).json({ error: "Failed to delete user" });
     }
 }
+

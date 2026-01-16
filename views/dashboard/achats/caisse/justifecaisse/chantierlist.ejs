@@ -100,7 +100,7 @@
         <div class="container-fluid">
           <div class="card shadow mb-4">
             <div class="card-header py-3">
-              <h6 class="m-0 font-weight-bold text-primary">Liste des Chef De Chantier</h6>
+              <h6 class="m-0 font-weight-bold text-primary">Liste Des Chantiers</h6>
             </div>
             <div class="card-body">
                 <table class="excel-table">
@@ -108,33 +108,27 @@
                     <tr>
                       <th>#</th>
                       <th>Nom</th>
-                      <th>Email</th>
-                      <th>Chantier</th>
                       <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <% if (users.length === 0) { %>
-                      <tr><td colspan="5">Aucun utilisateur trouvé</td></tr>
+                    <% if (chantiers.length === 0) { %>
+                      <tr><td colspan="5">Aucun chantier trouvé</td></tr>
                     <% } else { %>
-                      <% users.forEach((user, index) => { %>
-                        <% if (user.role === "user") { %>
-                          <tr>
-                            <td><%= index + 1 %></td>
-                            <td>
-                              <a href="/achats/caisse/admin/<%= user.id %>" class="text-primary font-weight-bold">
-                                <%= user.name %>
-                              </a>  
-                            </td>
-                            <td><%= user.email %></td>
-                            <td>Temprory </td>
-                            <td>
-                              <a href="/achats/caisse/admin/<%= user.id %>"  class="btn btn-sm btn-primary custom-btn">
-                                <i class="fas fa-eye"></i> Voir
-                              </a>
-                            </td>
-                          </tr>
-                        <% } %>
+                      <% chantiers.forEach((chantier, index) => { %>
+                        <tr>
+                          <td><%= index + 1 %></td>
+                          <td>
+                            <a href="<%= '/achats/caisse/justif/' + chantier.id %>" class="text-primary font-weight-bold">
+                              <%= chantier.nom %>
+                            </a>
+                          </td>
+                          <td>
+                            <a href="<%='/achats/caisse/justif/'+chantier.id %>"  class="btn btn-sm btn-primary custom-btn">
+                              <i class="fas fa-eye"></i> Voir
+                            </a>
+                          </td>
+                        </tr>
                       <% }) %>
                     <% } %>
                   </tbody>

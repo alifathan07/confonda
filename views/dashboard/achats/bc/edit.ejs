@@ -630,7 +630,6 @@
       <div id="content-wrapper" class="d-flex flex-column">
         <div id="content">
           <%- include('../../../layouts/topbar') %>
-
             <div class="container-fluid px-3 px-md-4">
 
               <!-- Action Bar -->
@@ -639,7 +638,7 @@
                   class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
                   <h1 style="font-size: 1.2rem;">
                     <i class="fas fa-file-invoice-dollar"></i> Bon de Commande
-                    <span class="badge">#<%= bc.id %></span>
+                    <span class="badge">#<%= bc.numero || bc.id %></span>
                   </h1>
                   <div class="d-flex flex-wrap gap-1">
                     <button onclick="sendEmail()" class="btn btn-sm btn-modern btn-send d-flex align-items-center gap-1"
@@ -656,6 +655,7 @@
                     </button>
                   </div>
                 </div>
+              </div> <!-- Close action-bar div -->
               <!-- Document -->
               <div class="doc-card">
 
@@ -677,7 +677,7 @@
                     <div class="fournisseur-box">
                       <input type="date" name="date" value="<%= new Date(bc.date).toISOString().slice(0,10) %>" hidden>
                       <div class="meta-grid">
-                        <div class="meta-item"><strong>BC N° :</strong><%= bc.id %></div>
+                        <div class="meta-item"><strong>BC N° :</strong><%= bc.numero || bc.id %></div>
                         <br>
                         <div class="meta-item"><strong>Date :</strong> <%= new Date(bc.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) %></div>
                       </div>
@@ -717,58 +717,60 @@
                   </div>
                 </div>
 
-                <div class="col-12 mt-3">
-                  <div class="fournisseur-box">
-                    <h5 class="mb-3"><i class="fas fa-wallet"></i> Règlement</h5>
-                    <div class="bc-extra-grid">
-                      <div class="bc-extra-field" style="flex: 1 1 320px;">
-                        <div class="bc-extra-label">Mode de règlement</div>
-                        <select id="modeReglement" name="modeReg" class="form-control bc-extra-input">
-                          <option value="">-- Choisir --</option>
-                          <option value="virement" <%= bc.modeReg === 'virement' ? 'selected' : '' %>>Virement</option>
-                          <option value="cheque" <%= bc.modeReg === 'cheque' ? 'selected' : '' %>>Chèque</option>
-                          <option value="effets" <%= bc.modeReg === 'effets' ? 'selected' : '' %>>Effets</option>
-                        </select>
-                      </div>
+                <div class="row mt-3">
+                  <div class="col-12 col-lg-6 mb-3 mb-lg-0">
+                    <div class="fournisseur-box">
+                      <h5 class="mb-3"><i class="fas fa-wallet"></i> Règlement</h5>
+                      <div class="bc-extra-grid">
+                        <div class="bc-extra-field" style="flex: 1 1 320px;">
+                          <div class="bc-extra-label">Mode de règlement</div>
+                          <select id="modeReglement" name="modeReg" class="form-control bc-extra-input">
+                            <option value="">-- Choisir --</option>
+                            <option value="virement" <%= bc.modeReg === 'virement' ? 'selected' : '' %>>Virement</option>
+                            <option value="cheque" <%= bc.modeReg === 'cheque' ? 'selected' : '' %>>Chèque</option>
+                            <option value="effets" <%= bc.modeReg === 'effets' ? 'selected' : '' %>>Effets</option>
+                          </select>
+                        </div>
 
-                      <div class="bc-extra-field" style="flex: 1 1 320px;">
-                        <div class="bc-extra-label">Délais de règlement</div>
-                        <select id="delaisReglement" name="delaiReg" class="form-control bc-extra-input">
-                          <option value="">-- Choisir --</option>
-                          <option value="a_vue" <%= bc.delaiReg === 'a_vue' ? 'selected' : '' %>>À vue</option>
-                          <option value="30_jours" <%= bc.delaiReg === '30_jours' ? 'selected' : '' %>>30 jours</option>
-                          <option value="60_jours" <%= bc.delaiReg === '60_jours' ? 'selected' : '' %>>60 jours</option>
-                          <option value="90_jours" <%= bc.delaiReg === '90_jours' ? 'selected' : '' %>>90 jours</option>
-                          <option value="120_jours" <%= bc.delaiReg === '120_jours' ? 'selected' : '' %>>120 jours</option>
-                        </select>
+                        <div class="bc-extra-field" style="flex: 1 1 320px;">
+                          <div class="bc-extra-label">Délais de règlement</div>
+                          <select id="delaisReglement" name="delaiReg" class="form-control bc-extra-input">
+                            <option value="">-- Choisir --</option>
+                            <option value="a_vue" <%= bc.delaiReg === 'a_vue' ? 'selected' : '' %>>À vue</option>
+                            <option value="30_jours" <%= bc.delaiReg === '30_jours' ? 'selected' : '' %>>30 jours</option>
+                            <option value="60_jours" <%= bc.delaiReg === '60_jours' ? 'selected' : '' %>>60 jours</option>
+                            <option value="90_jours" <%= bc.delaiReg === '90_jours' ? 'selected' : '' %>>90 jours</option>
+                            <option value="120_jours" <%= bc.delaiReg === '120_jours' ? 'selected' : '' %>>120 jours</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div class="col-12 mt-3">
-                  <div class="fournisseur-box">
-                    <h5 class="mb-3"><i class="fas fa-hard-hat"></i> Chantiers</h5>
-                    <div class="bc-extra-grid">
-                      <div id="chantierCheckboxes" style="flex: 1 1 520px; min-width: 260px;">
-                        <!-- Multi-select + tags for chantiers -->
-                        <select id="chantierSelect" class="form-control" multiple size="6" style="min-height:120px;">
-                          <% chantiers.forEach(ch=> {
-                              const isUsed = bc.commandesItems.some(item => (item.BondeCommandeChantierItem || []).some(bcci => bcci.chantierId === ch.id));
-                            %>
-                            <option value="<%= ch.id %>" data-chantier-name="<%= ch.nom %>" <%= isUsed ? 'selected' : '' %>><%= ch.nom %></option>
-                          <% }) %>
-                        </select>
-                      </div>
+                  <div class="col-12 col-lg-6">
+                    <div class="fournisseur-box">
+                      <h5 class="mb-3"><i class="fas fa-hard-hat"></i> Chantiers</h5>
+                      <div class="bc-extra-grid">
+                        <div id="chantierCheckboxes" style="flex: 1 1 520px; min-width: 260px;">
+                          <!-- Multi-select + tags for chantiers -->
+                          <select id="chantierSelect" class="form-control" multiple size="6" style="min-height:120px;">
+                            <% chantiers.forEach(ch=> {
+                                const isUsed = bc.commandesItems.some(item => (item.BondeCommandeChantierItem || []).some(bcci => bcci.chantierId === ch.id));
+                              %>
+                              <option value="<%= ch.id %>" data-chantier-name="<%= ch.nom %>" <%= isUsed ? 'selected' : '' %>><%= ch.nom %></option>
+                            <% }) %>
+                          </select>
+                        </div>
 
-                      <div class="bc-extra-field">
-                        <div class="bc-extra-label">Date de livraison</div>
-                        <input id="dateLivraison" type="date" class="form-control bc-extra-input" value="<%= bc.dateLivraison ? new Date(bc.dateLivraison).toISOString().slice(0,10) : '' %>" />
-                      </div>
+                        <div class="bc-extra-field">
+                          <div class="bc-extra-label">Date de livraison</div>
+                          <input id="dateLivraison" type="date" class="form-control bc-extra-input" value="<%= bc.dateLivraison ? new Date(bc.dateLivraison).toISOString().slice(0,10) : '' %>" />
+                        </div>
 
-                      <div class="bc-extra-field">
-                        <div class="bc-extra-label">Lieu de livraison</div>
-                        <input id="lieuLivraison" type="text" class="form-control bc-extra-input" placeholder="Ex: Dépôt / Chantier / Adresse" value="<%= bc.lieuLivraison || '' %>" />
+                        <div class="bc-extra-field">
+                          <div class="bc-extra-label">Lieu de livraison</div>
+                          <input id="lieuLivraison" type="text" class="form-control bc-extra-input" placeholder="Ex: Dépôt / Chantier / Adresse" value="<%= bc.lieuLivraison || '' %>" />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -880,7 +882,7 @@
                 </div>
 
                 <!-- Bouton Ajouter ligne -->
-                <div class="table-section" style="padding-top: 0;" class="no-print">
+                <div class="table-section no-print" style="padding-top: 0;">
                   <div class="text-center no-print">
                     <button type="button" onclick="addBcRow()" class="btn btn-modern btn-add-line">
                       Ajouter une ligne

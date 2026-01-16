@@ -61,14 +61,18 @@
                   <% if (!user.name) { %>
                     <p class="error-text">Erreur : Nom de l'utilisateur non défini</p>
                   <% } %>
-                  <p style="margin: 0;"><strong>Chantier :</strong> <%= chantier.nom || 'Non défini' %></p>
-                  <% if (!chantier.nom) { %>
-                    <p class="error-text">Erreur : Chantier non défini</p>
-                  <% } %>
+                  <div class="form-group" style="margin: 0;">
+                    <select name="chantierId" id="chantier" class="form-control" style="width: 200px; display: inline-block; background-color: #17A673; color : white">
+                      <option value="">Sélectionner un chantier</option>
+                      <% chantiers.forEach(chantier => { %>
+                        <option value="<%= chantier.id %>"><%= chantier.nom %></option>
+                      <% }) %>
+                    </select>
+                  </div>
                   <input type="hidden" name="responsable" value="<%= user.name || '' %>" />
-                  <input type="hidden" name="chantier" value="<%= chantier.nom || '' %>" />
                   <input type="hidden" name="userId" value="<%= user.id || '' %>" />
                   <input type="hidden" name="justifId" value="<%= justifCaisse.id || '' %>" />
+                  <input type="hidden" name="chantierId" value="<%= justifCaisse.chantierId || '' %>">
                   <div class="form-group" style="margin: 0;">
                     <% if (justifCaisse && justifCaisse.id) { %>
                       <p><strong>SITUATION DE CAISSE :</strong> <%= justifCaisse.designation || '' %></p>
@@ -107,17 +111,19 @@
             <div class="card-header d-flex justify-content-between align-items-center">
               <h2 class="card-title">Caisse Reçue</h2>
               <div class="d-flex justify-content-end mb-3">
-                <% if (!justifCaisse.id) { %>
+             
                   <label for="soldePrecedent" class="me-2">Solde Précédent</label>
-                  <input type="number" id="soldePrecedent" name="soldePrecedent" class="form-control" step="0.01" min="0.01" value="0.00" />
+                  <input type="number" id="soldePrecedent" name="soldePrecedent" class="form-control" step="0.01" min="0" value="<%= justifCaisse && justifCaisse.soldePrecedent !== null && justifCaisse.soldePrecedent !== undefined ? justifCaisse.soldePrecedent.toFixed(2) : '0.00' %>" />
                 
-                 
-                <% } %>
+
               </div>
            
               <div>
                 <button class="btn btn-primary btn-sm" id="addRecetteBtn" onclick="addNewRecetteRow()">
                   <i class="fas fa-plus"></i> Ajouter Recette
+                </button>
+                <button class="btn btn-info btn-sm" id="saveSoldeBtn" onclick="saveSoldePrecedentOnly()">
+                  <i class="fas fa-save"></i> Enregistrer Solde
                 </button>
                 <button class="btn btn-success btn-sm" id="saveRecettesBtn" onclick="saveAllRecetteItems()">Enregistrer Recette</button>
               </div>
@@ -163,6 +169,7 @@
             </div>
           </div>
 
+          <!-- Depenses Table -->
           <div id="depenses" class="card shadow mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
               <h2 class="card-title">DÉPENSES</h2>
@@ -227,6 +234,7 @@
           </div>
           
           <script>
+         
           document.addEventListener('change', function (e) {
             if (e.target.classList.contains('validation-checkbox')) {
               const depenseId = e.target.dataset.id;
@@ -387,8 +395,6 @@
 
     <script>
 
-
-
       
         //   const response = await fetch(`/achats/caisse/justification/depenses/${id}`, {
         //     method: 'POST',
@@ -438,15 +444,61 @@
     <td><button class="btn btn-danger btn-sm" onclick="deleteRecetteItem(this)">Supprimer</button></td>
   `;
   tbody.appendChild(newRow);
-
-  // Ensure soldePrecedent is editable if no justifCaisse exists
-  const soldePrecedentInput = document.querySelector('#soldePrecedent');
-  const justifId = document.querySelector('input[name="justifId"]')?.value?.trim();
-  if (!justifId) {
-    soldePrecedentInput.removeAttribute('readonly');
-    soldePrecedentInput.classList.remove('readonly');
-  }
 }
+
+      function saveSoldePrecedentOnly() {
+        const userId = document.querySelector('input[name="userId"]')?.value?.trim();
+        const justifId = document.querySelector('input[name="justifId"]')?.value?.trim() || null;
+        const designation = document.querySelector('#mois')?.value?.trim();
+
+        const chantierId = document.querySelector('input[name="chantierId"]')?.value?.trim() || null;
+
+        const soldePrecedentInput = document.querySelector('#soldePrecedent')?.value?.trim();
+        const soldePrecedent = soldePrecedentInput !== '' ? parseFloat(soldePrecedentInput) : null;
+
+        const errors = [];
+        if (!userId) errors.push('userId manquant');
+        if (!chantierId) errors.push('chantier manquant');
+        if (!designation) errors.push('mois manquant');
+        if (soldePrecedent === null || Number.isNaN(soldePrecedent) || soldePrecedent < 0) errors.push('soldePrecedent invalide');
+
+        if (errors.length) {
+          alert(`Erreurs:\n${errors.join('\n')}`);
+          return;
+        }
+
+        const id = window.location.pathname.split('/').pop();
+
+        fetch(`/achats/caisse/admin/${userId}/${id}/solde-precedent`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, chantierId, designation, justifId, soldePrecedent }),
+        })
+          .then(async (res) => {
+            if (!res.ok) {
+              const data = await res.json().catch(() => ({}));
+              throw new Error(data.error || `Erreur HTTP ${res.status}`);
+            }
+            return res.json();
+          })
+          .then((data) => {
+            if (data.success) {
+              alert('Solde précédent enregistré avec succès.');
+              if (data.justifId && (!justifId || justifId !== String(data.justifId))) {
+                window.location.href = `/achats/caisse/admin/${userId}/${data.justifId}`;
+              } else {
+                window.location.reload();
+              }
+            } else {
+              alert(`Erreur: ${data.error || 'Erreur inconnue.'}`);
+            }
+          })
+          .catch((err) => {
+            console.error('Fetch error:', err);
+            alert(`Erreur: ${err.message}`);
+          });
+      }
+
       // Save all recette items
    
       function saveAllRecetteItems() {
@@ -455,6 +507,7 @@
   let valid = true;
   let errorMessages = [];
 
+  // Collect recettes
   rows.forEach((row, index) => {
     const dateInput = row.querySelector('input[name="dateRecette"]')?.value;
     const sourceInput = row.querySelector('input[name="source"]')?.value?.trim();
@@ -489,24 +542,24 @@
 
   const responsable = document.querySelector('input[name="responsable"]')?.value?.trim();
   const userId = document.querySelector('input[name="userId"]')?.value?.trim();
-  const chantier = document.querySelector('input[name="chantier"]')?.value?.trim();
+  const chantierId = document.querySelector('input[name="chantierId"]')?.value?.trim();
   const designation = document.querySelector('#mois')?.value?.trim();
   const justifId = document.querySelector('input[name="justifId"]')?.value?.trim() || null;
   const soldePrecedentInput = document.querySelector('#soldePrecedent')?.value?.trim();
   const soldePrecedent = soldePrecedentInput ? parseFloat(soldePrecedentInput) : null;
 
-  if (!responsable || !userId || !chantier || !designation) {
+  if (!responsable || !userId || !chantierId || !designation) {
     const missingFields = [];
     if (!responsable) missingFields.push('responsable');
     if (!userId) missingFields.push('userId');
-    if (!chantier) missingFields.push('chantier');
+    if (!chantierId) missingFields.push('chantierId');
     if (!designation) missingFields.push('mois');
     errorMessages.push(`Champs manquants: ${missingFields.join(', ')}`);
     valid = false;
   }
 
-  if (!justifId && (soldePrecedent === null || isNaN(soldePrecedent) || soldePrecedent < 0)) {
-    errorMessages.push('Solde Précédent manquant ou invalide pour la première justification');
+  if (soldePrecedent === null || isNaN(soldePrecedent) || soldePrecedent < 0) {
+    errorMessages.push('Solde Précédent manquant ou invalide');
     valid = false;
   }
 
@@ -521,10 +574,8 @@
   }
 
   const id = window.location.pathname.split('/').pop();
-  const payload = { userId, responsable, chantier, designation, justifId, items };
-  if (!justifId) {
-    payload.soldePrecedent = soldePrecedent;
-  }
+  const payload = { userId, responsable, chantierId, designation, justifId, items };
+  payload.soldePrecedent = soldePrecedent;
 
   fetch(`/achats/caisse/admin/${userId}/${id}/recettes`, {
     method: 'POST',
@@ -689,9 +740,15 @@
 
         const responsable = document.querySelector('input[name="responsable"]')?.value?.trim();
         const userId = document.querySelector('input[name="userId"]')?.value?.trim();
-        const chantier = document.querySelector('input[name="chantier"]')?.value?.trim();
+        const chantierSelect = document.querySelector('#chantier');
+        const chantier = chantierSelect && chantierSelect.selectedIndex >= 0
+          ? chantierSelect.options[chantierSelect.selectedIndex].text.trim()
+          : '';
         const designation = document.querySelector('#mois')?.value?.trim();
         const justifId = document.querySelector('input[name="justifId"]')?.value?.trim() || null;
+
+        const soldePrecedentInput = document.querySelector('#soldePrecedent')?.value?.trim();
+        const soldePrecedent = soldePrecedentInput ? parseFloat(soldePrecedentInput) : null;
 
         if (!responsable || !userId || !chantier || !designation) {
           const missingFields = [];
@@ -717,7 +774,7 @@
         fetch(`/achats/caisse/admin/${userId}/${id}/save-all`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, responsable, chantier, designation, recettes: recetteItems, depenses: depenseItems }),
+          body: JSON.stringify({ userId, responsable, chantier, designation, recettes: recetteItems, depenses: depenseItems, justifId, soldePrecedent }),
         })
           .then(res => {
             if (!res.ok) {

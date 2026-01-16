@@ -106,6 +106,7 @@
               <div class="d-flex justify-content-end mb-3">
                 <button id="downloadPdfBtn" class="btn btn-primary custom-btn mr-2" hidden>
                 </button>
+                <input type="hidden" id="chantierInput" value="<%= chantier %>">
                 <button id="downloadExcelBtn" class="btn btn-success custom-btn mr-2" hidden>
                  </button>
                  
@@ -114,9 +115,9 @@
                       <i class="fas fa-exclamation-triangle"></i> Ajouter 
                     </a> -->
                   <% } else { %>
-                    <a class="btn btn-primary custom-btn" onclick="addJustife()">
+                    <!-- <a class="btn btn-primary custom-btn" onclick="addJustife(<%= chantier %>)">
                       <i class="fas fa-save"></i> Mois Suivant
-                    </a>
+                    </a> -->
                     <input type="text" name="designation" id="latestDesignation" value="<%= lastDesignation?.designation || `Mois ${new Date().getMonth() + 1} ${new Date().getFullYear()}` %>" hidden>
                   <% } %>
 
@@ -321,27 +322,25 @@
           }
         }
 
-        async function addJustife() {
+    async function addJustife(chantierId) {
+
+  if (!chantierId) {
+    alert('Veuillez sélectionner un chantier.');
+    return;
+  }
+
   try {
     const response = await fetch('/achats/add/justifeAuto', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}), // nothing needed
+      body: JSON.stringify({ chantierId }) // chantierId is a string, backend will parseInt
     });
-
-    const result = await response.json();
-    if (response.ok && result.success) {
-      alert('Justificatif de caisse ajouté avec succès.');
-      location.reload();
-    } else {
-      alert(`Erreur: ${result.error || 'Erreur inconnue'}`);
-    }
+    // ...
   } catch (error) {
     console.error('Error adding justifCaisse:', error);
     alert('Erreur réseau lors de l\'ajout du justificatif de caisse.');
   }
 }
-
         // Drag and drop columns
         function swapColumns(table, fromIdx, toIdx) {
           const headerRow = table.tHead.rows[0];
