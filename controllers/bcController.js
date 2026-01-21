@@ -18,8 +18,8 @@ const mailTransporter = nodemailer.createTransport({
   port: 587,
   secure: false,
   auth: {
-    user: "abfathan@gmail.com",
-    pass: "ftaq bvph apmq qofe",
+    user: "confonda@gmail.com",
+    pass: "kxdl rgui vvxw eyfw",
   },
 });
 
@@ -705,6 +705,71 @@ export const generateBcPDF = async (req, res) => {
 
 // Replace your current sendBcEmail with this one
 export const sendBcEmail = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const bcId = parseInt(id, 10);
+
+    if (!bcId || Number.isNaN(bcId)) {
+      return res.status(400).json({ success: false, error: "ID invalide" });
+    }
+
+    const bc = await prisma.bondeCommande.findUnique({
+      where: { id: bcId },
+      include: { fournisseur: true },
+    });
+
+    if (!bc) {
+      return res.status(404).json({ success: false, error: "Bon de commande non trouvé" });
+    }
+
+    const to = (req.body?.email || bc?.fournisseur?.email || "").toString().trim();
+    if (!to) {
+      return res.status(400).json({ success: false, error: "Email fournisseur manquant" });
+    }
+
+    // Fetch the exact same PDF as the download endpoint
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const pdfUrl = `${baseUrl}/achat/bc/${bcId}/pdf`;
+
+    const pdfResp = await axios.get(pdfUrl, {
+      responseType: 'arraybuffer',
+      headers: {
+        // Forward session cookies so the PDF endpoint behaves exactly like in the browser
+        cookie: req.headers.cookie || "",
+      },
+      // Avoid caching proxies returning old PDFs
+      params: { t: Date.now() },
+      validateStatus: () => true,
+    });
+
+    if (pdfResp.status < 200 || pdfResp.status >= 300) {
+      console.error('sendBcEmail: PDF fetch failed', { status: pdfResp.status, data: pdfResp.data?.toString?.() });
+      return res.status(500).json({ success: false, error: "Impossible de générer le PDF pour l'email" });
+    }
+
+    const pdfBuffer = Buffer.from(pdfResp.data);
+
+    const subject = `Bon de commande #${bc.numero || bc.id}`;
+    const mailOptions = {
+      from: "confonda@gmail.com",
+      to,
+      subject,
+      text: `Bonjour,\n\nVeuillez trouver en pièce jointe le bon de commande ${bc.numero || bc.id}.\n\nCordialement.`,
+      attachments: [
+        {
+          filename: `bonCommande_${bc.numero || bc.id}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf',
+        },
+      ],
+    };
+
+    await mailTransporter.sendMail(mailOptions);
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Error in sendBcEmail:', error);
+    return res.status(500).json({ success: false, error: error.message || "Erreur serveur" });
+  }
 };
 
 
