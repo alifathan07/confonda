@@ -151,8 +151,8 @@
                             <td>
                               <div class="btn-group" role="group">
                                 <a href="/achats/fourniture/<%= d.id %>" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> Voir</a>
-                                <a href="/achats/fourniture/<%= d.id %>/pdf" class="btn btn-danger btn-sm"><i class="fas fa-file-pdf"></i> PDF</a>
-                                <a href="/achats/fourniture/<%= d.id %>/excel" class="btn btn-success btn-sm"><i class="fas fa-file-excel"></i> Excel</a>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="deleteDemande(<%= d.id %>)"><i class="fas fa-trash"></i> Supprimer</button>
+                                
                               </div>
                             </td>
                           </tr>
@@ -168,6 +168,26 @@
                     </tr>
                   </tfoot>
                 </table>
+              </div>
+
+              <div class="modal fade" id="deleteConfirmModal" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="deleteConfirmModalLabel">Confirmer la suppression</h5>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                      Voulez-vous vraiment supprimer cette demande ?
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                      <button type="button" class="btn btn-danger" id="btnConfirmDelete">Supprimer</button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -384,6 +404,41 @@
 
         // ---------- INIT ----------
         document.addEventListener('DOMContentLoaded',()=>{ updateTotal(); });
+
+
+        let __deleteDemandeId = null;
+
+        const deleteDemande = async (id) => {
+          __deleteDemandeId = id;
+          $('#deleteConfirmModal').modal('show');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+          const btn = document.getElementById('btnConfirmDelete');
+          if (!btn) return;
+          btn.addEventListener('click', async () => {
+            if (!__deleteDemandeId) return;
+            btn.disabled = true;
+            try {
+              const response = await fetch(`/achats/fourniture/${__deleteDemandeId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+              });
+              if (response.ok) {
+                $('#deleteConfirmModal').modal('hide');
+                window.location.reload();
+              } else {
+                const j = await response.json().catch(() => null);
+                alert((j && (j.error || j.message)) || 'Erreur lors de la suppression.');
+              }
+            } catch (e) {
+              alert('Erreur réseau lors de la suppression.');
+            } finally {
+              btn.disabled = false;
+              __deleteDemandeId = null;
+            }
+          });
+        });
       </script>
 
       <!-- VENDOR SCRIPTS -->

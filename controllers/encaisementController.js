@@ -9,6 +9,7 @@ export const  indexEncaissement = async (req, res) => {
                 banque: true,
                 client : true,               
             },
+            
             orderBy: { dateEtablissement: 'desc' },
         });
         const banques = await prisma.banque.findMany();

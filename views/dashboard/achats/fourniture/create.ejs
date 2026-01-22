@@ -152,9 +152,40 @@
   <script>
     $(document).ready(function() {
       const tableBody = $("#productsTable tbody");
-  
+
+      let lastChantierAlertAt = 0;
+      const showChantierModal = () => {
+        if (typeof $ === 'function' && $('#chantierRequiredModal').length && typeof $('#chantierRequiredModal').modal === 'function') {
+          $('#chantierRequiredModal').modal('show');
+        } else {
+          alert('Veuillez sélectionner un chantier avant de continuer.');
+        }
+      };
+      const ensureChantierSelected = () => {
+        const chantierId = $('#chantierId').val();
+        if (chantierId) return true;
+
+        const now = Date.now();
+        if (now - lastChantierAlertAt > 800) {
+          lastChantierAlertAt = now;
+          showChantierModal();
+        }
+        $('#chantierId').focus();
+        return false;
+      };
+
+      $(document).on('focus mousedown keydown click', '#productsTable input, .addRow, .deleteRow', function(e) {
+        if (!ensureChantierSelected()) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          try { $(this).blur(); } catch (err) {}
+          return false;
+        }
+      });
+
       // Add Row
       $(document).on("click", ".addRow", function() {
+        if (!ensureChantierSelected()) return;
         const rowCount = $("#productsTable tbody tr").length;
         const row = `
           <tr>
@@ -180,14 +211,26 @@
           </tr>`;
         tableBody.append(row);
       });
-  
+
       // Delete Row
       $(document).on("click", ".deleteRow", function() {
+        if (!ensureChantierSelected()) return;
         $(this).closest("tr").remove();
       });
     });
     const saveDemande = (e) => {
       if (e) e.preventDefault(); // Prevent default form submission if event is passed
+
+      const chantierId = $('#chantierId').val();
+      if (!chantierId) {
+        if (typeof $ === 'function' && $('#chantierRequiredModal').length && typeof $('#chantierRequiredModal').modal === 'function') {
+          $('#chantierRequiredModal').modal('show');
+        } else {
+          alert('Veuillez sélectionner un chantier avant de continuer.');
+        }
+        $('#chantierId').focus();
+        return;
+      }
       
       // Convert parallel arrays to items array format
       const items = [];
@@ -237,7 +280,7 @@
       const formData = {
         date: $('#date').val(),
         numero: $('#numero').val(),
-        chantierId: $('#chantierId').val(),
+        chantierId: chantierId,
         items: items
       };
       
@@ -325,6 +368,39 @@
             Cancel
           </button>
           <a class="btn btn-primary" href="/login">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="modal fade"
+    id="chantierRequiredModal"
+    tabindex="-1"
+    role="dialog"
+    aria-labelledby="chantierRequiredModalLabel"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="chantierRequiredModalLabel">Chantier requis</h5>
+          <button
+            class="close"
+            type="button"
+            data-dismiss="modal"
+            aria-label="Close"
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          Veuillez sélectionner un chantier avant de continuer.
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" type="button" data-dismiss="modal">
+            OK
+          </button>
         </div>
       </div>
     </div>

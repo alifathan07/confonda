@@ -323,7 +323,8 @@ export const generateBcPDF = async (req, res) => {
     const signaturePath = path.join(__dirname, "../public/img/signature.png");
 
     const headerHeight = 150;
-    const footerHeight = 184;
+    const companyFooterHeight = 100;
+    const footerHeight = 184 + 12 + companyFooterHeight;
     const rowHeight = 22;
     const colWidths = [28, 55, 160, 45, 50, 60, 45, 72];
 
@@ -488,6 +489,25 @@ export const generateBcPDF = async (req, res) => {
 
       doc.moveTo(sig2X + 10, sigStartY + sigH - 18).lineTo(sig2X + sigW - 10, sigStartY + sigH - 18)
         .lineWidth(1).stroke(colors.borderSoft);
+
+      const footerY = pageHeight - companyFooterHeight;
+
+      doc.rect(0, footerY, pageWidth, companyFooterHeight).fill('#AB3029').stroke();
+
+      const textMargin = 15;
+      doc.font('Helvetica').fontSize(9).fillColor('#FFFFFF');
+      doc.text(
+        '82, angle Bd abdelmoumen et rue Soumaya Imm.Shahrazad III 2ème étage Casablanca Tél : 0522-23-39-70',
+        50,
+        footerY + textMargin,
+        { width: pageWidth - 100, align: 'center' }
+      );
+      doc.text(
+        'Fax : 0522-23-42-60  Capital : 18 500 000.00 DH  CNSS : 7167788 - R.C. : 145619 – I.F. : 1602714 – Patente : 37900708- I.C.E : 001526422000063',
+        50,
+        footerY + textMargin + 15,
+        { width: pageWidth - 100, align: 'center' }
+      );
     };
 
     const drawTableHeader = (y) => {
@@ -688,6 +708,7 @@ export const generateBcPDF = async (req, res) => {
     drawTotals(totalsY);
     drawMontantLettres(montantY);
     drawFooter(footerY);
+    
 
     doc.end();
 
@@ -751,7 +772,7 @@ export const sendBcEmail = async (req, res) => {
 
     const subject = `Bon de commande #${bc.numero || bc.id}`;
     const mailOptions = {
-      from: "confonda@gmail.com",
+      from: "CONFONDA",
       to,
       subject,
       text: `Bonjour,\n\nVeuillez trouver en pièce jointe le bon de commande ${bc.numero || bc.id}.\n\nCordialement.`,

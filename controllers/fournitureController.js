@@ -50,3 +50,15 @@ export const postFourniture = async (req, res) => {
     }
   };
   
+export const deleteFourniture = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.demandeFourniture.delete({
+      where: { id: parseInt(id) }
+    });
+    res.redirect("/achats/fourniture");
+  } catch (error) {
+    console.error("❌ Erreur suppression fourniture:", error);
+    res.status(500).send("Erreur lors de la suppression de la demande de fourniture");
+  }
+};
