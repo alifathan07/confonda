@@ -390,7 +390,6 @@ dashboardRouter.get("/achats/fourniture/:id", viewDemandeFourniture);
 dashboardRouter.get("/achats/fourniture/:id/edit", editDemandeFourniture);
 dashboardRouter.put("/achats/fourniture/:id", uploadFour.any(), updateDemandeFourniture);
 dashboardRouter.delete("/achats/fourniture/:id", deleteDemandeFourniture);
-
 dashboardRouter.patch('/achat/fourniture/:id/validate', updateValidationFourniture);
 dashboardRouter.patch('/achat/fourniture/validate-all/:id', validateAllFourniture);
 

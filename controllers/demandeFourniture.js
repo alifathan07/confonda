@@ -904,3 +904,6 @@ export const generateDemandeFourniturePDF = async (req, res) => {
 
 
 
+
+
+
