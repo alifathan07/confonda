@@ -5,3 +5,6 @@ node_modules
 /generated/prisma
 
 nodemon.json
+
+
+algo.txt

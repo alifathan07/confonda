@@ -694,14 +694,14 @@ export const generateDemandeFourniturePDF = async (req, res) => {
     const col = {
       code: 70,
       des: 220,
-      unit: 55,
-      qd: 55,
-      qs: 55,
+      unit: 45,
+      qd: 52,
+      qs: 50,
       d1: 65,
       d2: 65,
-      qp: 55,
-      qr: 55,
-      lot: 50,
+      qp: 40,
+      qr: 40,
+      lot: 60,
     };
     col.obs = contentW - Object.values(col).reduce((a, b) => a + b, 0);
 
