@@ -82,24 +82,23 @@
                       <% demandeFourniture.items.forEach((item, idx) => { %>
                         <tr data-index="<%= idx %>" data-item-id="<%= item.id %>">
                           <!-- Inputs WITHOUT name -->
-                          <td><input type="text"   class="form-control" value="<%= item.code ?? '' %>"></td>
-                          <td><input type="text"   class="form-control" value="<%= item.designation ?? '' %>"></td>
-                          <td><input type="text"   class="form-control" value="<%= item.unité ?? '' %>"></td>
-                          <td><input type="number" class="form-control" value="<%= item.quantité ?? '' %>" min="1"></td>
-                          <td><input type="text"   class="form-control" value="<%= item.imputation ?? '' %>"></td>
-                          <td><input type="date"   class="form-control"
-                                    value="<%= item.auPlutot ? new Date(item.auPlutot).toISOString().split('T')[0] : '' %>"></td>
-                          <td><input type="date"   class="form-control"
-                                    value="<%= item.auPlutart ? new Date(item.auPlutart).toISOString().split('T')[0] : '' %>"></td>
-                          <td><input type="text"   class="form-control" value="<%= item.lot ?? '' %>"></td>
-                          <td><input type="text"   class="form-control" value="<%= item.observation ?? '' %>"></td>
+                           
+                          <td class="cell-code"><input type="text" class="form-control code" value="<%= item.code ?? '' %>"></td>
+                          <td class="cell-designation"><input type="text" class="form-control designation" value="<%= item.designation ?? '' %>"></td>
+                          <td class="cell-unite"><input type="text" class="form-control unite" value="<%= item.unité ?? '' %>"></td>
+                          <td class="cell-quantite"><input type="number" class="form-control quantite" value="<%= item.quantité ?? '' %>" min="1"></td>
+                          <td><input type="text" class="form-control imputation" value="<%= item.imputation ?? '' %>"></td>
+                          <td><input type="date" class="form-control auPlutot" value="<%= item.auPlutot ? new Date(item.auPlutot).toISOString().split('T')[0] : '' %>"></td>
+                          <td><input type="date" class="form-control auPlutart" value="<%= item.auPlutart ? new Date(item.auPlutart).toISOString().split('T')[0] : '' %>"></td>
+                          <td class="cell-lot"><input type="text" class="form-control lot" value="<%= item.lot ?? '' %>"></td>
+                          <td class="cell-observation"><input type="text" class="form-control observation" value="<%= item.observation ?? '' %>"></td>
 
                           <!-- Hidden fields -->
                           <input type="hidden" class="itemId" value="<%= item.id %>">
                           <input type="hidden" class="tempImage" value="<%= item.image || '' %>">
 
                           <!-- Validation -->
-                          <td>
+                          <td class="validation-cell">
                             <% if (item.validation === true && item.validepar) { %>
                               <span class="badge badge-success">Validée</span>
                             <% } else if (item.validation === false && item.validepar) { %>
@@ -170,20 +169,20 @@
                       </div>
                       <% demandeFourniture.items.forEach((item, idx) => { %>
                         <tr data-item-id="<%= item.id %>">
-                          <td><input type="hidden" value="<%= item.id %>">
+                          <td class="cell-code"><input type="hidden" value="<%= item.id %>">
                               <input type="text" class="form-control" value="<%= item.code ?? '' %>"></td>
-                          <td><input type="text" class="form-control" value="<%= item.designation ?? '' %>"></td>
-                          <td><input type="text" class="form-control" value="<%= item.unité ?? '' %>"></td>
-                          <td><input type="number" class="form-control" value="<%= item.quantité ?? '' %>" min="1"></td>
+                          <td class="cell-designation"><input type="text" class="form-control" value="<%= item.designation ?? '' %>"></td>
+                          <td class="cell-unite"><input type="text" class="form-control" value="<%= item.unité ?? '' %>"></td>
+                          <td class="cell-quantite"><input type="number" class="form-control" value="<%= item.quantité ?? '' %>" min="1"></td>
                           <td><input type="text" class="form-control" value="<%= item.imputation ?? '' %>"></td>
                           <td><input type="date" class="form-control"
                                     value="<%= item.auPlutot ? new Date(item.auPlutot).toISOString().split('T')[0] : '' %>"></td>
                           <td><input type="date" class="form-control"
                                     value="<%= item.auPlutart ? new Date(item.auPlutart).toISOString().split('T')[0] : '' %>"></td>
-                          <td><input type="text" class="form-control" value="<%= item.lot ?? '' %>"></td>
-                          <td><input type="text" class="form-control" value="<%= item.observation ?? '' %>"></td>
+                          <td class="cell-lot"><input type="text" class="form-control" value="<%= item.lot ?? '' %>"></td>
+                          <td class="cell-observation"><input type="text" class="form-control" value="<%= item.observation ?? '' %>"></td>
 
-                       <td class="text-center align-middle">
+                       <td class="validation-cell text-center align-middle">
   <div class="d-flex flex-column align-items-center gap-1">
     <!-- Badge -->
     <% if (item.validation === true && item.validepar) { %>
@@ -280,16 +279,16 @@
     <tbody>
       <% demandeFourniture.items.forEach((item) => { %>
         <tr data-item-id="<%= item.id %>">
-          <td><%= item.code ?? '' %></td>
-          <td><%= item.designation ?? '' %></td>
-          <td><%= item.unité ?? '' %></td>
-          <td><%= item.quantité ?? '' %></td>
+          <td class="cell-code"><%= item.code ?? '' %></td>
+          <td class="cell-designation"><%= item.designation ?? '' %></td>
+          <td class="cell-unite"><%= item.unité ?? '' %></td>
+          <td class="cell-quantite"><%= item.quantité ?? '' %></td>
           <td><%= item.imputation ?? '' %></td>
           <td><%= item.auPlutot ? new Date(item.auPlutot).toLocaleDateString('fr-FR') : '' %></td>
           <td><%= item.auPlutart ? new Date(item.auPlutart).toLocaleDateString('fr-FR') : '' %></td>
-          <td><%= item.lot ?? '' %></td>
-          <td><%= item.observation ?? '' %></td>
-          <td>
+          <td class="cell-lot"><%= item.lot ?? '' %></td>
+          <td class="cell-observation"><%= item.observation ?? '' %></td>
+          <td class="validation-cell">
             <% if (item.validation === true) { %>
               <span class="badge badge-success">Validée</span>
             <% } else if (item.validation === false) { %>
@@ -298,7 +297,7 @@
               <span class="badge badge-secondary">En attente</span>
             <% } %>
           </td>
-          <td><%= item.validepar || '-' %></td>
+          <td class="validerPar-cell"><%= item.validepar || '-' %></td>
           <td class="text-center">
             <% if (item.image) { %>
               <img src="<%= item.image %>" style="max-height:90px; cursor:pointer; object-fit:cover; border-radius:8px;" 
@@ -418,9 +417,9 @@
       const itemId = $tr.data('item-id');
       if (!itemId) return;
 
-      const designation = $tr.find('td').eq(1).text().trim();
-      const quantite = $tr.find('td').eq(3).text().trim();
-      const unite = $tr.find('td').eq(2).text().trim();
+      const designation = $tr.find('.cell-designation').text().trim();
+      const quantite = $tr.find('.cell-quantite').text().trim();
+      const unite = $tr.find('.cell-unite').text().trim();
 
       if (!designation) return;
 
@@ -541,7 +540,7 @@
     <footer class="sticky-footer bg-white">
       <div class="container my-auto">
         <div class="copyright text-center my-auto">
-          <span>Copyright © Your Website 2025</span>
+          <span>Copyright &copy; Your Website 2025</span>
         </div>
       </div>
     </footer>
@@ -566,16 +565,16 @@ $(function () {
   $('#btnAddRow').on('click', function () {
     const html = `
       <tr data-index="${rowIndex}" data-new="true">
-        <td><input type="text" class="form-control"></td>
-        <td><input type="text" class="form-control"></td>
-        <td><input type="text" class="form-control"></td>
-        <td><input type="number" class="form-control" min="1"></td>
-        <td><input type="text" class="form-control"></td>
-        <td><input type="date" class="form-control"></td>
-        <td><input type="date" class="form-control"></td>
-        <td><input type="text" class="form-control"></td>
-        <td><input type="text" class="form-control"></td>
-        <td><span class="badge badge-secondary">En attente</span></td>
+        <td class="cell-code"><input type="text" class="form-control"></td>
+        <td class="cell-designation"><input type="text" class="form-control"></td>
+        <td class="cell-unite"><input type="text" class="form-control"></td>
+        <td class="cell-quantite"><input type="number" class="form-control" min="1"></td>
+        <td><input type="text" class="form-control imputation"></td>
+        <td><input type="date" class="form-control auPlutot"></td>
+        <td><input type="date" class="form-control auPlutart"></td>
+        <td class="cell-lot"><input type="text" class="form-control lot"></td>
+        <td class="cell-observation"><input type="text" class="form-control observation"></td>
+        <td class="validation-cell"><span class="badge badge-secondary">En attente</span></td>
         <td class="validerPar-cell">-</td>
         <td class="text-center">
            <div class="d-flex justify-content-center mt-2">
@@ -683,17 +682,20 @@ $(function () {
     $tbody.find('tr').each(function () {
       const $tr = $(this);
       const item = {
-        id: $tr.find('.itemId').val() || null,
-        code: $tr.find('input[type="text"]').eq(0).val(),
-        designation: $tr.find('input[type="text"]').eq(1).val(),
-        unite: $tr.find('input[type="text"]').eq(2).val(),
-        quantite: $tr.find('input[type="number"]').val(),
-        auPlutot: $tr.find('input[type="date"]').eq(0).val(),
-        auPlutart: $tr.find('input[type="date"]').eq(1).val(),
-        lot: $tr.find('input[type="text"]').eq(3).val(),
-        observation: $tr.find('input[type="text"]').eq(4).val(),
-        tempImage: $tr.find('.tempImage').val() || null,
-      };
+      id: $tr.find('.itemId').val() || null,
+      code: $tr.find('.cell-code').find('input').val(),
+      designation: $tr.find('.cell-designation').find('input').val(),
+      unite: $tr.find('.cell-unite').find('input').val(),
+      quantite: $tr.find('.cell-quantite').find('input').val(),
+      imputation: $tr.find('.imputation').val(),
+      auPlutot: $tr.find('.auPlutot').val(),
+      auPlutart: $tr.find('.auPlutart').val(),
+      lot: $tr.find('.cell-lot').find('input').val(),
+      observation: $tr.find('.cell-observation').find('input').val(),
+      tempImage: $tr.find('.tempImage').first().val() || null,
+};
+
+
       items.push(item);
     });
 
@@ -757,7 +759,7 @@ $(function () {
     window.location.reload();
 
     const $row        = $cb.closest('tr');
-    const $badgeCell  = $row.find('td').eq(8);          // Validation column
+    const $badgeCell  = $row.find('.validation-cell');          // Validation column
     const $validerPar = $row.find('.validerPar-cell');
 
     $badgeCell.html(isChecked

@@ -148,7 +148,6 @@ export const storeDemandeFourniture = async (req, res) => {
   }
 };
 
-import { parse } from 'date-fns';
 
 export const updateDemandeFourniture = async (req, res) => {
   const { id } = req.params;
@@ -232,6 +231,7 @@ export const updateDemandeFourniture = async (req, res) => {
               code: (it.code || "").trim() || null,
               designation: (it.designation || "").trim(),
               unité: (it.unite || "").trim() || null,
+              imputation: (it.imputation || "").trim() || null,
               quantité: it.quantité,
               auPlutot: it.auPlutot || null,
               auPlutart: it.auPlutart || null,
@@ -270,6 +270,7 @@ export const updateDemandeFourniture = async (req, res) => {
               code: (it.code || "").trim() || null,
               designation: (it.designation || "").trim(),
               unité: (it.unite || "").trim() || null,
+              imputation: (it.imputation || "").trim() || null,
               quantité: it.quantité,
               auPlutot: it.auPlutot || null,
               auPlutart: it.auPlutart || null,
@@ -776,46 +777,88 @@ export const generateDemandeFourniturePDF = async (req, res) => {
     /* ---------------- ROWS ---------------- */
 
     let y = tableY + h1 + h2;
-    const rowH = 22;
+    const baseRowH = 22;
 
     doc.fontSize(11);
 
-    // Calculate how many rows can fit and draw all row lines
-    const maxRows = Math.floor((tableBottom - y) / rowH);
+    // Calculate dynamic row heights based on content
+    const calculateRowHeight = (item) => {
+      let maxHeight = baseRowH;
+      
+      // Check designation text height
+      if (item.designation) {
+        const desLines = doc.widthOfString(item.designation, { width: col.des }) / col.des;
+        const desHeight = Math.ceil(desLines) * 12 + 10; // 12pt font height + padding
+        maxHeight = Math.max(maxHeight, desHeight);
+      }
+      
+      // Check observation text height
+      if (item.observation) {
+        const obsLines = doc.widthOfString(item.observation, { width: col.obs }) / col.obs;
+        const obsHeight = Math.ceil(obsLines) * 12 + 10;
+        maxHeight = Math.max(maxHeight, obsHeight);
+      }
+      
+      return Math.min(maxHeight, 60); // Cap at 60 to prevent overly tall rows
+    };
+
+    // Calculate total height needed and draw grid
+    let currentY = y;
+    const rowHeights = [];
     
-    // Draw all horizontal row lines to create complete grid (except the very bottom)
-    for (let i = 0; i < maxRows; i++) {
-      const currentY = y + (i * rowH);
-      doc.moveTo(margin, currentY).lineTo(margin + contentW, currentY).lineWidth(thin).stroke();
+    // First, calculate heights for all items
+    for (const item of demande.items || []) {
+      const height = calculateRowHeight(item);
+      rowHeights.push(height);
+      currentY += height;
+      
+      // Stop if we reach table bottom
+      if (currentY >= tableBottom) break;
+    }
+    
+    // Fill remaining space with default height rows to maintain grid
+    while (currentY < tableBottom) {
+      rowHeights.push(baseRowH);
+      currentY += baseRowH;
     }
 
-    // Draw the final bottom border to close the table
-    // Force close table bottom border
-doc.moveTo(margin, tableBottom)
-   .lineTo(margin + contentW, tableBottom)
-   .lineWidth(thin)
-   .stroke();
+    // Draw horizontal lines for all rows (data + empty)
+    currentY = y;
+    for (const height of rowHeights) {
+      doc.moveTo(margin, currentY).lineTo(margin + contentW, currentY).lineWidth(thin).stroke();
+      currentY += height;
+    }
 
-    // Fill data for existing items
+    // Force close table bottom border
+    doc.moveTo(margin, tableBottom)
+       .lineTo(margin + contentW, tableBottom)
+       .lineWidth(thin)
+       .stroke();
+
+    // Fill data for existing items with dynamic positioning
     let rowIndex = 0;
+    currentY = y;
+    
     for (const item of demande.items || []) {
-      if (rowIndex >= maxRows) break;
+      if (rowIndex >= rowHeights.length) break;
       
-      const currentY = y + (rowIndex * rowH);
+      const rowHeight = rowHeights[rowIndex];
+      const textY = currentY + (rowHeight - 12) / 2; // Center text vertically
 
       // Fill row data with proper field mapping
-      doc.text(item.code || "", x.code + 2, currentY + 5, { width: col.code });
-      doc.text(item.designation || "", x.des + 2, currentY + 5, { width: col.des });
-      doc.text(item.unité || item.unite || "", x.unit, currentY + 5, { width: col.unit, align: "center" });
-      doc.text(item.quantité || item.quantite || "", x.qd, currentY + 5, { width: col.qd, align: "center" });
-      doc.text("", x.qs, currentY + 5, { width: col.qs, align: "center" }); // Stockées - usually empty
-      doc.text(item.auPlutot ? fmtDate(item.auPlutot) : "", x.d1, currentY + 5, { width: col.d1, align: "center" });
-      doc.text(item.auPlutart ? fmtDate(item.auPlutart) : "", x.d2, currentY + 5, { width: col.d2, align: "center" });
-      doc.text("", x.qp, currentY + 5, { width: col.qp, align: "center" }); // Prévu - usually empty
-      doc.text("", x.qr, currentY + 5, { width: col.qr, align: "center" }); // Reçue - usually empty
-      doc.text(item.lot || "", x.lot, currentY + 5, { width: col.lot, align: "center" });
-      doc.text(item.observation || "", x.obs + 2, currentY + 5, { width: col.obs });
+      doc.text(item.code || "", x.code + 2, textY, { width: col.code });
+      doc.text(item.designation || "", x.des + 2, textY, { width: col.des });
+      doc.text(item.unité || item.unite || "", x.unit, textY, { width: col.unit, align: "center" });
+      doc.text(item.quantité || item.quantite || "", x.qd, textY, { width: col.qd, align: "center" });
+      doc.text("", x.qs, textY, { width: col.qs, align: "center" }); // Stockées - usually empty
+      doc.text(item.auPlutot ? fmtDate(item.auPlutot) : "", x.d1, textY, { width: col.d1, align: "center" });
+      doc.text(item.auPlutart ? fmtDate(item.auPlutart) : "", x.d2, textY, { width: col.d2, align: "center" });
+      doc.text("", x.qp, textY, { width: col.qp, align: "center" }); // Prévu - usually empty
+      doc.text("", x.qr, textY, { width: col.qr, align: "center" }); // Reçue - usually empty
+      doc.text(item.lot || "", x.lot, textY, { width: col.lot, align: "center" });
+      doc.text(item.observation || "", x.obs + 2, textY, { width: col.obs });
 
+      currentY += rowHeight;
       rowIndex++;
     }
 
@@ -856,7 +899,6 @@ doc.moveTo(margin, tableBottom)
     res.status(500).send("Erreur génération PDF");
   }
 };
-
 
 
 
