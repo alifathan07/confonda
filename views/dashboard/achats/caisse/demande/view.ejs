@@ -62,6 +62,9 @@
               <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="h3 page-title"><i class="fas fa-cash-register"></i> Demande Caisse</h1>
                 <div>
+                  <button type="button" class="btn btn-danger" id="downloadPdfBtn" data-id="<%= demandeCaisse.id %>" data-numero="<%= demandeCaisse.numero %>">
+                    <i class="fas fa-file-pdf"></i> PDF
+                  </button>
                   <a href="/achats/demandeCaisse" class="btn btn-primary btn-sm">
                     <i class="fas fa-arrow-left"></i> Retour
                   </a>
@@ -483,9 +486,37 @@
       
     }
 
+    async function generatepdf(id, numero) {
+      try {
+        const res = await fetch(`/achats/demandes/caisse/${id}/pdf`);
+        if (!res.ok) throw new Error('Erreur lors du téléchargement');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const date = new Date().getFullYear();
+        link.download = `demandeCaisse_${numero}_${date}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error(err);
+        alert('Erreur lors du téléchargement du PDF');
+      }
+    }
+
+    document.getElementById('downloadPdfBtn')?.addEventListener('click', function () {
+      const id = this.getAttribute('data-id');
+      const numero = this.getAttribute('data-numero');
+      if (!id) return;
+      generatepdf(id, numero);
+    });
+
     // Inline montant editing (admin / grandadmin)
     (function initMontantInlineEditing() {
       const inputs = document.querySelectorAll('.js-montant-input');
+
       if (!inputs || inputs.length === 0) return;
 
       const saveMontant = debounce(async (input) => {
