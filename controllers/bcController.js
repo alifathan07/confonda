@@ -159,7 +159,7 @@ export const postBcDemandeFourniture = async (req, res) => {
       const newBc = await prisma.bondeCommande.create({
         data: {
           date: new Date(),
-          numero: String(nextNumero++),
+          numero: String("00" + nextNumero++ + "/" + new Date().getFullYear()),
           fournisseurId,
           chantierId,
           demandeur,
@@ -217,7 +217,6 @@ export const deleteBc = async (req, res) => {
       return res.status(400).json({ success: false, error: 'ID invalide' });
     }
 
-    await prisma.commandesItems.deleteMany({ where: { bondeCommandeId: id } });
     await prisma.bondeCommande.delete({ where: { id } });
 
     return res.json({ success: true });
@@ -379,7 +378,7 @@ export const generateBcPDF = async (req, res) => {
       // Meta (left)
       doc.roundedRect(margin, gridY, boxW, boxH, 8).lineWidth(1).stroke(colors.border);
       doc.font("Helvetica-Bold").fontSize(11).fillColor(colors.gray900)
-        .text(`BC N° : ${bc.id}`, margin + 10, gridY + 14, { width: boxW - 20 });
+        .text(`BC N° : ${bc.numero}`, margin + 10, gridY + 14, { width: boxW - 20 });
       doc.font("Helvetica-Bold").fontSize(11).fillColor(colors.gray900)
         .text(`Date : ${docDateStr}`, margin + 10, gridY + 38, { width: boxW - 20 });
 
@@ -411,6 +410,50 @@ export const generateBcPDF = async (req, res) => {
     };
 
 
+    const drawReglement = (yPosition) => {
+      const startY = yPosition;
+      const gap = 12;
+      const cardW = (contentWidth - gap) / 2;
+      const cardH = 56;
+
+      const leftX = margin;
+      const rightX = margin + cardW + gap;
+
+      const modeRegLabel = (() => {
+        const v = String(bc.modeReg || "").toLowerCase();
+        if (v === "virement") return "Virement";
+        if (v === "cheque") return "Chèque";
+        if (v === "effets") return "Effets";
+        return "-";
+      })();
+
+      const delaiRegLabel = (() => {
+        const v = String(bc.delaiReg || "").toLowerCase();
+        if (v === "a_vue") return "À vue";
+        if (v === "30_jours") return "30 jours";
+        if (v === "60_jours") return "60 jours";
+        if (v === "90_jours") return "90 jours";
+        if (v === "120_jours") return "120 jours";
+        return "-";
+      })();
+
+      doc.roundedRect(leftX, startY, cardW, cardH, 8).lineWidth(1).stroke(colors.borderSoft);
+      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
+        .text("MODE DE PAIEMENT", leftX + 10, startY + 10, { width: cardW - 20 });
+      doc.font("Helvetica").fontSize(9).fillColor(colors.gray800)
+        .text(modeRegLabel, leftX + 10, startY + 30, { width: cardW - 20, ellipsis: true });
+
+      doc.roundedRect(rightX, startY, cardW, cardH, 8).lineWidth(1).stroke(colors.borderSoft);
+      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
+        .text("DÉLAIS DE RÈGLEMENT", rightX + 10, startY + 10, { width: cardW - 20 });
+      doc.font("Helvetica").fontSize(9).fillColor(colors.gray800)
+        .text(delaiRegLabel, rightX + 10, startY + 30, { width: cardW - 20, ellipsis: true });
+
+      return { startY, cardH };
+    };
+    
+
+
     const drawChantier = (yPosition) => {
       const startY = yPosition ?? (pageHeight - margin - footerHeight);
       const gap = 12;
@@ -438,20 +481,27 @@ export const generateBcPDF = async (req, res) => {
 
       // Card 2: Livraison (date + lieu in the same card)
       doc.roundedRect(livraisonX, startY, cardW, cardH, 8).lineWidth(1).stroke(colors.borderSoft);
+
+      const dividerY = startY + (cardH / 2);
+      doc.moveTo(livraisonX + 10, dividerY).lineTo(livraisonX + cardW - 10, dividerY)
+        .lineWidth(1).stroke(colors.borderSoft);
+
       doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
-        .text("LIVRAISON", livraisonX + 10, startY + 10, { width: cardW - 20 });
+        .text("LIEU DE LIVRAISON", livraisonX + 10, startY + 10, { width: cardW - 20 });
+      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
+        .text(bc.lieuLivraison || "-", livraisonX + 10, startY + 28, { width: cardW - 20, ellipsis: true });
 
       const dateLivStr = bc.dateLivraison
         ? new Date(bc.dateLivraison).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
         : "-";
+
+      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
+        .text("DATE DE LIVRAISON", livraisonX + 10, dividerY + 10, { width: cardW - 20 });
       doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
-        .text(`Date : ${dateLivStr}`, livraisonX + 10, startY + 30, { width: cardW - 20, ellipsis: true });
-      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
-        .text(`Lieu : ${bc.lieuLivraison || "-"}`, livraisonX + 10, startY + 48, { width: cardW - 20, ellipsis: true });
+        .text(dateLivStr, livraisonX + 10, dividerY + 28, { width: cardW - 20, ellipsis: true });
 
       return { startY, cardH };
     };
-
 
     const drawFooter = (yPosition) => {
       const startY = yPosition || (pageHeight - margin - footerHeight);
@@ -636,9 +686,16 @@ export const generateBcPDF = async (req, res) => {
     await drawHeader();
 
     // Table Logic
-    const maxRowsPerPage = 20;
+    const getMaxRowsForPage = (yStartRows) => {
+      const available = (pageHeight - margin) - yStartRows;
+      return Math.max(1, Math.floor(available / rowHeight));
+    };
+
+    const reglement = drawReglement(currentY);
+    currentY = reglement.startY + reglement.cardH + 14;
 
     currentY = drawTableHeader(currentY);
+    let maxRowsPerPage = getMaxRowsForPage(currentY);
     let rowsOnPage = 0;
 
     for (let i = 0; i < items.length; i++) {
@@ -652,6 +709,7 @@ export const generateBcPDF = async (req, res) => {
         await drawHeader();
         currentY = margin + headerHeight + 18;
         currentY = drawTableHeader(currentY);
+        maxRowsPerPage = getMaxRowsForPage(currentY);
         rowsOnPage = 0;
       }
 
@@ -659,50 +717,27 @@ export const generateBcPDF = async (req, res) => {
       rowsOnPage += 1;
     }
 
+    currentY += 20; // Spacing after table
+
     // Totals & Montant en lettres
-    const totalsHeight = 120;
-    const montantHeight = 60;
-    const bottomBlockHeight = totalsHeight + montantHeight;
-
-    // Check if we have space for Totals + Montant + Footer
-    // If not, and we are allowed to add pages (isMultiPage), we add a page.
-    // If !isMultiPage, we still might have to add a page if it physically doesn't fit, 
-    // but we'll try to keep it together.
-
-    const spaceForFooter = footerHeight + 20;
-    const spaceNeededForEnd = bottomBlockHeight + spaceForFooter;
-    const spaceRemaining = pageHeight - margin - currentY;
-
-    if (spaceRemaining < spaceNeededForEnd) {
-      if (isMultiPage) {
-        doc.addPage();
-        await drawHeader();
-        currentY = margin + headerHeight + 18;
-      }
-      // If !isMultiPage, we hope it fits. If it really doesn't, PDFKit might just overflow or we should force a page.
-      // But requirement says "all items are rendered on a single page". It doesn't say "totals must be on same page as items if items <= 7".
-      // However, usually "single page" means the whole doc.
-      // With 7 items, currentY ~ 130 + 20 + 30 + (7*30) = 390.
-      // Space needed ~ 200 (totals) + 180 (footer) = 380.
-      // 390 + 380 = 770. Page height 841. It fits.
-    } else {
-      currentY += 20; // Spacing after table
-    }
-
     // Draw Totals
     const totalsBoxHeight = (3 * 20) + 20;
     const montantBoxHeight = 48;
     const endGap = 12;
 
-    const footerY = pageHeight - margin - footerHeight;
-    const montantY = footerY - endGap - montantBoxHeight;
-    const totalsY = montantY - endGap - totalsBoxHeight;
+    let footerY = pageHeight - margin - footerHeight;
+    let montantY = footerY - endGap - montantBoxHeight;
+    let totalsY = montantY - endGap - totalsBoxHeight;
 
     // If the end block doesn't fit on this page, move it entirely to the next page
-    if (currentY + 20 > totalsY) {
+    if (currentY > totalsY) {
       doc.addPage();
       await drawHeader();
       currentY = margin + headerHeight + 18;
+
+      footerY = pageHeight - margin - footerHeight;
+      montantY = footerY - endGap - montantBoxHeight;
+      totalsY = montantY - endGap - totalsBoxHeight;
     }
 
     drawTotals(totalsY);
@@ -724,7 +759,6 @@ export const generateBcPDF = async (req, res) => {
 
 
 
-// Replace your current sendBcEmail with this one
 export const sendBcEmail = async (req, res) => {
   try {
     const { id } = req.params;
@@ -1168,7 +1202,7 @@ export const storeBc = async (req, res) => {
     const bc = await prisma.bondeCommande.create({
       data: {
         date: jsDate,
-        numero: String(nextNumero),
+        numero: String("00" + nextNumero + "/" + new Date().getFullYear()),
         totalHt,
         tauxTva: tvaRate,
         totalTtc,
@@ -1546,4 +1580,6 @@ export const importBcInfo = async (req, res) => {
     fs.unlink(filePath, () => { });
   }
 };
+
+
 

@@ -638,7 +638,7 @@ model commandesItems {
   remise          Float?
   totalHt         Float?
   reference      String?
-  bondeCommande   BondeCommande? @relation(fields: [bondeCommandeId], references: [id])
+  bondeCommande   BondeCommande? @relation(fields: [bondeCommandeId], references: [id], onDelete: Cascade)
   bondeCommandeId Int?
   BondeCommandeChantierItem BondeCommandeChantierItem[]
 

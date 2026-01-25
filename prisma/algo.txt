@@ -233,6 +233,7 @@ Tasks :
         voidx : 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
 
         latest token : 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
+        
 
 Paie Tasks : 
 
@@ -271,10 +272,6 @@ add Delais de reglement : a vue , 30 jours, 60 jours, 90 jours, 120 jours
 Lieu De livraison // date de livrison 
 
 
-adding new ligne after saving demande fourniture 
-blockage select chantier 
-delete pdf excel keep just voir 
-make user able to delete 
 pied de page on bc 
 
 

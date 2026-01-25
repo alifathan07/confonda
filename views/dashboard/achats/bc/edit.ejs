@@ -750,62 +750,60 @@
                   </div>
                 </div>
 
-                <div class="bc-two-cols">
-                  <div class="bc-col">
-                    <div class="fournisseur-box">
-                      <h5 class="mb-3"><i class="fas fa-wallet"></i> Règlement</h5>
-                      <div class="bc-extra-grid">
-                        <div class="bc-extra-field" style="flex: 1 1 320px;">
-                          <div class="bc-extra-label">Mode de règlement</div>
-                          <select id="modeReglement" name="modeReg" class="form-control bc-extra-input bc-input">
-                            <option value="">-- Choisir --</option>
-                            <option value="virement" <%= bc.modeReg === 'virement' ? 'selected' : '' %>>Virement</option>
-                            <option value="cheque" <%= bc.modeReg === 'cheque' ? 'selected' : '' %>>Chèque</option>
-                            <option value="effets" <%= bc.modeReg === 'effets' ? 'selected' : '' %>>Effets</option>
-                          </select>
-                        </div>
+                <div class="col-12 mt-3">
+                  <div class="fournisseur-box">
+                    <h5 class="mb-3"><i class="fas fa-wallet"></i> Règlement</h5>
+                    <div class="bc-extra-grid">
+                      <div class="bc-extra-field" style="flex: 1 1 320px;">
+                        <div class="bc-extra-label">Mode de règlement</div>
+                        <select id="modeReglement" name="modeReg" class="form-control bc-extra-input">
+                          <option value="">-- Choisir --</option>
+                          <option value="virement" <%= bc.modeReg === 'virement' ? 'selected' : '' %>>Virement</option>
+                          <option value="cheque" <%= bc.modeReg === 'cheque' ? 'selected' : '' %>>Chèque</option>
+                          <option value="effets" <%= bc.modeReg === 'effets' ? 'selected' : '' %>>Effets</option>
+                        </select>
+                      </div>
 
-                        <div class="bc-extra-field" style="flex: 1 1 320px;">
-                          <div class="bc-extra-label">Délais de règlement</div>
-                          <select id="delaisReglement" name="delaiReg" class="form-control bc-extra-input bc-input">
-                            <option value="">-- Choisir --</option>
-                            <option value="a_vue" <%= bc.delaiReg === 'a_vue' ? 'selected' : '' %>>À vue</option>
-                            <option value="30_jours" <%= bc.delaiReg === '30_jours' ? 'selected' : '' %>>30 jours</option>
-                            <option value="60_jours" <%= bc.delaiReg === '60_jours' ? 'selected' : '' %>>60 jours</option>
+                      <div class="bc-extra-field" style="flex: 1 1 320px;">
+                        <div class="bc-extra-label">Délais de règlement</div>
+                        <select id="delaisReglement" name="delaiReg" class="form-control bc-extra-input">
+                          <option value="">-- Choisir --</option>
+                          <option value="a_vue" <%= bc.delaiReg === 'a_vue' ? 'selected' : '' %>>À vue</option>
+                          <option value="30_jours" <%= bc.delaiReg === '30_jours' ? 'selected' : '' %>>30 jours</option>
+                          <option value="60_jours" <%= bc.delaiReg === '60_jours' ? 'selected' : '' %>>60 jours</option>
 
-                            <option value="90_jours" <%= bc.delaiReg === '90_jours' ? 'selected' : '' %>>90 jours</option>
-                            <option value="120_jours" <%= bc.delaiReg === '120_jours' ? 'selected' : '' %>>120 jours</option>
-                          </select>
-                        </div>
+                          <option value="90_jours" <%= bc.delaiReg === '90_jours' ? 'selected' : '' %>>90 jours</option>
+                          <option value="120_jours" <%= bc.delaiReg === '120_jours' ? 'selected' : '' %>>120 jours</option>
+                        </select>
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  <div class="bc-col">
-                    <div class="fournisseur-box">
-                      <h5 class="mb-3"><i class="fas fa-hard-hat"></i> Chantiers</h5>
-                      <div class="bc-extra-grid">
-                        <div id="chantierCheckboxes" style="flex: 1 1 520px; min-width: 260px;">
-                          <!-- Multi-select + tags for chantiers -->
-                          <select id="chantierSelect" class="form-control" multiple size="6" style="min-height:120px;">
+                <div class="col-12 mt-3">
+                  <div class="fournisseur-box">
+                    <h5 class="mb-3"><i class="fas fa-hard-hat"></i> Chantiers</h5>
+                    <div class="bc-extra-grid">
+                      <div id="chantierCheckboxes" style="flex: 1 1 520px; min-width: 260px;">
+                        <!-- Multi-select + tags for chantiers -->
+                        <select id="chantierSelect" class="form-control" multiple size="6" style="min-height:120px;">
 
-                            <% chantiers.forEach(ch=> {
-                                const isUsed = bc.commandesItems.some(item => (item.BondeCommandeChantierItem || []).some(bcci => bcci.chantierId === ch.id));
-                              %>
-                              <option value="<%= ch.id %>" data-chantier-name="<%= ch.nom %>" <%= isUsed ? 'selected' : '' %>><%= ch.nom %></option>
-                            <% }) %>
-                          </select>
-                        </div>
+                          <% chantiers.forEach(ch=> {
+                              const isUsed = bc.commandesItems.some(item => (item.BondeCommandeChantierItem || []).some(bcci => bcci.chantierId === ch.id));
+                            %>
+                            <option value="<%= ch.id %>" data-chantier-name="<%= ch.nom %>" <%= isUsed ? 'selected' : '' %>><%= ch.nom %></option>
+                          <% }) %>
+                        </select>
+                      </div>
 
-                        <div class="bc-extra-field">
-                          <div class="bc-extra-label">Date de livraison</div>
-                          <input id="dateLivraison" type="date" class="form-control bc-extra-input bc-input" value="<%= bc.dateLivraison ? new Date(bc.dateLivraison).toISOString().slice(0,10) : '' %>" />
-                        </div>
+                      <div class="bc-extra-field">
+                        <div class="bc-extra-label">Date de livraison</div>
+                        <input id="dateLivraison" type="date" name="dateLivraison" class="form-control bc-extra-input" value="<%= bc.dateLivraison ? new Date(bc.dateLivraison).toISOString().slice(0,10) : '' %>" />
+                      </div>
 
-                        <div class="bc-extra-field">
-                          <div class="bc-extra-label">Lieu de livraison</div>
-                          <input id="lieuLivraison" type="text" class="form-control bc-extra-input bc-input" placeholder="Ex: Dépôt / Chantier / Adresse" value="<%= bc.lieuLivraison || '' %>" />
-                        </div>
+                      <div class="bc-extra-field">
+                        <div class="bc-extra-label">Lieu de livraison</div>
+                        <input id="lieuLivraison" type="text" name="lieuLivraison" class="form-control bc-extra-input" placeholder="Ex: Dépôt / Chantier / Adresse" value="<%= bc.lieuLivraison || '' %>" />
                       </div>
                     </div>
                   </div>

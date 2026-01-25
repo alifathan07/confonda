@@ -13,9 +13,7 @@ export const showRecavenir = async (req, res) => {
     const clients = await prisma.client.findMany();
     const chantiers = await prisma.chantier.findMany();
     res.render('dashboard/tresorerie/reglements/recavenir/index', { recavenirs : recavenirs , banques , clients , chantiers });
-}
-  
-
+}  
 export const createRecavenir = async (req, res) => {
     try {
       console.log('🆕 Creating recette a venir...', req.body);

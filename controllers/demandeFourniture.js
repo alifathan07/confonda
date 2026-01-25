@@ -557,3 +557,308 @@ export const uploadImageFournitures = async (req, res) => {
     res.status(500).json({ success: false, error: "Erreur serveur lors de l'upload." });
   }
 };
+
+
+
+
+
+
+
+
+export const generateDemandeFourniturePDF = async (req, res) => {
+  const demandeId = parseInt(req.params.id, 10);
+  if (Number.isNaN(demandeId)) {
+    return res.status(400).send("ID invalide");
+  }
+
+  try {
+    const demande = await prisma.demandeFourniture.findUnique({
+      where: { id: demandeId },
+      include: {
+        chantier: true,
+        items: true,
+      },
+    });
+
+    if (!demande) {
+      return res.status(404).send("Demande non trouvée");
+    }
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=demande_fourniture_${demande.id}.pdf`
+    );
+
+    const doc = new PDFDocument({
+      size: "A4",
+      layout: "landscape",
+      margin: 10,
+    });
+    doc.pipe(res);
+
+    const pageW = 841.89;
+    const pageH = 595.28;
+    const margin = 10;
+    const contentW = pageW - margin * 2;
+
+    const thin = 0.5;
+    const thick = 1.5;
+
+    const fmtDate = (d) =>
+      d ? new Date(d).toLocaleDateString("fr-FR") : "";
+
+    const logoPath = path.join(
+      __dirname,
+      "../public/img/logo-4.png"
+    );
+
+    /* ---------------- HEADER ---------------- */
+
+    const headerH = 70;
+    
+    // Draw main header border
+    doc.rect(margin, margin, contentW, headerH).lineWidth(thick).stroke();
+
+    const leftW = 110;
+    const rightW = 150;
+    const centerW = contentW - leftW - rightW;
+
+    // Draw vertical lines for header sections
+    doc
+      .moveTo(margin + leftW, margin)
+      .lineTo(margin + leftW, margin + headerH)
+      .lineWidth(thick)
+      .stroke();
+
+    doc
+      .moveTo(margin + leftW + centerW, margin)
+      .lineTo(margin + leftW + centerW, margin + headerH)
+      .lineWidth(thick)
+      .stroke();
+
+    // Logo and company name
+    if (fs.existsSync(logoPath)) {
+      doc.image(logoPath, margin + 20, margin + 8, { width: 85 });
+    }
+
+   
+
+    // Main title
+    doc.font("Helvetica-Bold").fontSize(20).text(
+      "DEMANDE DE FOURNITURES",
+      margin + leftW,
+      margin + 22,
+      { width: centerW, align: "center" }
+    );
+
+    // Document info
+    doc.fontSize(10);
+    doc.text("Code : EN 53 02 001", margin + leftW + centerW + 15, margin + 12);
+    doc.text("Version : 02", margin + leftW + centerW + 15, margin + 28);
+    doc.text("Date : 27/01/2016", margin + leftW + centerW + 15, margin + 44);
+    doc.text(
+      `N° : ${(demande.numero || demande.id).toString().padStart(6, "0")}`,
+      margin + leftW + centerW + 15,
+      margin + 60
+    );
+
+    /* ---------------- INFO ROW ---------------- */
+
+    const infoY = margin + headerH;
+    const infoH = 28;
+
+    // Draw info row border
+    doc.rect(margin, infoY, contentW, infoH).lineWidth(thick).stroke();
+
+    const splitX = margin + contentW * 0.65;
+    doc.moveTo(splitX, infoY).lineTo(splitX, infoY + infoH).stroke();
+
+    doc.fontSize(12);
+    doc.text("Code / Chantier :", margin + 10, infoY + 8);
+    doc.text(
+      demande.chantier?.nom || "",
+      margin + 120,
+      infoY + 8
+    );
+
+    doc.text("Date :", splitX + 10, infoY + 8);
+    doc.text(fmtDate(demande.dateDemande), splitX + 55, infoY + 8);
+
+    /* ---------------- TABLE ---------------- */
+
+    const tableY = infoY + infoH;
+    const tableBottom = pageH - 100;
+
+    // Calculate column widths - reduced observations, increased others
+    const col = {
+      code: 70,
+      des: 220,
+      unit: 55,
+      qd: 55,
+      qs: 55,
+      d1: 65,
+      d2: 65,
+      qp: 55,
+      qr: 55,
+      lot: 50,
+    };
+    col.obs = contentW - Object.values(col).reduce((a, b) => a + b, 0);
+
+    // Calculate column positions
+    const x = {};
+    let acc = margin;
+    Object.entries(col).forEach(([k, w]) => {
+      x[k] = acc;
+      acc += w;
+    });
+
+    const h1 = 22;
+    const h2 = 22;
+
+    // Draw table header border
+    doc.rect(margin, tableY, contentW, h1 + h2).lineWidth(thick).stroke();
+
+    // Draw vertical lines for all columns
+    Object.values(x).forEach((vx) => {
+      doc.moveTo(vx, tableY).lineTo(vx, tableBottom).lineWidth(thin).stroke();
+    });
+    
+    // Draw right border of table
+    doc.moveTo(margin + contentW, tableY).lineTo(margin + contentW, tableBottom).lineWidth(thin).stroke();
+
+    // Table headers - first row
+    doc.fontSize(10).text("Code\narticle", x.code + 2, tableY + 4, {
+      width: col.code,
+      align: "center",
+    });
+
+    doc.text("Désignations", x.des, tableY + 12, {
+      width: col.des,
+      align: "center",
+    });
+
+    doc.text("Unité", x.unit, tableY + 12, { width: col.unit, align: "center" });
+
+    // Quantités header spans both qd and qs columns
+    doc.text("Quantités", x.qd, tableY + 4, {
+      width: col.qd + col.qs,
+      align: "center",
+    });
+
+    // Date de livraison header spans both d1 and d2 columns
+    doc.text("Date de livraison", x.d1, tableY + 4, {
+      width: col.d1 + col.d2,
+      align: "center",
+    });
+
+    // Quantités header spans both qp and qr columns
+    doc.text("Quantités", x.qp, tableY + 4, {
+      width: col.qp + col.qr,
+      align: "center",
+    });
+
+    doc.text("LOT", x.lot, tableY + 12, { width: col.lot, align: "center" });
+    doc.text("Recommandations et Observations", x.obs, tableY + 4, {
+      width: col.obs,
+      align: "center",
+    });
+
+    // Table headers - second row
+    doc.fontSize(9);
+    doc.text("Demandées", x.qd, tableY + h1 + 6, { width: col.qd, align: "center" });
+    doc.text("Stockées", x.qs, tableY + h1 + 6, { width: col.qs, align: "center" });
+    doc.text("Au plutôt", x.d1, tableY + h1 + 6, { width: col.d1, align: "center" });
+    doc.text("Au plus tard", x.d2, tableY + h1 + 6, { width: col.d2, align: "center" });
+    doc.text("Prévu", x.qp, tableY + h1 + 6, { width: col.qp, align: "center" });
+    doc.text("Reçue", x.qr, tableY + h1 + 6, { width: col.qr, align: "center" });
+
+    /* ---------------- ROWS ---------------- */
+
+    let y = tableY + h1 + h2;
+    const rowH = 22;
+
+    doc.fontSize(11);
+
+    // Calculate how many rows can fit and draw all row lines
+    const maxRows = Math.floor((tableBottom - y) / rowH);
+    
+    // Draw all horizontal row lines to create complete grid (except the very bottom)
+    for (let i = 0; i < maxRows; i++) {
+      const currentY = y + (i * rowH);
+      doc.moveTo(margin, currentY).lineTo(margin + contentW, currentY).lineWidth(thin).stroke();
+    }
+
+    // Draw the final bottom border to close the table
+    // Force close table bottom border
+doc.moveTo(margin, tableBottom)
+   .lineTo(margin + contentW, tableBottom)
+   .lineWidth(thin)
+   .stroke();
+
+    // Fill data for existing items
+    let rowIndex = 0;
+    for (const item of demande.items || []) {
+      if (rowIndex >= maxRows) break;
+      
+      const currentY = y + (rowIndex * rowH);
+
+      // Fill row data with proper field mapping
+      doc.text(item.code || "", x.code + 2, currentY + 5, { width: col.code });
+      doc.text(item.designation || "", x.des + 2, currentY + 5, { width: col.des });
+      doc.text(item.unité || item.unite || "", x.unit, currentY + 5, { width: col.unit, align: "center" });
+      doc.text(item.quantité || item.quantite || "", x.qd, currentY + 5, { width: col.qd, align: "center" });
+      doc.text("", x.qs, currentY + 5, { width: col.qs, align: "center" }); // Stockées - usually empty
+      doc.text(item.auPlutot ? fmtDate(item.auPlutot) : "", x.d1, currentY + 5, { width: col.d1, align: "center" });
+      doc.text(item.auPlutart ? fmtDate(item.auPlutart) : "", x.d2, currentY + 5, { width: col.d2, align: "center" });
+      doc.text("", x.qp, currentY + 5, { width: col.qp, align: "center" }); // Prévu - usually empty
+      doc.text("", x.qr, currentY + 5, { width: col.qr, align: "center" }); // Reçue - usually empty
+      doc.text(item.lot || "", x.lot, currentY + 5, { width: col.lot, align: "center" });
+      doc.text(item.observation || "", x.obs + 2, currentY + 5, { width: col.obs });
+
+      rowIndex++;
+    }
+
+    /* ---------------- SIGNATURES ---------------- */
+
+    const sigY = pageH - 85;
+    const sigH = 70;
+
+    // Draw signature section border
+    doc.rect(margin, 500.28, contentW, 90).lineWidth(thick).stroke();
+
+    const sigW = contentW / 4;
+    for (let i = 1; i < 4; i++) {
+      doc.moveTo(margin + sigW * i, sigY).lineTo(margin + sigW * i, sigY + sigH).stroke();
+    }
+
+    // Add signature lines
+    doc.fontSize(11);
+    ["Magasinier", "Conducteur des travaux", "Chef Chantier", "Service Approvisionnement"]
+      .forEach((t, i) => {
+        // Title at bottom
+        doc.text(t, margin + sigW * i + 5, sigY + sigH - 20, {
+          width: sigW - 10,
+          align: "center",
+        });
+        
+        // Signature line in the middle
+        const lineY = sigY + 35;
+        doc.moveTo(margin + sigW * i + 15, lineY)
+           .lineTo(margin + sigW * (i + 1) - 15, lineY)
+           .lineWidth(0.8)
+           .stroke();
+      });
+
+    doc.end();
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Erreur génération PDF");
+  }
+};
+
+
+
+
+
+
