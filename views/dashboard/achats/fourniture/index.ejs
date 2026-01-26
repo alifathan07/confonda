@@ -69,13 +69,13 @@
                       </select>
                     </div>
 
-                    
-
                     <div class="flex-grow-1">
                       <label for="statusFilter">Statut</label>
                       <select id="statusFilter" class="form-control custom-select">
                         <option value="">Tous</option>
                         <option value="En Attente">En Attente</option>
+                        <option value="Validé">Validé</option>
+                        <option value="Refusé">Refusé</option>
                         <option value="Versée">Versée</option>
                         <option value="Annulée">Annulée</option>
                       </select>
@@ -126,16 +126,25 @@
                             <td contenteditable data-name="chantier"><%= d.chantier.nom ||'e' %></td>
                          
 
-                            <% if (user.role==='user' || user.role==='grandadmin') { %>
+                            <% if (user.role==='user') { %>
                               <td data-name="status" class="text-center">
                                 <span class="badge rounded-pill px-3 py-2"
                                       style="min-width:100px;<%
-                                        if(d.status==='Versée'){%>background:#C6E2B5;color:#256029;<%}
-                                        else if(d.status==='Annulée'){%>background:#FFD6D6;color:#B71C1C;<%}
+                                        if(d.status==='Validé'){%>background:#C6E2B5;color:#256029;<%}
+                                        else if(d.status==='Refusé'){%>background:#FFD6D6;color:#B71C1C;<%}
                                         else if(d.status==='En Attente'){%>background:#FFF3CD;color:#856404;<%}
                                         else{%>background:#F8F9FA;color:#6C757D;<%}%>">
                                   <%= d.status||'—' %>
                                 </span>
+                              </td>
+                            <% } else if (user.role==='grandadmin') { %>
+                              <td data-name="status">
+                                <select class="form-control form-control-sm" onchange="updateStatus(<%= d.id %>,this.value)">
+                                  <option value="">—</option>
+                                  <option value="Validé"    <%= d.status==='Validé'    ?'selected':'' %>>Validé</option>
+                                  <option value="Refusé"    <%= d.status==='Refusé'    ?'selected':'' %>>Refusé</option>
+                                  <option value="En Attente"<%= d.status==='En Attente'? 'selected':'' %>>En Attente</option>
+                                </select>
                               </td>
                             <% } else { /* admin */ %>
                               <td data-name="status">
@@ -459,6 +468,8 @@
               alert('Erreur lors du téléchargement du PDF');
             }
           }
+      
+      
       </script>
 
       <!-- VENDOR SCRIPTS -->

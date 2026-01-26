@@ -187,6 +187,9 @@
                               <a href="/achats/caisse/justifecaisse/<%= d.id %>" class="btn btn-info btn-sm">
                                 <i class="fas fa-eye"></i> Détails
                               </a>
+                             <button type="button" class="btn btn-danger btn-sm" onclick="generatepdf(<%= d.id %>, '<%= d.designation %>')">
+                               <i class="fas fa-file-pdf"></i> PDF
+                             </button>
                               <button type="button" class="btn btn-danger btn-sm" onclick="supprimerjustifCaisse(<%= d.id %>)">
                                 <i class="fas fa-trash"></i> Supprimer
                               </button>
@@ -683,6 +686,25 @@
 
         }
      
+    async function generatepdf(id, designation) {
+      try {
+        const res = await fetch(`/achats/caisse/justification/recettes/${id}/pdf`);
+        if (!res.ok) throw new Error('Erreur lors du téléchargement');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const date = new Date().getFullYear();
+        link.download = `justifCaisse_${designation.replace(/\s+/g, '_')}_${date}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error(err);
+        alert('Erreur lors du téléchargement du PDF');
+      }
+    }
      </script>
       <script src="/vendor/jquery/jquery.min.js"></script>
       <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>

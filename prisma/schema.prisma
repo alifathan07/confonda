@@ -105,7 +105,7 @@ model ItemFourniture {
   auPlutot            String?
   lot                 String?
   observation         String?
-  validation          Boolean?           @default(true)
+  validation          Boolean? @default(null) @map("NULL")
   image               String? // <-- ✅ image file path
   // En cours , Refusée , Validée
   validepar           String?

@@ -346,16 +346,16 @@
     <% } %>
     <br>
 
-    <!-- Checkbox and label -->
+    <!-- Dropdown for validation -->
     <div class="d-flex align-items-center gap-2 mt-1">
-      <input type="checkbox" 
-             class="form-check-input validation-checkbox" 
-             id="validation-<%= item.id %>" 
-             data-id="<%= item.id %>"
-             <%= item.validation === true ? 'checked' : '' %>
-             style="width: 38px; height: 20px;">
-
-     
+      <select class="form-control form-control-sm validation-dropdown" 
+              id="validation-<%= item.id %>" 
+              data-id="<%= item.id %>"
+              style="width: 120px;">
+        <option value="null" <%= item.validation === null || item.validation === undefined ? 'selected' : '' %>>En attente</option>
+        <option value="1" <%= item.validation === true ? 'selected' : '' %>>Validé</option>
+        <option value="0" <%= item.validation === false ? 'selected' : '' %>>Refusé</option>
+      </select>
     </div>
   </div>
 </td>
@@ -982,43 +982,60 @@ $(function () {
   });
 
   /* ---------- INDIVIDUAL VALIDATION (Admin) ---------- */
- $tbody.on('change', '.validation-checkbox', function () {
-  const $cb       = $(this);
-  const itemId    = $cb.data('id');
-  const isChecked = $cb.is(':checked');
+  $tbody.on('change', '.validation-dropdown', function () {
+    const $dropdown = $(this);
+    const itemId    = $dropdown.data('id');
+    const status    = $dropdown.val(); // "1", "0", or "null"
 
-  $cb.prop('disabled', true);
+    $dropdown.prop('disabled', true);
 
-  fetch(`/achat/fourniture/${itemId}/validate`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'same-origin',          // <-- important for session cookie
-    body: JSON.stringify({ validation: isChecked })
-  })
-  .then(r => {
-    if (!r.ok) return r.json().then(err => { throw new Error(err.error || 'Erreur serveur'); });
-    return r.json();
-  })
-  .then(data => {
-    if (!data.success) throw new Error(data.error);
-    window.location.reload();
+    fetch(`/achat/fourniture/${itemId}/validate`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ validation: status })
+    })
+    .then(r => {
+      if (!r.ok) return r.json().then(err => { throw new Error(err.error || 'Erreur serveur'); });
+      return r.json();
+    })
+    .then(data => {
+      if (!data.success) throw new Error(data.error);
+      window.location.reload();
 
-    const $row        = $cb.closest('tr');
-    const $badgeCell  = $row.find('.validation-cell');          // Validation column
-    const $validerPar = $row.find('.validerPar-cell');
+      const $row        = $dropdown.closest('tr');
+      const $badgeCell  = $row.find('.validation-cell');
+      const $validerPar = $row.find('.validerPar-cell');
 
-    $badgeCell.html(isChecked
-      ? '<span class="badge badge-success">Validée</span>'
-      : '<span class="badge badge-danger">Refusée</span>');
+      // Update badge based on status
+      let badgeHtml = '';
+      switch(status) {
+        case '1':
+          badgeHtml = '<span class="badge badge-success">Validée</span>';
+          break;
+        case '0':
+          badgeHtml = '<span class="badge badge-danger">Refusée</span>';
+          break;
+        case 'null':
+        default:
+          badgeHtml = '<span class="badge badge-secondary">En attente</span>';
+          break;
+      }
 
-    $validerPar.text(data.data.validepar || '-');
-  })
-  .catch(err => {
-    alert(err.message);
-    $cb.prop('checked', !isChecked);   // revert
-  })
-  .finally(() => $cb.prop('disabled', false));
-});
+      $badgeCell.find('.badge').remove();
+      $badgeCell.prepend(badgeHtml);
+      $validerPar.text(data.data.validepar || '-');
+    })
+    .catch(err => {
+      alert(err.message);
+      // Revert dropdown to previous value
+      const $row = $dropdown.closest('tr');
+      const currentValidation = $row.find('.validation-cell .badge').hasClass('badge-success') ? '1' : 
+                               $row.find('.validation-cell .badge').hasClass('badge-danger') ? '0' : 'null';
+      $dropdown.val(currentValidation);
+    })
+    .finally(() => $dropdown.prop('disabled', false));
+  });
 
 }); // <-- Fermeture du $(function()
 
@@ -1042,6 +1059,9 @@ async function generatepdf(id, numero) {
     alert('Erreur lors du téléchargement du PDF');
   }
 }
+
+
+
 </script>
 
 </body>

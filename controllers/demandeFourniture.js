@@ -135,6 +135,8 @@ export const storeDemandeFourniture = async (req, res) => {
             observation: (it.observation || "").trim() || null,
             imputation: (it.imputation || "").trim() || null,
             image: it.tempImage || null,
+            validation: null,
+            validepar: null,
           })),
         },
       },
@@ -238,7 +240,7 @@ export const updateDemandeFourniture = async (req, res) => {
               lot: (it.lot || "").trim() || null,
               observation: (it.observation || "").trim() || null,
               image: imagePath,
-              validation: false,
+              validation: null,
               validepar: null,
             };
           }),
@@ -368,6 +370,78 @@ export const deleteDemandeFourniture = async (req, res) => {
   }
 };
 
+/* -------------------------- UPDATE STATUS (Manual) -------------------------- */
+export const updateDemandeStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const admin = req.session?.user;
+
+    // -------------------------------------------------
+    // 1. Basic validation
+    // -------------------------------------------------
+    if (!admin) {
+      return res.status(401).json({ success: false, error: 'Utilisateur non authentifié' });
+    }
+
+    if (!["admin", "grandadmin"].includes(admin.role)) {
+      return res.status(403).json({ success: false, error: 'Accès refusé' });
+    }
+
+    if (!status) {
+      return res.status(400).json({ success: false, error: 'Statut requis' });
+    }
+
+    const demandeId = parseInt(id, 10);
+    if (isNaN(demandeId)) {
+      return res.status(400).json({ success: false, error: 'ID invalide' });
+    }
+
+    // -------------------------------------------------
+    // 2. Determine color based on status
+    // -------------------------------------------------
+    let color = "blue"; // default
+    if (status === "Validé") {
+      color = "green";
+    } else if (status === "Refusé") {
+      color = "red";
+    } else if (status === "En Attente") {
+      color = "blue";
+    } else if (status === "Versée") {
+      color = "green";
+    } else if (status === "Annulée") {
+      color = "gray";
+    }
+
+    // -------------------------------------------------
+    // 3. Update demande status
+    // -------------------------------------------------
+    const updated = await prisma.demandeFourniture.update({
+      where: { id: demandeId },
+      data: { status, color },
+    });
+
+    // -------------------------------------------------
+    // 4. Success response
+    // -------------------------------------------------
+    res.json({ success: true, data: updated });
+
+  } catch (error) {
+    console.error('updateDemandeStatus error:', error);
+
+    // Prisma record-not-found
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      return res.status(404).json({ success: false, error: 'Demande non trouvée' });
+    }
+
+    // Any other error
+    res.status(500).json({
+      success: false,
+      error: 'Erreur serveur',
+    });
+  }
+};
+
 /* -------------------------- VALIDATION (single) -------------------------- */
 // controllers/fournitureController.js  (or wherever you keep it)
 
@@ -376,7 +450,6 @@ export const updateValidationFourniture = async (req, res) => {
     const { id } = req.params;
     const { validation } = req.body;
     const admin = req.session?.user;
-
 
     // -------------------------------------------------
     // 1. Basic validation
@@ -395,40 +468,75 @@ export const updateValidationFourniture = async (req, res) => {
     }
 
     // -------------------------------------------------
-    // 2. Update in DB
+    // 2. Update in DB - Handle null values
     // -------------------------------------------------
+    let validationValue;
+    if (validation === "null" || validation === null || validation === "null") {
+      validationValue = null;  // En attent
+    } else if (validation === "0" || validation === 0 || validation === false) {
+      validationValue = false;     // Refusé 
+    } else {
+      validationValue = true;     // Validé (default for any other value)
+    }
+
     const data = {
-      validation: Boolean(validation),   // true / false
+      validation: validationValue,
       validepar: admin.name,
-
     };
-    const idDemande = await prisma.itemFourniture.findUnique({ where: { id: itemId }, select: { demandeFournitureId: true } });
-    const demande = await prisma.demandeFourniture.findUnique({ where: { id: parseInt(idDemande.demandeFournitureId) } });
+
+    const idDemande = await prisma.itemFourniture.findUnique({ 
+      where: { id: itemId }, 
+      select: { demandeFournitureId: true } 
+    });
+    
+    const demande = await prisma.demandeFourniture.findUnique({ 
+      where: { id: parseInt(idDemande.demandeFournitureId) } 
+    });
+    
     if (!demande) return res.status(404).json({ success: false, error: "Demande introuvable" });
-
-
 
     const updated = await prisma.itemFourniture.update({
       where: { id: itemId },
       data,
     });
-    const udateDemande = await prisma.demandeFourniture.update({
-      where: { id: parseInt(demande.id) },
-      data: { status: "Validé", color: "green" },
-    });
-
-
-
 
     // -------------------------------------------------
-    // 3. Success response
+    // 3. Update demande status based on all items
+    // -------------------------------------------------
+    const allItems = await prisma.itemFourniture.findMany({
+      where: { demandeFournitureId: parseInt(idDemande.demandeFournitureId) },
+      select: { validation: true }
+    });
+
+    const anyPending = allItems.some(i => i.validation === null || i.validation === undefined);
+    const anyValidated = allItems.some(i => i.validation === true);
+    const allRefused = allItems.every(i => i.validation === false);
+
+    let finalStatus = "En Attente";
+    let finalColor = "blue";
+
+    if (anyPending) {
+      finalStatus = "En Attente";
+      finalColor = "blue";
+    } else if (anyValidated) {
+      finalStatus = "Validé";
+      finalColor = "green";
+    } else if (allRefused) {
+      finalStatus = "Refusé";
+      finalColor = "red";
+    }
+
+    await prisma.demandeFourniture.update({
+      where: { id: parseInt(demande.id) },
+      data: { status: finalStatus, color: finalColor },
+    });
+
+    // -------------------------------------------------
+    // 4. Success response
     // -------------------------------------------------
     res.json({ success: true, data: updated });
 
   } catch (error) {
-    // -------------------------------------------------
-    // 4. All errors → JSON (never HTML)
-    // -------------------------------------------------
     console.error('updateValidationFourniture error:', error);
 
     // Prisma record-not-found
@@ -440,7 +548,6 @@ export const updateValidationFourniture = async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Erreur serveur',
-      // optional: detail: error.message   (remove in production)
     });
   }
 };
@@ -614,6 +721,11 @@ export const generateDemandeFourniturePDF = async (req, res) => {
       "../public/img/logo-4.png"
     );
 
+    /* ---------------- PAGE BORDER ---------------- */
+    
+    // Draw complete page border
+    doc.rect(margin, margin, contentW, pageH - margin * 2).lineWidth(thick).stroke();
+
     /* ---------------- HEADER ---------------- */
 
     const headerH = 70;
@@ -781,7 +893,7 @@ export const generateDemandeFourniturePDF = async (req, res) => {
 
     doc.fontSize(11);
 
-    // Calculate dynamic row heights based on content
+    // Calculate row height based on content
     const calculateRowHeight = (item) => {
       let maxHeight = baseRowH;
       
@@ -792,11 +904,11 @@ export const generateDemandeFourniturePDF = async (req, res) => {
         maxHeight = Math.max(maxHeight, desHeight);
       }
       
-      // Check observation text height
+      // Check observation text height - use this as row height when observation exists
       if (item.observation) {
         const obsLines = doc.widthOfString(item.observation, { width: col.obs }) / col.obs;
-        const obsHeight = Math.ceil(obsLines) * 12 + 10;
-        maxHeight = Math.max(maxHeight, obsHeight);
+        const obsHeight = Math.ceil(obsLines) * 12 + 12; // 12pt font height + 2px padding
+        return obsHeight; // Return observation height directly
       }
       
       return Math.min(maxHeight, 60); // Cap at 60 to prevent overly tall rows
@@ -844,6 +956,7 @@ export const generateDemandeFourniturePDF = async (req, res) => {
       
       const rowHeight = rowHeights[rowIndex];
       const textY = currentY + (rowHeight - 12) / 2; // Center text vertically
+      const obsTextY = currentY + 4; // Start observation from top of row with 4px padding
 
       // Fill row data with proper field mapping
       doc.text(item.code || "", x.code + 2, textY, { width: col.code });
@@ -856,7 +969,7 @@ export const generateDemandeFourniturePDF = async (req, res) => {
       doc.text("", x.qp, textY, { width: col.qp, align: "center" }); // Prévu - usually empty
       doc.text("", x.qr, textY, { width: col.qr, align: "center" }); // Reçue - usually empty
       doc.text(item.lot || "", x.lot, textY, { width: col.lot, align: "center" });
-      doc.text(item.observation || "", x.obs + 2, textY, { width: col.obs });
+      doc.text(item.observation || "", x.obs + 2, obsTextY, { width: col.obs, align: "left" });
 
       currentY += rowHeight;
       rowIndex++;
@@ -879,10 +992,15 @@ export const generateDemandeFourniturePDF = async (req, res) => {
     doc.fontSize(11);
     ["Magasinier", "Conducteur des travaux", "Chef Chantier", "Service Approvisionnement"]
       .forEach((t, i) => {
+        // Draw border for each signature box
+        doc.rect(margin + sigW * i + 5, sigY, sigW - 10, sigH)
+           .lineWidth(1)
+           .stroke();
+        
         // Title at bottom
-        doc.text(t, margin + sigW * i + 5, sigY + sigH - 20, {
+        doc.text(t, margin + sigW * i + 10, sigY + sigH - 20, {
           width: sigW - 10,
-          align: "center",
+          align: "left",
         });
         
         // Signature line in the middle
@@ -899,6 +1017,8 @@ export const generateDemandeFourniturePDF = async (req, res) => {
     res.status(500).send("Erreur génération PDF");
   }
 };
+
+
 
 
 

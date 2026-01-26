@@ -1566,329 +1566,269 @@ export const validateAllDepenses = async (req, res) => {
     res.status(500).json({ success: false, error: 'Erreur lors de la validation des dépenses.' });
   }
 };
-
-
-
-
-
-
-
-
-
-
 export const generateJustifCaissePDF = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const user = req.session.user;
+  const { id } = req.params;
+  const user = req.session.user;
 
-    if (!user) return res.status(403).json({ success: false, error: "Utilisateur non authentifié" });
+  if (!user) return res.sendStatus(403);
 
-    const justifCaisse = await prisma.justifCaisse.findUnique({
-      where: { id: parseInt(id) },
-      include: {
-        recettes: true,
-        depenses: true,
-        user: { select: { name: true } },
-        chantier: { select: { nom: true } },
-      },
-    });
+  const justif = await prisma.justifCaisse.findUnique({
+    where: { id: Number(id) },
+    include: {
+      recettes: true,
+      depenses: true,
+      user: { select: { name: true } },
+      chantier: { select: { nom: true } },
+    },
+  });
 
-    if (!justifCaisse) return res.status(404).json({ success: false, error: "Justification non trouvée" });
+  if (!justif) return res.sendStatus(404);
+  if (justif.userId !== user.id && !["admin", "grandadmin"].includes(user.role))
+    return res.sendStatus(403);
 
-    if (justifCaisse.userId !== user.id && !["admin", "grandadmin"].includes(user.role))
-      return res.status(403).json({ success: false, error: "Accès refusé" });
-    const words = justifCaisse.designation.split(' ');
-    const lastTwoWords = words.slice(-2).join(' ');
-    const COLORS = {
-      PRIMARY: '#A52A2A',
-      SECONDARY: '#333333',
-      BACKGROUND: '#FAFAFA',
-      TABLE_HEADER: '#F2F2F2',
-      WHITE: '#FFFFFF',
-      BORDER: '#E0E0E0',
-      MUTED: '#7A7A7A',
-      LIGHT_GRAY: '#F9F9F9',
-    };
+  const doc = new PDFDocument({ size: "A4", margin: 40, bufferPages: true });
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename=JustifCaisse_${id}.pdf`
+  );
+  doc.pipe(res);
 
-    const FONTS = {
-      REGULAR: 'Helvetica',
-      BOLD: 'Helvetica-Bold',
-      ITALIC: 'Helvetica-Oblique',
-    };
+  const PAGE_WIDTH = 595.28;
+  const PAGE_HEIGHT = 841.89;
+  const MARGIN = 40;
+  const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
+  const FOOTER_HEIGHT = 70;
 
-    const SIZES = {
-      TITLE: 22,
-      SUBTITLE: 13,
-      BODY: 10,
-      SMALL: 8,
-      MARGIN: 50,
-      PAGE_WIDTH: 595,
-      PAGE_HEIGHT: 842,
-      FOOTER_HEIGHT: 70,
-      ROW_HEIGHT: 28,
-    };
+  const drawHeader = () => {
+    const logo = path.join(process.cwd(), "public/img/logo-4.png");
+    if (fs.existsSync(logo)) doc.image(logo, MARGIN, 30, { width: 90 });
 
-    // Spacing constants for consistent layout
-    const SPACING = {
-      LOGO_TO_TITLE: 12,
-      TITLE_TO_META: 30,
-      META_LINE_HEIGHT: 18,
-      META_TO_INFO: 25,
-      INFO_BOX_HEIGHT: 85,
-      INFO_BOX_PADDING: 14,
-      INFO_LINE_HEIGHT: 22,
-      INFO_TO_TABLE: 35,
-      TABLE_TITLE_TO_HEADER: 22,
-      TABLE_HEADER_HEIGHT: 30,
-      TABLE_BOTTOM_MARGIN: 30,
-    };
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(16)
+      .fillColor("#8B0000")
+      .text("JUSTIFICATIFS DE CAISSE", 0, 40, { align: "center" });
 
-    const { PAGE_WIDTH, PAGE_HEIGHT, FOOTER_HEIGHT, MARGIN, ROW_HEIGHT } = SIZES;
-    const footerY = PAGE_HEIGHT - FOOTER_HEIGHT;
+    doc
+      .fontSize(9)
+      .fillColor("#000")
+      .text(`N° : J-${justif.id}`, PAGE_WIDTH - 160, 40)
+      .text(`Date : ${new Date().toLocaleDateString("fr-FR")}`, PAGE_WIDTH - 160, 55);
+  };
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename=JustifCaisse-${justifCaisse.designation}.pdf`
+  const drawInfoBox = (yPosition) => {
+    let y = yPosition || 110;
+    doc.rect(MARGIN, y, CONTENT_WIDTH, 70).stroke();
+
+    doc.font("Helvetica-Bold").text("Informations", MARGIN + 5, y + 5);
+    doc.font("Helvetica").fontSize(10);
+
+    doc.text(`Responsable : ${justif.user?.name ?? "-"}`, MARGIN + 10, y + 25);
+    doc.text(`Chantier : ${justif.chantier?.nom ?? "-"}`, MARGIN + 10, y + 40);
+    doc.text(`Mois : ${justif.designation ?? "-"}`, PAGE_WIDTH / 2, y + 25);
+    doc.text(
+      `Solde final : ${Number(justif.soldeFinal).toFixed(2)} MAD`,
+      PAGE_WIDTH / 2,
+      y + 40
     );
+    return y + 85;
+  };
 
-    const doc = new PDFDocument({ margin: 0, size: 'A4' });
-    doc.pipe(res);
+  const drawFooter = (yPosition) => {
+    const fy = yPosition || (PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT);
+    doc.rect(0, fy, PAGE_WIDTH, FOOTER_HEIGHT).fill("#8B0000");
 
-    const drawLine = (x1, y1, x2, y2, color = COLORS.BORDER) =>
-      doc.strokeColor(color).lineWidth(1).moveTo(x1, y1).lineTo(x2, y2).stroke();
+    doc
+      .fillColor("#fff")
+      .fontSize(8)
+      .text(
+        "82, angle Bd Abdelmoumen et rue Soumaya, Casablanca — Tél 0522-23-39-70",
+        0,
+        fy + 20,
+        { align: "center", width: PAGE_WIDTH }
+      );
+    doc.text(
+      "Fax: 0522-23-42-60 | Capital: 18 500 000 DH | ICE: 001526422000063",
+      0,
+      fy + 35,
+      { align: "center", width: PAGE_WIDTH }
+    );
+  };
 
-    // ========== HEADER SECTION ==========
-    let currentY = MARGIN;
+  const drawRecettesTable = (yPosition) => {
+    if (!justif.recettes || justif.recettes.length === 0) return yPosition;
 
-    // Logo
-    const logoSize = 160;
-    const logoPath = path.join(__dirname, '../public/img/logo-4.png');
-    if (fs.existsSync(logoPath)) {
-      doc.image(logoPath, (PAGE_WIDTH - logoSize) / 2, currentY, { width: logoSize });
-    }
-    currentY += logoSize + SPACING.LOGO_TO_TITLE;
-
-    // Title
-    doc.font(FONTS.BOLD)
-      .fontSize(SIZES.TITLE)
-      .fillColor(COLORS.PRIMARY)
-      .text('JUSTIFICATIFS DE CAISSE', 0, currentY, { align: 'center', width: PAGE_WIDTH });
-
-    currentY += SIZES.TITLE + SPACING.TITLE_TO_META;
-
-    // ===== METADATA GRID =====
-    const gridColWidth = (PAGE_WIDTH - 2 * MARGIN - 80) / 3;
-    const metaStartX = MARGIN + 40;
-
-    doc.font(FONTS.BOLD).fontSize(SIZES.BODY).fillColor('#444')
-      .text('Chantier:', metaStartX, currentY, { width: gridColWidth, continued: true })
-      .font(FONTS.REGULAR).text(` ${justifCaisse.chantier?.nom || '-'}`, { width: gridColWidth });
-
-    doc.font(FONTS.BOLD)
-      .text('Responsable :', metaStartX + gridColWidth, currentY, { width: gridColWidth, continued: true })
-      .font(FONTS.REGULAR).text(` ${justifCaisse.user?.name || '-'}`, { width: gridColWidth });
-
-    doc.font(FONTS.BOLD)
-      .text('Mois:', metaStartX + 2 * gridColWidth, currentY, { width: gridColWidth, continued: true })
-      .font(FONTS.REGULAR).text(` ${lastTwoWords || '-'}`, { width: gridColWidth });
-
-    currentY += SPACING.META_LINE_HEIGHT + SPACING.META_TO_INFO;
-
-    // ===== INFO BOX =====
-    const infoBoxHeight = SPACING.INFO_BOX_HEIGHT;
-    doc.rect(MARGIN, currentY, PAGE_WIDTH - 2 * MARGIN, infoBoxHeight)
-      .fillAndStroke(COLORS.WHITE, COLORS.BORDER);
-
-    const infoPadding = SPACING.INFO_BOX_PADDING;
-    const col1X = MARGIN + infoPadding;
-    const col2X = PAGE_WIDTH / 2 + infoPadding;
-    const infoTextY = currentY + infoPadding;
-
-    // First row of info
-    doc.font(FONTS.BOLD).fontSize(SIZES.BODY).fillColor('#444')
-      .text('Total Recettes:', col1X, infoTextY, { continued: true })
-      .font(FONTS.REGULAR).text(` ${Number(justifCaisse.totalRecettes ?? 0).toFixed(2)} MAD`);
-
-    doc.font(FONTS.BOLD)
-      .text('Total Dépenses:', col2X, infoTextY, { continued: true })
-      .font(FONTS.REGULAR).text(` ${Number(justifCaisse.totalDepenses ?? 0).toFixed(2)} MAD`);
-
-    // Second row of info
-    const secondRowY = infoTextY + SPACING.INFO_LINE_HEIGHT;
-    doc.font(FONTS.BOLD)
-      .text('Solde Précédent:', col1X, secondRowY, { continued: true })
-      .font(FONTS.REGULAR).text(` ${Number(justifCaisse.soldePrecedent ?? 0).toFixed(2)} MAD`);
-
-    doc.font(FONTS.BOLD)
-      .text('Solde Final:', col2X, secondRowY, { continued: true })
-      .font(FONTS.REGULAR).text(` ${Number(justifCaisse.soldeFinal ?? 0).toFixed(2)} MAD`);
-
-    currentY += infoBoxHeight + SPACING.INFO_TO_TABLE;
-
-    // ===== CENTERED TABLE FUNCTION =====
-    const drawCenteredTable = (items, title, startY, columns) => {
-      const colWidths = columns.map(c => c.width);
-      const tableWidth = colWidths.reduce((a, b) => a + b, 0);
-      const tableX = (PAGE_WIDTH - tableWidth) / 2;
-
-      // Table title
-      doc.font(FONTS.BOLD).fontSize(SIZES.SUBTITLE).fillColor(COLORS.PRIMARY)
-        .text(title, 0, startY, { align: 'center', width: PAGE_WIDTH });
-
-      let y = startY + SPACING.TABLE_TITLE_TO_HEADER;
-
-      // Header row
-      doc.rect(tableX, y, tableWidth, SPACING.TABLE_HEADER_HEIGHT)
-        .fillAndStroke('#F5F5F5', COLORS.BORDER);
-
-      let x = tableX;
-      columns.forEach((col, i) => {
-        doc.font(FONTS.BOLD).fontSize(SIZES.BODY).fillColor('#444')
-          .text(col.header, x + 6, y + 9, {
-            width: colWidths[i] - 12,
-            align: col.align || 'left'
-          });
-        if (i > 0) drawLine(x, y, x, y + SPACING.TABLE_HEADER_HEIGHT);
-        x += colWidths[i];
-      });
-      y += SPACING.TABLE_HEADER_HEIGHT;
-
-      // Data rows
-      items.forEach((item, idx) => {
-        const bgColor = idx % 2 === 0 ? COLORS.WHITE : COLORS.LIGHT_GRAY;
-        doc.rect(tableX, y, tableWidth, ROW_HEIGHT).fillAndStroke(bgColor, COLORS.BORDER);
-
-        x = tableX;
-        columns.forEach((col, j) => {
-          const text = col.getText(item);
-          doc.font(FONTS.REGULAR).fontSize(SIZES.BODY).fillColor('#444')
-            .text(text, x + 6, y + 9, {
-              width: colWidths[j] - 12,
-              align: col.align || 'left'
-            });
-          if (j > 0) drawLine(x, y, x, y + ROW_HEIGHT);
-          x += colWidths[j];
-        });
-        y += ROW_HEIGHT;
-      });
-
-      // Totals row
-      const totalCols = columns.filter(c => c.total);
-      if (totalCols.length > 0) {
-        const totalRowHeight = ROW_HEIGHT + 2;
-        doc.rect(tableX, y, tableWidth, totalRowHeight).fillAndStroke('#F5F5F5', COLORS.BORDER);
-
-        x = tableX;
-        columns.forEach((col, j) => {
-          if (col.total) {
-            const sum = items.reduce((acc, it) =>
-              acc + Number(col.sum ? col.sum(it) : 0), 0
-            );
-            doc.font(FONTS.BOLD).fontSize(SIZES.BODY).fillColor('#444')
-              .text(sum.toFixed(2), x + 6, y + 9, {
-                width: colWidths[j] - 12,
-                align: col.align || 'right'
-              });
-          } else if (j === 0) {
-            doc.font(FONTS.BOLD).fontSize(SIZES.BODY).fillColor('#444')
-              .text('TOTAL', x + 6, y + 9, {
-                width: colWidths[j] - 12,
-                align: 'left'
-              });
-          }
-          if (j > 0) drawLine(x, y, x, y + totalRowHeight);
-          x += colWidths[j];
-        });
-        y += totalRowHeight;
-      }
-
-      return y + SPACING.TABLE_BOTTOM_MARGIN;
-    };
-
-    // ===== DÉPENSES TABLE =====
-    const depensesColumns = [
-      {
-        header: 'Date',
-        width: 75,
-        getText: d => new Date(d.dateDepense).toLocaleDateString('fr-FR')
-      },
-
-      {
-        header: 'N° Piece',
-        width: 55,
-        getText: d => d.numeroPiece || '-',
-
-      },
-      {
-        header: 'Nature de la Dépense',
-        width: 200,
-        getText: d => d.natureDepense || '-'
-      },
-      {
-        header: 'Imputation',
-        width: 75,
-        getText: d => d.imputation || '-',
-
-      },
-
-      {
-        header: 'Justifié',
-        width: 75,
-        getText: d => Number(d.montantJustifie ?? 0).toFixed(2),
-        align: 'right',
-        total: true,
-        sum: d => Number(d.montantJustifie ?? 0)
-      },
-      {
-        header: 'Non Justifié',
-        width: 75,
-        getText: d => Number(d.montantNonJustifie ?? 0).toFixed(2),
-        align: 'right',
-        total: true,
-        sum: d => Number(d.montantNonJustifie ?? 0)
-      },
-
+    const cols = [
+      { label: "Date", w: 100 },
+      { label: "Source", w: 250 },
+      { label: "Montant", w: 100 },
     ];
 
-    currentY = drawCenteredTable(
-      justifCaisse.depenses || [],
-      'Dépenses',
-      currentY,
-      depensesColumns
-    );
+    const rowH = 22;
+    const tableX = MARGIN;
 
-    // ===== FOOTER =====
-    doc.rect(0, footerY, PAGE_WIDTH, FOOTER_HEIGHT).fill(COLORS.PRIMARY);
-    const footerTextY = footerY + (FOOTER_HEIGHT - 40) / 2;
+    const drawRow = (yy, values, bold = false) => {
+      let x = tableX;
+      doc.font(bold ? "Helvetica-Bold" : "Helvetica").fontSize(9);
 
-    doc.font(FONTS.REGULAR).fontSize(SIZES.SMALL).fillColor(COLORS.WHITE)
-      .text(
-        '82, angle Bd Abdelmoumen et rue Soumaya Imm. Shahrazad III, 2ème étage Casablanca',
-        0,
-        footerTextY,
-        { align: 'center', width: PAGE_WIDTH }
-      )
-      .text(
-        'Tél: 0522-23-39-70 | Fax: 0522-23-42-60 | Capital: 18 500 000 DH | ICE: 001526422000063',
-        0,
-        footerTextY + 16,
-        { align: 'center', width: PAGE_WIDTH }
-      );
+      cols.forEach((c, i) => {
+        doc.rect(x, yy, c.w, rowH).stroke();
+        doc.text(values[i], x + 4, yy + 6, {
+          width: c.w - 8,
+          align: i === 2 ? "right" : "left",
+        });
+        x += c.w;
+      });
+    };
 
-    doc.end();
+    // Section title
+    doc.font("Helvetica-Bold").fontSize(12).fillColor("#8B0000")
+      .text("RECETTES", MARGIN, yPosition);
+    yPosition += 25;
 
-  } catch (error) {
-    console.error("Erreur lors de la génération du PDF :", error);
-    res.status(500).json({ success: false, error: error.message });
+    // Header
+    drawRow(yPosition, cols.map(c => c.label), true);
+    yPosition += rowH;
+
+    // Data
+    let totalRecettes = 0;
+    justif.recettes.forEach(r => {
+      totalRecettes += Number(r.montant ?? 0);
+      drawRow(yPosition, [
+        new Date(r.dateRecette).toLocaleDateString("fr-FR"),
+        r.source ?? "",
+        Number(r.montant ?? 0).toFixed(2),
+      ]);
+      yPosition += rowH;
+    });
+
+    // Total
+    drawRow(yPosition, ["TOTAL", "", totalRecettes.toFixed(2)], true);
+    yPosition += rowH + 20;
+
+    return yPosition;
+  };
+
+  const drawDepensesTable = (yPosition) => {
+    const cols = [
+      { label: "Date", w: 70 },
+      { label: "N° Pièce", w: 60 },
+      { label: "Nature Dépense", w: 170 },
+      { label: "Imputation", w: 70 },
+      { label: "Justifié", w: 70 },
+      { label: "Non Justifié", w: 70 },
+    ];
+
+    const rowH = 22;
+    const tableX = MARGIN;
+
+    const drawRow = (yy, values, bold = false) => {
+      let x = tableX;
+      doc.font(bold ? "Helvetica-Bold" : "Helvetica").fontSize(9);
+
+      cols.forEach((c, i) => {
+        doc.rect(x, yy, c.w, rowH).stroke();
+        doc.text(values[i], x + 4, yy + 6, {
+          width: c.w - 8,
+          align: i >= 4 ? "right" : "left",
+        });
+        x += c.w;
+      });
+    };
+
+    // Section title
+    doc.font("Helvetica-Bold").fontSize(12).fillColor("#8B0000")
+      .text("DÉPENSES", MARGIN, yPosition);
+    yPosition += 25;
+
+    // Header
+    drawRow(yPosition, cols.map(c => c.label), true);
+    yPosition += rowH;
+
+    return { yPosition, drawRow, cols, rowH };
+  };
+
+  // Main logic
+  drawHeader();
+  let currentY = drawInfoBox(110);
+
+  // Recettes - Add recettes table if data exists
+  if (justif.recettes && justif.recettes.length > 0) {
+    currentY = drawRecettesTable(currentY);
   }
+
+  // Depenses
+  const depensesTable = drawDepensesTable(currentY);
+  currentY = depensesTable.yPosition;
+
+  const getMaxRowsForPage = (yStartRows) => {
+    const available = (PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT) - yStartRows;
+    return Math.max(1, Math.floor(available / depensesTable.rowH));
+  };
+
+  let maxRowsPerPage = getMaxRowsForPage(currentY);
+  let rowsOnPage = 0;
+
+  let totalJ = 0;
+  let totalNJ = 0;
+
+  for (const d of justif.depenses) {
+    totalJ += Number(d.montantJustifie ?? 0);
+    totalNJ += Number(d.montantNonJustifie ?? 0);
+
+    if (rowsOnPage >= maxRowsPerPage) {
+      doc.addPage();
+      drawHeader();
+      currentY = MARGIN + 80;
+      currentY = drawDepensesTable(currentY).yPosition - 25;
+      maxRowsPerPage = getMaxRowsForPage(currentY);
+      rowsOnPage = 0;
+    }
+
+    depensesTable.drawRow(currentY, [
+      new Date(d.dateDepense).toLocaleDateString("fr-FR"),
+      d.numeroPiece ?? "",
+      d.natureDepense ?? "",
+      d.imputation ?? "",
+      Number(d.montantJustifie ?? 0).toFixed(2),
+      Number(d.montantNonJustifie ?? 0).toFixed(2),
+    ]);
+    currentY += depensesTable.rowH;
+    rowsOnPage += 1;
+  }
+
+  // Empty rows
+  for (let i = 0; i < 8; i++) {
+    if (rowsOnPage >= maxRowsPerPage) {
+      doc.addPage();
+      drawHeader();
+      currentY = MARGIN + 80;
+      currentY = drawDepensesTable(currentY).yPosition - 25;
+      maxRowsPerPage = getMaxRowsForPage(currentY);
+      rowsOnPage = 0;
+    }
+    depensesTable.drawRow(currentY, ["", "", "", "", "", ""]);
+    currentY += depensesTable.rowH;
+    rowsOnPage += 1;
+  }
+
+  // Totals
+  if (rowsOnPage >= maxRowsPerPage - 1) {
+    doc.addPage();
+    drawHeader();
+    currentY = MARGIN + 80;
+  }
+
+  depensesTable.drawRow(
+    currentY,
+    ["TOTAL", "", "", "", totalJ.toFixed(2), totalNJ.toFixed(2)],
+    true
+  );
+
+  drawFooter();
+  doc.end();
 };
-
-
-
-
-
-
 export const generateJustifCaisseExcel = async (req, res) => {
   try {
     const { id } = req.params;
@@ -2009,19 +1949,8 @@ export const generateJustifCaisseExcel = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
-
 export const listChantierUser = async (req, res) => {
   const user = req.session.user;
   const chantiers = await prisma.chantier.findMany();
   res.render('dashboard/achats/caisse/justifecaisse/chantierlist', { chantiers })
 }
-
-
-
-
-
-
-
-
-
-
