@@ -154,9 +154,39 @@
       color: #ffffff;
     }
     .cell-designation {
-  width: 300px; /* or percentage */
-  max-width: 400px;
-}
+      min-width: 280px; 
+      max-width: 520px;
+    }
+
+    #productsTable {
+      table-layout: auto;
+      min-width: 1550px;
+    }
+
+    #productsTable th,
+    #productsTable td {
+      vertical-align: middle;
+    }
+
+    #productsTable input.form-control {
+      min-width: 90px;
+    }
+
+    #productsTable .cell-code { min-width: 140px; }
+    #productsTable .cell-lot { min-width: 160px; }
+    #productsTable .cell-unite { min-width: 120px; }
+    #productsTable .cell-quantite { min-width: 120px; }
+    #productsTable .validation-cell { min-width: 140px; }
+    #productsTable .validerPar-cell { min-width: 150px; }
+
+    #productsTable .cell-observation {
+      min-width: 320px;
+      white-space: normal;
+    }
+
+    #productsTable .cell-designation {
+      white-space: normal;
+    }
   </style>
 </head>
 
@@ -221,11 +251,11 @@
                       <tr>
                         <th rowspan="2">Code article</th>
                         <th rowspan="2">Désignations</th>
+                        <th rowspan="2">Reference</th>
                         <th rowspan="2">Unité</th>
                         <th rowspan="2">Quantité</th>
-                        <th rowspan="2">Imputation</th>
                         <th colspan="2">Date de livraison</th>
-                        <th rowspan="2">Reference</th>
+                        <th rowspan="2">Imputation</th>
                         <th rowspan="2">Recommandations et Observations</th>
                         <th rowspan="2">Validation</th>
                         <th rowspan="2">Validé Par</th>
@@ -241,12 +271,13 @@
                            
                           <td class="cell-code"><input type="text" class="form-control code" value="<%= item.code ?? '' %>"></td>
                           <td class="cell-designation"><input type="text" class="form-control designation" value="<%= item.designation ?? '' %>"></td>
+                             <td class="cell-lot"><input type="text" class="form-control lot" value="<%= item.lot ?? '' %>"></td>
                           <td class="cell-unite"><input type="text" class="form-control unite" value="<%= item.unité ?? '' %>"></td>
                           <td class="cell-quantite"><input type="number" class="form-control quantite" value="<%= item.quantité ?? '' %>" min="1"></td>
-                          <td><input type="text" class="form-control imputation" value="<%= item.imputation ?? '' %>"></td>
                           <td><input type="date" class="form-control auPlutot" value="<%= item.auPlutot ? new Date(item.auPlutot).toISOString().split('T')[0] : '' %>"></td>
                           <td><input type="date" class="form-control auPlutart" value="<%= item.auPlutart ? new Date(item.auPlutart).toISOString().split('T')[0] : '' %>"></td>
-                          <td class="cell-lot"><input type="text" class="form-control lot" value="<%= item.lot ?? '' %>"></td>
+                            <td><input type="text" class="form-control imputation" value="<%= item.imputation ?? '' %>"></td>
+
                           <td class="cell-observation"><input type="text" class="form-control observation" value="<%= item.observation ?? '' %>"></td>
 
                           <!-- Hidden fields -->
@@ -318,11 +349,11 @@
                       <tr>
                         <th rowspan="2">Code article</th>
                         <th rowspan="2">Désignations</th>
+                        <th rowspan="2">Reference</th>
                         <th rowspan="2">Unité</th>
                         <th rowspan="2">Quantité</th>
-                        <th rowspan="2">Imputation</th>
                         <th colspan="2">Date de livraison</th>
-                        <th rowspan="2">Reference</th>
+                        <th rowspan="2">Imputation</th>
                         <th rowspan="2">Recommandations et Observations</th>
                         <th rowspan="2">Validation</th>
                         <th rowspan="2">Validé Par</th>
@@ -331,6 +362,7 @@
                       </tr>
                       <tr><th>Au plus tôt</th><th>Au plus tard</th></tr>
                     </thead>
+
                     <tbody>
                       <div class="d-flex justify-content-end mb-2">
                         <button type="button" id="btnValiderAll" class="btn btn-success">Valider Tout</button>
@@ -340,14 +372,14 @@
                           <td class="cell-code"><input type="hidden" value="<%= item.id %>">
                               <input type="text" class="form-control" value="<%= item.code ?? '' %>"></td>
                           <td class="cell-designation"><input type="text" class="form-control" value="<%= item.designation ?? '' %>"></td>
+                          <td class="cell-lot"><input type="text" class="form-control" value="<%= item.lot ?? '' %>"></td>
                           <td class="cell-unite"><input type="text" class="form-control" value="<%= item.unité ?? '' %>"></td>
                           <td class="cell-quantite"><input type="number" class="form-control" value="<%= item.quantité ?? '' %>" min="1"></td>
-                          <td><input type="text" class="form-control" value="<%= item.imputation ?? '' %>"></td>
                           <td><input type="date" class="form-control"
                                     value="<%= item.auPlutot ? new Date(item.auPlutot).toISOString().split('T')[0] : '' %>"></td>
                           <td><input type="date" class="form-control"
                                     value="<%= item.auPlutart ? new Date(item.auPlutart).toISOString().split('T')[0] : '' %>"></td>
-                          <td class="cell-lot"><input type="text" class="form-control" value="<%= item.lot ?? '' %>"></td>
+                          <td><input type="text" class="form-control" value="<%= item.imputation ?? '' %>"></td>
                           <td class="cell-observation"><input type="text" class="form-control" value="<%= item.observation ?? '' %>"></td>
 
                        <td class="validation-cell text-center align-middle">
@@ -376,8 +408,6 @@
   </div>
 </td>
 
-
-
                           <td class="validerPar-cell"><%= item.validepar || '-' %></td>
                           <td class="text-center">
                             <% if (item.image) { %>
@@ -393,7 +423,6 @@
                           </td>
                           <td>
                             <div class="d-flex align-items-center gap-2">
-                              <!-- Downlaod Image -->
                               <% if (item.image) { %>
                                 <a href="/achat/fourniture/<%= item.id %>/download-image" 
                                    class="btn btn-sm btn-info downloadBtn" target="_blank">
@@ -404,6 +433,14 @@
                                   <i class="fas fa-download"></i>
                                 </a>
                               <% } %>
+                              <button type="button" class="btn btn-sm btn-primary uploadBtn" data-item-id="<%= item.id %>">
+                                <i class="fas fa-upload"></i>
+                              </button>
+                              <input type="file" class="d-none uploadInput" accept="image/*">
+                              <input type="hidden" class="tempImage" value="<%= item.image || '' %>">
+                              <button type="button" class="btn btn-sm btn-danger deleteRow">
+                                <i class="fas fa-trash"></i>
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -432,11 +469,11 @@
       <tr>
         <th rowspan="2">Code article</th>
         <th rowspan="2">Désignations</th>
+        <th rowspan="2">Reference</th>
         <th rowspan="2">Unité</th>
         <th rowspan="2">Quantité</th>
-        <th rowspan="2">Imputation</th>
         <th colspan="2">Date de livraison</th>
-        <th rowspan="2">Reference</th>
+        <th rowspan="2">Imputation</th>
         <th rowspan="2">Recommandations et Observations</th>
         <th rowspan="2">Validation</th>
         <th rowspan="2">Validé Par</th>
@@ -444,17 +481,18 @@
       </tr>
       <tr><th>Au plus tôt</th><th>Au plus tard</th></tr>
     </thead>
+
     <tbody>
       <% demandeFourniture.items.forEach((item) => { %>
         <tr data-item-id="<%= item.id %>">
           <td class="cell-code"><%= item.code ?? '' %></td>
           <td class="cell-designation"><%= item.designation ?? '' %></td>
+          <td class="cell-lot"><%= item.lot ?? '' %></td>
           <td class="cell-unite"><%= item.unité ?? '' %></td>
           <td class="cell-quantite"><%= item.quantité ?? '' %></td>
-          <td><%= item.imputation ?? '' %></td>
           <td><%= item.auPlutot ? new Date(item.auPlutot).toLocaleDateString('fr-FR') : '' %></td>
           <td><%= item.auPlutart ? new Date(item.auPlutart).toLocaleDateString('fr-FR') : '' %></td>
-          <td class="cell-lot"><%= item.lot ?? '' %></td>
+          <td><%= item.imputation ?? '' %></td>
           <td class="cell-observation"><%= item.observation ?? '' %></td>
           <td class="validation-cell">
             <% if (item.validation === true) { %>
@@ -761,15 +799,15 @@ $(function () {
   $('#btnAddRow').on('click', function () {
     const html = `
       <tr data-index="${rowIndex}" data-new="true">
-        <td class="cell-code"><input type="text" class="form-control"></td>
-        <td class="cell-designation"><input type="text" class="form-control"></td>
-        <td class="cell-unite"><input type="text" class="form-control"></td>
-        <td class="cell-quantite"><input type="number" class="form-control" min="1"></td>
-        <td><input type="text" class="form-control imputation"></td>
-        <td><input type="date" class="form-control auPlutot"></td>
-        <td><input type="date" class="form-control auPlutart"></td>
-        <td class="cell-lot"><input type="text" class="form-control lot"></td>
-        <td class="cell-observation"><input type="text" class="form-control observation"></td>
+        <td class="cell-code"><input type="text" class="form-control code" value=""></td>
+        <td class="cell-designation"><input type="text" class="form-control designation" value=""></td>
+        <td class="cell-lot"><input type="text" class="form-control lot" value=""></td>
+        <td class="cell-unite"><input type="text" class="form-control unite" value=""></td>
+        <td class="cell-quantite"><input type="number" class="form-control quantite" min="1" value=""></td>
+        <td><input type="date" class="form-control auPlutot" value=""></td>
+        <td><input type="date" class="form-control auPlutart" value=""></td>
+        <td><input type="text" class="form-control imputation" value=""></td>
+        <td class="cell-observation"><input type="text" class="form-control observation" value=""></td>
         <td class="validation-cell"><span class="badge badge-secondary">En attente</span></td>
         <td class="validerPar-cell">-</td>
         <td class="text-center">
@@ -779,6 +817,9 @@ $(function () {
         </td>
         <td>
           <div class="d-flex align-items-center gap-2">
+            <a href="#" class="btn btn-sm btn-secondary downloadBtn d-none" target="_blank">
+              <i class="fas fa-download"></i>
+            </a>
             <button type="button" class="btn btn-sm btn-primary uploadBtn">
               <i class="fas fa-upload"></i>
             </button>

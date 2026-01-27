@@ -12,9 +12,35 @@
   <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
   <style>
-    .cell-designation {
-      width: 300px;
-      max-width: 400px;
+    #productsTable {
+      table-layout: auto;
+      min-width: 1400px;
+    }
+
+    #productsTable th,
+    #productsTable td {
+      vertical-align: middle;
+    }
+
+    #productsTable input.form-control {
+      min-width: 90px;
+    }
+
+    #productsTable .cell-code { min-width: 140px; }
+    #productsTable .cell-unite { min-width: 120px; }
+    #productsTable .cell-quantite { min-width: 120px; }
+    #productsTable .cell-imputation { min-width: 150px; }
+    #productsTable .cell-lot { min-width: 160px; }
+
+    #productsTable .cell-designation {
+      min-width: 280px;
+      max-width: 520px;
+      white-space: normal;
+    }
+
+    #productsTable .cell-observation {
+      min-width: 320px;
+      white-space: normal;
     }
   </style>
 </head>
@@ -99,11 +125,11 @@
             <tr>
               <th rowspan="2">Code article</th>
               <th rowspan="2">Désignations</th>
+              <th rowspan="2">Reference</th>
               <th rowspan="2">Unité</th>
               <th rowspan="2">Quantité</th>
-              <th rowspan="2">Imputation</th>
               <th colspan="2">Date de livraison</th>
-              <th rowspan="2">Reference</th>
+              <th rowspan="2">Imputation</th>
               <th rowspan="2">Recommandations et Observations</th>
               <th rowspan="2"></th>
             </tr>
@@ -116,15 +142,17 @@
           </thead>
           <tbody>
             <tr>
-  <td><input type="text" name="codeArticle[]" class="form-control" value=""></td>
+  <td class="cell-code"><input type="text" name="codeArticle[]" class="form-control" value=""></td>
   <td class="cell-designation"><input type="text" name="designation[]" class="form-control" value=""></td>
-  <td><input type="text" name="unite[]" class="form-control" value=""></td>
-  <td><input type="number" name="qteDemandee[]" class="form-control" value=""></td>
-  <td><input type="text" name="imputation[]" class="form-control" value=""></td>
+    <td class="cell-lot"><input type="text" name="lot[]" class="form-control"></td>
+
+  <td class="cell-unite"><input type="text" name="unite[]" class="form-control" value=""></td>
+  <td class="cell-quantite"><input type="number" name="qteDemandee[]" class="form-control" value=""></td>
   <td><input type="date" name="dateTôt[]" class="form-control"></td>
   <td><input type="date" name="dateTard[]" class="form-control"></td>
-  <td><input type="text" name="lot[]" class="form-control"></td>
-  <td><input type="text" name="observation[]" class="form-control" value=""></td>
+    <td class="cell-imputation"><input type="text" name="imputation[]" class="form-control" value=""></td>
+
+  <td class="cell-observation"><input type="text" name="observation[]" class="form-control" value=""></td>
   <td>
     <div class="d-flex justify-content-end">
       <button type="button" class="btn btn-md btn-danger deleteRow">
@@ -193,15 +221,17 @@
         const rowCount = $("#productsTable tbody tr").length;
         const row = `
           <tr>
-            <td><input type="text" name="codeArticle[]" class="form-control" value=""></td>
+            <td class="cell-code"><input type="text" name="codeArticle[]" class="form-control" value=""></td>
             <td class="cell-designation"><input type="text" name="designation[]" class="form-control" value=""></td>
-            <td><input type="text" name="unite[]" class="form-control" value=""></td>
-            <td><input type="number" name="qteDemandee[]" class="form-control" value=""></td>
-            <td><input type="text" name="imputation[]" class="form-control" value=""></td>
             <td><input type="date" name="dateTôt[]" class="form-control"></td>
             <td><input type="date" name="dateTard[]" class="form-control"></td>
-            <td><input type="text" name="lot[]" class="form-control"></td>
-            <td><input type="text" name="observation[]" class="form-control" value=""></td>
+            <td class="cell-lot"><input type="text" name="lot[]" class="form-control"></td>
+
+            <td class="cell-unite"><input type="text" name="unite[]" class="form-control" value=""></td>
+            <td class="cell-quantite"><input type="number" name="qteDemandee[]" class="form-control" value=""></td>
+
+            <td class="cell-imputation"><input type="text" name="imputation[]" class="form-control" value=""></td>
+            <td class="cell-observation"><input type="text" name="observation[]" class="form-control" value=""></td>
             <td>
               <div class="d-flex justify-content-end">
                 <button type="button" class="btn btn-md btn-danger deleteRow">
