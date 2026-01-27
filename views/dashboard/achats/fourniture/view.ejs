@@ -153,6 +153,10 @@
       background: #ef4444;
       color: #ffffff;
     }
+    .cell-designation {
+  width: 300px; /* or percentage */
+  max-width: 400px;
+}
   </style>
 </head>
 
@@ -279,6 +283,18 @@
                           <!-- Actions -->
                           <td>
                             <div class="d-flex align-items-center gap-2">
+                              <% if (item.image) { %>
+                                <a href="/achat/fourniture/<%= item.id %>/download-image"
+                                   class="btn btn-sm btn-info downloadBtn"
+                                   data-item-id="<%= item.id %>"
+                                   target="_blank">
+                                  <i class="fas fa-download"></i>
+                                </a>
+                              <% } else { %>
+                                <a href="#" class="btn btn-sm btn-secondary downloadBtn d-none" data-item-id="<%= item.id %>" target="_blank">
+                                  <i class="fas fa-download"></i>
+                                </a>
+                              <% } %>
                               <button type="button" class="btn btn-sm btn-primary uploadBtn" data-item-id="<%= item.id %>">
                                 <i class="fas fa-upload"></i>
                               </button>

@@ -565,18 +565,7 @@ export const updateCheque = async (req, res) => {
     }
 
     // 📌 Check if chantier exists by name
-    let findChantier = null;
-    if (chantier) {
-      findChantier = await prisma.chantier.findFirst({ where: { nom: chantier } });
-      if (!findChantier) {
-        findChantier = await prisma.chantier.create({
-          data: {
-            nom: chantier,
-            // Add other required fields for chantier if necessary
-          }
-        });
-      }
-    }
+   
 
     // 🛠️ Build the data object dynamically, only including fields that are provided
     const data = {};
@@ -594,7 +583,6 @@ export const updateCheque = async (req, res) => {
     if (obs !== undefined) data.obs = obs;
     if (fournisseur) data.fournisseur = { connect: { id: fournisseur.id } };
     if (findBanque) data.banque = { connect: { id: findBanque.id } };
-    if (findChantier) data.chantier = { connect: { id: findChantier.id } };
 
     // 🛠️ Update cheque
     const cheque = await prisma.cheque.update({

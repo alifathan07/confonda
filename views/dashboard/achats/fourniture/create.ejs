@@ -11,8 +11,12 @@
   <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
   <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
- 
-  
+  <style>
+    .cell-designation {
+      width: 300px;
+      max-width: 400px;
+    }
+  </style>
 </head>
 <body id="page-top">
   <div id="wrapper">
@@ -113,7 +117,7 @@
           <tbody>
             <tr>
   <td><input type="text" name="codeArticle[]" class="form-control" value=""></td>
-  <td><input type="text" name="designation[]" class="form-control" value=""></td>
+  <td class="cell-designation"><input type="text" name="designation[]" class="form-control" value=""></td>
   <td><input type="text" name="unite[]" class="form-control" value=""></td>
   <td><input type="number" name="qteDemandee[]" class="form-control" value=""></td>
   <td><input type="text" name="imputation[]" class="form-control" value=""></td>
@@ -190,7 +194,7 @@
         const row = `
           <tr>
             <td><input type="text" name="codeArticle[]" class="form-control" value=""></td>
-            <td><input type="text" name="designation[]" class="form-control" value=""></td>
+            <td class="cell-designation"><input type="text" name="designation[]" class="form-control" value=""></td>
             <td><input type="text" name="unite[]" class="form-control" value=""></td>
             <td><input type="number" name="qteDemandee[]" class="form-control" value=""></td>
             <td><input type="text" name="imputation[]" class="form-control" value=""></td>

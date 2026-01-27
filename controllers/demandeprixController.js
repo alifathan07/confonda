@@ -17,8 +17,8 @@ const mailTransporter = nodemailer.createTransport({
     port: 587,
     secure: false,
     auth: {
-    user: "abfathan@gmail.com",
-    pass: "ftaq bvph apmq qofe",
+    user: "confonda@gmail.com",
+    pass: "kxdl rgui vvxw eyfw",
     },
 });
 
@@ -310,195 +310,228 @@ export const generateDemandePrixPDF = async (req, res) => {
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=demandePrix_${demandePrix.id}.pdf`);
 
-    const doc = new PDFDocument({
-      size: 'A4',
-      margin: 40,
-      bufferPages: false,
-      autoFirstPage: true
-    });
+    const doc = new PDFDocument({ size: 'A4', margin: 40, bufferPages: true, autoFirstPage: true });
     doc.pipe(res);
 
-    // Page dimensions
     const pageWidth = 595.28;
     const pageHeight = 841.89;
     const margin = 40;
-    const contentWidth = pageWidth - (margin * 2);
+    const contentWidth = pageWidth - margin * 2;
 
-    // Colors
-    const primaryColor = '#2563EB';
-    const darkText = '#1F2937';
-    const lightText = '#6B7280';
-    const borderColor = '#D1D5DB';
-    const lightBg = '#F9FAFB';
+    const colors = {
+      blue: '#0052CC',
+      blueLight: '#f3f8ff',
+      brand: '#A22C29',
+      gray900: '#1f2937',
+      gray800: '#374151',
+      gray600: '#6b7280',
+      border: '#cfd6df',
+      borderSoft: '#c3cbd6',
+      rowBorder: '#eef1f5',
+      white: '#ffffff',
+      tableHeader: '#0052CC',
+      rowEven: '#ffffff',
+      rowOdd: '#f9fafb',
+    };
 
-    const signatureHeight = 70;
-    const footerHeight = 45;
-    const reservedSpace = signatureHeight + footerHeight + 20;
-
-    let y = margin;
-
-    // ===== HEADER =====
     const logoPath = path.join(__dirname, '../public/img/logo-4.png');
-    if (fs.existsSync(logoPath)) doc.image(logoPath, margin, y, { width: 100, height: 50 });
+    const signaturePath = path.join(__dirname, '../public/img/signature.png');
 
-    doc.fillColor(primaryColor)
-       .font('Helvetica-Bold')
-       .fontSize(20)
-       .text('DEMANDE DE PRIX', 0, y + 5, { align: 'center', width: pageWidth });
-
-    y += 20;
-
-    doc.font('Helvetica').fontSize(9).fillColor(darkText)
-       .text(`Référence: #${demandePrix.id}`, pageWidth - 160, y, { align: 'right', width: 120 })
-       .text(`Date: ${new Date(demandePrix.date).toLocaleDateString('fr-FR')}`, pageWidth - 160, y + 12, { align: 'right', width: 120 });
-
-    y += 50;
-
-    doc.moveTo(margin, y).lineTo(pageWidth - margin, y).strokeColor(primaryColor).lineWidth(2).stroke();
-    y += 25;
-
-    // ===== COMPANY & SUPPLIER INFO =====
-    const boxWidth = (contentWidth - 20) / 2;
-
-    // Company box
-    doc.roundedRect(margin, y, boxWidth, 85, 5).fillAndStroke(lightBg, borderColor);
-    doc.fillColor(primaryColor).font('Helvetica-Bold').fontSize(10).text('ÉMETTEUR', margin + 12, y + 12);
-    doc.font('Helvetica').fontSize(9).fillColor(darkText)
-       .text('CONFONDA', margin + 12, y + 28)
-       .text('82, Bd Abdelmoumen', margin + 12, y + 41)
-       .text('Casablanca, Maroc', margin + 12, y + 54)
-       .text('Tél: 0522-23-39-70', margin + 12, y + 67);
-
-    // Supplier box
-    const supplierX = margin + boxWidth + 20;
-    doc.roundedRect(supplierX, y, boxWidth, 85, 5).fillAndStroke(lightBg, borderColor);
-    doc.fillColor(primaryColor).font('Helvetica-Bold').fontSize(10).text('DESTINATAIRE', supplierX + 12, y + 12);
-    doc.font('Helvetica').fontSize(9).fillColor(darkText)
-       .text(demandePrix.fournisseur?.name || '-', supplierX + 12, y + 28)
-       .text(demandePrix.fournisseur?.email || '-', supplierX + 12, y + 41)
-       .text(demandePrix.fournisseur?.telFournisseur || '-', supplierX + 12, y + 54);
-
-    y += 80;
-
-    // Description
-    doc.font('Helvetica').fontSize(12).fillColor(darkText)
-       .text('Nous vous prions de bien vouloir nous communiquer votre meilleur offre de prix concernant les produits ci-après', margin + 12, y + 28);
-
-    y += 70;
-
-    // ===== ARTICLES TABLE =====
-    const columnWidths = [35, 210, 95, 55, 55];
-    const headerHeight = 28;
     const rowHeight = 22;
-    let currentY = y;
+    const companyFooterHeight = 100;
+    const footerHeight = 120 + companyFooterHeight;
+    const colWidths = [28, 240, 95, 55, 55];
 
-    const drawTableHeader = () => {
-      doc.roundedRect(margin, currentY, contentWidth, headerHeight, 3).fillAndStroke(primaryColor, primaryColor);
-      const headers = ['N°', 'Désignation', 'Référence', 'Unité', 'Quantité'];
-      let x = margin;
-      doc.fillColor('#FFFFFF').font('Helvetica-Bold').fontSize(9);
-      headers.forEach((h, i) => {
-        const align = i === 0 || i >= 2 ? 'center' : 'left';
-        const textX = align === 'center' ? x + (columnWidths[i] / 2) - (doc.widthOfString(h) / 2) : x + 10;
-        doc.text(h, textX, currentY + 8);
-        x += columnWidths[i];
-      });
-      currentY += headerHeight;
-    };
+    const sanitizePdfNumber = (s) => String(s || '').replace(/[\u202F\u00A0]/g, ' ');
+    const fmtStr = (s) => sanitizePdfNumber(String(s || ''));
+    const dpDateStr = new Date(demandePrix.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-    const drawRow = (art, idx) => {
-      if (currentY + rowHeight + reservedSpace > pageHeight) {
-        doc.addPage();
-        currentY = margin;
-        drawTableHeader();
-      }
+    const drawHeader = () => {
+      const y = margin;
+      const toplineY = y;
+      const toplineH = 70;
 
-      const bg = idx % 2 === 0 ? '#FFFFFF' : lightBg;
-      doc.rect(margin, currentY, contentWidth, rowHeight).fill(bg);
-
-      let cx = margin;
-      doc.fillColor(darkText).font('Helvetica').fontSize(9);
-
-      // N°
-      doc.text(String(idx + 1), cx + (columnWidths[0] / 2) - (doc.widthOfString(String(idx + 1)) / 2), currentY + 6);
-      cx += columnWidths[0];
-
-      // Désignation
-      const truncated = (art.designation || '-').slice(0, 50);
-      doc.text(truncated, cx + 8, currentY + 6, { width: columnWidths[1] - 16, lineBreak: false });
-      cx += columnWidths[1];
-
-      // Référence
-      const ref = (art.reference || '-').substring(0, 22);
-      doc.text(ref, cx + (columnWidths[2] / 2) - (doc.widthOfString(ref) / 2), currentY + 6);
-      cx += columnWidths[2];
-
-      // Unité
-      const unit = art.unite || '-';
-      doc.text(unit, cx + (columnWidths[3] / 2) - (doc.widthOfString(unit) / 2), currentY + 6);
-      cx += columnWidths[3];
-
-      // Quantité
-      const qty = String(art.quantite || '-');
-      doc.text(qty, cx + (columnWidths[4] / 2) - (doc.widthOfString(qty) / 2), currentY + 6);
-
-      currentY += rowHeight;
-    };
-
-    // Draw table
-    drawTableHeader();
-    if (demandePrix.articles.length === 0) {
-      doc.rect(margin, currentY, contentWidth, rowHeight * 2).stroke(borderColor);
-      doc.fillColor(lightText).font('Helvetica-Oblique').fontSize(10)
-         .text('Aucun article disponible', 0, currentY + 12, { align: 'center', width: pageWidth });
-      currentY += rowHeight * 2;
-    } else {
-      demandePrix.articles.forEach((art, idx) => drawRow(art, idx));
-    }
-
-    // ===== SIGNATURES =====
-    let sigY = pageHeight - margin - footerHeight - signatureHeight;
-    const sigWidth = (contentWidth / 2) - 15;
-
-    const boxes = [
-      { x: margin, label: 'Cachet & Signature Fournisseur' },
-      { x: margin + sigWidth + 30, label: 'Signature Responsable Achat' }
-    ];
-
-    const signatureImgPath = path.join(__dirname, '../public/img/signature.png');
-
-    boxes.forEach((box, idx) => {
-      doc.roundedRect(box.x, sigY, sigWidth, 50, 3).stroke(borderColor);
-
-      // For Responsable Achat box, try to draw signature image inside
-      if (idx === 1 && fs.existsSync(signatureImgPath)) {
+      if (fs.existsSync(logoPath)) {
         try {
-          const imgWidth = 180;
-          const imgHeight = 80;
-          const imgX = box.x + (sigWidth - imgWidth) / 2;
-          const imgY = sigY;
-          doc.image(signatureImgPath, imgX, imgY, { width: imgWidth, height: imgHeight });
+          doc.image(logoPath, margin, toplineY + 2, { height: 60 });
         } catch (e) {
-          console.error('Erreur chargement signature.png pour PDF download:', e.message);
+          console.error('Error loading logo:', e);
         }
       }
 
-      doc.font('Helvetica').fontSize(8).fillColor(lightText)
-         .text(box.label, box.x, sigY + 55, { width: sigWidth, align: 'center' });
-    });
+      const centerX = margin + contentWidth / 2;
+      const sepW = 6;
+      const sepH = 44;
+      const sepX = centerX - sepW / 2;
+      const sepY = toplineY + 12;
+      doc.rect(sepX, sepY, sepW, sepH).fill(colors.brand);
 
-    // ===== FOOTER =====
-    const footerY = pageHeight - margin - footerHeight + 15;
-    doc.moveTo(margin, footerY).lineTo(pageWidth - margin, footerY)
-       .strokeColor(borderColor).lineWidth(1).stroke();
+      doc.font('Helvetica-Bold').fontSize(13).fillColor(colors.brand)
+        .text('Construction et Fondation', centerX + 14, toplineY + 18, { align: 'left' });
+      doc.font('Helvetica').fontSize(9).fillColor(colors.gray600)
+        .text('Pour des constructions bien fondées', centerX + 14, toplineY + 36, { align: 'left' });
 
-    doc.font('Helvetica').fontSize(10).fillColor(darkText)
-       .text('82, angle Bd Abdelmoumen et rue Soumaya • Casablanca, Maroc',
-             margin, footerY + 8, { width: contentWidth, align: 'center' })
-     
-       .text('contact@confonda.com • Tél: 0522-23-39-70',
-             margin, footerY + 18, { width: contentWidth, align: 'center' })
-      
+      const gridY = toplineY + toplineH + 12;
+      const gap = 10;
+      const boxW = (contentWidth - gap * 2) / 3;
+      const boxH = 68;
+
+      doc.roundedRect(margin, gridY, boxW, boxH, 8).lineWidth(1).stroke(colors.border);
+      doc.font('Helvetica-Bold').fontSize(11).fillColor(colors.gray900)
+        .text(`DP N° : ${demandePrix.id}`, margin + 10, gridY + 14, { width: boxW - 20 });
+      doc.font('Helvetica-Bold').fontSize(11).fillColor(colors.gray900)
+        .text(`Date : ${dpDateStr}`, margin + 10, gridY + 38, { width: boxW - 20 });
+
+      const midX = margin + boxW + gap;
+      doc.roundedRect(midX, gridY, boxW, boxH, 8).lineWidth(1).stroke(colors.border);
+      doc.font('Helvetica-Bold').fontSize(11).fillColor(colors.gray900)
+        .text('DEMANDE DE PRIX', midX + 10, gridY + 24, { width: boxW - 20, align: 'center' });
+
+      const cliX = margin + (boxW + gap) * 2;
+      doc.roundedRect(cliX, gridY, boxW, boxH, 8).lineWidth(1).stroke(colors.border);
+      const lineW = boxW - 16;
+      doc.font('Helvetica-Bold').fontSize(9.5).fillColor(colors.gray900)
+        .text(fmtStr(demandePrix.fournisseur?.name || '-'), cliX + 8, gridY + 8, { width: lineW, ellipsis: true });
+      doc.font('Helvetica').fontSize(8.5).fillColor(colors.gray600)
+        .text(fmtStr(demandePrix.fournisseur?.email || '-'), cliX + 8, gridY + 24, { width: lineW, ellipsis: true });
+      doc.font('Helvetica').fontSize(8.5).fillColor(colors.gray600)
+        .text(fmtStr(demandePrix.fournisseur?.telFournisseur || 'Non renseigné'), cliX + 8, gridY + 38, { width: lineW, ellipsis: true });
+
+      doc.font('Helvetica').fontSize(11).fillColor(colors.gray900)
+        .text(
+          "Nous vous prions de bien vouloir nous communiquer votre meilleur offre de prix concernant les produits ci-après",
+          margin,
+          gridY + boxH + 20,
+          { width: contentWidth }
+        );
+
+      return gridY + boxH + 55;
+    };
+
+    const drawFooter = (yPosition) => {
+      const startY = yPosition || (pageHeight - margin - footerHeight);
+      const gap = 12;
+      const sigW = (contentWidth - gap) / 2;
+      const sigH = 86;
+
+      const sigStartY = startY;
+
+      doc.roundedRect(margin, sigStartY, sigW, sigH, 8).lineWidth(1).stroke(colors.borderSoft);
+      doc.font('Helvetica-Bold').fontSize(8.5).fillColor(colors.gray900)
+        .text('CACHET & SIGNATURE FOURNISSEUR', margin + 10, sigStartY + 10);
+      doc.moveTo(margin + 10, sigStartY + sigH - 18).lineTo(margin + sigW - 10, sigStartY + sigH - 18)
+        .lineWidth(1).stroke(colors.borderSoft);
+
+      const sig2X = margin + sigW + gap;
+      doc.roundedRect(sig2X, sigStartY, sigW, sigH, 8).lineWidth(1).stroke(colors.borderSoft);
+      doc.font('Helvetica-Bold').fontSize(8.5).fillColor(colors.gray900)
+        .text('LE RESPONSABLE ACHATS', sig2X + 10, sigStartY + 10);
+
+      if (fs.existsSync(signaturePath)) {
+        try {
+          const fitW = sigW - 20;
+          const fitH = 60;
+          const imgX = sig2X + (sigW - fitW) / 2;
+          const imgY = sigStartY + 22;
+          doc.image(signaturePath, imgX, imgY, { fit: [fitW, fitH], align: 'center', valign: 'center' });
+        } catch (e) {
+          console.error('Error loading signature:', e);
+        }
+      }
+
+      doc.moveTo(sig2X + 10, sigStartY + sigH - 18).lineTo(sig2X + sigW - 10, sigStartY + sigH - 18)
+        .lineWidth(1).stroke(colors.borderSoft);
+
+      const footerY = pageHeight - companyFooterHeight;
+      doc.rect(0, footerY, pageWidth, companyFooterHeight).fill('#AB3029').stroke();
+
+      const textMargin = 15;
+      doc.font('Helvetica').fontSize(9).fillColor('#FFFFFF');
+      doc.text(
+        '82, angle Bd abdelmoumen et rue Soumaya Imm.Shahrazad III 2ème étage Casablanca Tél : 0522-23-39-70',
+        50,
+        footerY + textMargin,
+        { width: pageWidth - 100, align: 'center' }
+      );
+      doc.text(
+        'Fax : 0522-23-42-60  Capital : 18 500 000.00 DH  CNSS : 7167788 - R.C. : 145619 – I.F. : 1602714 – Patente : 37900708- I.C.E : 001526422000063',
+        50,
+        footerY + textMargin + 15,
+        { width: pageWidth - 100, align: 'center' }
+      );
+    };
+
+    const drawTableHeader = (y) => {
+      doc.rect(margin, y, contentWidth, rowHeight).fill(colors.tableHeader);
+      const headers = ['N°', 'Désignation', 'Reference', 'Unité', 'Quantité'];
+      let x = margin;
+      headers.forEach((h, i) => {
+        doc.font('Helvetica-Bold').fontSize(8).fillColor(colors.white)
+          .text(h, x + 4, y + 7, { width: colWidths[i] - 8, align: i === 1 ? 'left' : 'center' });
+        x += colWidths[i];
+      });
+      return y + rowHeight;
+    };
+
+    const drawTableRow = (y, art, index) => {
+      const bg = index % 2 === 0 ? colors.rowEven : colors.rowOdd;
+      doc.rect(margin, y, contentWidth, rowHeight).fill(bg);
+
+      let x = margin;
+      colWidths.forEach((w) => {
+        doc.rect(x, y, w, rowHeight).lineWidth(0.6).stroke(colors.rowBorder);
+        x += w;
+      });
+
+      x = margin;
+      doc.font('Helvetica').fontSize(8).fillColor(colors.gray900)
+        .text(String(index + 1), x + 4, y + 7, { width: colWidths[0] - 12, align: 'center' });
+      x += colWidths[0];
+
+      doc.font('Helvetica').fontSize(8).fillColor(colors.gray800)
+        .text(fmtStr(art.designation || ''), x + 4, y + 7, { width: colWidths[1] - 8, align: 'left', ellipsis: true });
+      x += colWidths[1];
+
+      doc.font('Helvetica').fontSize(8).fillColor(colors.gray800)
+        .text(fmtStr(art.reference || ''), x + 4, y + 7, { width: colWidths[2] - 8, align: 'center', ellipsis: true });
+      x += colWidths[2];
+
+      doc.font('Helvetica').fontSize(8).fillColor(colors.gray800)
+        .text(fmtStr(art.unite || ''), x + 4, y + 7, { width: colWidths[3] - 8, align: 'center', ellipsis: true });
+      x += colWidths[3];
+
+      doc.font('Helvetica').fontSize(8).fillColor(colors.gray800)
+        .text(fmtStr(art.quantite ?? ''), x + 4, y + 7, { width: colWidths[4] - 8, align: 'center', ellipsis: true });
+
+      return y + rowHeight;
+    };
+
+    let currentY = drawHeader();
+
+    currentY += 10;
+    currentY = drawTableHeader(currentY);
+
+    const articles = Array.isArray(demandePrix.articles) ? demandePrix.articles : [];
+    const reservedSpace = footerHeight + 20;
+
+    if (!articles.length) {
+      doc.rect(margin, currentY, contentWidth, rowHeight * 2).stroke(colors.rowBorder);
+      doc.font('Helvetica-Oblique').fontSize(10).fillColor(colors.gray600)
+        .text('Aucun article disponible', 0, currentY + 12, { align: 'center', width: pageWidth });
+      currentY += rowHeight * 2;
+    } else {
+      articles.forEach((art, idx) => {
+        if (currentY + rowHeight + reservedSpace > pageHeight) {
+          doc.addPage();
+          currentY = margin;
+          currentY = drawTableHeader(currentY);
+        }
+        currentY = drawTableRow(currentY, art, idx);
+      });
+    }
+
+    drawFooter(pageHeight - margin - footerHeight);
+
     doc.end();
 
   } catch (err) {
@@ -532,177 +565,205 @@ export const sendDemandePrixEmail = async (req, res) => {
       console.error('Erreur génération PDF (email):', e);
     });
 
-    // Same layout as generateDemandePrixPDF
     const pageWidth = 595.28;
     const pageHeight = 841.89;
     const margin = 40;
-    const contentWidth = pageWidth - (margin * 2);
+    const contentWidth = pageWidth - margin * 2;
 
-    const primaryColor = '#2563EB';
-    const darkText = '#1F2937';
-    const lightText = '#6B7280';
-    const borderColor = '#D1D5DB';
-    const lightBg = '#F9FAFB';
-
-    const signatureHeight = 70;
-    const footerHeight = 45;
-    const reservedSpace = signatureHeight + footerHeight + 20;
-
-    let y = margin;
+    const colors = {
+      blue: '#0052CC',
+      blueLight: '#f3f8ff',
+      brand: '#A22C29',
+      gray900: '#1f2937',
+      gray800: '#374151',
+      gray600: '#6b7280',
+      border: '#cfd6df',
+      borderSoft: '#c3cbd6',
+      rowBorder: '#eef1f5',
+      white: '#ffffff',
+      tableHeader: '#0052CC',
+      rowEven: '#ffffff',
+      rowOdd: '#f9fafb',
+    };
 
     const logoPath = path.join(__dirname, '../public/img/logo-4.png');
-    if (fs.existsSync(logoPath)) doc.image(logoPath, margin, y, { width: 100, height: 50 });
+    const signaturePath = path.join(__dirname, '../public/img/signature.png');
 
-    doc.fillColor(primaryColor)
-      .font('Helvetica-Bold')
-      .fontSize(20)
-      .text('DEMANDE DE PRIX', 0, y + 5, { align: 'center', width: pageWidth });
-
-    y += 20;
-
-    doc.font('Helvetica').fontSize(9).fillColor(darkText)
-      .text(`Référence: #${demandePrix.id}`, pageWidth - 160, y, { align: 'right', width: 120 })
-      .text(`Date: ${new Date(demandePrix.date).toLocaleDateString('fr-FR')}`, pageWidth - 160, y + 12, { align: 'right', width: 120 });
-
-    y += 50;
-
-    doc.moveTo(margin, y).lineTo(pageWidth - margin, y).strokeColor(primaryColor).lineWidth(2).stroke();
-    y += 25;
-
-    const boxWidth = (contentWidth - 20) / 2;
-
-    doc.roundedRect(margin, y, boxWidth, 85, 5).fillAndStroke(lightBg, borderColor);
-    doc.fillColor(primaryColor).font('Helvetica-Bold').fontSize(10).text('ÉMETTEUR', margin + 12, y + 12);
-    doc.font('Helvetica').fontSize(9).fillColor(darkText)
-      .text('CONFONDA', margin + 12, y + 28)
-      .text('82, Bd Abdelmoumen', margin + 12, y + 41)
-      .text('Casablanca, Maroc', margin + 12, y + 54)
-      .text('Tél: 0522-23-39-70', margin + 12, y + 67);
-
-    const supplierX = margin + boxWidth + 20;
-    doc.roundedRect(supplierX, y, boxWidth, 85, 5).fillAndStroke(lightBg, borderColor);
-    doc.fillColor(primaryColor).font('Helvetica-Bold').fontSize(10).text('DESTINATAIRE', supplierX + 12, y + 12);
-    doc.font('Helvetica').fontSize(9).fillColor(darkText)
-      .text(demandePrix.fournisseur?.name || '-', supplierX + 12, y + 28)
-      .text(demandePrix.fournisseur?.email || '-', supplierX + 12, y + 41)
-      .text(demandePrix.fournisseur?.telFournisseur || '-', supplierX + 12, y + 54);
-
-    y += 80;
-
-    doc.font('Helvetica').fontSize(12).fillColor(darkText)
-      .text('Nous vous prions de bien vouloir nous communiquer votre meilleur offre de prix concernant les produits ci-après', margin + 12, y + 28);
-
-    y += 70;
-
-    const columnWidths = [35, 210, 95, 55, 55];
-    const headerHeight = 28;
     const rowHeight = 22;
-    let currentY = y;
+    const companyFooterHeight = 100;
+    const footerHeight = 120 + companyFooterHeight;
+    const colWidths = [28, 240, 95, 55, 55];
 
-    const drawTableHeader = () => {
-      doc.roundedRect(margin, currentY, contentWidth, headerHeight, 3).fillAndStroke(primaryColor, primaryColor);
-      const headers = ['N°', 'Désignation', 'Référence', 'Unité', 'Quantité'];
-      let x = margin;
-      doc.fillColor('#FFFFFF').font('Helvetica-Bold').fontSize(9);
-      headers.forEach((h, i) => {
-        const align = i === 0 || i >= 2 ? 'center' : 'left';
-        const textX = align === 'center' ? x + (columnWidths[i] / 2) - (doc.widthOfString(h) / 2) : x + 10;
-        doc.text(h, textX, currentY + 8);
-        x += columnWidths[i];
-      });
-      currentY += headerHeight;
-    };
+    const sanitizePdfNumber = (s) => String(s || '').replace(/[\u202F\u00A0]/g, ' ');
+    const fmtStr = (s) => sanitizePdfNumber(String(s || ''));
+    const dpDateStr = new Date(demandePrix.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-    const drawRow = (art, idx) => {
-      if (currentY + rowHeight + reservedSpace > pageHeight) {
-        doc.addPage();
-        currentY = margin;
-        drawTableHeader();
-      }
+    const drawHeader = () => {
+      const y = margin;
+      const toplineY = y;
+      const toplineH = 70;
 
-      const bg = idx % 2 === 0 ? '#FFFFFF' : lightBg;
-      doc.rect(margin, currentY, contentWidth, rowHeight).fill(bg);
-
-      let cx = margin;
-      doc.fillColor(darkText).font('Helvetica').fontSize(9);
-
-      const numStr = String(idx + 1);
-      doc.text(numStr, cx + (columnWidths[0] / 2) - (doc.widthOfString(numStr) / 2), currentY + 6);
-      cx += columnWidths[0];
-
-      const truncated = (art.designation || '-').slice(0, 50);
-      doc.text(truncated, cx + 8, currentY + 6, { width: columnWidths[1] - 16, lineBreak: false });
-      cx += columnWidths[1];
-
-      const ref = (art.reference || '-').substring(0, 22);
-      doc.text(ref, cx + (columnWidths[2] / 2) - (doc.widthOfString(ref) / 2), currentY + 6);
-      cx += columnWidths[2];
-
-      const unit = art.unite || '-';
-      doc.text(unit, cx + (columnWidths[3] / 2) - (doc.widthOfString(unit) / 2), currentY + 6);
-      cx += columnWidths[3];
-
-      const qty = String(art.quantite || '-');
-      doc.text(qty, cx + (columnWidths[4] / 2) - (doc.widthOfString(qty) / 2), currentY + 6);
-
-      currentY += rowHeight;
-    };
-
-    drawTableHeader();
-    if (demandePrix.articles.length === 0) {
-      doc.rect(margin, currentY, contentWidth, rowHeight * 2).stroke(borderColor);
-      doc.fillColor(lightText).font('Helvetica-Oblique').fontSize(10)
-        .text('Aucun article disponible', 0, currentY + 12, { align: 'center', width: pageWidth });
-      currentY += rowHeight * 2;
-    } else {
-      demandePrix.articles.forEach((art, idx) => drawRow(art, idx));
-    }
-
-    let sigY = pageHeight - margin - footerHeight - signatureHeight;
-    const sigWidth = (contentWidth / 2) - 15;
-    const boxes = [
-      { x: margin, label: 'Cachet & Signature Fournisseur' },
-      { x: margin + sigWidth + 30, label: 'Signature Responsable Achat' },
-    ];
-
-    const signatureImgPathEmail = path.join(__dirname, '../public/img/signature.png');
-
-    boxes.forEach((box, idx) => {
-      doc.roundedRect(box.x, sigY, sigWidth, 50, 3).stroke(borderColor);
-
-      if (idx === 1 && fs.existsSync(signatureImgPathEmail)) {
+      if (fs.existsSync(logoPath)) {
         try {
-          const imgWidth = 180;
-          const imgHeight = 80;
-          const imgX = box.x + (sigWidth - imgWidth) / 2;
-          const imgY = sigY;
-          doc.image(signatureImgPathEmail, imgX, imgY, { width: imgWidth, height: imgHeight });
+          doc.image(logoPath, margin, toplineY + 2, { height: 60 });
         } catch (e) {
-          console.error('Erreur chargement signature.png pour PDF email:', e.message);
+          console.error('Error loading logo:', e);
         }
       }
 
-      doc.font('Helvetica').fontSize(8).fillColor(lightText)
-        .text(box.label, box.x, sigY + 55, { width: sigWidth, align: 'center' });
-    });
+      const centerX = margin + contentWidth / 2;
+      const sepW = 6;
+      const sepH = 44;
+      const sepX = centerX - sepW / 2;
+      const sepY = toplineY + 12;
+      doc.rect(sepX, sepY, sepW, sepH).fill(colors.brand);
 
-    const footerY = pageHeight - margin - footerHeight + 15;
-    doc.moveTo(margin, footerY).lineTo(pageWidth - margin, footerY)
-      .strokeColor(borderColor).lineWidth(1).stroke();
+      doc.font('Helvetica-Bold').fontSize(13).fillColor(colors.brand)
+        .text('Construction et Fondation', centerX + 14, toplineY + 18, { align: 'left' });
+      doc.font('Helvetica').fontSize(9).fillColor(colors.gray600)
+        .text('Pour des constructions bien fondées', centerX + 14, toplineY + 36, { align: 'left' });
 
-    doc.font('Helvetica').fontSize(10).fillColor(darkText)
-      .text('82, angle Bd Abdelmoumen et rue Soumaya • Casablanca, Maroc',
-            margin, footerY + 8, { width: contentWidth, align: 'center' })
-      .text('contact@confonda.com • Tél: 0522-23-39-70',
-            margin, footerY + 18, { width: contentWidth, align: 'center' });
+      const gridY = toplineY + toplineH + 12;
+      const gap = 10;
+      const boxW = (contentWidth - gap * 2) / 3;
+      const boxH = 68;
 
-    doc.end();
+      doc.roundedRect(margin, gridY, boxW, boxH, 8).lineWidth(1).stroke(colors.border);
+      doc.font('Helvetica-Bold').fontSize(11).fillColor(colors.gray900)
+        .text(`DP N° : ${demandePrix.id}`, margin + 10, gridY + 14, { width: boxW - 20 });
+      doc.font('Helvetica-Bold').fontSize(11).fillColor(colors.gray900)
+        .text(`Date : ${dpDateStr}`, margin + 10, gridY + 38, { width: boxW - 20 });
+
+      const midX = margin + boxW + gap;
+      doc.roundedRect(midX, gridY, boxW, boxH, 8).lineWidth(1).stroke(colors.border);
+      doc.font('Helvetica-Bold').fontSize(11).fillColor(colors.gray900)
+        .text('DEMANDE DE PRIX', midX + 10, gridY + 24, { width: boxW - 20, align: 'center' });
+
+      const cliX = margin + (boxW + gap) * 2;
+      doc.roundedRect(cliX, gridY, boxW, boxH, 8).lineWidth(1).stroke(colors.border);
+      const lineW = boxW - 16;
+      doc.font('Helvetica-Bold').fontSize(9.5).fillColor(colors.gray900)
+        .text(fmtStr(demandePrix.fournisseur?.name || '-'), cliX + 8, gridY + 8, { width: lineW, ellipsis: true });
+      doc.font('Helvetica').fontSize(8.5).fillColor(colors.gray600)
+        .text(fmtStr(demandePrix.fournisseur?.email || '-'), cliX + 8, gridY + 24, { width: lineW, ellipsis: true });
+      doc.font('Helvetica').fontSize(8.5).fillColor(colors.gray600)
+        .text(fmtStr(demandePrix.fournisseur?.telFournisseur || 'Non renseigné'), cliX + 8, gridY + 38, { width: lineW, ellipsis: true });
+
+      doc.font('Helvetica').fontSize(11).fillColor(colors.gray900)
+        .text(
+          "Nous vous prions de bien vouloir nous communiquer votre meilleur offre de prix concernant les produits ci-après",
+          margin,
+          gridY + boxH + 20,
+          { width: contentWidth }
+        );
+
+      return gridY + boxH + 55;
+    };
+
+    const drawFooter = (yPosition) => {
+      const startY = yPosition || (pageHeight - margin - footerHeight);
+      const gap = 12;
+      const sigW = (contentWidth - gap) / 2;
+      const sigH = 86;
+
+      const sigStartY = startY;
+
+      doc.roundedRect(margin, sigStartY, sigW, sigH, 8).lineWidth(1).stroke(colors.borderSoft);
+      doc.font('Helvetica-Bold').fontSize(8.5).fillColor(colors.gray900)
+        .text('CACHET & SIGNATURE FOURNISSEUR', margin + 10, sigStartY + 10);
+      doc.moveTo(margin + 10, sigStartY + sigH - 18).lineTo(margin + sigW - 10, sigStartY + sigH - 18)
+        .lineWidth(1).stroke(colors.borderSoft);
+
+      const sig2X = margin + sigW + gap;
+      doc.roundedRect(sig2X, sigStartY, sigW, sigH, 8).lineWidth(1).stroke(colors.borderSoft);
+      doc.font('Helvetica-Bold').fontSize(8.5).fillColor(colors.gray900)
+        .text('LE RESPONSABLE ACHATS', sig2X + 10, sigStartY + 10);
+
+      if (fs.existsSync(signaturePath)) {
+        try {
+          const fitW = sigW - 20;
+          const fitH = 60;
+          const imgX = sig2X + (sigW - fitW) / 2;
+          const imgY = sigStartY + 22;
+          doc.image(signaturePath, imgX, imgY, { fit: [fitW, fitH], align: 'center', valign: 'center' });
+        } catch (e) {
+          console.error('Error loading signature:', e);
+        }
+      }
+
+      doc.moveTo(sig2X + 10, sigStartY + sigH - 18).lineTo(sig2X + sigW - 10, sigStartY + sigH - 18)
+        .lineWidth(1).stroke(colors.borderSoft);
+
+      const footerY = pageHeight - companyFooterHeight;
+      doc.rect(0, footerY, pageWidth, companyFooterHeight).fill('#AB3029').stroke();
+
+      const textMargin = 15;
+      doc.font('Helvetica').fontSize(9).fillColor('#FFFFFF');
+      doc.text(
+        '82, angle Bd abdelmoumen et rue Soumaya Imm.Shahrazad III 2ème étage Casablanca Tél : 0522-23-39-70',
+        50,
+        footerY + textMargin,
+        { width: pageWidth - 100, align: 'center' }
+      );
+      doc.text(
+        'Fax : 0522-23-42-60  Capital : 18 500 000.00 DH  CNSS : 7167788 - R.C. : 145619 – I.F. : 1602714 – Patente : 37900708- I.C.E : 001526422000063',
+        50,
+        footerY + textMargin + 15,
+        { width: pageWidth - 100, align: 'center' }
+      );
+    };
+
+    const drawTableHeader = (y) => {
+      doc.rect(margin, y, contentWidth, rowHeight).fill(colors.tableHeader);
+      const headers = ['N°', 'Désignation', 'Reference', 'Unité', 'Quantité'];
+      let x = margin;
+      headers.forEach((h, i) => {
+        doc.font('Helvetica-Bold').fontSize(8).fillColor(colors.white)
+          .text(h, x + 4, y + 7, { width: colWidths[i] - 8, align: i === 1 ? 'left' : 'center' });
+        x += colWidths[i];
+      });
+      return y + rowHeight;
+    };
+
+    const drawTableRow = (y, art, index) => {
+      const bg = index % 2 === 0 ? colors.rowEven : colors.rowOdd;
+      doc.rect(margin, y, contentWidth, rowHeight).fill(bg);
+
+      let x = margin;
+      colWidths.forEach((w) => {
+        doc.rect(x, y, w, rowHeight).lineWidth(0.6).stroke(colors.rowBorder);
+        x += w;
+      });
+
+      x = margin;
+      doc.font('Helvetica').fontSize(8).fillColor(colors.gray900)
+        .text(String(index + 1), x + 4, y + 7, { width: colWidths[0] - 12, align: 'center' });
+      x += colWidths[0];
+
+      doc.font('Helvetica').fontSize(8).fillColor(colors.gray800)
+        .text(fmtStr(art.designation || ''), x + 4, y + 7, { width: colWidths[1] - 8, align: 'left', ellipsis: true });
+      x += colWidths[1];
+
+      doc.font('Helvetica').fontSize(8).fillColor(colors.gray800)
+        .text(fmtStr(art.reference || ''), x + 4, y + 7, { width: colWidths[2] - 8, align: 'center', ellipsis: true });
+      x += colWidths[2];
+
+      doc.font('Helvetica').fontSize(8).fillColor(colors.gray800)
+        .text(fmtStr(art.unite || ''), x + 4, y + 7, { width: colWidths[3] - 8, align: 'center', ellipsis: true });
+      x += colWidths[3];
+
+      doc.font('Helvetica').fontSize(8).fillColor(colors.gray800)
+        .text(fmtStr(art.quantite ?? ''), x + 4, y + 7, { width: colWidths[4] - 8, align: 'center', ellipsis: true });
+
+      return y + rowHeight;
+    };
 
     doc.on('end', async () => {
       const pdfBuffer = Buffer.concat(chunks);
       try {
+      
         await mailTransporter.sendMail({
-          from: process.env.SMTP_FROM || process.env.SMTP_USER,
+          from: "CONFONDA",
           to: email,
           subject: `Demande de Prix #${demandePrix.id}`,
           text: `Bonjour,\n\nVeuillez trouver ci-joint la demande de prix #${demandePrix.id}.`,
@@ -719,6 +780,33 @@ export const sendDemandePrixEmail = async (req, res) => {
         return res.status(500).json({ success: false, error: 'Erreur envoi email' });
       }
     });
+
+    let currentY = drawHeader();
+    currentY += 10;
+    currentY = drawTableHeader(currentY);
+
+    const articles = Array.isArray(demandePrix.articles) ? demandePrix.articles : [];
+    const reservedSpace = footerHeight + 20;
+
+    if (!articles.length) {
+      doc.rect(margin, currentY, contentWidth, rowHeight * 2).stroke(colors.rowBorder);
+      doc.font('Helvetica-Oblique').fontSize(10).fillColor(colors.gray600)
+        .text('Aucun article disponible', 0, currentY + 12, { align: 'center', width: pageWidth });
+      currentY += rowHeight * 2;
+    } else {
+      articles.forEach((art, idx) => {
+        if (currentY + rowHeight + reservedSpace > pageHeight) {
+          doc.addPage();
+          currentY = margin;
+          currentY = drawTableHeader(currentY);
+        }
+        currentY = drawTableRow(currentY, art, idx);
+      });
+    }
+
+    drawFooter(pageHeight - margin - footerHeight);
+
+    doc.end();
   } catch (err) {
     console.error('Erreur préparation email demande de prix:', err);
     return res.status(500).json({ success: false, error: 'Erreur serveur' });

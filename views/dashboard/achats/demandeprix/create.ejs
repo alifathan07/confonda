@@ -12,24 +12,35 @@
 
   <style>
     :root {
-      --blue: #2563eb;
-      --green: #16a34a;
-      --red: #ef4444;
+      --blue: #0052cc;
+      --blue-light: #f3f8ff;
       --gray-100: #f8f9fc;
-      --gray-200: #e5e7eb;
-      --blue-light: #e0efff;
+      --gray-200: #e9ecef;
+      --gray-600: #6c757d;
+      --gray-800: #343a40;
+      --gray-900: #212529;
     }
 
+    * { box-sizing: border-box; }
     body {
       font-family: 'Inter', sans-serif;
       background: var(--gray-100);
-      font-size: 0.95rem;
-      color: #333;
+      color: var(--gray-800);
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+    }
+
+    @media print {
+      .no-print, .action-bar, .sidebar, .topbar { display: none !important; }
+      body { background: white; padding: 15px; }
+      .doc-card { box-shadow: none; border: 1px solid #eee; }
+      .table-container { overflow: visible !important; }
     }
 
     .action-bar {
       background: white;
-      border-bottom: 1px solid var(--gray-200);
+      border-bottom: 1px solid #dee2e6;
       padding: 1rem 1.5rem;
       margin-bottom: 1.5rem;
       box-shadow: 0 2px 10px rgba(0,0,0,0.05);
@@ -45,77 +56,220 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      flex-wrap: wrap;
     }
 
     .action-bar .badge {
       background: var(--blue);
       color: white;
-      padding: 0.35rem 0.8rem;
-      border-radius: 50px;
       font-weight: 600;
       font-size: 0.8rem;
+      padding: 0.35rem 0.8rem;
+      border-radius: 50px;
     }
 
     .btn-modern {
-      padding: 0.7rem 1.4rem;
+      padding: 0.65rem 1.2rem;
       border-radius: 12px;
       font-weight: 600;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       border: none;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      transition: all 0.25s;
+      transition: all 0.25s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
+
     .btn-modern:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
     }
+
     .btn-send { background: var(--blue); color: white; }
-    .btn-save { background: var(--green); color: white; font-size: 1rem; padding: 0.9rem 2rem; }
-    .btn-add-line { background: #6366f1; color: white; }
+    .btn-send:hover { background: #0041a3; }
+    .btn-outline { background: white; color: var(--blue); border: 2px solid var(--blue); }
+    .btn-outline:hover { background: var(--blue-light); }
 
     .doc-card {
       background: white;
       border-radius: 20px;
       overflow: hidden;
       box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+      margin: 0 auto;
       max-width: 1000px;
-      margin: 0 auto 2rem;
     }
 
-    td[contenteditable="true"] {
-      outline: 2px dashed transparent;
-      transition: all 0.2s;
-      padding: 10px !important;
+    .doc-header {
+      padding: 2.5rem 2rem;
+      background: linear-gradient(135deg, var(--blue-light) 0%, white 70%);
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .header-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    @media (min-width: 768px) {
+      .header-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .logo-title h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--gray-900);
+      margin: 0.8rem 0 0.4rem;
+    }
+
+    .logo-title p {
+      color: var(--blue);
+      font-weight: 600;
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    .logo-img {
+      height: 70px;
+      object-fit: contain;
+      margin-bottom: 0.8rem;
+    }
+
+    .fournisseur-box {
+      background: white;
+      border: 2px solid var(--blue-light);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 15px rgba(0,82,204,0.08);
+    }
+
+    .fournisseur-box h5 {
+      color: var(--blue);
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+    }
+
+    .info-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 0.7rem;
+      font-size: 0.92rem;
+    }
+
+    .info-line i {
+      color: var(--blue);
+      width: 18px;
+      font-size: 1rem;
+    }
+
+    .table-section {
+      padding: 2rem;
+      overflow-x: auto;
+    }
+
+    .table-container {
+      min-width: 800px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .table-doc {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      min-width: 700px;
+    }
+
+    .table-doc thead th {
+      background: var(--blue);
+      color: white;
+      padding: 0.9rem 0.8rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .table-doc tbody td {
+      padding: 1rem 0.8rem;
+      border-bottom: 1px solid #eef1f5;
+      vertical-align: middle;
+    }
+
+    .table-doc tbody tr:hover { background: var(--blue-light); }
+
+    .num-circle {
+      background: var(--blue);
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
       font-size: 0.95rem;
     }
-    td[contenteditable="true"]:focus {
-      outline: 2px dashed var(--blue);
-      background: #f8fbff !important;
-      border-radius: 8px;
-    }
 
-    .qty-input {
-      width: 80px;
-      text-align: center;
-      font-weight: 700;
-      font-size: 1rem;
-      border: none;
+    .qty-pill {
       background: #e2e8f0;
+      color: #1e293b;
+      padding: 0.4rem 0.9rem;
       border-radius: 50px;
-      padding: 0.5rem 1rem;
+      font-weight: 700;
+      font-size: 0.9rem;
     }
-    .qty-input:focus { outline: 2px solid var(--blue); background: white; }
 
-    .table th, .table td { vertical-align: middle; }
-    .table thead { background: var(--blue); color: white; font-size: 0.85rem; }
-    .cell-input { width: 100%; }
-    .cell-input, .cell-textarea { font-size: 0.92rem; }
-    .cell-textarea { width: 100%; min-height: 38px; resize: vertical; }
+    .signature-area {
+      padding: 2.5rem 2rem;
+      background: #f8fbff;
+      border-top: 1px solid #dee2e6;
+    }
 
-    @media print {
-      .no-print, .action-bar, .sidebar, .topbar, .delete-btn, .btn-add-line, #btnSave { display: none !important; }
-      body { background: white; padding: 20px; }
-      .doc-card { box-shadow: none; border: 1px solid #eee; }
+    .signature-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      margin-top: 1.5rem;
+    }
+
+    @media (min-width: 640px) {
+      .signature-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .sig-box {
+      text-align: center;
+      padding: 1.8rem;
+      border: 2px dashed #c3d4e9;
+      border-radius: 16px;
+      background: white;
+    }
+
+    .sig-box h6 {
+      color: var(--gray-600);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-size: 0.82rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .sig-line {
+      height: 80px;
+      border-bottom: 3px solid #e2e8f0;
+      margin: 1.2rem 0;
+    }
+
+    @media (max-width: 576px) {
+      .action-bar { padding: 1rem; }
+      .action-bar h1 { font-size: 1.2rem; }
+      .btn-modern { padding: 0.6rem 1rem; font-size: 0.8rem; }
+      .doc-header { padding: 2rem 1.5rem; }
+      .logo-title h1 { font-size: 1.7rem; }
+      .table-section { padding: 1.5rem; }
+      .fournisseur-box { padding: 1.2rem; }
+      .info-line { font-size: 0.88rem; }
     }
   </style>
 </head>
@@ -129,80 +283,91 @@
 
       <div class="container-fluid px-3 px-md-4">
 
-        <div class="action-bar no-print d-flex justify-content-between align-items-center">
-          <h1 class="h5 m-0"><i class="fas fa-file-invoice-dollar"></i> Créer une Demande de Prix</h1>
-          <button id="btnSave" class="btn btn-modern btn-save">ENREGISTRER</button>
+        <div class="action-bar no-print">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+            <h1>
+              <i class="fas fa-file-invoice-dollar"></i>
+              Demande de Prix
+              <span class="badge">#—</span>
+            </h1>
+            <div class="d-flex flex-wrap gap-2">
+              <button onclick="sendEmail()" class="btn btn-modern btn-send" id="btnSend">
+                <i class="fas fa-paper-plane"></i> <span class="d-none d-sm-inline">Envoyer</span>
+              </button>
+              <button class="btn btn-modern btn-outline" title="PDF" onclick="downloadPDF()">
+                <i class="fas fa-file-pdf"></i> <span class="d-none d-sm-inline">PDF</span>
+              </button>
+              <button id="btnSave" class="btn btn-modern btn-outline" style="background-color: green; color: white;">
+                <i class="fas fa-save"></i> <span class="d-none d-sm-inline">Créer</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class="doc-card">
-          <div class="p-4" style="background:linear-gradient(135deg,#f3f8ff 0%,white 70%); border-bottom:1px solid #dee2e6;">
-            <div class="row">
-              <div class="col-md-6">
-                <img src="/img/logo-4.png" alt="Logo" style="height:70px; object-fit:contain;">
-                <h1 class="mt-3" style="font-size:2rem; font-weight:800;">Demande de Prix</h1>
-                <div class="d-flex align-items-center gap-2 mt-2">
-                  <label class="mb-0 mr-2">Date:</label>
-                  <input type="date" name="date" id="dpDate" class="form-control" style="max-width:200px;">
-                </div>
+          <div class="doc-header">
+            <div class="header-grid">
+              <div class="logo-title">
+                <img src="/img/logo-4.png" alt="Logo" class="logo-img">
+                <h1>Demande de Prix</h1>
+                <input type="date" name="date" id="dpDate" hidden>
+                <p>N° — • <%= new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) %></p>
               </div>
-              <div class="col-md-6">
-                <div class="p-4 bg-white rounded-3 shadow-sm border border-primary border-2">
-                  <h5 class="mb-3"><i class="fas fa-building"></i> Fournisseur</h5>
-                  <select id="fournisseurSelect" class="form-control mb-3" name="supplier">
-                    <option value="">-- Choisir un fournisseur --</option>
-                    <% (fournisseurs||[]).forEach(f => { %>
-                      <option value="<%= f.id %>"><%= f.name %> <%= f.ville ? '- ' + f.ville : '' %></option>
-                    <% }) %>
-                  </select>
-                  <div class="small">
-                    <div><i class="fas fa-user-tie"></i> <strong id="fourName">—</strong></div>
-                    <div><i class="fas fa-envelope"></i> <span id="fourEmail">—</span></div>
-                    <div><i class="fas fa-phone"></i> <span id="fourTel">Non renseigné</span></div>
-                  </div>
+
+              <div class="fournisseur-box">
+                <h5><i class="fas fa-building"></i> Fournisseur</h5>
+                <select id="fournisseurSelect" class="form-control mb-3" name="supplier">
+                  <option value="">-- Choisir un fournisseur --</option>
+                  <% (fournisseurs||[]).forEach(f => { %>
+                    <option value="<%= f.id %>"><%= f.name %> <%= f.ville ? '- ' + f.ville : '' %></option>
+                  <% }) %>
+                </select>
+                <div class="small">
+                  <div class="info-line"><i class="fas fa-user-tie"></i> <strong id="fourName">—</strong></div>
+                  <div class="info-line"><i class="fas fa-envelope"></i> <span id="fourEmail">—</span></div>
+                  <div class="info-line"><i class="fas fa-phone"></i> <span id="fourTel">Non renseigné</span></div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="p-4">
-            <table class="table table-bordered" id="articlesTable">
-              <thead class="table-primary text-white">
-                <tr>
-                  <th width="6%" class="text-center">N°</th>
-                  <th width="40%">Désignation</th>
-                  <th width="16%" class="text-center">Réf / Lot</th>
-                  <th width="10%" class="text-center">Unité</th>
-                  <th width="10%" class="text-center">Quantité</th>
-                  <th width="8%" class="text-center">Suppr</th>
-                </tr>
-              </thead>
-              <tbody id="articlesBody"></tbody>
-            </table>
-            <div class="text-center mt-3">
-              <button onclick="addArticleRow()" class="btn btn-modern btn-add-line">Ajouter un article</button>
+          <div class="table-section">
+            <div class="table-container">
+              <table class="table-doc" id="articlesTable">
+                <thead>
+                  <tr>
+                    <th style="width:6%; text-align:center; border: 1px solid #dee2e6;">N°</th>
+                    <th style="width:40%; border: 1px solid #dee2e6;">Désignation</th>
+                    <th style="width:18%; text-align:center; border: 1px solid #dee2e6;">Référence</th>
+                    <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Unité</th>
+                    <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Quantité</th>
+                    <th style="width:6%; text-align:center; border: 1px solid #dee2e6;" class="no-print">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="articlesBody"></tbody>
+              </table>
+            </div>
+            <div class="text-center no-print" style="margin-top: 1rem;">
+              <button type="button" onclick="addArticleRow()" class="btn btn-modern btn-outline">
+                Ajouter une ligne
+              </button>
             </div>
           </div>
+
+          <div class="signature-area">
+            <div class="signature-grid">
+              <div class="sig-box">
+                <h6>Cachet & Signature du Fournisseur</h6>
+                <div class="sig-line"></div>
+              </div>
+              <div class="sig-box">
+                <h6>Le Responsable Achats</h6>
+                <div class="sig-line"></div>
+              </div>
+            </div>
+          </div>
+
         </div>
-
-
-
-          <!-- Signatures -->
-          <div class="p-5 text-center" style="background:#f8fbff; border-top:1px solid #dee2e6;">
-            <div class="row">
-              <div class="col-6">
-                <div class="border border-2 border-dashed rounded-3 p-4 bg-white">
-                  <h6 class="text-uppercase text-muted small">Cachet & Signature du Fournisseur</h6>
-                  <div style="height:90px; border-bottom:3px solid #ddd; margin:20px 0;"></div>
-                </div>
-              </div>
-              <div class="col-6">
-                <div class="border border-2 border-dashed rounded-3 p-4 bg-white">
-                  <h6 class="text-uppercase text-muted small">Le Responsable Achats</h6>
-                  <div style="height:90px; border-bottom:3px solid #ddd; margin:20px 0;"></div>
-                </div>
-              </div>
-            </div>
-          </div>
 
       </div>
     </div>
@@ -240,12 +405,24 @@ function addArticleRow(){
   const row = tbody.insertRow();
   const idx = tbody.rows.length;
   row.innerHTML = `
-    <td class="text-center align-middle"><div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:34px;height:34px;font-weight:700;">${idx}</div></td>
-    <td class="align-middle"><input type="text" class="form-control form-control-sm" placeholder="Désignation"></td>
-    <td class="text-center align-middle"><input type="text" class="form-control form-control-sm text-center" placeholder="Réf / Lot"></td>
-    <td class="text-center align-middle"><input type="text" class="form-control form-control-sm text-center" placeholder="Unité"></td>
-    <td class="text-center align-middle"><input type="number" min="1" class="qty-input" value="1"></td>
-    <td class="text-center align-middle"><i class="fas fa-trash-alt" style="cursor:pointer" onclick="this.closest('tr').remove(); renumberRows();"></i></td>
+    <td style="text-align:center; border: 1px solid #dee2e6;">
+      <div class="num-circle">${idx}</div>
+    </td>
+    <td style="border: 1px solid #dee2e6;">
+      <input type="text" class="form-control form-control-sm" placeholder="Désignation">
+    </td>
+    <td style="text-align:center; border: 1px solid #dee2e6;">
+      <input type="text" class="form-control form-control-sm text-center" placeholder="Réf / Lot">
+    </td>
+    <td style="text-align:center; border: 1px solid #dee2e6;">
+      <input type="text" class="form-control form-control-sm text-center" placeholder="Unité">
+    </td>
+    <td style="text-align:center; border: 1px solid #dee2e6;">
+      <input type="number" min="1" class="qty-pill" style="border:none; outline:none; max-width: 110px; text-align:center;" value="1">
+    </td>
+    <td style="text-align:center; border: 1px solid #dee2e6;" class="no-print">
+      <i class="fas fa-trash-alt" style="cursor:pointer" onclick="this.closest('tr').remove(); renumberRows();"></i>
+    </td>
   `;
 }
 
@@ -285,6 +462,14 @@ document.getElementById('btnSave').addEventListener('click', async function(){
     window.location.href = json.redirect || '/achats/demande-prix';
   }catch(e){ alert(e.message||'Erreur'); btn.disabled=false; btn.innerHTML=original; }
 });
+
+function sendEmail() {
+  alert('Veuillez d\'abord créer la demande de prix.');
+}
+
+function downloadPDF() {
+  alert('Veuillez d\'abord créer la demande de prix.');
+}
 </script>
 
 </body>

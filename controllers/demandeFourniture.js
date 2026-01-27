@@ -577,9 +577,32 @@ export const uploadImageFourniture = async (req, res) => {
     const { id } = req.params;
     if (!req.file) return res.status(400).json({ success: false, error: "Fichier manquant" });
 
+    const itemId = parseInt(id, 10);
+    if (Number.isNaN(itemId)) {
+      return res.status(400).json({ success: false, error: "ID invalide" });
+    }
+
+    const sessionUser = req.session?.user;
+    if (!sessionUser) {
+      return res.status(401).json({ success: false, error: "Non authentifié" });
+    }
+
+    const item = await prisma.itemFourniture.findUnique({
+      where: { id: itemId },
+      select: { id: true, demandeFourniture: { select: { userId: true } } },
+    });
+
+    if (!item) {
+      return res.status(404).json({ success: false, error: "Article introuvable" });
+    }
+
+    if (sessionUser.role === 'user' && item.demandeFourniture?.userId !== sessionUser.id) {
+      return res.status(403).json({ success: false, error: "Accès refusé" });
+    }
+
     const imagePath = `/uploads/fournitures/${req.file.filename}`;
     const updated = await prisma.itemFourniture.update({
-      where: { id: parseInt(id) },
+      where: { id: itemId },
       data: { image: imagePath },
     });
 
@@ -607,11 +630,25 @@ export const uploadTempImage = async (req, res) => {
 export const downloadImageFourniture = async (req, res) => {
   try {
     const { id } = req.params;
+    const itemId = parseInt(id, 10);
+    if (Number.isNaN(itemId)) {
+      return res.status(400).json({ success: false, error: "ID invalide" });
+    }
+
+    const sessionUser = req.session?.user;
+    if (!sessionUser) {
+      return res.status(401).json({ success: false, error: "Non authentifié" });
+    }
+
     const item = await prisma.itemFourniture.findUnique({
-      where: { id: parseInt(id) },
-      select: { image: true },
+      where: { id: itemId },
+      select: { image: true, demandeFourniture: { select: { userId: true } } },
     });
     if (!item?.image) return res.status(404).json({ success: false, error: "Image introuvable" });
+
+    if (sessionUser.role === 'user' && item.demandeFourniture?.userId !== sessionUser.id) {
+      return res.status(403).json({ success: false, error: "Accès refusé" });
+    }
 
     const filePath = path.resolve(__dirname, '..', item.image.replace(/^\//, ''));
     await fs.promises.access(filePath);

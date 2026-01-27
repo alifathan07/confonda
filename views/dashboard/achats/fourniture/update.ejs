@@ -11,6 +11,12 @@
   <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
   <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+  <style>
+    .cell-designation {
+      width: 300px;
+      max-width: 400px;
+    }
+  </style>
 </head>
 
 <body id="page-top">
@@ -97,7 +103,7 @@
                     <% demandeFourniture.items.forEach((item, idx) => { %>
                       <tr data-index="<%= idx %>">
                         <td><input type="text"   name="items[<%= idx %>][code]"        class="form-control" value="<%= item.code ?? '' %>"></td>
-                        <td><input type="text"   name="items[<%= idx %>][designation]" class="form-control" value="<%= item.designation %>"></td>
+                        <td class="cell-designation"><input type="text"   name="items[<%= idx %>][designation]" class="form-control" value="<%= item.designation %>"></td>
                         <td><input type="text"   name="items[<%= idx %>][unité]"       class="form-control" value="<%= item.unité ?? '' %>"></td>
                         <td><input type="number" name="items[<%= idx %>][quantité]"    class="form-control" value="<%= item.quantité %>"></td>
                         <td><input type="text" name="items[<%= idx %>][imputation]"    class="form-control" value="<%= item.imputation %>"></td>
@@ -477,7 +483,7 @@
                     <% demandeFourniture.items.forEach((item, idx) => { %>
                       <tr data-index="<%= idx %>">
                         <td><input type="text"   name="items[<%= idx %>][code]"        class="form-control" value="<%= item.code ?? '' %>"></td>
-                        <td><input type="text"   name="items[<%= idx %>][designation]" class="form-control" value="<%= item.designation %>"></td>
+                        <td class="cell-designation"><input type="text"   name="items[<%= idx %>][designation]" class="form-control" value="<%= item.designation %>"></td>
                         <td><input type="text"   name="items[<%= idx %>][unité]"       class="form-control" value="<%= item.unité ?? '' %>"></td>
                         <td><input type="number" name="items[<%= idx %>][quantité]"    class="form-control" value="<%= item.quantité %>"></td>
                         <td><input type="text" name="items[<%= idx %>][imputation]"    class="form-control" value="<%= item.imputation%>"></td>
@@ -556,7 +562,7 @@
       const html = `
         <tr data-index="${rowIndex}">
           <td><input type="text"   name="items[${rowIndex}][code]"        class="form-control"></td>
-          <td><input type="text"   name="items[${rowIndex}][designation]" class="form-control"></td>
+          <td class="cell-designation"><input type="text"   name="items[${rowIndex}][designation]" class="form-control"></td>
           <td><input type="text"   name="items[${rowIndex}][unité]"       class="form-control"></td>
           <td><input type="number" name="items[${rowIndex}][quantité]"    class="form-control"></td>
           <td><input type="text" name="items[${rowIndex}][imputation]" class="form-control"></td>
