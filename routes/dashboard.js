@@ -23,11 +23,12 @@ import { deleteTelePai, indexTelePai, storeTelePai, updateTelePai } from '../con
 import { createEncaissement, indexEncaissement, updateEncaissement } from '../controllers/encaisementController.js';
 import { addCaisseItem, createDemandeCaisse, deleteDemandeCaisse, deleteDemandeCaisseItem, generateDemandeExcel, generateDemandePdf, indexDemandeCaisse, storeDemandeCaisse, updateDemandeCaisseItem, updateDemandeCaisseItemValidation, updateDemandeCaisseStatut, updateDemandeCaisseValidationAll, viewDemandeCaisse } from '../controllers/demandecaisseController.js';
 import { addJustifCaisse, addJustifCaisseAdminAuto, addJustifCaisseUserFirstTime, adminUserList, createJustifCaisse, createJustifCaisseAdmin, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteJustifeCaisse, deleteRecette, generateJustifCaisseExcel, generateJustifCaissePDF, getAllJustifCaisse, justifeCaisseListUser, listChantierUser, saveAllData, saveRecettesAdmin, updateDepenceValidation, updateSoldePrecedentAdmin, validateAllDepenses, viewJustifCaisse, viewJustifCaisseAdmin } from '../controllers/justifecaisseController.js';
-import { createDemandeFourniture, deleteDemandeFourniture, downloadImageFourniture, editDemandeFourniture, generateDemandeFourniturePDF, indexDemandeFourniture, storeDemandeFourniture, updateDemandeFourniture, updateDemandeStatus, updateValidationFourniture, uploadFour, uploadImageFourniture, uploadTempImage, validateAllFourniture, viewDemandeFourniture } from '../controllers/demandeFourniture.js';
+import { addpricingforDemande, createDemandeFourniture, deleteDemandeFourniture, downloadImageFourniture, editDemandeFourniture, generateDemandeFourniturePDF, indexDemandeFourniture, storeDemandeFourniture, updateDemandeFourniture, updateDemandeStatus, updateValidationFourniture, uploadFour, uploadImageFourniture, uploadTempImage, validateAllFourniture, viewDemandeFourniture } from '../controllers/demandeFourniture.js';
 import { fileURLToPath } from 'url';
 import { EditDemandePrix, listDemandePrix, postDemandePrixViaFourniture, updateDemandePrix, viewDemandePrix, deleteDemandePrix, deleteArticle, createDemandePrix, storeDemandePrix, generateDemandePrixPDF, sendDemandePrixEmail } from '../controllers/demandeprixController.js';
 import { editBc, postBcDemandeFourniture, updateBc, deleteBcItem, createBcForm, storeBc, generateBcPDF, sendBcEmail, listBc, deleteBc, updateBcItemDistribution, updateBcItem, importBcInfo } from '../controllers/bcController.js';
 import { bmceDelete, bmceDownload, bmcePay, bmcePreview, bmceUpload, indexVirementPay } from '../controllers/virementpayController.js';
+import { getListFourniture } from '../controllers/listfournitureController.js';
 
 const virementpayUpload = multer({
   dest: 'uploads/',
@@ -393,12 +394,11 @@ dashboardRouter.delete("/achats/fourniture/:id", deleteDemandeFourniture);
 dashboardRouter.patch('/achat/fourniture/:id/validate', updateValidationFourniture);
 dashboardRouter.patch('/achat/fourniture/validate-all/:id', validateAllFourniture);
 dashboardRouter.patch('/achats/demandes/fourniture/updateStatus/:id', updateDemandeStatus);
-
+dashboardRouter.patch('/achats/demandes/fourniture/update/:id', updateDemandeFourniture);
+dashboardRouter.put('/achats/fourniture/update/pricing/:id', addpricingforDemande);
 dashboardRouter.post('/achat/fourniture/:id/upload-image', uploadFour.single('image'), uploadImageFourniture);
 dashboardRouter.post('/achat/fourniture/upload-temp-image', uploadFour.single('image'), uploadTempImage);
 dashboardRouter.get('/achat/fourniture/:id/download-image', downloadImageFourniture);
-
-
 
 
 /// Creation de La demande de prix :
@@ -445,7 +445,7 @@ dashboardRouter.post('/achat/bc/import', upload.single('excelFile'), importBcInf
 
 // virement payment 
 dashboardRouter.get("/virementpay", indexVirementPay);
-dashboardRouter.get("/virementpay/bmce" ,bmcePay)
+dashboardRouter.get("/virementpay/bmce", bmcePay)
 dashboardRouter.post('/virementpay/bmce/upload', (req, res, next) => {
   virementpayUpload.single('excelFile')(req, res, (err) => {
     if (err) {
@@ -462,4 +462,8 @@ dashboardRouter.get('/virementpay/bmce/files/:fileId/download', bmceDownload);
 dashboardRouter.post('/virementpay/bmce/files/:fileId/delete', bmceDelete);
 
 
+
+
+/// list fourniture
+dashboardRouter.get('/achats/listfourniture', getListFourniture);
 

@@ -21,7 +21,6 @@ model User {
 
   JustifCaisse JustifCaisse[]
 
-  
   demandeCaisse     DemandeCaisse[]
   demandeFourniture DemandeFourniture[]
   role              String              @default("grandadmin") // user, admin, grandadmin
@@ -85,7 +84,10 @@ model DemandeFourniture {
   chantier   Chantier? @relation(fields: [chantierId], references: [id])
   status     String    @default("En Attente") // En Attente // Commandé // Livré // Annulé
 
-  items ItemFourniture[]
+  items    ItemFourniture[]
+  totalHt  Float?
+  Tva      Float?
+  totalTTC Float?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -95,20 +97,24 @@ model DemandeFourniture {
 }
 
 model ItemFourniture {
-  id                  Int                @id @default(autoincrement())
-  code                String?
-  designation         String
-  unité              String?
-  imputation String? 
-  quantité           String?
-  auPlutart           String?
-  auPlutot            String?
-  lot                 String?
-  observation         String?
-  validation          Boolean? @default(null) @map("NULL")
-  image               String? // <-- ✅ image file path
+  id          Int     @id @default(autoincrement())
+  code        String?
+  designation String
+  unité      String?
+
+  imputation     String?
+  quantité      String?
+  auPlutart      String?
+  auPlutot       String?
+  lot            String?
+  observation    String?
+  validation     Boolean?
+  image          String? // <-- ✅ image file path
   // En cours , Refusée , Validée
-  validepar           String?
+  validepar      String?
+  prixU          Float?
+  totalHt        Float?
+  delaisPaiement String?
 
   demandeFournitureId Int?
   demandeFourniture   DemandeFourniture? @relation(fields: [demandeFournitureId], references: [id], onDelete: Cascade)
@@ -142,7 +148,7 @@ model JustifCaisse {
 
   recettes RecetteCaisse[]
   depenses DepenseCaisse[]
-  
+
   @@index([userId, annee(sort: Desc), mois(sort: Desc)])
 }
 
@@ -261,7 +267,6 @@ model ChequeAllocation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
 
 model Effet {
   id                Int         @id @default(autoincrement())
@@ -551,24 +556,23 @@ model Article {
   updatedAt       DateTime       @updatedAt
 }
 
-
 model Chantier {
-  id                     Int                      @id @default(autoincrement())
-  nom                    String                   @unique
-  objet                  String?
-  montantContratHt       Float?
-  natureContrat          String?
-  numContrat             String?
-  recavenir              Recavenir[]              @relation("RecavenirChantier")
-  encaissementRecu       EncaissementRecu[]       @relation("EncaissementRecuChantier")
-  telepaimentPrelevement TelepaimentPrelevement[] @relation("TelepaimentPrelevementChantier")
-  BondeCommandeChantierItem  BondeCommandeChantierItem[]
+  id                        Int                         @id @default(autoincrement())
+  nom                       String                      @unique
+  objet                     String?
+  montantContratHt          Float?
+  natureContrat             String?
+  numContrat                String?
+  recavenir                 Recavenir[]                 @relation("RecavenirChantier")
+  encaissementRecu          EncaissementRecu[]          @relation("EncaissementRecuChantier")
+  telepaimentPrelevement    TelepaimentPrelevement[]    @relation("TelepaimentPrelevementChantier")
+  BondeCommandeChantierItem BondeCommandeChantierItem[]
 
   clientId Int?
   client   Client? @relation("ClientChantier", fields: [clientId], references: [id])
 
   // Relations
- 
+
   demandeCaisse DemandeCaisse[]
   bondeCommande BondeCommande[]
 
@@ -588,12 +592,11 @@ model Chantier {
   updatedAt DateTime @updatedAt
 }
 
-
 model BondeCommandeChantierItem {
-  id              Int           @id @default(autoincrement())
-  bondeCommande   BondeCommande @relation(fields: [bondeCommandeId], references: [id], onDelete: Cascade)
+  id              Int            @id @default(autoincrement())
+  bondeCommande   BondeCommande  @relation(fields: [bondeCommandeId], references: [id], onDelete: Cascade)
   bondeCommandeId Int
-  chantier        Chantier      @relation(fields: [chantierId], references: [id])
+  chantier        Chantier       @relation(fields: [chantierId], references: [id])
   chantierId      Int
   item            commandesItems @relation(fields: [itemId], references: [id])
   itemId          Int
@@ -605,55 +608,50 @@ model BondeCommandeChantierItem {
 }
 
 model BondeCommande {
-  id                    Int                     @id @default(autoincrement())
-  date                  DateTime                @default(now())
-  fournisseur           Fournisseur             @relation(fields: [fournisseurId], references: [id])
-  fournisseurId         Int
+  id                        Int                         @id @default(autoincrement())
+  date                      DateTime                    @default(now())
+  fournisseur               Fournisseur                 @relation(fields: [fournisseurId], references: [id])
+  fournisseurId             Int
   BondeCommandeChantierItem BondeCommandeChantierItem[]
-  chantier              Chantier?               @relation(fields: [chantierId], references: [id])
-  chantierId            Int?
-  demandeur             String?
-  commandesItems        commandesItems[]
-  totalHt               Float?
-  tauxTva               Float?
-  totalTtc              Float?
-  dateLivraison String? 
-  lieuLivraison String? 
-  modeReg String?
-  delaiReg String?
-  numero String?
-  montantLettre         String?
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @updatedAt
+  chantier                  Chantier?                   @relation(fields: [chantierId], references: [id])
+  chantierId                Int?
+  demandeur                 String?
+  commandesItems            commandesItems[]
+  totalHt                   Float?
+  tauxTva                   Float?
+  totalTtc                  Float?
+  dateLivraison             String?
+  lieuLivraison             String?
+  modeReg                   String?
+  delaiReg                  String?
+  numero                    String?
+  montantLettre             String?
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
 }
 
 model commandesItems {
-  id              Int            @id @default(autoincrement())
-  designation     String
-  unite           String
-  quantite        Int
-  imputation      String?
-  prixUnitaire    Float?
-  tauxRemise     Float?
-  remise          Float?
-  totalHt         Float?
-  reference      String?
-  bondeCommande   BondeCommande? @relation(fields: [bondeCommandeId], references: [id], onDelete: Cascade)
-  bondeCommandeId Int?
+  id                        Int                         @id @default(autoincrement())
+  designation               String
+  unite                     String
+  quantite                  Int
+  imputation                String?
+  prixUnitaire              Float?
+  tauxRemise                Float?
+  remise                    Float?
+  totalHt                   Float?
+  reference                 String?
+  bondeCommande             BondeCommande?              @relation(fields: [bondeCommandeId], references: [id], onDelete: Cascade)
+  bondeCommandeId           Int?
   BondeCommandeChantierItem BondeCommandeChantierItem[]
 
-
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-
-
-model Fourniture_list { 
-  id              Int           @id @default(autoincrement())
-  designation String? 
-  reference String? 
-  unite String? 
-  prixUnitaire Float?
+model Fourniture_list {
+  id           Int      @id @default(autoincrement())
+  designation  String?
+  reference    String?
+  prixUnitaire Decimal?
 }
-

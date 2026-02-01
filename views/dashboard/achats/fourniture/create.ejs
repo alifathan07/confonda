@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -14,6 +15,7 @@
   <style>
     #productsTable {
       table-layout: auto;
+      width: 100%;
       min-width: 1400px;
     }
 
@@ -26,11 +28,25 @@
       min-width: 90px;
     }
 
-    #productsTable .cell-code { min-width: 140px; }
-    #productsTable .cell-unite { min-width: 120px; }
-    #productsTable .cell-quantite { min-width: 120px; }
-    #productsTable .cell-imputation { min-width: 150px; }
-    #productsTable .cell-lot { min-width: 160px; }
+    #productsTable .cell-code {
+      min-width: 140px;
+    }
+
+    #productsTable .cell-unite {
+      min-width: 120px;
+    }
+
+    #productsTable .cell-quantite {
+      min-width: 120px;
+    }
+
+    #productsTable .cell-imputation {
+      min-width: 150px;
+    }
+
+    #productsTable .cell-lot {
+      min-width: 160px;
+    }
 
     #productsTable .cell-designation {
       min-width: 280px;
@@ -42,30 +58,63 @@
       min-width: 320px;
       white-space: normal;
     }
+
+    /* Autocomplete Styles - Global Container */
+    #global-autocomplete-list {
+      position: absolute;
+      z-index: 9999;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+      display: none;
+      /* Hidden by default */
+      min-width: 200px;
+    }
+
+    #global-autocomplete-list li {
+      padding: 8px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+    }
+
+    #global-autocomplete-list li:last-child {
+      border-bottom: none;
+    }
+
+    #global-autocomplete-list li:hover {
+      background-color: #f1f3f9;
+    }
   </style>
 </head>
+
 <body id="page-top">
   <div id="wrapper">
     <%- include('../../../layouts/sidebar') %>
 
-    <!-- Page Wrapper -->
-    <div id="content-wrapper" class="d-flex flex-column">
-      <!-- Main Content -->
-      <div id="content">
-        <!-- Topbar -->    
-         <%- include('../../../layouts/topbar') %>
+      <!-- Page Wrapper -->
+      <div id="content-wrapper" class="d-flex flex-column">
+        <!-- Main Content -->
+        <div id="content">
+          <!-- Topbar -->
+          <%- include('../../../layouts/topbar') %>
 
-        <!-- End of Topbar -->
+            <!-- End of Topbar -->
 
-        <!-- Begin Page Content -->
-        <!-- Begin Page Content -->
-<div class="container-fluid">
+            <!-- Begin Page Content -->
+            <!-- Begin Page Content -->
+            <div class="container-fluid">
 
-    <!-- Page Heading -->
-    <h1 class="h3 mb-4 text-gray-800">Créer une Demande de Fournitures</h1>
-  
-    <!-- Form Card -->
-    <!-- <div class="card shadow mb-4">
+              <!-- Page Heading -->
+              <h1 class="h3 mb-4 text-gray-800">Créer une Demande de Fournitures</h1>
+
+              <!-- Form Card -->
+              <!-- <div class="card shadow mb-4">
       <div class="card-body">
         <form id="demandeForm" action="/achats/fourniture/create" method="POST">
           
@@ -73,165 +122,209 @@
         </form>
       </div>
     </div> -->
-  
-    <!-- Products Table -->
-    <!-- Products Table -->
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-      <h6 class="m-0 font-weight-bold text-primary">Demande Fournitures </h6>
-      <br>
-          <form 
-            id="demandeForm"
-            action="/achats/demande/fourniture"
-            method="POST"
-          >
-        <div class="d-flex justify-content-between">
-      
-            <div class="form-group">
-              <label for="date">Date</label>
 
-              <input type="date" class="form-control" id="date" name="date" value="<%= today %>" readonly>
+              <!-- Products Table -->
+              <!-- Products Table -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Demande Fournitures </h6>
+                  <br>
+                  <form id="demandeForm" action="/achats/demande/fourniture" method="POST">
+                    <div class="d-flex justify-content-between">
+
+                      <div class="form-group">
+                        <label for="date">Date</label>
+
+                        <input type="date" class="form-control" id="date" name="date" value="<%= today %>" readonly>
+                      </div>
+                      <div class="form-group">
+                        <label for="numero">Numéro</label>
+                        <input type="number" class="form-control" id="numero" name="numero" value="<%= numero %>"
+                          readonly>
+                      </div>
+                      <div class="form-group">
+                        <label for="user">User</label>
+                        <input type="text" class="form-control" id="user" name="user" value="<%= user.name %>" readonly>
+                      </div>
+
+                      <div class="form-group">
+                        <label for="chantierId">Chantier</label>
+                        <select class="form-control" id="chantierId" name="chantierId" required>
+                          <option value="">Sélectionner un chantier</option>
+                          <% if (typeof chantiers !=='undefined' && chantiers.length> 0) { %>
+                            <% chantiers.forEach(c=> { %>
+                              <option value="<%= c.id %>">
+                                <%= c.nom %>
+                              </option>
+                              <% }) %>
+                                <% } %>
+                        </select>
+                      </div>
+                      <% if (user.role !=='user' ) { %>
+                        <div class="form-group">
+                          <label for="delaisPaiement">Délais de Paiement</label>
+                          <select class="form-control" id="delaisPaiement" name="delaisPaiement">
+                            <option value="">Sélectionner un délai</option>
+                            <option value="à vue">À vue</option>
+                            <option value="30 jours">30 jours</option>
+                            <option value="60 jours">60 jours</option>
+                            <option value="90 jours">90 jours</option>
+                            <option value="120 jours">120 jours</option>
+                          </select>
+                        </div>
+                        <% } %>
+
+                    </div>
+
+
+
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table table-bordered text-center align-middle" id="productsTable" width="100%"
+                      cellspacing="0">
+                      <thead class="thead-light">
+                        <tr>
+                          <th rowspan="2">Code article</th>
+                          <th rowspan="2">Désignations</th>
+                          <th rowspan="2">Reference</th>
+                          <th rowspan="2">Unité</th>
+                          <th rowspan="2">Quantité</th>
+                          <th colspan="2">Date de livraison</th>
+                          <th rowspan="2">Imputation</th>
+                          <th rowspan="2">Recommandations et Observations</th>
+                          <th rowspan="2">Image</th>
+                          <th rowspan="2"></th>
+                        </tr>
+                        <tr>
+
+                          <th>Au plus tôt</th>
+                          <th>Au plus tard</th>
+
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td class="cell-code"><input type="text" name="codeArticle[]" class="form-control" value="">
+                          </td>
+                          <td class="cell-designation" style="position: relative;">
+                            <input type="text" name="designation[]" class="form-control designation-input" value=""
+                              autocomplete="off">
+                            <ul class="autocomplete-list suggestions-list" style="display:none;"></ul>
+                          </td>
+                          <td class="cell-lot" style="position: relative;">
+                            <input type="text" name="lot[]" class="form-control lot-input" autocomplete="off">
+                            <ul class="autocomplete-list suggestions-list" style="display:none;"></ul>
+                          </td>
+
+                          <td class="cell-unite"><input type="text" name="unite[]" class="form-control" value=""></td>
+                          <td class="cell-quantite"><input type="number" name="qteDemandee[]" class="form-control"
+                              value=""></td>
+                          <td><input type="date" name="dateTôt[]" class="form-control"></td>
+                          <td><input type="date" name="dateTard[]" class="form-control"></td>
+                          <td class="cell-imputation"><input type="text" name="imputation[]" class="form-control"
+                              value=""></td>
+
+                          <td class="cell-observation"><input type="text" name="observation[]" class="form-control"
+                              value=""></td>
+
+                          <td class="cell-image" style="vertical-align: middle; text-align: center; min-width: 80px;">
+                            <label
+                              style="cursor: pointer; margin-bottom: 0; padding: 6px 12px; border: 1px solid #d1d3e2; border-radius: 0.35rem; background-color: #f8f9fc; display: inline-block; transition: all 0.2s;">
+                              <i class="fas fa-upload text-primary"></i>
+                              <input type="file" name="image[]" style="display: none;" accept="image/*">
+                            </label>
+                          </td>
+                          <td>
+                            <div class="d-flex justify-content-end">
+                              <button type="button" class="btn btn-md btn-danger deleteRow">
+                                <i class="fas fa-trash"></i>
+                              </button>
+                              <button type="button" class="btn btn-md btn-primary addRow">
+                                <i class="fas fa-plus"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+
+                </div>
+
+                </form>
+              </div>
+              <div class="mb-4 text-right">
+
+                <button type="submit" form="demandeForm" name="action" value="submit" class="btn btn-primary"
+                  onclick="saveDemande(event)">
+                  Enregistrer la Demande
+                </button>
+                <a href="/demande-fourniture" class="btn btn-danger">Annuler</a>
+              </div>
             </div>
-            <div class="form-group">
-              <label for="numero">Numéro</label>
-              <input type="number" class="form-control" id="numero" name="numero" value="<%= numero %>" readonly>
-            </div>
-            <div class="form-group">
-              <label for="user">User</label>
-              <input type="text" class="form-control" id="user" name="user" value="<%= user.name %>" readonly>
-            </div>
+            <script>
+              $(document).ready(function () {
+                const tableBody = $("#productsTable tbody");
 
-            <div class="form-group">
-              <label for="chantierId">Chantier</label>
-              <select class="form-control" id="chantierId" name="chantierId" required>
-                <option value="">Sélectionner un chantier</option>
-                <% if (typeof chantiers !== 'undefined' && chantiers.length > 0) { %>
-                  <% chantiers.forEach(c => { %>
-                    <option value="<%= c.id %>"><%= c.nom %></option>
-                  <% }) %>
-                <% } %>
-              </select>
-            </div>
-        
-        </div>
+                let lastChantierAlertAt = 0;
+                const showChantierModal = () => {
+                  if (typeof $ === 'function' && $('#chantierRequiredModal').length && typeof $('#chantierRequiredModal').modal === 'function') {
+                    $('#chantierRequiredModal').modal('show');
+                  } else {
+                    alert('Veuillez sélectionner un chantier avant de continuer.');
+                  }
+                };
+                const ensureChantierSelected = () => {
+                  const chantierId = $('#chantierId').val();
+                  if (chantierId) return true;
 
+                  const now = Date.now();
+                  if (now - lastChantierAlertAt > 800) {
+                    lastChantierAlertAt = now;
+                    showChantierModal();
+                  }
+                  $('#chantierId').focus();
+                  return false;
+                };
 
-        
-    </div>
-    <div class="card-body">
-      <div class="table-responsive">
-        <table class="table table-bordered text-center align-middle" id="productsTable" width="100%" cellspacing="0">
-          <thead class="thead-light">
-            <tr>
-              <th rowspan="2">Code article</th>
-              <th rowspan="2">Désignations</th>
-              <th rowspan="2">Reference</th>
-              <th rowspan="2">Unité</th>
-              <th rowspan="2">Quantité</th>
-              <th colspan="2">Date de livraison</th>
-              <th rowspan="2">Imputation</th>
-              <th rowspan="2">Recommandations et Observations</th>
-              <th rowspan="2"></th>
-            </tr>
-            <tr>
-              
-              <th>Au plus tôt</th>
-              <th>Au plus tard</th>
-              
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-  <td class="cell-code"><input type="text" name="codeArticle[]" class="form-control" value=""></td>
-  <td class="cell-designation"><input type="text" name="designation[]" class="form-control" value=""></td>
-    <td class="cell-lot"><input type="text" name="lot[]" class="form-control"></td>
+                $(document).on('focus mousedown keydown click', '#productsTable input, .addRow, .deleteRow', function (e) {
+                  if (!ensureChantierSelected()) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    try { $(this).blur(); } catch (err) { }
+                    return false;
+                  }
+                });
 
-  <td class="cell-unite"><input type="text" name="unite[]" class="form-control" value=""></td>
-  <td class="cell-quantite"><input type="number" name="qteDemandee[]" class="form-control" value=""></td>
-  <td><input type="date" name="dateTôt[]" class="form-control"></td>
-  <td><input type="date" name="dateTard[]" class="form-control"></td>
-    <td class="cell-imputation"><input type="text" name="imputation[]" class="form-control" value=""></td>
-
-  <td class="cell-observation"><input type="text" name="observation[]" class="form-control" value=""></td>
-  <td>
-    <div class="d-flex justify-content-end">
-      <button type="button" class="btn btn-md btn-danger deleteRow">
-        <i class="fas fa-trash"></i>
-      </button>
-      <button type="button" class="btn btn-md btn-primary addRow">
-        <i class="fas fa-plus"></i> 
-      </button>
-    </div>
-  </td>
-</tr>
-          </tbody>
-        </table>
-      </div>
-  
-      
-    </div>
-
-      </form>
-  </div>
-  <div class="mb-4 text-right">
-     
-      <button type="submit" form="demandeForm" name="action" value="submit" class="btn btn-primary" onclick="saveDemande(event)">
-        Enregistrer la Demande
-      </button>
-      <a href="/demande-fourniture" class="btn btn-danger">Annuler</a>
-    </div>
-  </div>
-  <script>
-    $(document).ready(function() {
-      const tableBody = $("#productsTable tbody");
-
-      let lastChantierAlertAt = 0;
-      const showChantierModal = () => {
-        if (typeof $ === 'function' && $('#chantierRequiredModal').length && typeof $('#chantierRequiredModal').modal === 'function') {
-          $('#chantierRequiredModal').modal('show');
-        } else {
-          alert('Veuillez sélectionner un chantier avant de continuer.');
-        }
-      };
-      const ensureChantierSelected = () => {
-        const chantierId = $('#chantierId').val();
-        if (chantierId) return true;
-
-        const now = Date.now();
-        if (now - lastChantierAlertAt > 800) {
-          lastChantierAlertAt = now;
-          showChantierModal();
-        }
-        $('#chantierId').focus();
-        return false;
-      };
-
-      $(document).on('focus mousedown keydown click', '#productsTable input, .addRow, .deleteRow', function(e) {
-        if (!ensureChantierSelected()) {
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          try { $(this).blur(); } catch (err) {}
-          return false;
-        }
-      });
-
-      // Add Row
-      $(document).on("click", ".addRow", function() {
-        if (!ensureChantierSelected()) return;
-        const rowCount = $("#productsTable tbody tr").length;
-        const row = `
+                // Add Row
+                $(document).on("click", ".addRow", function () {
+                  if (!ensureChantierSelected()) return;
+                  const rowCount = $("#productsTable tbody tr").length;
+                  const row = `
           <tr>
             <td class="cell-code"><input type="text" name="codeArticle[]" class="form-control" value=""></td>
-            <td class="cell-designation"><input type="text" name="designation[]" class="form-control" value=""></td>
-            <td><input type="date" name="dateTôt[]" class="form-control"></td>
-            <td><input type="date" name="dateTard[]" class="form-control"></td>
-            <td class="cell-lot"><input type="text" name="lot[]" class="form-control"></td>
-
+            <td class="cell-designation" style="position: relative;">
+                <input type="text" name="designation[]" class="form-control designation-input" value="" autocomplete="off">
+            </td>
+            <td class="cell-lot" style="position: relative;">
+                <input type="text" name="lot[]" class="form-control lot-input" value="" autocomplete="off">
+            </td>
             <td class="cell-unite"><input type="text" name="unite[]" class="form-control" value=""></td>
             <td class="cell-quantite"><input type="number" name="qteDemandee[]" class="form-control" value=""></td>
-
+            <td><input type="date"
+             name="dateTôt[]" class="form-control"></td>
+            <td><input type="date" name="dateTard[]" class="form-control"></td>
             <td class="cell-imputation"><input type="text" name="imputation[]" class="form-control" value=""></td>
             <td class="cell-observation"><input type="text" name="observation[]" class="form-control" value=""></td>
+              <td class="cell-image" style="vertical-align: middle; text-align: center; min-width: 80px;">
+                            <label
+                              style="cursor: pointer; margin-bottom: 0; padding: 6px 12px; border: 1px solid #d1d3e2; border-radius: 0.35rem; background-color: #f8f9fc; display: inline-block; transition: all 0.2s;">
+                              <i class="fas fa-upload text-primary"></i>
+                              <input type="file" name="image[]" style="display: none;" accept="image/*">
+                            </label>
+                          </td>
             <td>
               <div class="d-flex justify-content-end">
                 <button type="button" class="btn btn-md btn-danger deleteRow">
@@ -243,127 +336,263 @@
               </div>
             </td>
           </tr>`;
-        tableBody.append(row);
-      });
+                  tableBody.append(row);
+                });
 
-      // Delete Row
-      $(document).on("click", ".deleteRow", function() {
-        if (!ensureChantierSelected()) return;
-        $(this).closest("tr").remove();
-      });
-    });
-    const saveDemande = (e) => {
-      if (e) e.preventDefault(); // Prevent default form submission if event is passed
+                // Delete Row
+                $(document).on("click", ".deleteRow", function () {
+                  if (!ensureChantierSelected()) return;
+                  $(this).closest("tr").remove();
+                });
 
-      const chantierId = $('#chantierId').val();
-      if (!chantierId) {
-        if (typeof $ === 'function' && $('#chantierRequiredModal').length && typeof $('#chantierRequiredModal').modal === 'function') {
-          $('#chantierRequiredModal').modal('show');
-        } else {
-          alert('Veuillez sélectionner un chantier avant de continuer.');
-        }
-        $('#chantierId').focus();
-        return;
-      }
-      
-      // Convert parallel arrays to items array format
-      const items = [];
-      const codeArticles = $('input[name="codeArticle[]"]').map(function() { return $(this).val(); }).get();
-      const designations = $('input[name="designation[]"]').map(function() { return $(this).val(); }).get();
-      const unites = $('input[name="unite[]"]').map(function() { return $(this).val(); }).get();
-      const qteDemandees = $('input[name="qteDemandee[]"]').map(function() { return $(this).val(); }).get();
-      const imputations = $('input[name="imputation[]"]').map(function() { return $(this).val(); }).get();
-      const dateTots = $('input[name="dateTôt[]"]').map(function() { return $(this).val(); }).get();
-      const dateTards = $('input[name="dateTard[]"]').map(function() { return $(this).val(); }).get();
-      const lots = $('input[name="lot[]"]').map(function() { return $(this).val(); }).get();
-      const observations = $('input[name="observation[]"]').map(function() { return $(this).val(); }).get();
-      
-      // Debug logging
-      console.log('Collected data:', {
-        codeArticles,
-        designations,
-        unites,
-        qteDemandees,
-        imputations,
-        dateTots,
-        dateTards,
-        lots,
-        observations
-      });
-      
-      for (let i = 0; i < designations.length; i++) {
-        if (designations[i] || qteDemandees[i]) {
-          items.push({
-            code: codeArticles[i] || '',
-            designation: designations[i] || '',
-            unité: unites[i] || '',
-            quantité: qteDemandees[i] || '0',
-            imputation: imputations[i] || '',
-            auPlutot: dateTots[i] || '',
-            auPlutart: dateTards[i] || '',
-            lot: lots[i] || '',
-            observation: observations[i] || ''
-          });
-        }
-      }
-      
-      // Debug logging
-      console.log('Items array:', items);
-      
-      // Get form data
-      const formData = {
-        date: $('#date').val(),
-        numero: $('#numero').val(),
-        chantierId: chantierId,
-        items: items
-      };
-      
-      console.log('Form data to submit:', formData);
-      
-      // Submit via AJAX
-      $.ajax({
-        url: '/achats/demande/fourniture',
-        method: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify(formData),
-        success: function(response) {
-          console.log('Success:', response);
-          if (response.success) {
-            window.location.href = response.redirect || '/achats/fourniture';
-          } else {
-            alert('Erreur: ' + (response.error || response.message || 'Erreur inconnue'));
-          }
-        },
-        error: function(xhr, status, error) {
-          console.error('Error:', xhr.responseText);
-          alert('Erreur serveur: ' + (xhr.responseJSON?.error || xhr.responseText || error));
-        }
-      });
-    }
-  </script>
-  
-  
-    <!-- Action Buttons -->
-    
-  <!-- /.container-fluid -->
-  
-  
-  
-        <!-- /.container-fluid -->
-      </div>
-      <!-- End of Main Content -->
+                // ==========================
+                //  AUTOCOMPLETE LOGIC (GLOBAL)
+                // ==========================
+                let fournitureData = [];
+                let activeInput = null; // Track which input is currently being edited
 
-      <!-- Footer -->
-      <footer class="sticky-footer bg-white">
-        <div class="container my-auto">
-          <div class="copyright text-center my-auto">
-            <span>Copyright &copy; Your Website 2020</span>
-          </div>
+                // Create global suggestion list
+                const $globalList = $('<ul id="global-autocomplete-list"></ul>').appendTo('body');
+
+                // Helper to position the list
+                const positionList = (input) => {
+                  const rect = input[0].getBoundingClientRect();
+                  const scrollTop = $(window).scrollTop();
+                  const scrollLeft = $(window).scrollLeft();
+
+                  $globalList.css({
+                    top: rect.bottom + scrollTop + 'px',
+                    left: rect.left + scrollLeft + 'px',
+                    width: rect.width + 'px',
+                    display: 'block'
+                  });
+                };
+
+                // Hide list on scroll/resize to avoid misalignment
+                $(window).on('scroll resize', function () {
+                  $globalList.hide();
+                });
+                $('.table-responsive').on('scroll', function () {
+                  $globalList.hide();
+                });
+
+                // 1. Fetch data
+                fetch('/achats/listfourniture')
+                  .then(res => res.json())
+                  .then(data => {
+                    if (data && data.listfourniture) {
+                      fournitureData = data.listfourniture;
+                    } else if (Array.isArray(data)) {
+                      fournitureData = data;
+                    }
+                    console.log("Fourniture data loaded:", fournitureData.length, "items");
+                  })
+                  .catch(err => console.error("Error loading fourniture data:", err));
+
+                // 2. Designation Input
+                $(document).on('input focus', '.designation-input', function () {
+                  const input = $(this);
+                  activeInput = input;
+                  const val = input.val().toLowerCase();
+
+                  $globalList.empty().hide();
+                  if (!val) return;
+
+                  const uniqueDesignations = new Set();
+                  const matches = [];
+
+                  for (const item of fournitureData) {
+                    const d = (item.designation || "").trim();
+                    if (d.toLowerCase().includes(val)) {
+                      if (!uniqueDesignations.has(d)) {
+                        uniqueDesignations.add(d);
+                        matches.push(item);
+                      }
+                    }
+                    if (matches.length >= 20) break;
+                  }
+
+                  if (matches.length > 0) {
+                    matches.forEach(m => {
+                      const li = $('<li>').text(m.designation);
+                      li.data('type', 'designation');
+                      li.data('value', m.designation);
+                      $globalList.append(li);
+                    });
+                    positionList(input);
+                  }
+                });
+
+                // 3. Lot (Reference) Input
+                $(document).on('input focus', '.lot-input', function () {
+                  const input = $(this);
+                  activeInput = input;
+                  const tr = input.closest('tr');
+                  const designation = tr.find('.designation-input').val();
+
+                  $globalList.empty().hide();
+                  if (!designation) return;
+
+                  const val = input.val().toLowerCase();
+                  const matches = fournitureData
+                    .filter(item => (item.designation || "").trim() === designation.trim())
+                    .filter(item => (item.reference || "").toLowerCase().includes(val));
+
+                  if (matches.length > 0) {
+                    matches.forEach(m => {
+                      const refText = m.reference || "(Pas de référence)";
+                      const li = $('<li>').text(refText);
+                      li.data('type', 'lot');
+                      li.data('item', m);
+                      $globalList.append(li);
+                    });
+                    positionList(input);
+                  }
+                });
+
+                // 4. Click Selection (on Global List)
+                $globalList.on('click', 'li', function () {
+                  const li = $(this);
+                  const type = li.data('type');
+
+                  if (!activeInput) return;
+
+                  const tr = activeInput.closest('tr');
+
+                  if (type === 'designation') {
+                    const val = li.data('value');
+                    activeInput.val(val);
+                    // Reset related fields
+                    tr.find('.lot-input').val('');
+                    tr.find('input[name="unite[]"]').val('');
+                  } else if (type === 'lot') {
+                    const item = li.data('item');
+                    activeInput.val(item.reference || "");
+                    if (item.unite) tr.find('input[name="unite[]"]').val(item.unite);
+                  }
+
+                  $globalList.hide();
+                  activeInput = null;
+                });
+
+                // Hide on click outside
+                $(document).on('click', function (e) {
+                  if (!$(e.target).closest('.designation-input, .lot-input, #global-autocomplete-list').length) {
+                    $globalList.hide();
+                  }
+                });
+
+              });
+              const saveDemande = (e) => {
+                if (e) e.preventDefault();
+
+                const chantierId = $('#chantierId').val();
+                if (!chantierId) {
+                  if (typeof $ === 'function' && $('#chantierRequiredModal').length && typeof $('#chantierRequiredModal').modal === 'function') {
+                    $('#chantierRequiredModal').modal('show');
+                  } else {
+                    alert('Veuillez sélectionner un chantier avant de continuer.');
+                  }
+                  $('#chantierId').focus();
+                  return;
+                }
+
+                // Prepare FormData for file upload
+                const formData = new FormData();
+                formData.append('date', $('#date').val());
+                formData.append('numero', $('#numero').val());
+                formData.append('chantierId', chantierId);
+                
+                <% if (user.role !== 'user') { %>
+                  formData.append('delaisPaiement', $('#delaisPaiement').val());
+                <% } %>
+
+                // Collect items and append files
+                const items = [];
+                const rows = $("#productsTable tbody tr");
+
+                rows.each(function (index) {
+                  const row = $(this);
+                  const designation = row.find('input[name="designation[]"]').val();
+                  const quantity = row.find('input[name="qteDemandee[]"]').val();
+
+                  // Only include rows with data
+                  if (designation || quantity) {
+                    const fileInput = row.find('input[name="image[]"]')[0];
+                    const hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
+
+                    const item = {
+                      code: row.find('input[name="codeArticle[]"]').val() || '',
+                      designation: designation || '',
+                      unité: row.find('input[name="unite[]"]').val() || '',
+                      quantité: quantity || '0',
+                      imputation: row.find('input[name="imputation[]"]').val() || '',
+                      auPlutot: row.find('input[name="dateTôt[]"]').val() || '',
+                      auPlutart: row.find('input[name="dateTard[]"]').val() || '',
+                      lot: row.find('input[name="lot[]"]').val() || '',
+                      observation: row.find('input[name="observation[]"]').val() || '',
+                      tempImage: hasFile // Flag to tell backend to look for file
+                    };
+                    items.push(item);
+
+                    if (hasFile) {
+                      // Append file to formData. 
+                      // Important: Order matters. We append files in the order they appear in valid items.
+                      formData.append('files', fileInput.files[0]);
+                    }
+                  }
+                });
+
+                // Append items as JSON string because we are using multipart/form-data
+                formData.append('items', JSON.stringify(items));
+
+                console.log('Sending FormData with items:', items);
+
+                // Submit via AJAX with processData: false and contentType: false
+                $.ajax({
+                  url: '/achats/demande/fourniture',
+                  method: 'POST',
+                  data: formData,
+                  processData: false,
+                  contentType: false,
+                  success: function (response) {
+                    console.log('Success:', response);
+                    if (response.success) {
+                      window.location.href = response.redirect || '/achats/fourniture';
+                    } else {
+                      alert('Erreur: ' + (response.error || response.message || 'Erreur inconnue'));
+                    }
+                  },
+                  error: function (xhr, status, error) {
+                    console.error('Error:', xhr.responseText);
+                    alert('Erreur serveur: ' + (xhr.responseJSON?.error || xhr.responseText || error));
+                  }
+                });
+              }
+            </script>
+
+
+            <!-- Action Buttons -->
+
+            <!-- /.container-fluid -->
+
+
+
+            <!-- /.container-fluid -->
         </div>
-      </footer>
-      <!-- End of Footer -->
-    </div>
-    <!-- End of Content Wrapper -->
+        <!-- End of Main Content -->
+
+        <!-- Footer -->
+        <footer class="sticky-footer bg-white">
+          <div class="container my-auto">
+            <div class="copyright text-center my-auto">
+              <span>Copyright &copy; Your Website 2020</span>
+            </div>
+          </div>
+        </footer>
+        <!-- End of Footer -->
+      </div>
+      <!-- End of Content Wrapper -->
   </div>
   <!-- End of Page Wrapper -->
 
@@ -373,24 +602,13 @@
   </a>
 
   <!-- Logout Modal-->
-  <div
-    class="modal fade"
-    id="logoutModal"
-    tabindex="-1"
-    role="dialog"
-    aria-labelledby="exampleModalLabel"
-    aria-hidden="true"
-  >
+  <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
-          <button
-            class="close"
-            type="button"
-            data-dismiss="modal"
-            aria-label="Close"
-          >
+          <button class="close" type="button" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">×</span>
           </button>
         </div>
@@ -407,24 +625,13 @@
     </div>
   </div>
 
-  <div
-    class="modal fade"
-    id="chantierRequiredModal"
-    tabindex="-1"
-    role="dialog"
-    aria-labelledby="chantierRequiredModalLabel"
-    aria-hidden="true"
-  >
+  <div class="modal fade" id="chantierRequiredModal" tabindex="-1" role="dialog"
+    aria-labelledby="chantierRequiredModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="chantierRequiredModalLabel">Chantier requis</h5>
-          <button
-            class="close"
-            type="button"
-            data-dismiss="modal"
-            aria-label="Close"
-          >
+          <button class="close" type="button" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">×</span>
           </button>
         </div>
@@ -457,4 +664,5 @@
   <!-- Page level custom scripts -->
   <script src="/js/demo/datatables-demo.js"></script>
 </body>
+
 </html>

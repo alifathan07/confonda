@@ -63,6 +63,27 @@
                   <input type="text" class="form-control" id="user" name="user"
                          value="<%= demandeFourniture.user.name %>" readonly>
                 </div>
+                <% if (user.role !== 'user') { %>
+                <div class="form-group">
+                  <label for="delaisPaiement">Délais de Paiement</label>
+                  <select class="form-control" id="delaisPaiement" name="delaisPaiement">
+                    <option value="">Sélectionner un délai</option>
+                    <option value="à vue" <%= demandeFourniture.delaisPaiement === 'à vue' ? 'selected' : '' %>>À vue</option>
+                    <option value="30 jours" <%= demandeFourniture.delaisPaiement === '30 jours' ? 'selected' : '' %>>30 jours</option>
+                    <option value="60 jours" <%= demandeFourniture.delaisPaiement === '60 jours' ? 'selected' : '' %>>60 jours</option>
+                    <option value="90 jours" <%= demandeFourniture.delaisPaiement === '90 jours' ? 'selected' : '' %>>90 jours</option>
+                    <option value="120 jours" <%= demandeFourniture.delaisPaiement === '120 jours' ? 'selected' : '' %>>120 jours</option>
+                    <option value="30 jours fin de mois" <%= demandeFourniture.delaisPaiement === '30 jours fin de mois' ? 'selected' : '' %>>30 jours fin de mois</option>
+                    <option value="60 jours fin de mois" <%= demandeFourniture.delaisPaiement === '60 jours fin de mois' ? 'selected' : '' %>>60 jours fin de mois</option>
+                  </select>
+                </div>
+                <% } else { %>
+                <div class="form-group">
+                  <label for="delaisPaiement">Délais de Paiement</label>
+                  <input type="text" class="form-control" id="delaisPaiement" name="delaisPaiement"
+                         value="<%= demandeFourniture.delaisPaiement || '' %>" readonly>
+                </div>
+                <% } %>
               </div>
             </div>
 
@@ -609,7 +630,7 @@
       const formData = $(this).serialize();
 
       $.ajax({
-        url: '/achats/fourniture/<%= demandeFourniture.id %>',   // fixed: .id not ._id
+        url: '/achats/fourniture/<%= demandeFourniture.id %>',
         method: 'PUT',
         data: formData,
         success: function () {

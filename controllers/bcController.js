@@ -90,7 +90,8 @@ export const postBcDemandeFourniture = async (req, res) => {
         unité: true,
         quantité: true,
         lot: true,
-        imputation: true
+        imputation: true,
+        prixU: true,
       },
     });
 
@@ -111,13 +112,9 @@ export const postBcDemandeFourniture = async (req, res) => {
     const recentBcs = await prisma.bondeCommande.findMany({
       select: { numero: true },
       orderBy: { createdAt: 'desc' },
-      take: 200,
     });
-    const currentMaxNumero = recentBcs.reduce((max, bc) => {
-      const n = parseInt(bc?.numero, 10);
-      return Number.isNaN(n) ? max : Math.max(max, n);
-    }, 0);
-    let nextNumero = currentMaxNumero + 1;
+    const currentMaxNumero = recentBcs[0]?.numero || "0";
+    let nextNumero = parseInt(currentMaxNumero) + 1;
 
     for (const [fournisseurIdStr, itemIdsForFournisseur] of Object.entries(itemsByFournisseur)) {
       const fournisseurId = parseInt(fournisseurIdStr);
@@ -135,16 +132,22 @@ export const postBcDemandeFourniture = async (req, res) => {
       const lignesToCreate = validItemIds.map((id) => {
         const a = itemMap[id];
         const q = parseInt(a.quantité || "1");
+        const p = parseFloat(a.prixU || "0");
 
         return {
           designation: a.designation,
           unite: a.unité || "",
           quantite: q,
           reference: a.lot,
-          imputation: a.imputation
+          imputation: a.imputation,
+          prixUnitaire: p,
+          totalHt: q * p,
 
         };
       });
+      const totalHt = lignesToCreate.reduce((acc, item) => acc + item.totalHt, 0);
+      const tva = totalHt * 0.2;
+      const totalTtc = totalHt + tva;
 
       // Fetch chantier + demandeur from demandeFourniture
       const demandInfo = await prisma.demandeFourniture.findUnique({
@@ -163,6 +166,9 @@ export const postBcDemandeFourniture = async (req, res) => {
           fournisseurId,
           chantierId,
           demandeur,
+          tauxTva: 20,
+          totalHt: totalHt,
+          totalTtc: totalTtc,
           commandesItems: { create: lignesToCreate },
         },
         include: { commandesItems: true }, // important to create chantier allocations
@@ -176,6 +182,7 @@ export const postBcDemandeFourniture = async (req, res) => {
             chantierId,
             itemId: item.id,
             qty: item.quantite,
+
 
             montant: null,
           },
@@ -451,23 +458,23 @@ export const generateBcPDF = async (req, res) => {
 
       return { startY, cardH };
     };
-    
+
 
 
     const drawChantier = (yPosition) => {
       const startY = yPosition ?? (pageHeight - margin - footerHeight);
       const gap = 12;
       const cardW = (contentWidth - gap) / 2;
-      const cardH = 86;
+      const cardH = 60;
 
       const chantierX = margin;
       const livraisonX = margin + cardW + gap;
 
       // Card 1: Chantier
       doc.roundedRect(chantierX, startY, cardW, cardH, 8).lineWidth(1).stroke(colors.borderSoft);
-      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
-        .text("CHANTIER", chantierX + 10, startY + 10, { width: cardW - 20 });
-      doc.font("Helvetica").fontSize(9).fillColor(colors.gray800)
+      doc.font("Helvetica-Bold").fontSize(7.5).fillColor(colors.gray900)
+        .text("CHANTIER", chantierX + 10, startY + 6, { width: cardW - 20 });
+      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
         .text((() => {
           const names = new Set();
           if (bc.chantier?.nom) names.add(bc.chantier.nom);
@@ -486,19 +493,19 @@ export const generateBcPDF = async (req, res) => {
       doc.moveTo(livraisonX + 10, dividerY).lineTo(livraisonX + cardW - 10, dividerY)
         .lineWidth(1).stroke(colors.borderSoft);
 
-      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
-        .text("LIEU DE LIVRAISON", livraisonX + 10, startY + 10, { width: cardW - 20 });
-      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
-        .text(bc.lieuLivraison || "-", livraisonX + 10, startY + 28, { width: cardW - 20, ellipsis: true });
+      doc.font("Helvetica-Bold").fontSize(7.5).fillColor(colors.gray900)
+        .text("LIEU DE LIVRAISON", livraisonX + 10, startY + 6, { width: cardW - 20 });
+      doc.font("Helvetica").fontSize(8).fillColor(colors.gray800)
+        .text(bc.lieuLivraison || "-", livraisonX + 10, startY + 18, { width: cardW - 20, ellipsis: true });
 
       const dateLivStr = bc.dateLivraison
         ? new Date(bc.dateLivraison).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
         : "-";
 
-      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
-        .text("DATE DE LIVRAISON", livraisonX + 10, dividerY + 10, { width: cardW - 20 });
-      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
-        .text(dateLivStr, livraisonX + 10, dividerY + 28, { width: cardW - 20, ellipsis: true });
+      doc.font("Helvetica-Bold").fontSize(7.5).fillColor(colors.gray900)
+        .text("DATE DE LIVRAISON", livraisonX + 10, dividerY + 6, { width: cardW - 20 });
+      doc.font("Helvetica").fontSize(8).fillColor(colors.gray800)
+        .text(dateLivStr, livraisonX + 10, dividerY + 18, { width: cardW - 20, ellipsis: true });
 
       return { startY, cardH };
     };
@@ -506,10 +513,16 @@ export const generateBcPDF = async (req, res) => {
     const drawFooter = (yPosition) => {
       const startY = yPosition || (pageHeight - margin - footerHeight);
       const gap = 12;
-      const sigW = (contentWidth - gap) / 2;
-      const sigH = 86;
 
-      const chantier = drawChantier(startY);
+      // 1. Totals + Montant Block (Top of footer)
+      const compactY = drawCompactTotalsAndMontant(startY);
+
+      // 2. Chantier + Livraison Block
+      const chantier = drawChantier(compactY + gap);
+
+      // 3. Signature Block
+      const sigW = (contentWidth - gap) / 2;
+      const sigH = 65;
       const sigStartY = chantier.startY + chantier.cardH + gap;
 
       // Signature du direction (left)
@@ -528,9 +541,9 @@ export const generateBcPDF = async (req, res) => {
       if (fs.existsSync(signaturePath)) {
         try {
           const fitW = sigW - 20;
-          const fitH = 60;
+          const fitH = 40;
           const imgX = sig2X + (sigW - fitW) / 2;
-          const imgY = sigStartY + 22;
+          const imgY = sigStartY + 15;
           doc.image(signaturePath, imgX, imgY, { fit: [fitW, fitH], align: "center", valign: "center" });
         } catch (e) {
           console.error("Error loading signature:", e);
@@ -635,115 +648,97 @@ export const generateBcPDF = async (req, res) => {
       return y + rowHeight;
     };
 
-    const drawTotals = (y) => {
-      const totalsWidth = 250;
-      const totalsX = pageWidth - margin - totalsWidth;
+    const drawCompactTotalsAndMontant = (y) => {
+      const blockHeight = 45;
+      const horizontalTableW = 220;
+      const montantLettresW = contentWidth - horizontalTableW - 10;
 
-      const lines = [
-        { label: "Total HT", value: computedTotalHt },
-        { label: `TVA (${fmtPct(tvaRate)}%)`, value: computedTva },
-        { label: "Total TTC", value: computedTtc, bold: true, size: 12 },
-      ];
+      // Background for the whole block
+      doc.rect(margin, y, contentWidth, blockHeight).fillAndStroke(colors.blueLight, colors.border);
 
-      const boxHeight = lines.length * 20 + 20;
+      // Left part: Montant en lettres
+      doc.font("Helvetica-Bold").fontSize(8).fillColor(colors.gray900)
+        .text("Arrêté le présent bon de commande à la somme de :", margin + 10, y + 8, { width: montantLettresW });
+      doc.font("Helvetica-Bold").fontSize(9).fillColor(colors.blue)
+        .text((bc.montantLettre || "—") + " TTC", margin + 10, y + 20, { width: montantLettresW });
 
-      doc.roundedRect(totalsX, y, totalsWidth, boxHeight, 10)
-        .fillAndStroke(colors.blueLight, "#dbeafe");
+      // Right part: Horizontal Totals Table
+      const tableX = margin + montantLettresW + 10;
+      const colW = horizontalTableW / 3;
 
-      let currentY = y + 10;
-      lines.forEach(line => {
-        doc.font(line.bold ? "Helvetica-Bold" : "Helvetica")
-          .fontSize(line.size || 10)
-          .fillColor(line.bold ? colors.blue : colors.gray900)
-          .text(line.label, totalsX + 10, currentY);
-
-        const valStr = fmtMoney(Math.abs(line.value)) + " MAD";
-        doc.text(valStr, totalsX + 10, currentY, { width: totalsWidth - 20, align: "right" });
-
-        currentY += 20;
+      // Headers
+      doc.fillColor(colors.tableHeader).rect(tableX, y, horizontalTableW, 15).fill();
+      const labels = ["TOTAL HT", `TVA (${fmtPct(tvaRate)}%)`, "TOTAL TTC"];
+      labels.forEach((l, i) => {
+        doc.font("Helvetica-Bold").fontSize(7).fillColor(colors.white)
+          .text(l, tableX + (i * colW), y + 4, { width: colW, align: "center" });
       });
 
-      return y + boxHeight;
-    };
+      // Values
+      const values = [fmtMoney(computedTotalHt), fmtMoney(computedTva), fmtMoney(computedTtc)];
+      values.forEach((v, i) => {
+        doc.rect(tableX + (i * colW), y + 15, colW, blockHeight - 15).lineWidth(0.5).stroke(colors.border);
+        doc.font("Helvetica-Bold").fontSize(8).fillColor(colors.gray900)
+          .text(v, tableX + (i * colW), y + 25, { width: colW, align: "center" });
+      });
 
-    const drawMontantLettres = (y) => {
-      const height = 48;
-      doc.roundedRect(margin, y, contentWidth, height, 8)
-        .fillAndStroke("#f3f4f6", colors.border);
-
-      doc.font("Helvetica-Bold").fontSize(10).fillColor(colors.gray900)
-        .text("Montant en lettres", margin + 15, y + 10);
-
-      doc.font("Helvetica-Bold").fontSize(10).fillColor(colors.gray900)
-        .text(bc.montantLettre || "—", margin + 15, y + 28, { width: contentWidth - 30 });
-
-      return y + height;
+      return y + blockHeight;
     };
 
     // 5. Main Render Logic
 
-    let currentY = margin + headerHeight + 18;
+    // 5. Main Render Logic
+
+    // Layout calculation constants
+    const headerH = headerHeight + 18;
+    const reglementH = 56 + 14;
+    const footerH = 45 + 10 + 60 + 10 + 65 + 10 + companyFooterHeight; // Compact Totals + Gap + Chantier + Gap + Signatures + Gap + Company Footer
+    const tableHeaderH = rowHeight;
+    const rowH = rowHeight;
+
+    // --- PAGE 1 ---
     await drawHeader();
+    let currentY = margin + headerH;
 
-    // Table Logic
-    const getMaxRowsForPage = (yStartRows) => {
-      const available = (pageHeight - margin) - yStartRows;
-      return Math.max(1, Math.floor(available / rowHeight));
-    };
+    const regRow = drawReglement(currentY);
+    currentY = regRow.startY + regRow.cardH + 14;
 
-    const reglement = drawReglement(currentY);
-    currentY = reglement.startY + reglement.cardH + 14;
+    // Calculate how many rows fit on Page 1
+    const availableForTableOnP1 = (pageHeight - margin * 2) - (headerH + reglementH + footerH) - tableHeaderH - 20;
+    const maxRowsOnP1 = Math.floor(availableForTableOnP1 / rowH);
 
     currentY = drawTableHeader(currentY);
-    let maxRowsPerPage = getMaxRowsForPage(currentY);
-    let rowsOnPage = 0;
 
-    for (let i = 0; i < items.length; i++) {
-      // Check for overflow
-      // Only trigger new page if isMultiPage is true AND we are running out of space
-      // We reserve space for the footer if we are on the last page (or potentially last)
-      // But if isMultiPage is false, we try to squeeze it in (it should fit by design for <= 7 items)
-
-      if (rowsOnPage >= maxRowsPerPage) {
-        doc.addPage();
-        await drawHeader();
-        currentY = margin + headerHeight + 18;
-        currentY = drawTableHeader(currentY);
-        maxRowsPerPage = getMaxRowsForPage(currentY);
-        rowsOnPage = 0;
-      }
-
+    let processedItems = 0;
+    for (let i = 0; i < Math.min(items.length, maxRowsOnP1); i++) {
       currentY = drawTableRow(currentY, items[i], i);
-      rowsOnPage += 1;
+      processedItems++;
     }
 
-    currentY += 20; // Spacing after table
+    // Combined Footer at the bottom of P1
+    drawFooter(pageHeight - margin - footerH);
 
-    // Totals & Montant en lettres
-    // Draw Totals
-    const totalsBoxHeight = (3 * 20) + 20;
-    const montantBoxHeight = 48;
-    const endGap = 12;
+    // --- SUBSEQUENT PAGES ---
+    if (processedItems < items.length) {
+      const availableForTableOnP2 = (pageHeight - margin * 2) - footerH - tableHeaderH - 20;
+      const maxRowsOnP2 = Math.floor(availableForTableOnP2 / rowH);
 
-    let footerY = pageHeight - margin - footerHeight;
-    let montantY = footerY - endGap - montantBoxHeight;
-    let totalsY = montantY - endGap - totalsBoxHeight;
+      while (processedItems < items.length) {
+        doc.addPage();
+        let py = margin;
+        py = drawTableHeader(py);
 
-    // If the end block doesn't fit on this page, move it entirely to the next page
-    if (currentY > totalsY) {
-      doc.addPage();
-      await drawHeader();
-      currentY = margin + headerHeight + 18;
+        let rowsOnThisPage = 0;
+        while (processedItems < items.length && rowsOnThisPage < maxRowsOnP2) {
+          py = drawTableRow(py, items[processedItems], processedItems);
+          processedItems++;
+          rowsOnThisPage++;
+        }
 
-      footerY = pageHeight - margin - footerHeight;
-      montantY = footerY - endGap - montantBoxHeight;
-      totalsY = montantY - endGap - totalsBoxHeight;
+        // Final footer for each subsequent page
+        drawFooter(pageHeight - margin - footerH);
+      }
     }
-
-    drawTotals(totalsY);
-    drawMontantLettres(montantY);
-    drawFooter(footerY);
-    
 
     doc.end();
 

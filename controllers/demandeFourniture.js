@@ -26,6 +26,8 @@ export const uploadFour = multer({ storage });
 
 /* -------------------------- LIST -------------------------- */
 export const indexDemandeFourniture = async (req, res) => {
+
+
   const demande = await prisma.demandeFourniture.findMany({
     include: { user: true, items: true, chantier: true },
     orderBy: { id: "desc" },
@@ -40,7 +42,15 @@ export const indexDemandeFourniture = async (req, res) => {
   const users = await prisma.user.findMany({ where: { role: "user" } });
   const chantiers = await prisma.chantier.findMany();
 
-  res.render("dashboard/achats/fourniture/index", { demande: sortedDemande, users, chantiers });
+
+
+
+  res.render("dashboard/achats/fourniture/index", {
+    demande: sortedDemande,
+    users,
+    chantiers,
+
+  });
 };
 
 /* -------------------------- CREATE FORM -------------------------- */
@@ -56,7 +66,8 @@ export const createDemandeFourniture = async (req, res) => {
   });
   const chantiers = await prisma.chantier.findMany();
   const today = new Date().toISOString().slice(0, 10);
-  res.render("dashboard/achats/fourniture/create", { user, today, numero, chantiers });
+  const listfourniture = await prisma.fourniture_list.findMany();
+  res.render("dashboard/achats/fourniture/create", { user, today, numero, chantiers, listfourniture });
 };
 
 /* -------------------------- STORE -------------------------- */
@@ -87,15 +98,39 @@ export const storeDemandeFourniture = async (req, res) => {
       return res.status(400).json({ success: false, error: "Chantier non trouvé." });
     }
 
-    // ---- validation -------------------------------------------------
-    if (!Array.isArray(items) || items.length === 0) {
+    // ---- validation & preparation -----------------------------------
+    let parsedItems = items;
+    if (typeof items === 'string') {
+      try {
+        parsedItems = JSON.parse(items);
+      } catch (e) {
+        return res.status(400).json({ success: false, error: "Format des items invalide." });
+      }
+    }
+
+    if (!Array.isArray(parsedItems) || parsedItems.length === 0) {
       return res.status(400).json({ success: false, error: "Les items doivent être un tableau non vide." });
     }
 
-    for (const [i, it] of items.entries()) {
+    const processedItems = [];
+    const files = req.files || [];
+    let fileIndex = 0;
+
+    for (const [i, it] of parsedItems.entries()) {
       const designation = (it.designation || "").trim();
       const qtyRaw = (it.quantité || it.quantite || "").trim();
-
+      let prixUnitaire = null;
+      if (it.lot) {
+        // Use findFirst because reference is unlikely to be unique in schema, or safe default
+        // Also must await the promise
+        const fournitureItem = await prisma.fourniture_list.findFirst({
+          where: { reference: it.lot },
+          select: { prixUnitaire: true },
+        });
+        if (fournitureItem && fournitureItem.prixUnitaire) {
+          prixUnitaire = Number(fournitureItem.prixUnitaire);
+        }
+      }
       if (!designation) {
         return res.status(400).json({ success: false, error: `Désignation requise (item ${i + 1})` });
       }
@@ -105,7 +140,21 @@ export const storeDemandeFourniture = async (req, res) => {
         return res.status(400).json({ success: false, error: `Quantité invalide ou ≤ 0 (item ${i + 1})` });
       }
 
-      it.quantité = quantité; // ← string propre
+      // Handle image assignment
+      let imagePath = null;
+      // Use tempImage flag to sync with uploaded files list
+      // Frontend must set tempImage=true and append file ONLY if file exists
+      if (it.tempImage && fileIndex < files.length) {
+        imagePath = `/uploads/fournitures/${files[fileIndex].filename}`;
+        fileIndex++;
+      }
+
+      processedItems.push({
+        ...it,
+        quantité: quantité,
+        prixUnitaire: prixUnitaire,
+        image: imagePath
+      });
     }
 
     // ---- creation ---------------------------------------------------
@@ -113,6 +162,10 @@ export const storeDemandeFourniture = async (req, res) => {
     if (isNaN(parsedDate.getTime())) {
       return res.status(400).json({ success: false, error: "Date invalide" });
     }
+
+    const totalHt = processedItems.reduce((acc, it) => acc + (parseInt(it.quantité, 10) * (it.prixUnitaire || 0)), 0);
+    const tva = totalHt * 0.20;
+    const totalTTC = totalHt + tva;
 
     const demandeFourniture = await prisma.demandeFourniture.create({
       data: {
@@ -123,20 +176,26 @@ export const storeDemandeFourniture = async (req, res) => {
         chantier: { connect: { id: chantierId } },
         status: "En Attente",
         color: "blue",
+        totalHt: totalHt,
+        Tva: tva,
+        totalTTC: totalTTC,
         items: {
-          create: items.map((it) => ({
+          create: processedItems.map((it) => ({
             code: (it.code || "").trim() || null,
             designation: (it.designation || "").trim(),
             unité: (it.unité || it.unite || "").trim() || null,
-            quantité: it.quantité, // ← "50", "100", etc.
+            quantité: it.quantité,
             auPlutot: it.auPlutot || null,
             auPlutart: it.auPlutart || null,
             lot: (it.lot || "").trim() || null,
+            prixU: it.prixUnitaire || null,
+            totalHt: (it.quantité * it.prixUnitaire) || null,
             observation: (it.observation || "").trim() || null,
             imputation: (it.imputation || "").trim() || null,
-            image: it.tempImage || null,
+            image: it.image,
             validation: null,
             validepar: null,
+            delaisPaiement: null
           })),
         },
       },
@@ -154,6 +213,8 @@ export const storeDemandeFourniture = async (req, res) => {
 export const updateDemandeFourniture = async (req, res) => {
   const { id } = req.params;
   const { date, numero, items, newImageCount } = req.body;
+  console.log("before any lanch :", items);
+
 
   try {
     // -------------------------------------------------
@@ -192,7 +253,25 @@ export const updateDemandeFourniture = async (req, res) => {
       }
 
       it.quantité = quantité;
+
+      // ---- Fetch Price logic ----
+      let prixUnitaire = null;
+      if (it.lot) {
+        const fournitureItem = await prisma.fourniture_list.findFirst({
+          where: { reference: it.lot },
+          select: { prixUnitaire: true },
+        });
+        if (fournitureItem && fournitureItem.prixUnitaire) {
+          prixUnitaire = Number(fournitureItem.prixUnitaire);
+        }
+      }
+      it.prixUnitaire = prixUnitaire;
     }
+
+    // ---- Calculate Global Totals ----
+    const totalHt = parsedItems.reduce((acc, it) => acc + (parseInt(it.quantité, 10) * (it.prixUnitaire || 0)), 0);
+    const tva = totalHt * 0.20;
+    const totalTTC = totalHt + tva;
 
     // -------------------------------------------------
     // 3. Get existing items from DB
@@ -242,6 +321,9 @@ export const updateDemandeFourniture = async (req, res) => {
               image: imagePath,
               validation: null,
               validepar: null,
+              delaisPaiement: null,
+              prixU: it.prixUnitaire || null,
+              totalHt: (it.quantité * it.prixUnitaire) || null,
             };
           }),
         });
@@ -279,8 +361,11 @@ export const updateDemandeFourniture = async (req, res) => {
               lot: (it.lot || "").trim() || null,
               observation: (it.observation || "").trim() || null,
               image: imagePath,
-              validation,
+              validation: current?.validation ?? null,
               validepar: current?.validepar ?? null,
+              delaisPaiement: current?.delaispaiment ?? null,
+              prixU: it.prixUnitaire || null,
+              totalHt: (it.quantité * it.prixUnitaire) || null,
             },
           });
         });
@@ -312,12 +397,17 @@ export const updateDemandeFourniture = async (req, res) => {
         where: { id: parseInt(id, 10) },
         data: {
           dateDemande: parsedDate,
+          dateDemande: parsedDate,
           numero: parseInt(numero, 10),
+          totalHt: totalHt,
+          Tva: tva,
+          totalTTC: totalTTC,
         },
       });
     });
 
     return res.json({ success: true });
+
   } catch (e) {
     console.error("updateDemandeFourniture ERROR:", e);
     res.status(500).send({ success: false, error: e.message });
@@ -484,15 +574,15 @@ export const updateValidationFourniture = async (req, res) => {
       validepar: admin.name,
     };
 
-    const idDemande = await prisma.itemFourniture.findUnique({ 
-      where: { id: itemId }, 
-      select: { demandeFournitureId: true } 
+    const idDemande = await prisma.itemFourniture.findUnique({
+      where: { id: itemId },
+      select: { demandeFournitureId: true }
     });
-    
-    const demande = await prisma.demandeFourniture.findUnique({ 
-      where: { id: parseInt(idDemande.demandeFournitureId) } 
+
+    const demande = await prisma.demandeFourniture.findUnique({
+      where: { id: parseInt(idDemande.demandeFournitureId) }
     });
-    
+
     if (!demande) return res.status(404).json({ success: false, error: "Demande introuvable" });
 
     const updated = await prisma.itemFourniture.update({
@@ -660,10 +750,6 @@ export const downloadImageFourniture = async (req, res) => {
     res.status(500).json({ success: false, error: e.message });
   }
 };
-
-
-
-
 export const uploadImageFournitures = async (req, res) => {
   try {
     const { id } = req.params;
@@ -702,14 +788,6 @@ export const uploadImageFournitures = async (req, res) => {
     res.status(500).json({ success: false, error: "Erreur serveur lors de l'upload." });
   }
 };
-
-
-
-
-
-
-
-
 export const generateDemandeFourniturePDF = async (req, res) => {
   const demandeId = parseInt(req.params.id, 10);
   if (Number.isNaN(demandeId)) {
@@ -746,116 +824,43 @@ export const generateDemandeFourniturePDF = async (req, res) => {
     const pageH = 595.28;
     const margin = 10;
     const contentW = pageW - margin * 2;
-
     const thin = 0.5;
     const thick = 1.5;
 
-    const fmtDate = (d) =>
-      d ? new Date(d).toLocaleDateString("fr-FR") : "";
+    const fmtDate = (d) => d ? new Date(d).toLocaleDateString("fr-FR") : "";
+    const logoPath = path.join(__dirname, "../public/img/logo-4.png");
 
-    const logoPath = path.join(
-      __dirname,
-      "../public/img/logo-4.png"
-    );
-
-    /* ---------------- PAGE BORDER ---------------- */
-    
-    // Draw complete page border
-    doc.rect(margin, margin, contentW, pageH - margin * 2).lineWidth(thick).stroke();
-
-    /* ---------------- HEADER ---------------- */
-
-    const headerH = 70;
-    
-    // Draw main header border
-    doc.rect(margin, margin, contentW, headerH).lineWidth(thick).stroke();
-
-    const leftW = 110;
-    const rightW = 150;
-    const centerW = contentW - leftW - rightW;
-
-    // Draw vertical lines for header sections
-    doc
-      .moveTo(margin + leftW, margin)
-      .lineTo(margin + leftW, margin + headerH)
-      .lineWidth(thick)
-      .stroke();
-
-    doc
-      .moveTo(margin + leftW + centerW, margin)
-      .lineTo(margin + leftW + centerW, margin + headerH)
-      .lineWidth(thick)
-      .stroke();
-
-    // Logo and company name
-    if (fs.existsSync(logoPath)) {
-      doc.image(logoPath, margin + 20, margin + 8, { width: 85 });
+    function parseNumber(value) {
+      if (value === undefined || value === null || value === "") return "";
+      const num = Number(value);
+      if (isNaN(num)) {
+        return String(value).replace(/\//g, ' ');
+      }
+      const parts = num.toFixed(2).split('.');
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+      return parts.join(',').replace(/\//g, ' ');
     }
 
-   
-
-    // Main title
-    doc.font("Helvetica-Bold").fontSize(20).text(
-      "DEMANDE DE FOURNITURES",
-      margin + leftW,
-      margin + 22,
-      { width: centerW, align: "center" }
-    );
-
-    // Document info
-    doc.fontSize(10);
-    doc.text("Code : EN 53 02 001", margin + leftW + centerW + 15, margin + 12);
-    doc.text("Version : 02", margin + leftW + centerW + 15, margin + 28);
-    doc.text("Date : 27/01/2016", margin + leftW + centerW + 15, margin + 44);
-    doc.text(
-      `N° : ${(demande.numero || demande.id).toString().padStart(6, "0")}`,
-      margin + leftW + centerW + 15,
-      margin + 60
-    );
-
-    /* ---------------- INFO ROW ---------------- */
-
-    const infoY = margin + headerH;
+    // --- LAYOUT CONSTANTS ---
+    const headerH = 70;
     const infoH = 28;
+    const tableHeaderH = 44; // 22 + 22
+    const tableBottomLimit = pageH - 40; // Max Y before page break
 
-    // Draw info row border
-    doc.rect(margin, infoY, contentW, infoH).lineWidth(thick).stroke();
-
-    const splitX = margin + contentW * 0.65;
-    doc.moveTo(splitX, infoY).lineTo(splitX, infoY + infoH).stroke();
-
-    doc.fontSize(12);
-    doc.text("Code / Chantier :", margin + 10, infoY + 8);
-    doc.text(
-      demande.chantier?.nom || "",
-      margin + 120,
-      infoY + 8
-    );
-
-    doc.text("Date :", splitX + 10, infoY + 8);
-    doc.text(fmtDate(demande.dateDemande), splitX + 55, infoY + 8);
-
-    /* ---------------- TABLE ---------------- */
-
-    const tableY = infoY + infoH;
-    const tableBottom = pageH - 100;
-
-    // Calculate column widths - reduced observations, increased others
+    // --- COLUMN DEFINITIONS ---
     const col = {
-      code: 70,
-      des: 220,
-      unit: 45,
-      qd: 52,
-      qs: 50,
+      code: 60,
+      des: 200,
+      lot: 70,
+      unit: 40,
+      qd: 50,
+      pu: 60,
+      tht: 70,
       d1: 65,
       d2: 65,
-      qp: 40,
-      qr: 40,
-      lot: 60,
     };
     col.obs = contentW - Object.values(col).reduce((a, b) => a + b, 0);
 
-    // Calculate column positions
     const x = {};
     let acc = margin;
     Object.entries(col).forEach(([k, w]) => {
@@ -863,189 +868,271 @@ export const generateDemandeFourniturePDF = async (req, res) => {
       acc += w;
     });
 
-    const h1 = 22;
-    const h2 = 22;
+    // --- DRAWING HELPERS ---
 
-    // Draw table header border
-    doc.rect(margin, tableY, contentW, h1 + h2).lineWidth(thick).stroke();
+    const drawCommonHeader = () => {
+      // Page Border
+      doc.rect(margin, margin, contentW, pageH - margin * 2).lineWidth(thick).stroke();
 
-    // Draw vertical lines for all columns
-    Object.values(x).forEach((vx) => {
-      doc.moveTo(vx, tableY).lineTo(vx, tableBottom).lineWidth(thin).stroke();
-    });
-    
-    // Draw right border of table
-    doc.moveTo(margin + contentW, tableY).lineTo(margin + contentW, tableBottom).lineWidth(thin).stroke();
+      // Main Header
+      const leftW = 110;
+      const rightW = 150;
+      const centerW = contentW - leftW - rightW;
 
-    // Table headers - first row
-    doc.fontSize(10).text("Code\narticle", x.code + 2, tableY + 4, {
-      width: col.code,
-      align: "center",
-    });
+      doc.rect(margin, margin, contentW, headerH).lineWidth(thick).stroke();
+      doc.moveTo(margin + leftW, margin).lineTo(margin + leftW, margin + headerH).lineWidth(thick).stroke();
+      doc.moveTo(margin + leftW + centerW, margin).lineTo(margin + leftW + centerW, margin + headerH).lineWidth(thick).stroke();
 
-    doc.text("Désignations", x.des, tableY + 12, {
-      width: col.des,
-      align: "center",
-    });
+      if (fs.existsSync(logoPath)) {
+        doc.image(logoPath, margin + 20, margin + 8, { width: 85 });
+      }
 
-    doc.text("Unité", x.unit, tableY + 12, { width: col.unit, align: "center" });
+      doc.font("Helvetica-Bold").fontSize(20).text("DEMANDE DE FOURNITURES", margin + leftW, margin + 22, { width: centerW, align: "center" });
 
-    // Quantités header spans both qd and qs columns
-    doc.text("Quantités", x.qd, tableY + 4, {
-      width: col.qd + col.qs,
-      align: "center",
-    });
+      doc.fontSize(10).font("Helvetica");
+      doc.text("Code : EN 53 02 001", margin + leftW + centerW + 15, margin + 12);
+      doc.text("Version : 02", margin + leftW + centerW + 15, margin + 28);
+      doc.text("Date : 27/01/2016", margin + leftW + centerW + 15, margin + 44);
 
-    // Date de livraison header spans both d1 and d2 columns
-    doc.text("Date de livraison", x.d1, tableY + 4, {
-      width: col.d1 + col.d2,
-      align: "center",
-    });
+      // Info Row
+      const infoY = margin + headerH;
+      doc.rect(margin, infoY, contentW, infoH).lineWidth(thick).stroke();
+      const splitX = margin + contentW * 0.65 - 90;
+      doc.moveTo(splitX, infoY).lineTo(splitX, infoY + infoH).stroke();
 
-    // Quantités header spans both qp and qr columns
-    doc.text("Quantités", x.qp, tableY + 4, {
-      width: col.qp + col.qr,
-      align: "center",
-    });
+      doc.fontSize(12);
+      doc.text("Code / Chantier :", margin + 10, infoY + 8);
+      doc.text(demande.chantier?.nom || "", margin + 120, infoY + 8);
+      doc.text("Date :", splitX + 10, infoY + 8);
+      doc.text(fmtDate(demande.dateDemande), splitX + 55, infoY + 8);
+      doc.text(`N° : ${(demande.numero || demande.id).toString().padStart(3, "0")}/${new Date().getFullYear()}`, splitX + 120, infoY + 8);
+      doc.text(`${demande.demandeur || ""}`, splitX + 220, infoY + 8);
+    };
 
-    doc.text("LOT", x.lot, tableY + 12, { width: col.lot, align: "center" });
-    doc.text("Recommandations et Observations", x.obs, tableY + 4, {
-      width: col.obs,
-      align: "center",
-    });
+    const drawTableHeader = (startY) => {
+      const h1 = 22;
+      const h2 = 22;
 
-    // Table headers - second row
-    doc.fontSize(9);
-    doc.text("Demandées", x.qd, tableY + h1 + 6, { width: col.qd, align: "center" });
-    doc.text("Stockées", x.qs, tableY + h1 + 6, { width: col.qs, align: "center" });
-    doc.text("Au plutôt", x.d1, tableY + h1 + 6, { width: col.d1, align: "center" });
-    doc.text("Au plus tard", x.d2, tableY + h1 + 6, { width: col.d2, align: "center" });
-    doc.text("Prévu", x.qp, tableY + h1 + 6, { width: col.qp, align: "center" });
-    doc.text("Reçue", x.qr, tableY + h1 + 6, { width: col.qr, align: "center" });
+      // Header Border
+      doc.rect(margin, startY, contentW, h1 + h2).lineWidth(thick).stroke();
 
-    /* ---------------- ROWS ---------------- */
+      // Vertical lines WITHIN header
+      Object.values(x).forEach((vx) => {
+        doc.moveTo(vx, startY).lineTo(vx, startY + h1 + h2).lineWidth(thin).stroke();
+      });
+      doc.moveTo(margin + contentW, startY).lineTo(margin + contentW, startY + h1 + h2).lineWidth(thin).stroke();
 
-    let y = tableY + h1 + h2;
-    const baseRowH = 22;
+      // Headers Text
+      doc.fontSize(10);
+      doc.text("Code\narticle", x.code + 2, startY + 4, { width: col.code, align: "center" });
+      doc.text("Désignations", x.des, startY + 12, { width: col.des, align: "center" });
+      doc.text("Unité", x.unit, startY + 12, { width: col.unit, align: "center" });
+      doc.text("Quantité", x.qd, startY + 12, { width: col.qd, align: "center" });
+      doc.text("P.U. HT", x.pu, startY + 12, { width: col.pu, align: "center" });
+      doc.text("Total HT", x.tht, startY + 12, { width: col.tht, align: "center" });
+      doc.text("Date de livraison", x.d1, startY + 4, { width: col.d1 + col.d2, align: "center" });
+      doc.text("Reference", x.lot, startY + 12, { width: col.lot, align: "center" });
+      doc.text("Recommandations et Observations", x.obs, startY + 4, { width: col.obs, align: "center" });
+
+      doc.fontSize(9);
+      doc.text("Au plutôt", x.d1, startY + h1 + 6, { width: col.d1, align: "center" });
+      doc.text("Au plus tard", x.d2, startY + h1 + 6, { width: col.d2, align: "center" });
+    };
+
+    const drawVerticalGridLines = (topY, bottomY) => {
+      Object.values(x).forEach((vx) => {
+        doc.moveTo(vx, topY).lineTo(vx, bottomY).lineWidth(thin).stroke();
+      });
+      // Right border
+      doc.moveTo(margin + contentW, topY).lineTo(margin + contentW, bottomY).lineWidth(thin).stroke();
+      // Bottom border for this section
+      doc.moveTo(margin, bottomY).lineTo(margin + contentW, bottomY).lineWidth(thin).stroke();
+    };
+
+    const calculateRowHeight = (item) => {
+      const baseRowH = 22;
+      let maxHeight = baseRowH;
+      const columnsToCheck = [
+        { text: item.code, width: col.code },
+        { text: item.designation, width: col.des },
+        { text: item.lot, width: col.lot },
+        { text: item.observation, width: col.obs },
+        { text: item.unité || item.unite, width: col.unit },
+        { text: item.quantité || item.quantite, width: col.qd },
+        { text: item.auPlutot ? fmtDate(item.auPlutot) : "", width: col.d1 },
+        { text: item.auPlutart ? fmtDate(item.auPlutart) : "", width: col.d2 },
+        { text: parseNumber(item.prixU), width: col.pu },
+        { text: parseNumber(item.totalHt), width: col.tht }
+      ];
+      columnsToCheck.forEach(colData => {
+        if (colData.text) {
+          const textHeight = doc.heightOfString(String(colData.text), { width: colData.width - 4 });
+          maxHeight = Math.max(maxHeight, textHeight + 10);
+        }
+      });
+      return maxHeight;
+    };
+
+    // --- INITIAL RENDER ---
+    drawCommonHeader();
+    let tableY = margin + headerH + infoH; // Start below header
+    drawTableHeader(tableY);
+
+    let currentY = tableY + tableHeaderH;
+    let tableStartOnCurrentPage = currentY; // Track where body starts on this page
+    doc.fontSize(11);
+
+    // --- ITEMS LOOP ---
+    for (const item of demande.items || []) {
+      const rowHeight = calculateRowHeight(item);
+
+      // Check for Page Break
+      if (currentY + rowHeight > tableBottomLimit) {
+        // Draw grid lines for previous page
+        drawVerticalGridLines(tableStartOnCurrentPage, currentY);
+
+        doc.addPage();
+        drawCommonHeader();
+
+        tableY = margin + headerH + infoH;
+        drawTableHeader(tableY);
+
+        currentY = tableY + tableHeaderH;
+        tableStartOnCurrentPage = currentY;
+        doc.fontSize(11); // Reset font size
+      }
+
+      // Draw horizontal separator
+      doc.moveTo(margin, currentY).lineTo(margin + contentW, currentY).lineWidth(thin).stroke();
+
+      // Render Text
+      const textTopPadding = 5;
+      const textY = currentY + textTopPadding;
+
+      doc.text(item.code || "", x.code + 2, textY, { width: col.code, align: "center" });
+      doc.text(item.designation || "", x.des + 2, textY, { width: col.des, align: "left" });
+      doc.text(item.lot || "", x.lot, textY, { width: col.lot, align: "center" });
+      doc.text(item.unité || item.unite || "", x.unit, textY, { width: col.unit, align: "center" });
+      doc.text(item.quantité || item.quantite || "", x.qd, textY, { width: col.qd, align: "center" });
+      doc.text(parseNumber(item.prixU), x.pu, textY, { width: col.pu, align: "center" });
+      doc.text(parseNumber(item.totalHt), x.tht, textY, { width: col.tht, align: "center" });
+      doc.text(item.auPlutot ? fmtDate(item.auPlutot) : "", x.d1, textY, { width: col.d1, align: "center" });
+      doc.text(item.auPlutart ? fmtDate(item.auPlutart) : "", x.d2, textY, { width: col.d2, align: "center" });
+      doc.text(item.observation || "", x.obs + 2, textY, { width: col.obs, align: "left" });
+
+      currentY += rowHeight;
+    }
+
+    // Draw final grid lines for the last page
+    drawVerticalGridLines(tableStartOnCurrentPage, currentY);
+
+    // --- SUMMARY & SIGNATURES ---
+    const summaryRowH = 20;
+    const summaryH = summaryRowH * 4 + 10;
+    const signatureH = 90;
+    const requiredTotalH = summaryH + signatureH + 20; // + gap
+
+    // Determine visual bottom for the grid on this specific page
+    // If summary fits, grid stops before summary.
+    // If summary doesn't fit, grid covers page, summary moves to next.
+
+    let gridBottomForThisPage = tableBottomLimit;
+
+    if (currentY + requiredTotalH <= tableBottomLimit) {
+      // It fits! We want grid to extend down to where summary starts
+      // Let's leave a small gap 20px
+      const summaryStartY = tableBottomLimit - requiredTotalH + 20;
+      // Actually, let's align summary to bottom of page margin? 
+      // User style preference: "fill empty rows".
+      // Let's define the "stop point" for grid as: `tableBottomLimit - requiredTotalH`.
+      // So summary/sigs are flush at bottom margin.
+      gridBottomForThisPage = tableBottomLimit - requiredTotalH;
+    }
+
+    // Fill remaining space with empty rows
+    while (currentY < gridBottomForThisPage) {
+      const h = 22;
+      // If adding another row exceeds limit, stop.
+      if (currentY + h > gridBottomForThisPage) break;
+
+      // Draw horizontal separator
+      doc.moveTo(margin, currentY).lineTo(margin + contentW, currentY).lineWidth(thin).stroke();
+
+      // Draw vertical lines for this empty row (or rely on the huge vertical line redraw?)
+      // We drew vertical lines from `tableStartOnCurrentPage` to `currentY` earlier.
+      // We need to extend those vertical lines OR draw new ones.
+      // The `drawVerticalGridLines` assumed `currentY` was final. 
+      // Let's re-draw vertical lines at the END of this filling loop to cover everything.
+
+      currentY += h;
+    }
+
+    // Draw horizontal and bottom borders for the filled space
+    // 1. Re-draw vertical lines to cover the newly filled empty rows
+    drawVerticalGridLines(tableStartOnCurrentPage, currentY);
+    // 2. Draw final bottom border at currentY
+    doc.moveTo(margin, currentY).lineTo(margin + contentW, currentY).lineWidth(thin).stroke();
+
+    // Check if we need a new page for Summary + Signatures
+    // Logic: If we limited gridBottomForThisPage to allow space, it fits.
+    // If gridBottomForThisPage was tableBottomLimit, it means we filled the page and need a new one.
+
+    if (currentY + requiredTotalH > tableBottomLimit) {
+      doc.addPage();
+      drawCommonHeader();
+      currentY = margin + headerH + infoH + 20;
+    } else {
+      currentY += 20; // Add gap
+    }
+
+    // Draw Summary Table (Right Aligned)
+    const sumW = 200;
+    const sumX = margin + contentW - sumW - 270;
+    const sumLabelW = 120;
 
     doc.fontSize(11);
 
-    // Calculate row height based on content
-    const calculateRowHeight = (item) => {
-      let maxHeight = baseRowH;
-      
-      // Check designation text height
-      if (item.designation) {
-        const desLines = doc.widthOfString(item.designation, { width: col.des }) / col.des;
-        const desHeight = Math.ceil(desLines) * 12 + 10; // 12pt font height + padding
-        maxHeight = Math.max(maxHeight, desHeight);
-      }
-      
-      // Check observation text height - use this as row height when observation exists
-      if (item.observation) {
-        const obsLines = doc.widthOfString(item.observation, { width: col.obs }) / col.obs;
-        const obsHeight = Math.ceil(obsLines) * 12 + 12; // 12pt font height + 2px padding
-        return obsHeight; // Return observation height directly
-      }
-      
-      return Math.min(maxHeight, 60); // Cap at 60 to prevent overly tall rows
+    const drawSummaryRow = (label, value, bold = false) => {
+      if (bold) doc.font("Helvetica-Bold");
+      else doc.font("Helvetica");
+
+      doc.rect(sumX, currentY, sumW, summaryRowH).stroke();
+      doc.text(label, sumX + 5, currentY + 5, { width: sumLabelW });
+      doc.text(value, sumX + sumLabelW, currentY + 5, { width: sumW - sumLabelW - 5, align: "right" });
+
+      currentY += summaryRowH;
     };
 
-    // Calculate total height needed and draw grid
-    let currentY = y;
-    const rowHeights = [];
-    
-    // First, calculate heights for all items
-    for (const item of demande.items || []) {
-      const height = calculateRowHeight(item);
-      rowHeights.push(height);
-      currentY += height;
-      
-      // Stop if we reach table bottom
-      if (currentY >= tableBottom) break;
-    }
-    
-    // Fill remaining space with default height rows to maintain grid
-    while (currentY < tableBottom) {
-      rowHeights.push(baseRowH);
-      currentY += baseRowH;
-    }
+    // Calculate Rate
+    const tvaRate = demande.totalHt > 0 ? ((demande.Tva / demande.totalHt) * 100) : 20;
 
-    // Draw horizontal lines for all rows (data + empty)
-    currentY = y;
-    for (const height of rowHeights) {
-      doc.moveTo(margin, currentY).lineTo(margin + contentW, currentY).lineWidth(thin).stroke();
-      currentY += height;
-    }
+    drawSummaryRow("Total HT", parseNumber(demande.totalHt) + " DH");
+    drawSummaryRow("TVA (" + parseNumber(tvaRate) + "%)", "");
+    drawSummaryRow("Montant TVA", parseNumber(demande.Tva) + " DH");
+    drawSummaryRow("Total TTC", parseNumber(demande.totalTTC) + " DH", true);
 
-    // Force close table bottom border
-    doc.moveTo(margin, tableBottom)
-       .lineTo(margin + contentW, tableBottom)
-       .lineWidth(thin)
-       .stroke();
+    currentY += 20; // Gap
 
-    // Fill data for existing items with dynamic positioning
-    let rowIndex = 0;
-    currentY = y;
-    
-    for (const item of demande.items || []) {
-      if (rowIndex >= rowHeights.length) break;
-      
-      const rowHeight = rowHeights[rowIndex];
-      const textY = currentY + (rowHeight - 12) / 2; // Center text vertically
-      const obsTextY = currentY + 4; // Start observation from top of row with 4px padding
+    // --- SIGNATURES ---
+    const sigY = currentY;
+    const sigH = 90;
 
-      // Fill row data with proper field mapping
-      doc.text(item.code || "", x.code + 2, textY, { width: col.code });
-      doc.text(item.designation || "", x.des + 2, textY, { width: col.des });
-      doc.text(item.unité || item.unite || "", x.unit, textY, { width: col.unit, align: "center" });
-      doc.text(item.quantité || item.quantite || "", x.qd, textY, { width: col.qd, align: "center" });
-      doc.text("", x.qs, textY, { width: col.qs, align: "center" }); // Stockées - usually empty
-      doc.text(item.auPlutot ? fmtDate(item.auPlutot) : "", x.d1, textY, { width: col.d1, align: "center" });
-      doc.text(item.auPlutart ? fmtDate(item.auPlutart) : "", x.d2, textY, { width: col.d2, align: "center" });
-      doc.text("", x.qp, textY, { width: col.qp, align: "center" }); // Prévu - usually empty
-      doc.text("", x.qr, textY, { width: col.qr, align: "center" }); // Reçue - usually empty
-      doc.text(item.lot || "", x.lot, textY, { width: col.lot, align: "center" });
-      doc.text(item.observation || "", x.obs + 2, obsTextY, { width: col.obs, align: "left" });
-
-      currentY += rowHeight;
-      rowIndex++;
-    }
-
-    /* ---------------- SIGNATURES ---------------- */
-
-    const sigY = pageH - 85;
-    const sigH = 70;
-
-    // Draw signature section border
-    doc.rect(margin, 500.28, contentW, 90).lineWidth(thick).stroke();
+    // Grid for signatures
+    doc.fontSize(11).font("Helvetica");
+    doc.rect(margin, sigY, contentW, sigH).lineWidth(thick).stroke();
 
     const sigW = contentW / 4;
     for (let i = 1; i < 4; i++) {
       doc.moveTo(margin + sigW * i, sigY).lineTo(margin + sigW * i, sigY + sigH).stroke();
     }
 
-    // Add signature lines
-    doc.fontSize(11);
     ["Magasinier", "Conducteur des travaux", "Chef Chantier", "Service Approvisionnement"]
       .forEach((t, i) => {
-        // Draw border for each signature box
-        doc.rect(margin + sigW * i + 5, sigY, sigW - 10, sigH)
-           .lineWidth(1)
-           .stroke();
-        
-        // Title at bottom
-        doc.text(t, margin + sigW * i + 10, sigY + sigH - 20, {
-          width: sigW - 10,
-          align: "left",
-        });
-        
-        // Signature line in the middle
-        const lineY = sigY + 35;
-        doc.moveTo(margin + sigW * i + 15, lineY)
-           .lineTo(margin + sigW * (i + 1) - 15, lineY)
-           .lineWidth(0.8)
-           .stroke();
+        doc.rect(margin + sigW * i + 5, sigY + 5, sigW - 10, sigH - 10).lineWidth(0.5).stroke();
+        doc.text(t, margin + sigW * i + 10, sigY + sigH - 25, { width: sigW - 10, align: "left" });
+
+        const lineY = sigY + 45;
+        doc.moveTo(margin + sigW * i + 15, lineY).lineTo(margin + sigW * (i + 1) - 15, lineY).lineWidth(0.8).stroke();
       });
 
     doc.end();
@@ -1055,12 +1142,113 @@ export const generateDemandeFourniturePDF = async (req, res) => {
   }
 };
 
+export const addpricingforDemande = async (req, res) => {
+  const { id } = req.params;
+  const { items, tauxTva, delaispaiement } = req.body;
 
+  try {
+    // -------------------------------------------------
+    // 1. Parse items (JSON string or array)
+    // -------------------------------------------------
+    let parsedItems = [];
+    if (typeof items === 'string') {
+      parsedItems = JSON.parse(items);
+    } else if (Array.isArray(items)) {
+      parsedItems = items;
+    } else {
+      return res.status(400).json({ success: false, error: "Items invalides." });
+    }
 
+    // -------------------------------------------------
+    // 2. Validate items and pricing
+    // -------------------------------------------------
+    if (!Array.isArray(parsedItems) || parsedItems.length === 0) {
+      return res.status(400).json({ success: false, error: "Au moins un item requis." });
+    }
 
+    for (const [i, it] of parsedItems.entries()) {
+      if (!it.id || isNaN(parseInt(it.id))) {
+        return res.status(400).json({ success: false, error: `ID item manquant (ligne ${i + 1})` });
+      }
+      const prixU = parseFloat(String(it.prixU || '0').replace(',', '.'));
+      if (isNaN(prixU) || prixU < 0) {
+        return res.status(400).json({ success: false, error: `Prix U invalide (ligne ${i + 1})` });
+      }
+      it.prixU = prixU;
+    }
 
+    // -------------------------------------------------
+    // 3. Validate TVA rate
+    // -------------------------------------------------
+    let effectiveTva = 0;
+    if (tauxTva !== undefined && tauxTva !== null && String(tauxTva).trim() !== '') {
+      const tva = parseFloat(String(tauxTva).replace(',', '.'));
+      if (isNaN(tva) || tva < 0 || tva > 100) {
+        return res.status(400).json({ success: false, error: 'TVA invalide (0-100)' });
+      }
+      effectiveTva = tva;
+    }
 
+    // -------------------------------------------------
+    // 4. Fetch existing items
+    // -------------------------------------------------
+    const existingItems = await prisma.itemFourniture.findMany({
+      where: { demandeFournitureId: parseInt(id, 10) },
+      select: { id: true, quantité: true },
+    });
 
+    const existingMap = new Map(existingItems.map(item => [item.id, item]));
 
+    // -------------------------------------------------
+    // 5. Prepare updates and calculate totals
+    // -------------------------------------------------
+    let totalHtDemande = 0;
+    const updatePromises = parsedItems.map(it => {
+      const itemId = parseInt(it.id);
+      const existing = existingMap.get(itemId);
+      if (!existing) {
+        throw new Error(`Item ${itemId} non trouvé`);
+      }
+      const qty = existing.quantité;
+      const totalHt = qty * it.prixU;
+      totalHtDemande += totalHt;
 
+      return prisma.itemFourniture.update({
+        where: { id: itemId },
+        data: {
+          prixU: it.prixU,
+          totalHt,
+          delaisPaiement: it.delaisPaiement ?? delaispaiement
+        },
+      });
+    });
+
+    // -------------------------------------------------
+    // 6. Update demande totals
+    // -------------------------------------------------
+    const montantTva = totalHtDemande * (effectiveTva / 100);
+    const totalTtc = totalHtDemande + montantTva;
+
+    // -------------------------------------------------
+    // 7. Execute transaction
+    // -------------------------------------------------
+    await prisma.$transaction([
+      ...updatePromises,
+      prisma.demandeFourniture.update({
+        where: { id: parseInt(id, 10) },
+        data: {
+          totalHt: totalHtDemande,
+          Tva: montantTva,
+          totalTTC: totalTtc,
+        },
+      }),
+    ]);
+
+    res.json({ success: true, message: 'Pricing mis à jour avec succès' });
+
+  } catch (error) {
+    console.error('Error in addpricingforDemande:', error);
+    res.status(500).json({ success: false, error: error.message || 'Erreur interne du serveur' });
+  }
+};
 
