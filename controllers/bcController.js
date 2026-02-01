@@ -108,13 +108,26 @@ export const postBcDemandeFourniture = async (req, res) => {
 
     const createdBcIds = [];
 
-    // Compute next BC numero (numero is a String in Prisma schema)
-    const recentBcs = await prisma.bondeCommande.findMany({
-      select: { numero: true },
-      orderBy: { createdAt: 'desc' },
+    // Compute next BC numero (numbering resets annually)
+    const yearForBc = new Date().getFullYear();
+    const yearStr = String(yearForBc);
+
+    const bcsThisYear = await prisma.bondeCommande.findMany({
+      where: {
+        numero: { contains: `/${yearStr}` }
+      },
+      select: { numero: true }
     });
-    const currentMaxNumero = recentBcs[0]?.numero || "0";
-    let nextNumero = parseInt(currentMaxNumero) + 1;
+
+    let maxNum = 0;
+    for (const bc of bcsThisYear) {
+      if (bc.numero && bc.numero.includes('/')) {
+        const numPart = bc.numero.split('/')[0];
+        const n = parseInt(numPart, 10);
+        if (!isNaN(n)) maxNum = Math.max(maxNum, n);
+      }
+    }
+    let nextNumCounter = maxNum + 1;
 
     for (const [fournisseurIdStr, itemIdsForFournisseur] of Object.entries(itemsByFournisseur)) {
       const fournisseurId = parseInt(fournisseurIdStr);
@@ -162,7 +175,7 @@ export const postBcDemandeFourniture = async (req, res) => {
       const newBc = await prisma.bondeCommande.create({
         data: {
           date: new Date(),
-          numero: String("00" + nextNumero++ + "/" + new Date().getFullYear()),
+          numero: `${String(nextNumCounter++).padStart(4, '0')}/${yearStr}`,
           fournisseurId,
           chantierId,
           demandeur,
@@ -1200,22 +1213,32 @@ export const storeBc = async (req, res) => {
     const montantTva = totalHt * (tvaRate > 0 ? tvaRate : 0) / 100;
     const totalTtc = totalHt + montantTva;
 
-    const recentBcs = await prisma.bondeCommande.findMany({
-      select: { numero: true },
-      orderBy: { createdAt: 'desc' },
-      take: 200,
+    // Compute next BC numero (numbering resets annually)
+    const yearForBc = jsDate.getFullYear();
+    const yearStr = String(yearForBc);
+
+    const bcsThisYear = await prisma.bondeCommande.findMany({
+      where: {
+        numero: { contains: `/${yearStr}` }
+      },
+      select: { numero: true }
     });
-    const currentMaxNumero = recentBcs.reduce((max, bc) => {
-      const n = parseInt(bc?.numero, 10);
-      return Number.isNaN(n) ? max : Math.max(max, n);
-    }, 0);
-    const nextNumero = currentMaxNumero + 1;
+
+    let maxNum = 0;
+    for (const bc of bcsThisYear) {
+      if (bc.numero && bc.numero.includes('/')) {
+        const numPart = bc.numero.split('/')[0];
+        const n = parseInt(numPart, 10);
+        if (!isNaN(n)) maxNum = Math.max(maxNum, n);
+      }
+    }
+    const nextNumCounter = maxNum + 1;
 
     // Step 1: Create BC + items
     const bc = await prisma.bondeCommande.create({
       data: {
         date: jsDate,
-        numero: String("00" + nextNumero + "/" + new Date().getFullYear()),
+        numero: `${String(nextNumCounter).padStart(4, '0')}/${yearStr}`,
         totalHt,
         tauxTva: tvaRate,
         totalTtc,
