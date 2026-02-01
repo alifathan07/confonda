@@ -6,27 +6,27 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const index = async(req , res) => {
-    const virements  = await prisma.virement.findMany({
-        include: { fournisseur: true, banque: true,  chantier : true },
-        orderBy : {
-            date: 'desc'
+export const index = async (req, res) => {
+    const virements = await prisma.virement.findMany({
+        include: { fournisseur: true, banque: true, chantier: true },
+        orderBy: {
+            id: 'desc'
         }
-    }); 
+    });
     const chantiers = await prisma.chantier.findMany({
-        orderBy : {
+        orderBy: {
             nom: 'asc'
         }
     });
-    res.render('dashboard/tresorerie/reglements/virements/index' , { virements, chantiers } )
+    res.render('dashboard/tresorerie/reglements/virements/index', { virements, chantiers })
 }
 
-export const createVirement = async(req , res) => {
+export const createVirement = async (req, res) => {
     const fournisseurs = await prisma.fournisseur.findMany()
     const banqueId = Number(req.params.id)
     const chantiers = await prisma.chantier.findMany()
-    
-    res.render('dashboard/tresorerie/reglements/virements/create' , { fournisseurs , banqueId, rtgs: false, srbm: false, instantane: false, chantiers } )
+
+    res.render('dashboard/tresorerie/reglements/virements/create', { fournisseurs, banqueId, rtgs: false, srbm: false, instantane: false, chantiers })
 }
 export const postVirement = async (req, res) => {
     try {
@@ -140,7 +140,7 @@ export const postVirement = async (req, res) => {
 export const showUpdateVirement = async (req, res) => {
     const id = Number(req.params.id);
     const banqueId = Number(req.params.banqueId);
-    
+
 
     // 1. Get the virement first
     const virement = await prisma.virement.findUnique({
@@ -266,7 +266,7 @@ export const updateVire = async (req, res) => {
             objet: objet !== undefined ? objet : existingVirement.objet,
             cause: cause !== undefined ? cause : existingVirement.cause,
             banque: { connect: { id: findBanque.id } },
-            chantier : { connect: { id: chantier ? parseInt(chantier) : parseInt(randomChantierId)} },
+            chantier: { connect: { id: chantier ? parseInt(chantier) : parseInt(randomChantierId) } },
         };
 
         // Only connect fournisseur if it exists
@@ -280,7 +280,7 @@ export const updateVire = async (req, res) => {
             data: updateData
         });
 
-        res.status(200).json({ 
+        res.status(200).json({
             message: "Virement mis à jour avec succès.",
             virement: updatedVirement // Return updated data for frontend
         });
@@ -291,14 +291,14 @@ export const updateVire = async (req, res) => {
     }
 };
 
-export const showVirement = async(req , res) => {
+export const showVirement = async (req, res) => {
     const banqueId = Number(req.params.id)
     const virements = await prisma.virement.findMany({
         where: { banqueId },
         include: { fournisseur: true, banque: true, chantier: true }
     })
     const chantiers = await prisma.chantier.findMany();
-    res.render('dashboard/tresorerie/reglements/virements/index' , { virements , banqueId , chantiers } )
+    res.render('dashboard/tresorerie/reglements/virements/index', { virements, banqueId, chantiers })
 }
 
 
@@ -332,53 +332,53 @@ export const generateVirementPDF = async (req, res) => {
         doc.image(logoPath, 50, 20, { width: 100 });
 
         doc.font('Helvetica')
-           .fontSize(10)
-           .fillColor('#555555')
-           .text(`CASABLANCA, ${new Date().toLocaleDateString('fr-FR')}`, 400, 100, { align: 'right' });
+            .fontSize(10)
+            .fillColor('#555555')
+            .text(`CASABLANCA, ${new Date().toLocaleDateString('fr-FR')}`, 400, 100, { align: 'right' });
 
         const sentence = `A L'ATTENTION de monsieur le directeur de la banque \n${virement.banque.name} Agence ${virement.banque.agence}`;
         doc.font('Helvetica')
-           .fontSize(10)
-           .fillColor('#555555')
-           .text(sentence.toUpperCase(), 350, 150, { align: 'left' });
+            .fontSize(10)
+            .fillColor('#555555')
+            .text(sentence.toUpperCase(), 350, 150, { align: 'left' });
 
         // === Objet + Intro ===
         doc.moveDown(4)
-           .font('Helvetica-Bold')
-           .fontSize(14)
-           .fillColor('#555555')
-           .text(`Objet : ${virement.objet || 'N/A'} ${virement.rtgs ? 'RTGS' : ''} ${virement.srbm ? 'SRBM' : ''} ${virement.instantane ? 'Instantané' : ''}`, 50, doc.y, { width: 495, align: 'left' });
+            .font('Helvetica-Bold')
+            .fontSize(14)
+            .fillColor('#555555')
+            .text(`Objet : ${virement.objet || 'N/A'} ${virement.rtgs ? 'RTGS' : ''} ${virement.srbm ? 'SRBM' : ''} ${virement.instantane ? 'Instantané' : ''}`, 50, doc.y, { width: 495, align: 'left' });
 
         doc.moveDown(1)
-           .font('Helvetica')
-           .fontSize(12)
-           .fillColor('#555555')
-           .text(virement.cause || '', { width: 495, align: 'justify' });
+            .font('Helvetica')
+            .fontSize(12)
+            .fillColor('#555555')
+            .text(virement.cause || '', { width: 495, align: 'justify' });
 
         doc.moveDown(1)
-           .font('Helvetica')
-           .fontSize(12)
-           .fillColor('#333333')
-           .text(
-               `Monsieur,\n\nNous vous prions de bien vouloir débiter notre compte numéro ${virement.banque.rib || 'N/A'}, ouvert à votre agence au nom de notre société CONFONDA, pour effectuer le virement détaillé ci-après.`,
-               { width: 495, align: 'justify', lineGap: 4 }
-           );
+            .font('Helvetica')
+            .fontSize(12)
+            .fillColor('#333333')
+            .text(
+                `Monsieur,\n\nNous vous prions de bien vouloir débiter notre compte numéro ${virement.banque.rib || 'N/A'}, ouvert à votre agence au nom de notre société CONFONDA, pour effectuer le virement détaillé ci-après.`,
+                { width: 495, align: 'justify', lineGap: 4 }
+            );
 
         // === TABLE ===
         const details = [
             { title: 'Bénéficiaire', value: virement.beneficiaire || 'N/A' },
-            { 
-                title: 'Montant', 
-                value: Number(virement.montant).toLocaleString('fr-FR', { 
-                  minimumFractionDigits: 2, 
-                  maximumFractionDigits: 2 
-                }).replace(/[\u00A0\u202F]/g, ' ') + ' DIRHAMS' 
-              },            { title: 'Montant en lettres', value: virement.montantLettres ? virement.montantLettres  : 'N/A' },
+            {
+                title: 'Montant',
+                value: Number(virement.montant).toLocaleString('fr-FR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).replace(/[\u00A0\u202F]/g, ' ') + ' DIRHAMS'
+            }, { title: 'Montant en lettres', value: virement.montantLettres ? virement.montantLettres : 'N/A' },
             { title: 'Banque', value: virement.fournisseur?.banque || 'N/A' },
             { title: 'RIB', value: virement.fournisseur?.rib || 'N/A' },
             { title: 'Agence', value: virement.fournisseur?.agence || 'N/A' },
         ];
-       
+
 
         doc.moveDown(2);
         let currentY = doc.y;
@@ -400,33 +400,33 @@ export const generateVirementPDF = async (req, res) => {
 
         // Table border
         doc.rect(boxX, doc.y - details.length * rowHeight, boxWidth, Math.min(details.length * rowHeight, maxContentY - doc.y + details.length * rowHeight))
-           .strokeColor('#CCCCCC').lineWidth(1).stroke();
+            .strokeColor('#CCCCCC').lineWidth(1).stroke();
 
         // === FOOTER ===
 
 
-// Draw footer background
-doc.rect(0, footerY, 595, footerHeight).fill('#AB3029').stroke();
+        // Draw footer background
+        doc.rect(0, footerY, 595, footerHeight).fill('#AB3029').stroke();
 
-// Text margin from top of footer
-const textMargin = 15;
+        // Text margin from top of footer
+        const textMargin = 15;
 
-// Add footer text
-doc.font('Helvetica').fontSize(9).fillColor('#FFFFFF')
-doc.text(
-    '82, angle Bd abdelmoumen et rue Soumaya Imm.Shahrazad III 2ème étage Casablanca Tél : 0522-23-39-70',
-    50,
-    footerY + textMargin,
-    { width: 495, align: 'center' }
-);
-doc.text(
-    'Fax : 0522-23-42-60  Capital : 18 500 000.00 DH  CNSS : 7167788 - R.C. : 145619 – I.F. : 1602714 – Patente : 37900708- I.C.E : 001526422000063',
-    50,
-    footerY + textMargin + 15,
-    { width: 495, align: 'center' }
-);
+        // Add footer text
+        doc.font('Helvetica').fontSize(9).fillColor('#FFFFFF')
+        doc.text(
+            '82, angle Bd abdelmoumen et rue Soumaya Imm.Shahrazad III 2ème étage Casablanca Tél : 0522-23-39-70',
+            50,
+            footerY + textMargin,
+            { width: 495, align: 'center' }
+        );
+        doc.text(
+            'Fax : 0522-23-42-60  Capital : 18 500 000.00 DH  CNSS : 7167788 - R.C. : 145619 – I.F. : 1602714 – Patente : 37900708- I.C.E : 001526422000063',
+            50,
+            footerY + textMargin + 15,
+            { width: 495, align: 'center' }
+        );
 
-doc.end();
+        doc.end();
 
     } catch (error) {
         console.error(error);
@@ -450,5 +450,5 @@ export const deleteVirement = async (req, res) => {
 export const listBanquesVirements = async (req, res) => {
     const banques = await prisma.banque.findMany();
 
-    res.render('dashboard/tresorerie/reglements/virements/banques', {banques});
+    res.render('dashboard/tresorerie/reglements/virements/banques', { banques });
 }

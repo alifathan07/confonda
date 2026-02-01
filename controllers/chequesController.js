@@ -565,7 +565,7 @@ export const updateCheque = async (req, res) => {
     }
 
     // 📌 Check if chantier exists by name
-   
+
 
     // 🛠️ Build the data object dynamically, only including fields that are provided
     const data = {};

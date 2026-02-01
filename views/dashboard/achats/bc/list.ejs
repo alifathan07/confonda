@@ -223,7 +223,6 @@
                                   </span></td>
                                 <td>
                                   <div class="btn-group btn-group-sm" role="group">
-
                                     <a href="/achat/bc/<%= dp.id %>/edit" class="btn btn-warning" title="Éditer">
                                       <i class="fas fa-edit"></i>
                                     </a>
@@ -242,6 +241,44 @@
                       </tbody>
                     </table>
                   </div>
+
+                  <!-- Pagination UI -->
+                  <% if (totalPages> 1) { %>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                      <div class="text-muted small">
+                        Affichage de <%= bc.length %> sur <%= totalCount %> bons de commande
+                      </div>
+                      <nav aria-label="Pagination">
+                        <ul class="pagination pagination-sm mb-0">
+                          <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                            <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>"
+                              aria-label="Précédent">
+                              <span aria-hidden="true">&laquo;</span>
+                            </a>
+                          </li>
+
+                          <% let startPage=Math.max(1, currentPage - 2); let endPage=Math.min(totalPages, startPage +
+                            4); if (endPage - startPage < 4) startPage=Math.max(1, endPage - 4); %>
+
+                            <% for (let i=startPage; i <=endPage; i++) { %>
+                              <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>">
+                                  <%= i %>
+                                </a>
+                              </li>
+                              <% } %>
+
+                                <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                                  <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>"
+                                    aria-label="Suivant">
+                                    <span aria-hidden="true">&raquo;</span>
+                                  </a>
+                                </li>
+                        </ul>
+                      </nav>
+                    </div>
+                    <% } %>
+
                 </div>
               </div>
             </div>

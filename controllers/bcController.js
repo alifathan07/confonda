@@ -236,7 +236,16 @@ export const deleteBc = async (req, res) => {
 
 export const listBc = async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const totalCount = await prisma.bondeCommande.count();
+    const totalPages = Math.ceil(totalCount / limit);
+
     const bc = await prisma.bondeCommande.findMany({
+      skip,
+      take: limit,
       include: {
         commandesItems: {
           include: {
@@ -244,20 +253,21 @@ export const listBc = async (req, res) => {
           }
         },
         fournisseur: true,
-
-        // include direct chantier relation if present
         chantier: true,
       },
       orderBy: {
         createdAt: 'desc',
       },
     });
-    if (!bc) {
-      return res.status(404).json({ success: false, error: "Bon de commande non trouvée" });
-    }
-    res.render('dashboard/achats/bc/list', { bc });
-  } catch (err) {
 
+    res.render('dashboard/achats/bc/list', {
+      bc,
+      currentPage: page,
+      totalPages,
+      totalCount,
+      limit
+    });
+  } catch (err) {
     console.error('Erreur affichage bon de commande:', err);
     res.status(500).json({ success: false, error: "Erreur serveur" });
   }
@@ -510,12 +520,12 @@ export const generateBcPDF = async (req, res) => {
       return { startY, cardH };
     };
 
-    const drawFooter = (yPosition) => {
+    const drawFooter = (yPosition, isLastPage = true) => {
       const startY = yPosition || (pageHeight - margin - footerHeight);
       const gap = 12;
 
       // 1. Totals + Montant Block (Top of footer)
-      const compactY = drawCompactTotalsAndMontant(startY);
+      const compactY = drawCompactTotalsAndMontant(startY, isLastPage);
 
       // 2. Chantier + Livraison Block
       const chantier = drawChantier(compactY + gap);
@@ -648,7 +658,7 @@ export const generateBcPDF = async (req, res) => {
       return y + rowHeight;
     };
 
-    const drawCompactTotalsAndMontant = (y) => {
+    const drawCompactTotalsAndMontant = (y, isLastPage = true) => {
       const blockHeight = 45;
       const horizontalTableW = 220;
       const montantLettresW = contentWidth - horizontalTableW - 10;
@@ -659,8 +669,13 @@ export const generateBcPDF = async (req, res) => {
       // Left part: Montant en lettres
       doc.font("Helvetica-Bold").fontSize(8).fillColor(colors.gray900)
         .text("Arrêté le présent bon de commande à la somme de :", margin + 10, y + 8, { width: montantLettresW });
+
+      const montantText = isLastPage
+        ? (numberToFrenchWords(computedTtc) || "—") + " TTC"
+        : "X TTC";
+
       doc.font("Helvetica-Bold").fontSize(9).fillColor(colors.blue)
-        .text((bc.montantLettre || "—") + " TTC", margin + 10, y + 20, { width: montantLettresW });
+        .text(montantText, margin + 10, y + 20, { width: montantLettresW });
 
       // Right part: Horizontal Totals Table
       const tableX = margin + montantLettresW + 10;
@@ -675,7 +690,10 @@ export const generateBcPDF = async (req, res) => {
       });
 
       // Values
-      const values = [fmtMoney(computedTotalHt), fmtMoney(computedTva), fmtMoney(computedTtc)];
+      const values = isLastPage
+        ? [fmtMoney(computedTotalHt), fmtMoney(computedTva), fmtMoney(computedTtc)]
+        : ["X", "X", "X"];
+
       values.forEach((v, i) => {
         doc.rect(tableX + (i * colW), y + 15, colW, blockHeight - 15).lineWidth(0.5).stroke(colors.border);
         doc.font("Helvetica-Bold").fontSize(8).fillColor(colors.gray900)
@@ -716,7 +734,7 @@ export const generateBcPDF = async (req, res) => {
     }
 
     // Combined Footer at the bottom of P1
-    drawFooter(pageHeight - margin - footerH);
+    drawFooter(pageHeight - margin - footerH, processedItems === items.length);
 
     // --- SUBSEQUENT PAGES ---
     if (processedItems < items.length) {
@@ -736,7 +754,7 @@ export const generateBcPDF = async (req, res) => {
         }
 
         // Final footer for each subsequent page
-        drawFooter(pageHeight - margin - footerH);
+        drawFooter(pageHeight - margin - footerH, processedItems === items.length);
       }
     }
 

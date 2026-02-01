@@ -1,10 +1,6 @@
-   export const numberToFrenchWords = (number) => {
-    if (!Number.isInteger(number)) {
-        throw new Error("Input must be an integer");
-    }
-
-    if (number < 0) {
-        return "moins " + numberToFrenchWords(Math.abs(number));
+export function numberToFrenchWords(number) {
+    if (typeof number !== "number") {
+        throw new Error("Input must be a number");
     }
 
     const units = ["", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf"];
@@ -16,89 +12,85 @@
         if (n === 0) return "";
         let result = "";
 
+        // Hundreds
         if (n >= 100) {
             const hundreds = Math.floor(n / 100);
-            if (hundreds === 1) {
-                result += "cent";
-            } else {
-                result += units[hundreds] + " cent";
-            }
-            if (n % 100 === 0 && hundreds > 1) {
-                result += "s";
-            }
-            if (n % 100 > 0) {
-                result += " ";
-            }
+            result += hundreds === 1 ? "cent" : units[hundreds] + " cent";
+            if (n % 100 === 0 && hundreds > 1) result += "s";
+            if (n % 100 > 0) result += " ";
             n %= 100;
         }
 
-        if (n > 0) {
-            if (n >= 20) {
-                const tenIndex = Math.floor(n / 10);
-                const unit = n % 10;
-                if (tenIndex === 7 || tenIndex === 9) {
-                    const base = tenIndex === 7 ? "soixante" : "quatre-vingt";
-                    if (unit === 0) {
-                        result += base + "-" + teens[0];
-                    } else {
-                        result += base + "-" + teens[unit]; // no "et" here
-                    }
+        // Tens & units
+        if (n >= 20) {
+            const tenIndex = Math.floor(n / 10);
+            const unit = n % 10;
+
+            // 70–79 & 90–99
+            if (tenIndex === 7 || tenIndex === 9) {
+                const base = tenIndex === 7 ? "soixante" : "quatre-vingt";
+                const teenIndex = n - (tenIndex === 7 ? 60 : 80) - 10;
+
+                if (n === 71) {
+                    result += "soixante-et-onze";
                 } else {
-                    result += tens[tenIndex];
-                    if (unit === 1 && tenIndex !== 8) {
-                        result += "-et-" + units[unit];
-                    } else if (unit > 0) {
-                        result += "-" + units[unit];
-                    } else if (tenIndex === 8 && unit === 0) {
-                        result += "s"; // quatre-vingts
-                    }
+                    result += base + "-" + teens[teenIndex];
                 }
-            } else if (n >= 10) {
-                result += teens[n - 10];
             } else {
-                result += units[n];
+                result += tens[tenIndex];
+                if (unit === 1 && tenIndex !== 8) result += "-et-un";
+                else if (unit > 0) result += "-" + units[unit];
+                else if (tenIndex === 8) result += "s";
             }
+        } else if (n >= 10) {
+            result += teens[n - 10];
+        } else if (n > 0) {
+            result += units[n];
         }
 
         return result.trim();
     }
 
-    if (number === 0) {
-        return "zéro";
-    }
+    function numberToWords(n) {
+        if (n === 0) return "zéro";
 
-    let n = number;
-    let groupIndex = 0;
-    const parts = [];
+        let parts = [];
+        let index = 0;
 
-    while (n > 0) {
-        const group = n % 1000;
-        if (group !== 0) {
-            const words = convertLessThanThousand(group);
-            const scale = thousands[groupIndex];
+        while (n > 0) {
+            const chunk = n % 1000;
+            if (chunk > 0) {
+                let chunkText = convertLessThanThousand(chunk);
 
-            if (groupIndex === 0) {
-                parts.unshift(words);
-            } else if (groupIndex === 1) {
-                // "mille" never takes "un" (1000 = "mille")
-                if (group === 1) {
-                    parts.unshift(scale);
-                } else {
-                    parts.unshift(`${words} ${scale}`);
+                if (index === 1) {
+                    chunkText = chunk === 1 ? "mille" : chunkText + " mille";
+                } else if (index > 1) {
+                    chunkText += " " + thousands[index];
+                    if (chunk > 1) chunkText += "s";
                 }
-            } else {
-                // million/milliard pluralization
-                const plural = group > 1 ? "s" : "";
-                parts.unshift(`${words} ${scale}${plural}`);
+
+                parts.unshift(chunkText);
             }
+            n = Math.floor(n / 1000);
+            index++;
         }
-        n = Math.floor(n / 1000);
-        groupIndex++;
+
+        return parts.join(" ").trim();
     }
 
-    return parts.join(' ').replace(/\s+/g, ' ').trim();
-}
+    let prefix = "";
+    if (number < 0) {
+        prefix = "moins ";
+        number = Math.abs(number);
+    }
 
-export default {
-    numberToFrenchWords,
-};
+    const integerPart = Math.floor(number);
+    const decimalPart = Math.round((number - integerPart) * 100);
+
+    let words = numberToWords(integerPart) + " dirhams";
+    if (decimalPart > 0) {
+        words += " et " + numberToWords(decimalPart) + " centimes";
+    }
+
+    return prefix + words;
+}
