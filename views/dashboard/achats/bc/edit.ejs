@@ -653,6 +653,60 @@
       padding: 6px 10px;
       font-weight: 700;
     }
+
+    #bc-global-autocomplete-list {
+      position: absolute;
+      z-index: 9999;
+      background: #ffffff;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.14);
+      padding: 6px;
+      margin: 0;
+      list-style: none;
+      max-height: 260px;
+      overflow: auto;
+      display: none;
+    }
+
+    #bc-global-autocomplete-list li {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 10px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    #bc-global-autocomplete-list li:hover,
+    #bc-global-autocomplete-list li.is-active {
+      background: #f3f8ff;
+    }
+
+    #bc-global-autocomplete-list .bc-suggest-main {
+      font-weight: 800;
+      color: #111827;
+      font-size: 0.92rem;
+      line-height: 1.15;
+    }
+
+    #bc-global-autocomplete-list .bc-suggest-sub {
+      color: #64748b;
+      font-size: 0.78rem;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    #bc-global-autocomplete-list li.is-disabled {
+      cursor: default;
+      background: transparent;
+    }
+
+    #bc-global-autocomplete-list li.is-disabled .bc-suggest-main {
+      font-weight: 700;
+      color: #94a3b8;
+    }
   </style>
 </head>
 
@@ -699,8 +753,7 @@
                       <div class="brand-sep"></div>
                       <div>
                         <div class="brand-name">Construction et Fondation</div>
-                        <div class="brand-sub">Pour des constructions bien fondées
-</div>
+                        <div class="brand-sub">Pour des constructions bien fondées</div>
                       </div>
                     </div>
                     <div style="font-weight:800; color:#b45309; font-size: 1.05rem;"></div>
@@ -816,8 +869,8 @@
                         <tr>
                           <th style="width:6%; text-align:center; border: 1px solid #dee2e6;">N°</th>
                           <th style="width:34%; border: 1px solid #dee2e6;">Désignation</th>
-                          <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Unité</th>
                           <th style="width:16%; text-align:center; border: 1px solid #dee2e6;">Reference</th>
+                          <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Unité</th>
 
                           <th style="width:8%; text-align:center; border: 1px solid #dee2e6;">Quantité</th>
                           <th style="width:8%; text-align:center; border: 1px solid #dee2e6;">Imputation</th>
@@ -847,18 +900,18 @@
                             <td style="border: 1px solid #dee2e6;">
                               <input type="text" class="form-control form-control-sm"
                                 style="font-weight:600; color:#1e293b; border-radius: 10px;"
-                                value="<%= item.designation || '' %>" data-field="designation" />
+                                value="<%= item.designation || '' %>" data-field="designation" autocomplete="off" />
+                            </td>
+                            <td style="text-align:center; border: 1px solid #dee2e6;">
+                              <input type="text" min="0" step="0.01" class="qty-pill item-total-qty"
+                                style="border:none;  max-width: 110px; outline:none;" value="<%= (item.reference) %>"
+                                data-field="reference" autocomplete="off" />
                             </td>
                             <td style="text-align:center; border: 1px solid #dee2e6;">
                               <input type="text" class="form-control form-control-sm text-center"
                                 style="font-weight:600; border-radius: 999px; max-width: 110px; margin: 0 auto;"
                                 value="<%= item.unite || '' %>" data-field="unite" />
 
-                            </td>
-                            <td style="text-align:center; border: 1px solid #dee2e6;">
-                              <input type="text" min="0" step="0.01" class="qty-pill item-total-qty"
-                                style="border:none;  max-width: 110px; outline:none;" value="<%= (item.reference) %>"
-                                data-field="reference" />
                             </td>
 
                             <td style="text-align:center; border: 1px solid #dee2e6;">
@@ -1108,6 +1161,321 @@
             placeholderValue: 'Sélectionner des chantiers',
             shouldSort: false,
             searchPlaceholderValue: 'Rechercher...'
+          });
+        })();
+
+        (function () {
+          const fournitureData = <%- JSON.stringify(typeof listfourniture !== 'undefined' ? listfourniture : []) %>;
+          let activeInput = null;
+          let activeType = null;
+          let activeItems = [];
+          let activeIndex = -1;
+
+          const list = document.createElement('ul');
+          list.id = 'bc-global-autocomplete-list';
+          list.setAttribute('role', 'listbox');
+          document.body.appendChild(list);
+
+          const normalize = (v) => (v == null ? '' : String(v)).trim();
+          const lower = (v) => normalize(v).toLowerCase();
+          const getDesignation = (item) => normalize(item?.designation || item?.Designation || '');
+          const getReference = (item) => normalize(item?.reference || item?.lot || item?.ref || item?.Reference || '');
+          const getUnite = (item) => normalize(item?.unite || item?.unité || item?.Unite || item?.Unité || '');
+          const getPrixUnitaire = (item) => {
+            const raw = item?.prixUnitaire ?? item?.prix_unitaire ?? item?.prix ?? item?.PrixUnitaire;
+            const cleaned = normalize(raw).replace(/\s/g, '').replace(',', '.');
+            const n = parseFloat(cleaned);
+            return Number.isFinite(n) ? n : null;
+          };
+          const fmtMoney = (n) => {
+            const v = Number(n);
+            if (!Number.isFinite(v)) return '';
+            try {
+              return v.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            } catch (e) {
+              return String(v.toFixed(2)).replace('.', ',');
+            }
+          };
+
+          const isVisible = () => list.style.display === 'block';
+          const hide = () => {
+            list.style.display = 'none';
+            activeItems = [];
+            activeIndex = -1;
+            activeType = null;
+          };
+
+          const positionList = (inputEl) => {
+            const rect = inputEl.getBoundingClientRect();
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop || 0;
+            const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft || 0;
+            list.style.top = `${rect.bottom + scrollTop + 6}px`;
+            list.style.left = `${rect.left + scrollLeft}px`;
+            list.style.width = `${Math.max(rect.width, 220)}px`;
+            list.style.display = 'block';
+          };
+
+          const setActiveIndex = (idx) => {
+            activeIndex = idx;
+            const items = Array.from(list.querySelectorAll('li[data-idx]'));
+            items.forEach((li) => li.classList.remove('is-active'));
+            const activeLi = items.find(li => parseInt(li.dataset.idx, 10) === activeIndex);
+            if (activeLi) {
+              activeLi.classList.add('is-active');
+              try { activeLi.scrollIntoView({ block: 'nearest' }); } catch (e) { }
+            }
+          };
+
+          const renderDesignation = (matches, query) => {
+            list.innerHTML = '';
+            activeType = 'designation';
+            activeItems = matches;
+            activeIndex = -1;
+
+            if (!matches.length) {
+              const li = document.createElement('li');
+              li.className = 'is-disabled';
+              const main = document.createElement('div');
+              main.className = 'bc-suggest-main';
+              main.textContent = query ? 'Aucune suggestion' : '';
+              li.appendChild(main);
+              list.appendChild(li);
+              return;
+            }
+
+            matches.forEach((m, i) => {
+              const li = document.createElement('li');
+              li.dataset.idx = String(i);
+              const d = getDesignation(m);
+              const countRefs = fournitureData.filter(x => lower(getDesignation(x)) === lower(d) && getReference(x)).length;
+              const main = document.createElement('div');
+              main.className = 'bc-suggest-main';
+              main.textContent = d;
+              const sub = document.createElement('div');
+              sub.className = 'bc-suggest-sub';
+              sub.textContent = countRefs ? `${countRefs} référence${countRefs > 1 ? 's' : ''}` : 'Sans référence';
+              li.appendChild(main);
+              li.appendChild(sub);
+              list.appendChild(li);
+            });
+          };
+
+          const renderReference = (matches, query) => {
+            list.innerHTML = '';
+            activeType = 'reference';
+            activeItems = matches;
+            activeIndex = -1;
+
+            if (!matches.length) {
+              const li = document.createElement('li');
+              li.className = 'is-disabled';
+              const main = document.createElement('div');
+              main.className = 'bc-suggest-main';
+              main.textContent = query ? 'Aucune suggestion' : '';
+              li.appendChild(main);
+              list.appendChild(li);
+              return;
+            }
+
+            matches.slice(0, 30).forEach((m, i) => {
+              const li = document.createElement('li');
+              li.dataset.idx = String(i);
+              const main = document.createElement('div');
+              main.className = 'bc-suggest-main';
+              main.textContent = getReference(m) || '(Sans référence)';
+              const unite = getUnite(m);
+              const pu = getPrixUnitaire(m);
+              const sub = document.createElement('div');
+              sub.className = 'bc-suggest-sub';
+              if (unite && pu != null) sub.textContent = `Unité: ${unite} · PU: ${fmtMoney(pu)}`;
+              else if (unite) sub.textContent = `Unité: ${unite}`;
+              else if (pu != null) sub.textContent = `PU: ${fmtMoney(pu)}`;
+              else sub.textContent = '';
+              li.appendChild(main);
+              if (sub.textContent) li.appendChild(sub);
+              list.appendChild(li);
+            });
+          };
+
+          const selectCurrent = (idx) => {
+            if (!activeInput) return;
+            if (!activeItems || !activeItems.length) return;
+            if (idx < 0 || idx >= activeItems.length) return;
+
+            const tr = activeInput.closest('tr');
+            const selected = activeItems[idx];
+            if (!tr) return;
+
+            if (activeType === 'designation') {
+              const des = getDesignation(selected);
+              activeInput.value = des;
+              const refEl = tr.querySelector('input[data-field="reference"]');
+              const uniteEl = tr.querySelector('input[data-field="unite"]');
+              const puEl = tr.querySelector('input[data-field="prixUnitaire"]');
+              if (refEl) refEl.value = '';
+              if (uniteEl) uniteEl.value = '';
+              if (puEl) puEl.value = '0,00';
+              tr.dataset.bcDesignation = des;
+              if (typeof window.__recalcBcTotals === 'function') window.__recalcBcTotals();
+            } else if (activeType === 'reference') {
+              const ref = getReference(selected);
+              activeInput.value = ref;
+              const uniteEl = tr.querySelector('input[data-field="unite"]');
+              const desEl = tr.querySelector('input[data-field="designation"]');
+              const puEl = tr.querySelector('input[data-field="prixUnitaire"]');
+              const des = tr.dataset.bcDesignation || (desEl ? desEl.value : '');
+              if (desEl && des && !normalize(desEl.value)) {
+                desEl.value = des;
+              }
+              if (uniteEl) uniteEl.value = getUnite(selected);
+              const pu = getPrixUnitaire(selected);
+              if (puEl && pu != null) puEl.value = fmtMoney(pu);
+              if (typeof window.__recalcBcTotals === 'function') window.__recalcBcTotals();
+            }
+
+            hide();
+            try { activeInput.blur(); activeInput.focus(); } catch (e) { }
+          };
+
+          const updateDesignationSuggestions = (inputEl) => {
+            const val = lower(inputEl.value);
+            list.innerHTML = '';
+            if (!val) {
+              hide();
+              return;
+            }
+
+            const seen = new Set();
+            const matches = [];
+            for (const item of fournitureData) {
+              const d = getDesignation(item);
+              const dl = lower(d);
+              if (!d) continue;
+              if (dl.includes(val) && !seen.has(dl)) {
+                seen.add(dl);
+                matches.push(item);
+              }
+              if (matches.length >= 25) break;
+            }
+
+            renderDesignation(matches, val);
+            positionList(inputEl);
+          };
+
+          const updateReferenceSuggestions = (inputEl) => {
+            const tr = inputEl.closest('tr');
+            if (!tr) {
+              hide();
+              return;
+            }
+            const desEl = tr.querySelector('input[data-field="designation"]');
+            const designation = normalize(tr.dataset.bcDesignation || (desEl ? desEl.value : ''));
+            if (!designation) {
+              hide();
+              return;
+            }
+
+            const val = lower(inputEl.value);
+            const matches = fournitureData
+              .filter(item => lower(getDesignation(item)) === lower(designation) && getReference(item))
+              .filter(item => lower(getReference(item)).includes(val))
+              .slice(0, 30);
+
+            renderReference(matches, val);
+            positionList(inputEl);
+          };
+
+          list.addEventListener('mousedown', (e) => {
+            const li = e.target && e.target.closest ? e.target.closest('li[data-idx]') : null;
+            if (!li) return;
+            e.preventDefault();
+          });
+
+          list.addEventListener('click', (e) => {
+            const li = e.target && e.target.closest ? e.target.closest('li[data-idx]') : null;
+            if (!li) return;
+            const idx = parseInt(li.dataset.idx, 10);
+            if (Number.isNaN(idx)) return;
+            selectCurrent(idx);
+          });
+
+          document.addEventListener('focusin', (e) => {
+            const t = e.target;
+            if (!(t instanceof HTMLElement)) return;
+            if (t.matches && t.matches('input[data-field="designation"], input[data-field="reference"]')) {
+              activeInput = t;
+              if (t.getAttribute('data-field') === 'designation') updateDesignationSuggestions(t);
+              else updateReferenceSuggestions(t);
+            }
+          });
+
+          document.addEventListener('input', (e) => {
+            const t = e.target;
+            if (!(t instanceof HTMLElement)) return;
+            if (t.matches && t.matches('input[data-field="designation"]')) {
+              activeInput = t;
+              const tr = t.closest('tr');
+              if (tr) {
+                tr.dataset.bcDesignation = '';
+                const refEl = tr.querySelector('input[data-field="reference"]');
+                const uniteEl = tr.querySelector('input[data-field="unite"]');
+                const puEl = tr.querySelector('input[data-field="prixUnitaire"]');
+                if (refEl && normalize(refEl.value)) refEl.value = '';
+                if (uniteEl && normalize(uniteEl.value)) uniteEl.value = '';
+                if (puEl && normalize(puEl.value) && normalize(puEl.value) !== '0,00') puEl.value = '0,00';
+                if (typeof window.__recalcBcTotals === 'function') window.__recalcBcTotals();
+              }
+              updateDesignationSuggestions(t);
+            }
+            if (t.matches && t.matches('input[data-field="reference"]')) {
+              activeInput = t;
+              updateReferenceSuggestions(t);
+            }
+          });
+
+          document.addEventListener('keydown', (e) => {
+            if (!activeInput) return;
+            if (!isVisible()) return;
+            if (!activeItems || !activeItems.length) return;
+            if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              const next = Math.min(activeItems.length - 1, activeIndex + 1);
+              setActiveIndex(next);
+              return;
+            }
+            if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              const prev = Math.max(0, activeIndex - 1);
+              setActiveIndex(prev);
+              return;
+            }
+            if (e.key === 'Enter') {
+              if (activeIndex >= 0) {
+                e.preventDefault();
+                selectCurrent(activeIndex);
+              }
+              return;
+            }
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              hide();
+              return;
+            }
+          });
+
+          document.addEventListener('mousedown', (e) => {
+            const t = e.target;
+            const inList = t && (t === list || (t.closest && t.closest('#bc-global-autocomplete-list')));
+            const inInput = t && (t.closest && t.closest('input[data-field="designation"], input[data-field="reference"]'));
+            if (!inList && !inInput) hide();
+          });
+
+          window.addEventListener('scroll', hide, { passive: true });
+          window.addEventListener('resize', hide);
+
+          // Ensure native autocomplete doesn't compete with our suggestions
+          document.querySelectorAll('input[data-field="designation"], input[data-field="reference"]').forEach(inp => {
+            try { inp.setAttribute('autocomplete', 'off'); } catch (e) { }
           });
         })();
 
@@ -1669,15 +2037,7 @@
           style="font-weight:600; color:#1e293b; border-radius: 10px;"
           value=""
           data-field="designation"
-        />
-      </td>
-      <td style="text-align:center; border: 1px solid #dee2e6;">
-        <input
-          type="text"
-          class="form-control form-control-sm text-center"
-          style="font-weight:600; border-radius: 999px; max-width: 110px; margin: 0 auto;"
-          value=""
-          data-field="unite"
+          autocomplete="off"
         />
       </td>
       <td style="text-align:center; border: 1px solid #dee2e6;">
@@ -1687,6 +2047,16 @@
           style="font-weight:600; border-radius: 999px; max-width: 110px; margin: 0 auto;"
           value=""
           data-field="reference"
+          autocomplete="off"
+        />
+      </td>
+      <td style="text-align:center; border: 1px solid #dee2e6;">
+        <input
+          type="text"
+          class="form-control form-control-sm text-center"
+          style="font-weight:600; border-radius: 999px; max-width: 110px; margin: 0 auto;"
+          value=""
+          data-field="unite"
         />
       </td>
       <td style="text-align:center; border: 1px solid #dee2e6;">

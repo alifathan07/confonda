@@ -355,7 +355,10 @@ export const generateBcPDF = async (req, res) => {
     const companyFooterHeight = 100;
     const footerHeight = 184 + 12 + companyFooterHeight;
     const rowHeight = 22;
-    const colWidths = [28, 55, 160, 45, 50, 60, 45, 72];
+    const colWidths = [28, 160, 55, 45, 50, 60, 45, 72];
+    const tableCellPadY = 5;
+    const tableCellPadX = 4;
+    const tableLineGap = 1;
 
     // 4. Helper Functions
 
@@ -598,7 +601,7 @@ export const generateBcPDF = async (req, res) => {
 
     const drawTableHeader = (y) => {
       doc.rect(margin, y, contentWidth, rowHeight).fill(colors.tableHeader);
-      const headers = ["N°", "Reference", "Désignation", "Quantité", "Unité", "Prix U. HT", "Remise (%)", "Total HT"];
+      const headers = ["N°", "Désignation", "Reference", "Quantité", "Unité", "Prix U. HT", "Remise (%)", "Total HT"];
       let x = margin;
       headers.forEach((h, i) => {
         doc.font("Helvetica-Bold").fontSize(8).fillColor(colors.white)
@@ -608,52 +611,71 @@ export const generateBcPDF = async (req, res) => {
       return y + rowHeight;
     };
 
-    const drawTableRow = (y, item, index) => {
+    const measureCellHeight = (text, width, font = 'Helvetica', fontSize = 8, align = 'left') => {
+      const safe = (text == null ? '' : String(text));
+      doc.font(font).fontSize(fontSize);
+      return doc.heightOfString(safe, { width, align, lineGap: tableLineGap });
+    };
+
+    const computeRowHeight = (item) => {
+      const desH = measureCellHeight(item.designation || "-", colWidths[1] - (tableCellPadX * 2), 'Helvetica', 8, 'left');
+      const refH = measureCellHeight(item.reference || "", colWidths[2] - (tableCellPadX * 2), 'Helvetica', 8, 'left');
+      const uniteH = measureCellHeight(item.unite || "", colWidths[4] - (tableCellPadX * 2), 'Helvetica', 8, 'center');
+      const textH = Math.max(refH, desH, uniteH, 10);
+      const needed = textH + (tableCellPadY * 2);
+      return Math.max(rowHeight, Math.ceil(needed));
+    };
+
+    const drawTableRow = (y, item, index, forcedRowHeight) => {
+      const rh = forcedRowHeight || computeRowHeight(item);
       const bg = index % 2 === 0 ? colors.rowEven : colors.rowOdd;
-      doc.rect(margin, y, contentWidth, rowHeight).fill(bg);
+      doc.rect(margin, y, contentWidth, rh).fill(bg);
 
       let x = margin;
       // Borders
       colWidths.forEach(w => {
-        doc.rect(x, y, w, rowHeight).lineWidth(0.6).stroke(colors.rowBorder);
+        doc.rect(x, y, w, rh).lineWidth(0.6).stroke(colors.rowBorder);
         x += w;
       });
 
       x = margin;
 
+      const yTop = y + tableCellPadY;
+      const yMid = y + (rh / 2) - 4;
+
       // N°
       doc.font("Helvetica").fontSize(8).fillColor(colors.gray900)
-        .text(String(index + 1), x + 4, y + 7, { width: colWidths[0] - 12, align: "center" });
+        .text(String(index + 1), x + tableCellPadX, yMid, { width: colWidths[0] - (tableCellPadX * 2), align: "center" });
       x += colWidths[0];
-
-      // Reference
-      doc.font("Helvetica").fontSize(8).fillColor(colors.gray800)
-        .text(item.reference || "", x + 4, y + 7, { width: colWidths[1] - 8, align: "left", ellipsis: true });
-      x += colWidths[1];
 
       // Désignation
       doc.font("Helvetica").fontSize(8).fillColor(colors.gray900)
-        .text(item.designation || "-", x + 4, y + 7, { width: colWidths[2] - 8, ellipsis: true });
+        .text(item.designation || "-", x + tableCellPadX, yTop, { width: colWidths[1] - (tableCellPadX * 2), align: "left", lineGap: tableLineGap });
+      x += colWidths[1];
+
+      // Reference
+      doc.font("Helvetica").fontSize(8).fillColor(colors.gray800)
+        .text(item.reference || "", x + tableCellPadX, yTop, { width: colWidths[2] - (tableCellPadX * 2), align: "left", lineGap: tableLineGap });
       x += colWidths[2];
 
       // Quantité
       doc.font("Helvetica").fontSize(8).fillColor(colors.gray900)
-        .text(String(item.quantite ?? 0), x, y + 7, { width: colWidths[3], align: "center" });
+        .text(String(item.quantite ?? 0), x, yMid, { width: colWidths[3], align: "center" });
       x += colWidths[3];
 
       // Unité
       doc.font("Helvetica").fontSize(8).fillColor(colors.gray800)
-        .text(item.unite || "", x, y + 7, { width: colWidths[4], align: "center", ellipsis: true });
+        .text(item.unite || "", x + tableCellPadX, yTop, { width: colWidths[4] - (tableCellPadX * 2), align: "center", lineGap: tableLineGap });
       x += colWidths[4];
 
       // Prix U.
       doc.font("Helvetica").fontSize(8).fillColor(colors.gray900)
-        .text(fmtMoney(item.prixUnitaire ?? 0), x, y + 7, { width: colWidths[5] - 6, align: "right" });
+        .text(fmtMoney(item.prixUnitaire ?? 0), x, yMid, { width: colWidths[5] - 6, align: "right" });
       x += colWidths[5];
 
       // Remise
       doc.font("Helvetica").fontSize(8).fillColor(colors.gray800)
-        .text(fmtPct(item.tauxRemise ?? 0), x, y + 7, { width: colWidths[6], align: "center" });
+        .text(fmtPct(item.tauxRemise ?? 0), x, yMid, { width: colWidths[6], align: "center" });
       x += colWidths[6];
 
       // Total HT (net)
@@ -666,9 +688,9 @@ export const generateBcPDF = async (req, res) => {
         return (q * pu) - remiseAmt;
       })();
       doc.font("Helvetica").fontSize(8).fillColor(colors.gray900)
-        .text(fmtMoney(itemTotalHt), x, y + 7, { width: colWidths[7] - 6, align: "right" });
+        .text(fmtMoney(itemTotalHt), x, yMid, { width: colWidths[7] - 6, align: "right" });
 
-      return y + rowHeight;
+      return y + rh;
     };
 
     const drawCompactTotalsAndMontant = (y, isLastPage = true) => {
@@ -725,7 +747,6 @@ export const generateBcPDF = async (req, res) => {
     const reglementH = 56 + 14;
     const footerH = 45 + 10 + 60 + 10 + 65 + 10 + companyFooterHeight; // Compact Totals + Gap + Chantier + Gap + Signatures + Gap + Company Footer
     const tableHeaderH = rowHeight;
-    const rowH = rowHeight;
 
     // --- PAGE 1 ---
     await drawHeader();
@@ -734,15 +755,14 @@ export const generateBcPDF = async (req, res) => {
     const regRow = drawReglement(currentY);
     currentY = regRow.startY + regRow.cardH + 14;
 
-    // Calculate how many rows fit on Page 1
-    const availableForTableOnP1 = (pageHeight - margin * 2) - (headerH + reglementH + footerH) - tableHeaderH - 20;
-    const maxRowsOnP1 = Math.floor(availableForTableOnP1 / rowH);
-
     currentY = drawTableHeader(currentY);
 
     let processedItems = 0;
-    for (let i = 0; i < Math.min(items.length, maxRowsOnP1); i++) {
-      currentY = drawTableRow(currentY, items[i], i);
+    const page1BottomLimit = pageHeight - margin - footerH - 10;
+    while (processedItems < items.length) {
+      const rh = computeRowHeight(items[processedItems]);
+      if (currentY + rh > page1BottomLimit) break;
+      currentY = drawTableRow(currentY, items[processedItems], processedItems, rh);
       processedItems++;
     }
 
@@ -751,22 +771,19 @@ export const generateBcPDF = async (req, res) => {
 
     // --- SUBSEQUENT PAGES ---
     if (processedItems < items.length) {
-      const availableForTableOnP2 = (pageHeight - margin * 2) - footerH - tableHeaderH - 20;
-      const maxRowsOnP2 = Math.floor(availableForTableOnP2 / rowH);
-
       while (processedItems < items.length) {
         doc.addPage();
         let py = margin;
         py = drawTableHeader(py);
 
-        let rowsOnThisPage = 0;
-        while (processedItems < items.length && rowsOnThisPage < maxRowsOnP2) {
-          py = drawTableRow(py, items[processedItems], processedItems);
+        const pageBottomLimit = pageHeight - margin - footerH - 10;
+        while (processedItems < items.length) {
+          const rh = computeRowHeight(items[processedItems]);
+          if (py + rh > pageBottomLimit) break;
+          py = drawTableRow(py, items[processedItems], processedItems, rh);
           processedItems++;
-          rowsOnThisPage++;
         }
 
-        // Final footer for each subsequent page
         drawFooter(pageHeight - margin - footerH, processedItems === items.length);
       }
     }
@@ -899,7 +916,9 @@ export const editBc = async (req, res) => {
     }
     const fournisseurs = await prisma.fournisseur.findMany()
     const publicBcUrl = buildPublicBcUrl(req, bc.id);
-    res.render('dashboard/achats/bc/edit', { bc, fournisseurs, chantiers, publicBcUrl });
+    const listfourniture = await prisma.fourniture_list.findMany();
+
+    res.render('dashboard/achats/bc/edit', { bc, fournisseurs, chantiers, publicBcUrl,  listfourniture});
   } catch (err) {
     console.error('Erreur affichage bon de commande:', err);
     res.status(500).json({ success: false, error: "Erreur serveur" });
@@ -1161,8 +1180,9 @@ export const createBcForm = async (req, res) => {
   try {
     const fournisseurs = await prisma.fournisseur.findMany();
     const chantiers = await prisma.chantier.findMany();
+    const listfourniture = await prisma.fourniture_list.findMany();
     console.log("Headers:", req.headers);
-    res.render('dashboard/achats/bc/create', { fournisseurs, chantiers });
+    res.render('dashboard/achats/bc/create', { fournisseurs, chantiers, listfourniture });
   } catch (error) {
     console.error("Erreur affichage formulaire BC:", error);
     res.status(500).json({ success: false, error: "Erreur serveur" });
