@@ -845,10 +845,9 @@ export const generateDemandeFourniturePDF = async (req, res) => {
     const headerH = 70;
     const infoH = 28;
     const tableHeaderH = 44; // 22 + 22
-    const summaryRowH = 20;
-    const summaryH = summaryRowH * 4 + 10;
+    const summaryTableH = 40; // Horizontal summary table (2 rows: labels + values)
     const signatureH = 90;
-    const footerH = summaryH + signatureH + 20; // Fixed footer height
+    const footerH = summaryTableH + signatureH + 20; // Fixed footer height
 
     // Calculate available space for items on first page and continuation pages
     const firstPageItemsLimit = pageH - margin - headerH - infoH - tableHeaderH - footerH - 10;
@@ -989,43 +988,66 @@ export const generateDemandeFourniturePDF = async (req, res) => {
       // Calculate footer position (always at bottom of page)
       const footerStartY = pageH - margin - footerH;
 
-      // Draw Summary Table (Right Aligned)
-      const sumW = 200;
-      const sumX = margin + contentW - sumW - 270;
-      const sumLabelW = 120;
-      let summaryY = footerStartY;
+      // Draw Summary Table (Horizontal Layout - 3 columns side by side)
+      const summaryTableH = 40; // Height for 2 rows (labels + values)
 
-      doc.fontSize(11);
+      // Make table narrower (60% of content width) and center it horizontally
+      const tableWidth = contentW * 0.6;
+      const tableX = margin + (contentW - tableWidth) / 2; // Center horizontally
+      const sumY = footerStartY;
 
-      const drawSummaryRow = (label, value, bold = false) => {
-        if (bold) doc.font("Helvetica-Bold");
-        else doc.font("Helvetica");
+      // Define 3 equal columns for the summary
+      const colWidth = tableWidth / 3;
 
-        doc.rect(sumX, summaryY, sumW, summaryRowH).stroke();
-        doc.text(label, sumX + 5, summaryY + 5, { width: sumLabelW });
-        doc.text(value, sumX + sumLabelW, summaryY + 5, { width: sumW - sumLabelW - 5, align: "right" });
+      doc.fontSize(10);
 
-        summaryY += summaryRowH;
-      };
+      // Draw the summary table border
+      doc.rect(tableX, sumY, tableWidth, summaryTableH).lineWidth(thick).stroke();
 
-      // Show real values only on last page, otherwise show "XX"
-      if (isLastPage) {
-        // Calculate Rate
-        const tvaRate = demande.totalHt > 0 ? ((demande.Tva / demande.totalHt) * 100) : 20;
-
-        drawSummaryRow("Total HT", parseNumber(demande.totalHt) + " DH");
-        drawSummaryRow("TVA (" + parseNumber(tvaRate) + "%)", "");
-        drawSummaryRow("Montant TVA", parseNumber(demande.Tva) + " DH");
-        drawSummaryRow("Total TTC", parseNumber(demande.totalTTC) + " DH", true);
-      } else {
-        // Show placeholder "XX" on non-last pages
-        drawSummaryRow("Total HT", "XX");
-        drawSummaryRow("TVA (%)", "");
-        drawSummaryRow("Montant TVA", "XX");
-        drawSummaryRow("Total TTC", "XX", true);
+      // Draw vertical separators for 3 columns
+      for (let i = 1; i < 3; i++) {
+        doc.moveTo(tableX + colWidth * i, sumY).lineTo(tableX + colWidth * i, sumY + summaryTableH).stroke();
       }
 
-      summaryY += 20; // Gap
+      // Draw horizontal separator (between labels and values)
+      const labelRowH = 20;
+      doc.moveTo(tableX, sumY + labelRowH).lineTo(tableX + tableWidth, sumY + labelRowH).stroke();
+
+      // Calculate TVA rate
+      const tvaRate = demande.totalHt > 0 ? ((demande.Tva / demande.totalHt) * 100) : 20;
+
+      // Define labels and values (3 columns now)
+      const columns = isLastPage ? [
+        { label: "Total HT", value: parseNumber(demande.totalHt) + " DH" },
+        { label: "Montant TVA (" + parseNumber(tvaRate) + "%)", value: parseNumber(demande.Tva) + " DH" },
+        { label: "Total TTC", value: parseNumber(demande.totalTTC) + " DH", bold: true }
+      ] : [
+        { label: "Total HT", value: "XX" },
+        { label: "Montant TVA (%)", value: "XX" },
+        { label: "Total TTC", value: "XX", bold: true }
+      ];
+
+      // Draw labels (top row)
+      columns.forEach((col, i) => {
+        doc.font("Helvetica").fontSize(9);
+        doc.text(col.label, tableX + colWidth * i + 5, sumY + 5, {
+          width: colWidth - 10,
+          align: "center"
+        });
+      });
+
+      // Draw values (bottom row)
+      columns.forEach((col, i) => {
+        if (col.bold) doc.font("Helvetica-Bold");
+        else doc.font("Helvetica");
+        doc.fontSize(10);
+        doc.text(col.value, tableX + colWidth * i + 5, sumY + labelRowH + 5, {
+          width: colWidth - 10,
+          align: "center"
+        });
+      });
+
+      const summaryY = sumY + summaryTableH + 20; // Gap after summary
 
       // --- SIGNATURES ---
       const sigY = summaryY;
