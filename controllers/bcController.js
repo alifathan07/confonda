@@ -1,54 +1,20 @@
 import prisma from "../db.js";
-import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
-import nodemailer from "nodemailer";
 import axios from "axios";
 import { fileURLToPath } from "url";
 import { log } from "console";
 import crypto from "crypto";
-import { numberToFrenchWords } from "../utils/utils.js";
+import {  buildPublicBcUrl, normalizeNumber, numberToFrenchWords, PUBLIC_BC_SECRET } from "../utils/utils.js";
 import ExcelJS from 'exceljs';
+import { sendEmail } from "../services/emailservice.js";
+import { downloadpdf, getpdfBuffer } from "../services/pdfbcService.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
-const mailTransporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: "confonda@gmail.com",
-    pass: "kxdl rgui vvxw eyfw",
-  },
-});
 
-const normalizeNumber = (value) => {
-  if (typeof value === 'number') return value;
-  if (value === null || value === undefined) return 0;
-  const cleaned = String(value)
-    .trim()
-    .replace(/[^0-9.,-]/g, '')
-    .replace(/\s/g, '')
-    .replace(',', '.');
-  const n = parseFloat(cleaned);
-  return Number.isNaN(n) ? 0 : n;
-};
 
-const PUBLIC_BC_SECRET = process.env.PUBLIC_BC_SECRET || 'confonda_public_bc_secret';
 
-const signPublicBcId = (id) => {
-  return crypto
-    .createHmac('sha256', PUBLIC_BC_SECRET)
-    .update(String(id))
-    .digest('hex');
-};
 
-const buildPublicBcUrl = (req, bcId) => {
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
-  const sig = signPublicBcId(bcId);
-  return `${baseUrl}/public/bc/${bcId}?sig=${sig}`;
-};
 
 
 export const postBcDemandeFourniture = async (req, res) => {
@@ -315,492 +281,24 @@ export const generateBcPDF = async (req, res) => {
     }
 
     // 2. Setup PDF Document
-    const doc = new PDFDocument({ size: "A4", margin: 40, bufferPages: true });
 
     // Response Headers
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename=bonCommande_${bc.id}.pdf`
+      `attachment; filename=bonCommande_${bc.numero}.pdf`
     );
 
-    doc.pipe(res);
-
-    // 3. Constants & Styling
-    const pageWidth = 595.28;
-    const pageHeight = 841.89;
-    const margin = 40;
-    const contentWidth = pageWidth - margin * 2;
-
-    const colors = {
-      blue: "#0052CC",
-      blueLight: "#f3f8ff",
-      brand: "#A22C29",
-      gray900: "#1f2937",
-      gray800: "#374151",
-      gray600: "#6b7280",
-      border: "#cfd6df",
-      borderSoft: "#c3cbd6",
-      rowBorder: "#eef1f5",
-      white: "#ffffff",
-      tableHeader: "#0052CC",
-      rowEven: "#ffffff",
-      rowOdd: "#f9fafb",
-    };
-
-    const logoPath = path.join(__dirname, "../public/img/logo-4.png");
-    const signaturePath = path.join(__dirname, "../public/img/signature.png");
-
-    const headerHeight = 150;
-    const companyFooterHeight = 100;
-    const footerHeight = 184 + 12 + companyFooterHeight;
-    const rowHeight = 22;
-    const colWidths = [28, 160, 55, 45, 50, 60, 45, 72];
-    const tableCellPadY = 5;
-    const tableCellPadX = 4;
-    const tableLineGap = 1;
-
-    // 4. Helper Functions
-
-    const sanitizePdfNumber = (s) => String(s || "").replace(/[\u202F\u00A0]/g, " ");
-    const fmtMoney = (n) => sanitizePdfNumber(Number(n || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-    const fmtPct = (n) => sanitizePdfNumber(Number(n || 0).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-
-    const tvaRate = normalizeNumber(bc.tauxTva || 0);
-    const items = Array.isArray(bc.commandesItems) ? bc.commandesItems : [];
-    const computedTotalHt = normalizeNumber(bc.totalHt ?? 0);
-    const computedTtc = normalizeNumber(bc.totalTtc ?? 0);
-    const computedTva = normalizeNumber((computedTtc || 0) - (computedTotalHt || 0));
-    const docDateStr = new Date(bc.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
-    const publicBcUrl = buildPublicBcUrl(req, bc.id);
-
-    const drawHeader = async () => {
-      const y = margin;
-
-      // Topline (logo left, centered brand block)
-      const toplineY = y;
-      const toplineH = 70;
-
-      if (fs.existsSync(logoPath)) {
-        try {
-          doc.image(logoPath, margin, toplineY + 2, { height: 60 });
-        } catch (e) {
-          console.error("Error loading logo:", e);
-        }
-      }
-
-      // Centered brand text + vertical separator (mimic bc.ejs)
-      const centerX = margin + contentWidth / 2;
-      const sepW = 6;
-      const sepH = 44;
-      const sepX = centerX - sepW / 2;
-      const sepY = toplineY + 12;
-      doc.rect(sepX, sepY, sepW, sepH).fill(colors.brand);
-
-      doc.font("Helvetica-Bold").fontSize(13).fillColor(colors.brand)
-        .text("Construction et Fondation", centerX + 14, toplineY + 18, { align: "left" });
-      doc.font("Helvetica").fontSize(9).fillColor(colors.gray600)
-        .text("Pour des constructions bien fondées", centerX + 14, toplineY + 36, { align: "left" });
-
-      // Header grid (3 boxes)
-      const gridY = toplineY + toplineH + 12;
-      const gap = 10;
-      const boxW = (contentWidth - gap * 2) / 3;
-      const boxH = 68;
-
-      // Meta (left)
-      doc.roundedRect(margin, gridY, boxW, boxH, 8).lineWidth(1).stroke(colors.border);
-      doc.font("Helvetica-Bold").fontSize(11).fillColor(colors.gray900)
-        .text(`BC N° : ${bc.numero}`, margin + 10, gridY + 14, { width: boxW - 20 });
-      doc.font("Helvetica-Bold").fontSize(11).fillColor(colors.gray900)
-        .text(`Date : ${docDateStr}`, margin + 10, gridY + 38, { width: boxW - 20 });
-
-      // QR (center)
-      const qrX = margin + boxW + gap;
-      doc.roundedRect(qrX, gridY, boxW, boxH, 8).lineWidth(1).stroke(colors.border);
-      try {
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(publicBcUrl || "")}`;
-        const qrResp = await axios.get(qrUrl, { responseType: "arraybuffer" });
-        const imgSize = 54;
-        const imgX = qrX + (boxW - imgSize) / 2;
-        const imgY = gridY + 7;
-        doc.image(Buffer.from(qrResp.data), imgX, imgY, { width: imgSize, height: imgSize });
-      } catch (e) {
-        doc.font("Helvetica").fontSize(7.5).fillColor(colors.gray600)
-          .text(publicBcUrl, qrX + 8, gridY + 26, { width: boxW - 16, align: "center", ellipsis: true });
-      }
-
-      // Fournisseur (right)
-      const cliX = margin + (boxW + gap) * 2;
-      doc.roundedRect(cliX, gridY, boxW, boxH, 8).lineWidth(1).stroke(colors.border);
-      const lineW = boxW - 16;
-      doc.font("Helvetica-Bold").fontSize(9.5).fillColor(colors.gray900)
-        .text(bc.fournisseur?.name || "-", cliX + 8, gridY + 8, { width: lineW, ellipsis: true });
-      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray600)
-        .text(bc.fournisseur?.email || "-", cliX + 8, gridY + 24, { width: lineW, ellipsis: true });
-      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray600)
-        .text(bc.fournisseur?.telFournisseur || "Non renseigné", cliX + 8, gridY + 38, { width: lineW, ellipsis: true });
-    };
-
-
-    const drawReglement = (yPosition) => {
-      const startY = yPosition;
-      const gap = 12;
-      const cardW = (contentWidth - gap) / 2;
-      const cardH = 56;
-
-      const leftX = margin;
-      const rightX = margin + cardW + gap;
-
-      const modeRegLabel = (() => {
-        const v = String(bc.modeReg || "").toLowerCase();
-        if (v === "virement") return "Virement";
-        if (v === "cheque") return "Chèque";
-        if (v === "effets") return "Effets";
-        return "-";
-      })();
-
-      const delaiRegLabel = (() => {
-        const v = String(bc.delaiReg || "").toLowerCase();
-        if (v === "a_vue") return "À vue";
-        if (v === "30_jours") return "30 jours";
-        if (v === "60_jours") return "60 jours";
-        if (v === "90_jours") return "90 jours";
-        if (v === "120_jours") return "120 jours";
-        return "-";
-      })();
-
-      doc.roundedRect(leftX, startY, cardW, cardH, 8).lineWidth(1).stroke(colors.borderSoft);
-      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
-        .text("MODE DE PAIEMENT", leftX + 10, startY + 10, { width: cardW - 20 });
-      doc.font("Helvetica").fontSize(9).fillColor(colors.gray800)
-        .text(modeRegLabel, leftX + 10, startY + 30, { width: cardW - 20, ellipsis: true });
-
-      doc.roundedRect(rightX, startY, cardW, cardH, 8).lineWidth(1).stroke(colors.borderSoft);
-      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
-        .text("DÉLAIS DE RÈGLEMENT", rightX + 10, startY + 10, { width: cardW - 20 });
-      doc.font("Helvetica").fontSize(9).fillColor(colors.gray800)
-        .text(delaiRegLabel, rightX + 10, startY + 30, { width: cardW - 20, ellipsis: true });
-
-      return { startY, cardH };
-    };
-
-
-
-    const drawChantier = (yPosition) => {
-      const startY = yPosition ?? (pageHeight - margin - footerHeight);
-      const gap = 12;
-      const cardW = (contentWidth - gap) / 2;
-      const cardH = 60;
-
-      const chantierX = margin;
-      const livraisonX = margin + cardW + gap;
-
-      // Card 1: Chantier
-      doc.roundedRect(chantierX, startY, cardW, cardH, 8).lineWidth(1).stroke(colors.borderSoft);
-      doc.font("Helvetica-Bold").fontSize(7.5).fillColor(colors.gray900)
-        .text("CHANTIER", chantierX + 10, startY + 6, { width: cardW - 20 });
-      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
-        .text((() => {
-          const names = new Set();
-          if (bc.chantier?.nom) names.add(bc.chantier.nom);
-          (bc.commandesItems || []).forEach(it => {
-            (it.BondeCommandeChantierItem || []).forEach(bcci => {
-              if (bcci?.chantier?.nom) names.add(bcci.chantier.nom);
-            });
-          });
-          return Array.from(names).join(', ') || "-";
-        })(), chantierX + 10, startY + 30, { width: cardW - 20, ellipsis: true });
-
-      // Card 2: Livraison (date + lieu in the same card)
-      doc.roundedRect(livraisonX, startY, cardW, cardH, 8).lineWidth(1).stroke(colors.borderSoft);
-
-      const dividerY = startY + (cardH / 2);
-      doc.moveTo(livraisonX + 10, dividerY).lineTo(livraisonX + cardW - 10, dividerY)
-        .lineWidth(1).stroke(colors.borderSoft);
-
-      doc.font("Helvetica-Bold").fontSize(7.5).fillColor(colors.gray900)
-        .text("LIEU DE LIVRAISON", livraisonX + 10, startY + 6, { width: cardW - 20 });
-      doc.font("Helvetica").fontSize(8).fillColor(colors.gray800)
-        .text(bc.lieuLivraison || "-", livraisonX + 10, startY + 18, { width: cardW - 20, ellipsis: true });
-
-      const dateLivStr = bc.dateLivraison
-        ? new Date(bc.dateLivraison).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-        : "-";
-
-      doc.font("Helvetica-Bold").fontSize(7.5).fillColor(colors.gray900)
-        .text("DATE DE LIVRAISON", livraisonX + 10, dividerY + 6, { width: cardW - 20 });
-      doc.font("Helvetica").fontSize(8).fillColor(colors.gray800)
-        .text(dateLivStr, livraisonX + 10, dividerY + 18, { width: cardW - 20, ellipsis: true });
-
-      return { startY, cardH };
-    };
-
-    const drawFooter = (yPosition, isLastPage = true) => {
-      const startY = yPosition || (pageHeight - margin - footerHeight);
-      const gap = 12;
-
-      // 1. Totals + Montant Block (Top of footer)
-      const compactY = drawCompactTotalsAndMontant(startY, isLastPage);
-
-      // 2. Chantier + Livraison Block
-      const chantier = drawChantier(compactY + gap);
-
-      // 3. Signature Block
-      const sigW = (contentWidth - gap) / 2;
-      const sigH = 65;
-      const sigStartY = chantier.startY + chantier.cardH + gap;
-
-      // Signature du direction (left)
-      doc.roundedRect(margin, sigStartY, sigW, sigH, 8).lineWidth(1).stroke(colors.borderSoft);
-      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
-        .text("SIGNATURE DU DIRECTION", margin + 10, sigStartY + 10);
-      doc.moveTo(margin + 10, sigStartY + sigH - 18).lineTo(margin + sigW - 10, sigStartY + sigH - 18)
-        .lineWidth(1).stroke(colors.borderSoft);
-
-      // Le Responsable Achats (right)
-      const sig2X = margin + sigW + gap;
-      doc.roundedRect(sig2X, sigStartY, sigW, sigH, 8).lineWidth(1).stroke(colors.borderSoft);
-      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
-        .text("LE RESPONSABLE ACHATS", sig2X + 10, sigStartY + 10);
-
-      if (fs.existsSync(signaturePath)) {
-        try {
-          const fitW = sigW - 20;
-          const fitH = 40;
-          const imgX = sig2X + (sigW - fitW) / 2;
-          const imgY = sigStartY + 15;
-          doc.image(signaturePath, imgX, imgY, { fit: [fitW, fitH], align: "center", valign: "center" });
-        } catch (e) {
-          console.error("Error loading signature:", e);
-        }
-      }
-
-      doc.moveTo(sig2X + 10, sigStartY + sigH - 18).lineTo(sig2X + sigW - 10, sigStartY + sigH - 18)
-        .lineWidth(1).stroke(colors.borderSoft);
-
-      const footerY = pageHeight - companyFooterHeight;
-
-      doc.rect(0, footerY, pageWidth, companyFooterHeight).fill('#AB3029').stroke();
-
-      const textMargin = 15;
-      doc.font('Helvetica').fontSize(9).fillColor('#FFFFFF');
-      doc.text(
-        '82, angle Bd abdelmoumen et rue Soumaya Imm.Shahrazad III 2ème étage Casablanca Tél : 0522-23-39-70',
-        50,
-        footerY + textMargin,
-        { width: pageWidth - 100, align: 'center' }
-      );
-      doc.text(
-        'Fax : 0522-23-42-60  Capital : 18 500 000.00 DH  CNSS : 7167788 - R.C. : 145619 – I.F. : 1602714 – Patente : 37900708- I.C.E : 001526422000063',
-        50,
-        footerY + textMargin + 15,
-        { width: pageWidth - 100, align: 'center' }
-      );
-    };
-
-    const drawTableHeader = (y) => {
-      doc.rect(margin, y, contentWidth, rowHeight).fill(colors.tableHeader);
-      const headers = ["N°", "Désignation", "Reference", "Quantité", "Unité", "Prix U. HT", "Remise (%)", "Total HT"];
-      let x = margin;
-      headers.forEach((h, i) => {
-        doc.font("Helvetica-Bold").fontSize(8).fillColor(colors.white)
-          .text(h, x + 4, y + 7, { width: colWidths[i] - 8, align: i === 2 ? "left" : "center" });
-        x += colWidths[i];
-      });
-      return y + rowHeight;
-    };
-
-    const measureCellHeight = (text, width, font = 'Helvetica', fontSize = 8, align = 'left') => {
-      const safe = (text == null ? '' : String(text));
-      doc.font(font).fontSize(fontSize);
-      return doc.heightOfString(safe, { width, align, lineGap: tableLineGap });
-    };
-
-    const computeRowHeight = (item) => {
-      const desH = measureCellHeight(item.designation || "-", colWidths[1] - (tableCellPadX * 2), 'Helvetica', 8, 'left');
-      const refH = measureCellHeight(item.reference || "", colWidths[2] - (tableCellPadX * 2), 'Helvetica', 8, 'left');
-      const uniteH = measureCellHeight(item.unite || "", colWidths[4] - (tableCellPadX * 2), 'Helvetica', 8, 'center');
-      const textH = Math.max(refH, desH, uniteH, 10);
-      const needed = textH + (tableCellPadY * 2);
-      return Math.max(rowHeight, Math.ceil(needed));
-    };
-
-    const drawTableRow = (y, item, index, forcedRowHeight) => {
-      const rh = forcedRowHeight || computeRowHeight(item);
-      const bg = index % 2 === 0 ? colors.rowEven : colors.rowOdd;
-      doc.rect(margin, y, contentWidth, rh).fill(bg);
-
-      let x = margin;
-      // Borders
-      colWidths.forEach(w => {
-        doc.rect(x, y, w, rh).lineWidth(0.6).stroke(colors.rowBorder);
-        x += w;
-      });
-
-      x = margin;
-
-      const yTop = y + tableCellPadY;
-      const yMid = y + (rh / 2) - 4;
-
-      // N°
-      doc.font("Helvetica").fontSize(8).fillColor(colors.gray900)
-        .text(String(index + 1), x + tableCellPadX, yMid, { width: colWidths[0] - (tableCellPadX * 2), align: "center" });
-      x += colWidths[0];
-
-      // Désignation
-      doc.font("Helvetica").fontSize(8).fillColor(colors.gray900)
-        .text(item.designation || "-", x + tableCellPadX, yTop, { width: colWidths[1] - (tableCellPadX * 2), align: "left", lineGap: tableLineGap });
-      x += colWidths[1];
-
-      // Reference
-      doc.font("Helvetica").fontSize(8).fillColor(colors.gray800)
-        .text(item.reference || "", x + tableCellPadX, yTop, { width: colWidths[2] - (tableCellPadX * 2), align: "left", lineGap: tableLineGap });
-      x += colWidths[2];
-
-      // Quantité
-      doc.font("Helvetica").fontSize(8).fillColor(colors.gray900)
-        .text(String(item.quantite ?? 0), x, yMid, { width: colWidths[3], align: "center" });
-      x += colWidths[3];
-
-      // Unité
-      doc.font("Helvetica").fontSize(8).fillColor(colors.gray800)
-        .text(item.unite || "", x + tableCellPadX, yTop, { width: colWidths[4] - (tableCellPadX * 2), align: "center", lineGap: tableLineGap });
-      x += colWidths[4];
-
-      // Prix U.
-      doc.font("Helvetica").fontSize(8).fillColor(colors.gray900)
-        .text(fmtMoney(item.prixUnitaire ?? 0), x, yMid, { width: colWidths[5] - 6, align: "right" });
-      x += colWidths[5];
-
-      // Remise
-      doc.font("Helvetica").fontSize(8).fillColor(colors.gray800)
-        .text(fmtPct(item.tauxRemise ?? 0), x, yMid, { width: colWidths[6], align: "center" });
-      x += colWidths[6];
-
-      // Total HT (net)
-      const itemTotalHt = (() => {
-        const stored = normalizeNumber(item.totalHt);
-        if (stored) return stored;
-        const q = normalizeNumber(item.quantite);
-        const pu = normalizeNumber(item.prixUnitaire);
-        const remiseAmt = normalizeNumber(item.remise);
-        return (q * pu) - remiseAmt;
-      })();
-      doc.font("Helvetica").fontSize(8).fillColor(colors.gray900)
-        .text(fmtMoney(itemTotalHt), x, yMid, { width: colWidths[7] - 6, align: "right" });
-
-      return y + rh;
-    };
-
-    const drawCompactTotalsAndMontant = (y, isLastPage = true) => {
-      const blockHeight = 45;
-      const horizontalTableW = 220;
-      const montantLettresW = contentWidth - horizontalTableW - 10;
-
-      // Background for the whole block
-      doc.rect(margin, y, contentWidth, blockHeight).fillAndStroke(colors.blueLight, colors.border);
-
-      // Left part: Montant en lettres
-      doc.font("Helvetica-Bold").fontSize(8).fillColor(colors.gray900)
-        .text("Arrêté le présent bon de commande à la somme de :", margin + 10, y + 8, { width: montantLettresW });
-
-      const montantText = isLastPage
-        ? (numberToFrenchWords(computedTtc) || "—") + " TTC"
-        : "X TTC";
-
-      doc.font("Helvetica-Bold").fontSize(9).fillColor(colors.blue)
-        .text(montantText, margin + 10, y + 20, { width: montantLettresW });
-
-      // Right part: Horizontal Totals Table
-      const tableX = margin + montantLettresW + 10;
-      const colW = horizontalTableW / 3;
-
-      // Headers
-      doc.fillColor(colors.tableHeader).rect(tableX, y, horizontalTableW, 15).fill();
-      const labels = ["TOTAL HT", `TVA (${fmtPct(tvaRate)}%)`, "TOTAL TTC"];
-      labels.forEach((l, i) => {
-        doc.font("Helvetica-Bold").fontSize(7).fillColor(colors.white)
-          .text(l, tableX + (i * colW), y + 4, { width: colW, align: "center" });
-      });
-
-      // Values
-      const values = isLastPage
-        ? [fmtMoney(computedTotalHt), fmtMoney(computedTva), fmtMoney(computedTtc)]
-        : ["X", "X", "X"];
-
-      values.forEach((v, i) => {
-        doc.rect(tableX + (i * colW), y + 15, colW, blockHeight - 15).lineWidth(0.5).stroke(colors.border);
-        doc.font("Helvetica-Bold").fontSize(8).fillColor(colors.gray900)
-          .text(v, tableX + (i * colW), y + 25, { width: colW, align: "center" });
-      });
-
-      return y + blockHeight;
-    };
-
-    // 5. Main Render Logic
-
-    // 5. Main Render Logic
-
-    // Layout calculation constants
-    const headerH = headerHeight + 18;
-    const reglementH = 56 + 14;
-    const footerH = 45 + 10 + 60 + 10 + 65 + 10 + companyFooterHeight; // Compact Totals + Gap + Chantier + Gap + Signatures + Gap + Company Footer
-    const tableHeaderH = rowHeight;
-
-    // --- PAGE 1 ---
-    await drawHeader();
-    let currentY = margin + headerH;
-
-    const regRow = drawReglement(currentY);
-    currentY = regRow.startY + regRow.cardH + 14;
-
-    currentY = drawTableHeader(currentY);
-
-    let processedItems = 0;
-    const page1BottomLimit = pageHeight - margin - footerH - 10;
-    while (processedItems < items.length) {
-      const rh = computeRowHeight(items[processedItems]);
-      if (currentY + rh > page1BottomLimit) break;
-      currentY = drawTableRow(currentY, items[processedItems], processedItems, rh);
-      processedItems++;
-    }
-
-    // Combined Footer at the bottom of P1
-    drawFooter(pageHeight - margin - footerH, processedItems === items.length);
-
-    // --- SUBSEQUENT PAGES ---
-    if (processedItems < items.length) {
-      while (processedItems < items.length) {
-        doc.addPage();
-        let py = margin;
-        py = drawTableHeader(py);
-
-        const pageBottomLimit = pageHeight - margin - footerH - 10;
-        while (processedItems < items.length) {
-          const rh = computeRowHeight(items[processedItems]);
-          if (py + rh > pageBottomLimit) break;
-          py = drawTableRow(py, items[processedItems], processedItems, rh);
-          processedItems++;
-        }
-
-        drawFooter(pageHeight - margin - footerH, processedItems === items.length);
-      }
-    }
-
-    doc.end();
-
+    await downloadpdf(bc, req, res);
   } catch (error) {
     console.error("Error generating BC PDF:", error);
-    if (!res.headersSent) {
+    if (res && !res.headersSent) {
       res.status(500).json({ success: false, error: "Erreur lors de la génération du PDF" });
+    } else if (!res) {
+      throw error;
     }
   }
 };
-
-
-
-
 
 export const sendBcEmail = async (req, res) => {
   try {
@@ -813,7 +311,15 @@ export const sendBcEmail = async (req, res) => {
 
     const bc = await prisma.bondeCommande.findUnique({
       where: { id: bcId },
-      include: { fournisseur: true },
+      include: {
+        fournisseur: true,
+        commandesItems: {
+          include: {
+            BondeCommandeChantierItem: { include: { chantier: true } }
+          }
+        },
+        chantier: true,
+      },
     });
 
     if (!bc) {
@@ -824,51 +330,38 @@ export const sendBcEmail = async (req, res) => {
     if (!to) {
       return res.status(400).json({ success: false, error: "Email fournisseur manquant" });
     }
+     // Response Headers
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=bonCommande_${bc.id}.pdf`
+    );
 
-    // Fetch the exact same PDF as the download endpoint
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
-    const pdfUrl = `${baseUrl}/achat/bc/${bcId}/pdf`;
+    const pdfBuffer = await getpdfBuffer(bc, req);
 
-    const pdfResp = await axios.get(pdfUrl, {
-      responseType: 'arraybuffer',
-      headers: {
-        // Forward session cookies so the PDF endpoint behaves exactly like in the browser
-        cookie: req.headers.cookie || "",
-      },
-      // Avoid caching proxies returning old PDFs
-      params: { t: Date.now() },
-      validateStatus: () => true,
-    });
-
-    if (pdfResp.status < 200 || pdfResp.status >= 300) {
-      console.error('sendBcEmail: PDF fetch failed', { status: pdfResp.status, data: pdfResp.data?.toString?.() });
-      return res.status(500).json({ success: false, error: "Impossible de générer le PDF pour l'email" });
-    }
-
-    const pdfBuffer = Buffer.from(pdfResp.data);
-
-    const subject = `Bon de commande #${bc.numero || bc.id}`;
-    const mailOptions = {
-      from: "CONFONDA",
-      to,
-      subject,
-      text: `Bonjour,\n\nVeuillez trouver en pièce jointe le bon de commande ${bc.numero || bc.id}.\n\nCordialement.`,
-      attachments: [
-        {
-          filename: `bonCommande_${bc.numero || bc.id}.pdf`,
-          content: pdfBuffer,
-          contentType: 'application/pdf',
-        },
-      ],
-    };
-
-    await mailTransporter.sendMail(mailOptions);
+      await sendEmail({
+        to,
+        subject: `Bon de Commande N° ${bc.numero}`,
+        text: `Bonjour,\n\nVeuillez trouver en pièce jointe notre bon de commande N° ${bc.numero}.\n\nCordialement. \n\nKhbazi Mustapha\n\nRésp. Service Achats\n\n Tél.  06 44 00 05 47.`,
+        attachments: [
+          {
+            filename: `bonCommande_${bc.numero}.pdf`,
+            content: pdfBuffer,
+            contentType: 'application/pdf'
+          }
+        ]
+      })    
+    console.log(pdfBuffer)
     return res.json({ success: true });
   } catch (error) {
     console.error('Error in sendBcEmail:', error);
     return res.status(500).json({ success: false, error: error.message || "Erreur serveur" });
   }
 };
+
+
+
+
 
 
 // export const viewBc = async (req, res) => {

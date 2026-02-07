@@ -1,3 +1,5 @@
+import crypto from "crypto"; // correct
+
 export function numberToFrenchWords(number) {
     if (typeof number !== "number") {
         throw new Error("Input must be a number");
@@ -94,3 +96,35 @@ export function numberToFrenchWords(number) {
 
     return prefix + words;
 }
+
+
+export const normalizeNumber = (value) => {
+  if (typeof value === 'number') return value;
+  if (value === null || value === undefined) return 0;
+  const cleaned = String(value)
+    .trim()
+    .replace(/[^0-9.,-]/g, '')
+    .replace(/\s/g, '')
+    .replace(',', '.');
+  const n = parseFloat(cleaned);
+  return Number.isNaN(n) ? 0 : n;
+};
+export const PUBLIC_BC_SECRET = process.env.PUBLIC_BC_SECRET || 'confonda_public_bc_secret';
+
+
+
+export const signPublicBcId = (id) => {
+  return crypto
+    .createHmac('sha256', PUBLIC_BC_SECRET)
+    .update(String(id))
+    .digest('hex');
+};
+
+
+
+
+export const buildPublicBcUrl = (req, bcId) => {
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  const sig = signPublicBcId(bcId);
+  return `${baseUrl}/public/bc/${bcId}?sig=${sig}`;
+};

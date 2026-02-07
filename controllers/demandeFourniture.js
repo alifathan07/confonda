@@ -845,7 +845,14 @@ export const generateDemandeFourniturePDF = async (req, res) => {
     const headerH = 70;
     const infoH = 28;
     const tableHeaderH = 44; // 22 + 22
-    const tableBottomLimit = pageH - 40; // Max Y before page break
+    const summaryRowH = 20;
+    const summaryH = summaryRowH * 4 + 10;
+    const signatureH = 90;
+    const footerH = summaryH + signatureH + 20; // Fixed footer height
+
+    // Calculate available space for items on first page and continuation pages
+    const firstPageItemsLimit = pageH - margin - headerH - infoH - tableHeaderH - footerH - 10;
+    const continuationPageItemsLimit = pageH - margin - tableHeaderH - footerH - 10;
 
     // --- COLUMN DEFINITIONS ---
     const col = {
@@ -870,7 +877,7 @@ export const generateDemandeFourniturePDF = async (req, res) => {
 
     // --- DRAWING HELPERS ---
 
-    const drawCommonHeader = () => {
+    const drawFirstPageHeader = () => {
       // Page Border
       doc.rect(margin, margin, contentW, pageH - margin * 2).lineWidth(thick).stroke();
 
@@ -907,6 +914,11 @@ export const generateDemandeFourniturePDF = async (req, res) => {
       doc.text(fmtDate(demande.dateDemande), splitX + 55, infoY + 8);
       doc.text(`N° : ${(demande.numero || demande.id).toString().padStart(3, "0")}/${new Date().getFullYear()}`, splitX + 120, infoY + 8);
       doc.text(`${demande.demandeur || ""}`, splitX + 220, infoY + 8);
+    };
+
+    const drawContinuationPageBorder = () => {
+      // Page Border only (no header)
+      doc.rect(margin, margin, contentW, pageH - margin * 2).lineWidth(thick).stroke();
     };
 
     const drawTableHeader = (startY) => {
@@ -973,33 +985,106 @@ export const generateDemandeFourniturePDF = async (req, res) => {
       return maxHeight;
     };
 
-    // --- INITIAL RENDER ---
-    drawCommonHeader();
-    let tableY = margin + headerH + infoH; // Start below header
+    const drawFixedFooter = (isLastPage = false) => {
+      // Calculate footer position (always at bottom of page)
+      const footerStartY = pageH - margin - footerH;
+
+      // Draw Summary Table (Right Aligned)
+      const sumW = 200;
+      const sumX = margin + contentW - sumW - 270;
+      const sumLabelW = 120;
+      let summaryY = footerStartY;
+
+      doc.fontSize(11);
+
+      const drawSummaryRow = (label, value, bold = false) => {
+        if (bold) doc.font("Helvetica-Bold");
+        else doc.font("Helvetica");
+
+        doc.rect(sumX, summaryY, sumW, summaryRowH).stroke();
+        doc.text(label, sumX + 5, summaryY + 5, { width: sumLabelW });
+        doc.text(value, sumX + sumLabelW, summaryY + 5, { width: sumW - sumLabelW - 5, align: "right" });
+
+        summaryY += summaryRowH;
+      };
+
+      // Show real values only on last page, otherwise show "XX"
+      if (isLastPage) {
+        // Calculate Rate
+        const tvaRate = demande.totalHt > 0 ? ((demande.Tva / demande.totalHt) * 100) : 20;
+
+        drawSummaryRow("Total HT", parseNumber(demande.totalHt) + " DH");
+        drawSummaryRow("TVA (" + parseNumber(tvaRate) + "%)", "");
+        drawSummaryRow("Montant TVA", parseNumber(demande.Tva) + " DH");
+        drawSummaryRow("Total TTC", parseNumber(demande.totalTTC) + " DH", true);
+      } else {
+        // Show placeholder "XX" on non-last pages
+        drawSummaryRow("Total HT", "XX");
+        drawSummaryRow("TVA (%)", "");
+        drawSummaryRow("Montant TVA", "XX");
+        drawSummaryRow("Total TTC", "XX", true);
+      }
+
+      summaryY += 20; // Gap
+
+      // --- SIGNATURES ---
+      const sigY = summaryY;
+      const sigH = 90;
+
+      // Grid for signatures
+      doc.fontSize(11).font("Helvetica");
+      doc.rect(margin, sigY, contentW, sigH).lineWidth(thick).stroke();
+
+      const sigW = contentW / 4;
+      for (let i = 1; i < 4; i++) {
+        doc.moveTo(margin + sigW * i, sigY).lineTo(margin + sigW * i, sigY + sigH).stroke();
+      }
+
+      ["Magasinier", "Conducteur des travaux", "Chef Chantier", "Service Approvisionnement"]
+        .forEach((t, i) => {
+          doc.rect(margin + sigW * i + 5, sigY + 5, sigW - 10, sigH - 10).lineWidth(0.5).stroke();
+          doc.text(t, margin + sigW * i + 10, sigY + sigH - 25, { width: sigW - 10, align: "left" });
+
+          const lineY = sigY + 45;
+          doc.moveTo(margin + sigW * i + 15, lineY).lineTo(margin + sigW * (i + 1) - 15, lineY).lineWidth(0.8).stroke();
+        });
+    };
+
+    // --- INITIAL RENDER (FIRST PAGE) ---
+    drawFirstPageHeader();
+    let tableY = margin + headerH + infoH;
     drawTableHeader(tableY);
 
     let currentY = tableY + tableHeaderH;
-    let tableStartOnCurrentPage = currentY; // Track where body starts on this page
+    let tableStartOnCurrentPage = currentY;
+    let isFirstPage = true;
     doc.fontSize(11);
 
     // --- ITEMS LOOP ---
     for (const item of demande.items || []) {
       const rowHeight = calculateRowHeight(item);
+      const itemsLimit = isFirstPage ? firstPageItemsLimit : continuationPageItemsLimit;
+      const itemsBottomY = isFirstPage ? (margin + headerH + infoH + tableHeaderH + itemsLimit) : (margin + tableHeaderH + itemsLimit);
 
       // Check for Page Break
-      if (currentY + rowHeight > tableBottomLimit) {
+      if (currentY + rowHeight > itemsBottomY) {
         // Draw grid lines for previous page
         drawVerticalGridLines(tableStartOnCurrentPage, currentY);
 
-        doc.addPage();
-        drawCommonHeader();
+        // Draw fixed footer on current page (not last page, show XX)
+        drawFixedFooter(false);
 
-        tableY = margin + headerH + infoH;
+        // New page (continuation - no header)
+        doc.addPage();
+        drawContinuationPageBorder();
+
+        tableY = margin;
         drawTableHeader(tableY);
 
         currentY = tableY + tableHeaderH;
         tableStartOnCurrentPage = currentY;
-        doc.fontSize(11); // Reset font size
+        isFirstPage = false;
+        doc.fontSize(11);
       }
 
       // Draw horizontal separator
@@ -1026,114 +1111,8 @@ export const generateDemandeFourniturePDF = async (req, res) => {
     // Draw final grid lines for the last page
     drawVerticalGridLines(tableStartOnCurrentPage, currentY);
 
-    // --- SUMMARY & SIGNATURES ---
-    const summaryRowH = 20;
-    const summaryH = summaryRowH * 4 + 10;
-    const signatureH = 90;
-    const requiredTotalH = summaryH + signatureH + 20; // + gap
-
-    // Determine visual bottom for the grid on this specific page
-    // If summary fits, grid stops before summary.
-    // If summary doesn't fit, grid covers page, summary moves to next.
-
-    let gridBottomForThisPage = tableBottomLimit;
-
-    if (currentY + requiredTotalH <= tableBottomLimit) {
-      // It fits! We want grid to extend down to where summary starts
-      // Let's leave a small gap 20px
-      const summaryStartY = tableBottomLimit - requiredTotalH + 20;
-      // Actually, let's align summary to bottom of page margin? 
-      // User style preference: "fill empty rows".
-      // Let's define the "stop point" for grid as: `tableBottomLimit - requiredTotalH`.
-      // So summary/sigs are flush at bottom margin.
-      gridBottomForThisPage = tableBottomLimit - requiredTotalH;
-    }
-
-    // Fill remaining space with empty rows
-    while (currentY < gridBottomForThisPage) {
-      const h = 22;
-      // If adding another row exceeds limit, stop.
-      if (currentY + h > gridBottomForThisPage) break;
-
-      // Draw horizontal separator
-      doc.moveTo(margin, currentY).lineTo(margin + contentW, currentY).lineWidth(thin).stroke();
-
-      // Draw vertical lines for this empty row (or rely on the huge vertical line redraw?)
-      // We drew vertical lines from `tableStartOnCurrentPage` to `currentY` earlier.
-      // We need to extend those vertical lines OR draw new ones.
-      // The `drawVerticalGridLines` assumed `currentY` was final. 
-      // Let's re-draw vertical lines at the END of this filling loop to cover everything.
-
-      currentY += h;
-    }
-
-    // Draw horizontal and bottom borders for the filled space
-    // 1. Re-draw vertical lines to cover the newly filled empty rows
-    drawVerticalGridLines(tableStartOnCurrentPage, currentY);
-    // 2. Draw final bottom border at currentY
-    doc.moveTo(margin, currentY).lineTo(margin + contentW, currentY).lineWidth(thin).stroke();
-
-    // Check if we need a new page for Summary + Signatures
-    // Logic: If we limited gridBottomForThisPage to allow space, it fits.
-    // If gridBottomForThisPage was tableBottomLimit, it means we filled the page and need a new one.
-
-    if (currentY + requiredTotalH > tableBottomLimit) {
-      doc.addPage();
-      drawCommonHeader();
-      currentY = margin + headerH + infoH + 20;
-    } else {
-      currentY += 20; // Add gap
-    }
-
-    // Draw Summary Table (Right Aligned)
-    const sumW = 200;
-    const sumX = margin + contentW - sumW - 270;
-    const sumLabelW = 120;
-
-    doc.fontSize(11);
-
-    const drawSummaryRow = (label, value, bold = false) => {
-      if (bold) doc.font("Helvetica-Bold");
-      else doc.font("Helvetica");
-
-      doc.rect(sumX, currentY, sumW, summaryRowH).stroke();
-      doc.text(label, sumX + 5, currentY + 5, { width: sumLabelW });
-      doc.text(value, sumX + sumLabelW, currentY + 5, { width: sumW - sumLabelW - 5, align: "right" });
-
-      currentY += summaryRowH;
-    };
-
-    // Calculate Rate
-    const tvaRate = demande.totalHt > 0 ? ((demande.Tva / demande.totalHt) * 100) : 20;
-
-    drawSummaryRow("Total HT", parseNumber(demande.totalHt) + " DH");
-    drawSummaryRow("TVA (" + parseNumber(tvaRate) + "%)", "");
-    drawSummaryRow("Montant TVA", parseNumber(demande.Tva) + " DH");
-    drawSummaryRow("Total TTC", parseNumber(demande.totalTTC) + " DH", true);
-
-    currentY += 20; // Gap
-
-    // --- SIGNATURES ---
-    const sigY = currentY;
-    const sigH = 90;
-
-    // Grid for signatures
-    doc.fontSize(11).font("Helvetica");
-    doc.rect(margin, sigY, contentW, sigH).lineWidth(thick).stroke();
-
-    const sigW = contentW / 4;
-    for (let i = 1; i < 4; i++) {
-      doc.moveTo(margin + sigW * i, sigY).lineTo(margin + sigW * i, sigY + sigH).stroke();
-    }
-
-    ["Magasinier", "Conducteur des travaux", "Chef Chantier", "Service Approvisionnement"]
-      .forEach((t, i) => {
-        doc.rect(margin + sigW * i + 5, sigY + 5, sigW - 10, sigH - 10).lineWidth(0.5).stroke();
-        doc.text(t, margin + sigW * i + 10, sigY + sigH - 25, { width: sigW - 10, align: "left" });
-
-        const lineY = sigY + 45;
-        doc.moveTo(margin + sigW * i + 15, lineY).lineTo(margin + sigW * (i + 1) - 15, lineY).lineWidth(0.8).stroke();
-      });
+    // Draw fixed footer on last page (show real values)
+    drawFixedFooter(true);
 
     doc.end();
   } catch (err) {

@@ -8,19 +8,12 @@ import nodemailer from "nodemailer";
 import { fileURLToPath } from 'url';
 import { error } from "console";
 import { connect } from "http2";
+import { sendEmail } from "../services/emailservice.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const mailTransporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    auth: {
-    user: "confonda@gmail.com",
-    pass: "kxdl rgui vvxw eyfw",
-    },
-});
+
 
 export const postDemandePrixViaFourniture = async (req, res) => {
   try {
@@ -295,7 +288,7 @@ export const storeDemandePrix = async (req, res) => {
     res.status(500).json({ success: false, error: 'Erreur serveur' });
   }
 };
-export const generateDemandePrixPDF = async (req, res) => {
+export const generateDemandePrixPDF = async (req, res, pdf) => {
   const { id } = req.params;
   const demandePrixId = parseInt(id, 10);
   if (isNaN(demandePrixId)) return res.status(400).send("ID invalide");
@@ -531,7 +524,7 @@ export const generateDemandePrixPDF = async (req, res) => {
     }
 
     drawFooter(pageHeight - margin - footerHeight);
-
+    
     doc.end();
 
   } catch (err) {
@@ -553,263 +546,27 @@ export const sendDemandePrixEmail = async (req, res) => {
     });
     if (!demandePrix) return res.status(404).json({ success: false, error: "Demande de prix non trouvée" });
 
-    const chunks = [];
-    const doc = new PDFDocument({
-      size: 'A4',
-      margin: 40,
-      bufferPages: false,
-      autoFirstPage: true,
-    });
-    doc.on('data', (c) => chunks.push(c));
-    doc.on('error', (e) => {
-      console.error('Erreur génération PDF (email):', e);
-    });
+    // Generate PDF using existing function
+    const pdfBuffer = await generateDemandePrixPDF(demandePrix);
 
-    const pageWidth = 595.28;
-    const pageHeight = 841.89;
-    const margin = 40;
-    const contentWidth = pageWidth - margin * 2;
-
-    const colors = {
-      blue: '#0052CC',
-      blueLight: '#f3f8ff',
-      brand: '#A22C29',
-      gray900: '#1f2937',
-      gray800: '#374151',
-      gray600: '#6b7280',
-      border: '#cfd6df',
-      borderSoft: '#c3cbd6',
-      rowBorder: '#eef1f5',
-      white: '#ffffff',
-      tableHeader: '#0052CC',
-      rowEven: '#ffffff',
-      rowOdd: '#f9fafb',
-    };
-
-    const logoPath = path.join(__dirname, '../public/img/logo-4.png');
-    const signaturePath = path.join(__dirname, '../public/img/signature.png');
-
-    const rowHeight = 22;
-    const companyFooterHeight = 100;
-    const footerHeight = 120 + companyFooterHeight;
-    const colWidths = [28, 240, 95, 55, 55];
-
-    const sanitizePdfNumber = (s) => String(s || '').replace(/[\u202F\u00A0]/g, ' ');
-    const fmtStr = (s) => sanitizePdfNumber(String(s || ''));
-    const dpDateStr = new Date(demandePrix.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-
-    const drawHeader = () => {
-      const y = margin;
-      const toplineY = y;
-      const toplineH = 70;
-
-      if (fs.existsSync(logoPath)) {
-        try {
-          doc.image(logoPath, margin, toplineY + 2, { height: 60 });
-        } catch (e) {
-          console.error('Error loading logo:', e);
+    // Send email
+    await sendEmail({
+      from: "CONFONDA",
+      to: email,
+      subject: `Demande de prix n°${demandePrix.id}`,
+      text: `Bonjour,\n\nVeuillez trouver ci-joint la demande de prix n°${demandePrix.id}.`,
+      attachments: [
+        {
+          filename: `demandePrix_${demandePrix.id}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf'
         }
-      }
-
-      const centerX = margin + contentWidth / 2;
-      const sepW = 6;
-      const sepH = 44;
-      const sepX = centerX - sepW / 2;
-      const sepY = toplineY + 12;
-      doc.rect(sepX, sepY, sepW, sepH).fill(colors.brand);
-
-      doc.font('Helvetica-Bold').fontSize(13).fillColor(colors.brand)
-        .text('Construction et Fondation', centerX + 14, toplineY + 18, { align: 'left' });
-      doc.font('Helvetica').fontSize(9).fillColor(colors.gray600)
-        .text('Pour des constructions bien fondées', centerX + 14, toplineY + 36, { align: 'left' });
-
-      const gridY = toplineY + toplineH + 12;
-      const gap = 10;
-      const boxW = (contentWidth - gap * 2) / 3;
-      const boxH = 68;
-
-      doc.roundedRect(margin, gridY, boxW, boxH, 8).lineWidth(1).stroke(colors.border);
-      doc.font('Helvetica-Bold').fontSize(11).fillColor(colors.gray900)
-        .text(`DP N° : ${demandePrix.id}`, margin + 10, gridY + 14, { width: boxW - 20 });
-      doc.font('Helvetica-Bold').fontSize(11).fillColor(colors.gray900)
-        .text(`Date : ${dpDateStr}`, margin + 10, gridY + 38, { width: boxW - 20 });
-
-      const midX = margin + boxW + gap;
-      doc.roundedRect(midX, gridY, boxW, boxH, 8).lineWidth(1).stroke(colors.border);
-      doc.font('Helvetica-Bold').fontSize(11).fillColor(colors.gray900)
-        .text('DEMANDE DE PRIX', midX + 10, gridY + 24, { width: boxW - 20, align: 'center' });
-
-      const cliX = margin + (boxW + gap) * 2;
-      doc.roundedRect(cliX, gridY, boxW, boxH, 8).lineWidth(1).stroke(colors.border);
-      const lineW = boxW - 16;
-      doc.font('Helvetica-Bold').fontSize(9.5).fillColor(colors.gray900)
-        .text(fmtStr(demandePrix.fournisseur?.name || '-'), cliX + 8, gridY + 8, { width: lineW, ellipsis: true });
-      doc.font('Helvetica').fontSize(8.5).fillColor(colors.gray600)
-        .text(fmtStr(demandePrix.fournisseur?.email || '-'), cliX + 8, gridY + 24, { width: lineW, ellipsis: true });
-      doc.font('Helvetica').fontSize(8.5).fillColor(colors.gray600)
-        .text(fmtStr(demandePrix.fournisseur?.telFournisseur || 'Non renseigné'), cliX + 8, gridY + 38, { width: lineW, ellipsis: true });
-
-      doc.font('Helvetica').fontSize(11).fillColor(colors.gray900)
-        .text(
-          "Nous vous prions de bien vouloir nous communiquer votre meilleur offre de prix concernant les produits ci-après",
-          margin,
-          gridY + boxH + 20,
-          { width: contentWidth }
-        );
-
-      return gridY + boxH + 55;
-    };
-
-    const drawFooter = (yPosition) => {
-      const startY = yPosition || (pageHeight - margin - footerHeight);
-      const gap = 12;
-      const sigW = (contentWidth - gap) / 2;
-      const sigH = 86;
-
-      const sigStartY = startY;
-
-      doc.roundedRect(margin, sigStartY, sigW, sigH, 8).lineWidth(1).stroke(colors.borderSoft);
-      doc.font('Helvetica-Bold').fontSize(8.5).fillColor(colors.gray900)
-        .text('CACHET & SIGNATURE FOURNISSEUR', margin + 10, sigStartY + 10);
-      doc.moveTo(margin + 10, sigStartY + sigH - 18).lineTo(margin + sigW - 10, sigStartY + sigH - 18)
-        .lineWidth(1).stroke(colors.borderSoft);
-
-      const sig2X = margin + sigW + gap;
-      doc.roundedRect(sig2X, sigStartY, sigW, sigH, 8).lineWidth(1).stroke(colors.borderSoft);
-      doc.font('Helvetica-Bold').fontSize(8.5).fillColor(colors.gray900)
-        .text('LE RESPONSABLE ACHATS', sig2X + 10, sigStartY + 10);
-
-      if (fs.existsSync(signaturePath)) {
-        try {
-          const fitW = sigW - 20;
-          const fitH = 60;
-          const imgX = sig2X + (sigW - fitW) / 2;
-          const imgY = sigStartY + 22;
-          doc.image(signaturePath, imgX, imgY, { fit: [fitW, fitH], align: 'center', valign: 'center' });
-        } catch (e) {
-          console.error('Error loading signature:', e);
-        }
-      }
-
-      doc.moveTo(sig2X + 10, sigStartY + sigH - 18).lineTo(sig2X + sigW - 10, sigStartY + sigH - 18)
-        .lineWidth(1).stroke(colors.borderSoft);
-
-      const footerY = pageHeight - companyFooterHeight;
-      doc.rect(0, footerY, pageWidth, companyFooterHeight).fill('#AB3029').stroke();
-
-      const textMargin = 15;
-      doc.font('Helvetica').fontSize(9).fillColor('#FFFFFF');
-      doc.text(
-        '82, angle Bd abdelmoumen et rue Soumaya Imm.Shahrazad III 2ème étage Casablanca Tél : 0522-23-39-70',
-        50,
-        footerY + textMargin,
-        { width: pageWidth - 100, align: 'center' }
-      );
-      doc.text(
-        'Fax : 0522-23-42-60  Capital : 18 500 000.00 DH  CNSS : 7167788 - R.C. : 145619 – I.F. : 1602714 – Patente : 37900708- I.C.E : 001526422000063',
-        50,
-        footerY + textMargin + 15,
-        { width: pageWidth - 100, align: 'center' }
-      );
-    };
-
-    const drawTableHeader = (y) => {
-      doc.rect(margin, y, contentWidth, rowHeight).fill(colors.tableHeader);
-      const headers = ['N°', 'Désignation', 'Reference', 'Unité', 'Quantité'];
-      let x = margin;
-      headers.forEach((h, i) => {
-        doc.font('Helvetica-Bold').fontSize(8).fillColor(colors.white)
-          .text(h, x + 4, y + 7, { width: colWidths[i] - 8, align: i === 1 ? 'left' : 'center' });
-        x += colWidths[i];
-      });
-      return y + rowHeight;
-    };
-
-    const drawTableRow = (y, art, index) => {
-      const bg = index % 2 === 0 ? colors.rowEven : colors.rowOdd;
-      doc.rect(margin, y, contentWidth, rowHeight).fill(bg);
-
-      let x = margin;
-      colWidths.forEach((w) => {
-        doc.rect(x, y, w, rowHeight).lineWidth(0.6).stroke(colors.rowBorder);
-        x += w;
-      });
-
-      x = margin;
-      doc.font('Helvetica').fontSize(8).fillColor(colors.gray900)
-        .text(String(index + 1), x + 4, y + 7, { width: colWidths[0] - 12, align: 'center' });
-      x += colWidths[0];
-
-      doc.font('Helvetica').fontSize(8).fillColor(colors.gray800)
-        .text(fmtStr(art.designation || ''), x + 4, y + 7, { width: colWidths[1] - 8, align: 'left', ellipsis: true });
-      x += colWidths[1];
-
-      doc.font('Helvetica').fontSize(8).fillColor(colors.gray800)
-        .text(fmtStr(art.reference || ''), x + 4, y + 7, { width: colWidths[2] - 8, align: 'center', ellipsis: true });
-      x += colWidths[2];
-
-      doc.font('Helvetica').fontSize(8).fillColor(colors.gray800)
-        .text(fmtStr(art.unite || ''), x + 4, y + 7, { width: colWidths[3] - 8, align: 'center', ellipsis: true });
-      x += colWidths[3];
-
-      doc.font('Helvetica').fontSize(8).fillColor(colors.gray800)
-        .text(fmtStr(art.quantite ?? ''), x + 4, y + 7, { width: colWidths[4] - 8, align: 'center', ellipsis: true });
-
-      return y + rowHeight;
-    };
-
-    doc.on('end', async () => {
-      const pdfBuffer = Buffer.concat(chunks);
-      try {
-      
-        await mailTransporter.sendMail({
-          from: "CONFONDA",
-          to: email,
-          subject: `Demande de Prix #${demandePrix.id}`,
-          text: `Bonjour,\n\nVeuillez trouver ci-joint la demande de prix #${demandePrix.id}.`,
-          attachments: [
-            {
-              filename: `demandePrix_${demandePrix.id}.pdf`,
-              content: pdfBuffer,
-            },
-          ],
-        });
-        return res.json({ success: true });
-      } catch (e) {
-        console.error('Erreur envoi email demande de prix:', e);
-        return res.status(500).json({ success: false, error: 'Erreur envoi email' });
-      }
+      ]
     });
-
-    let currentY = drawHeader();
-    currentY += 10;
-    currentY = drawTableHeader(currentY);
-
-    const articles = Array.isArray(demandePrix.articles) ? demandePrix.articles : [];
-    const reservedSpace = footerHeight + 20;
-
-    if (!articles.length) {
-      doc.rect(margin, currentY, contentWidth, rowHeight * 2).stroke(colors.rowBorder);
-      doc.font('Helvetica-Oblique').fontSize(10).fillColor(colors.gray600)
-        .text('Aucun article disponible', 0, currentY + 12, { align: 'center', width: pageWidth });
-      currentY += rowHeight * 2;
-    } else {
-      articles.forEach((art, idx) => {
-        if (currentY + rowHeight + reservedSpace > pageHeight) {
-          doc.addPage();
-          currentY = margin;
-          currentY = drawTableHeader(currentY);
-        }
-        currentY = drawTableRow(currentY, art, idx);
-      });
-    }
-
-    drawFooter(pageHeight - margin - footerHeight);
-
-    doc.end();
-  } catch (err) {
-    console.error('Erreur préparation email demande de prix:', err);
-    return res.status(500).json({ success: false, error: 'Erreur serveur' });
+    res.send('email Sent !');
+  } catch (error) {
+    console.log(error);
+    res.send(error.message);
   }
 };  
 
