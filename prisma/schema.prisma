@@ -654,4 +654,5 @@ model Fourniture_list {
   designation  String?
   reference    String?
   prixUnitaire Decimal?
+  @@unique([designation, reference])
 }

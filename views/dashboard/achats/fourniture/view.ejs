@@ -608,74 +608,30 @@
                             </div>
 
                             <!-- Tableau CONFONDA (lecture seule) -->
-                            <style>
-                              .table-wrapper {
-                                max-height: 70vh;
-                                overflow: auto;
-                              }
-
-                              #productsTable {
-                                min-width: 1100px;
-                              }
-
-                              #productsTable thead th {
-                                position: sticky;
-                                top: 0;
-                                background: #fff;
-                                z-index: 3;
-                              }
-
-                              #productsTable th,
-                              #productsTable td {
-                                padding: 6px 8px;
-                                font-size: 13px;
-                                vertical-align: middle;
-                              }
-
-                              .cell-designation {
-                                min-width: 280px;
-                                white-space: normal;
-                              }
-
-                              .details-row td {
-                                padding: 12px;
-                              }
-
-                              .details-grid {
-                                display: grid;
-                                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-                                gap: 12px;
-                              }
-
-                              .detail-image {
-                                max-height: 90px;
-                                cursor: pointer;
-                                border-radius: 8px;
-                                object-fit: cover;
-                              }
-                            </style>
-                            <div class="table-wrapper">
-                              <table class="table table-bordered align-middle text-center" id="confondaTable">
+                            <div class="table-responsive">
+                              <table class="table table-bordered" id="productsTable">
                                 <thead>
                                   <tr>
                                     <th>Code</th>
                                     <th>Désignation</th>
+                                    <th>Reference</th>
                                     <th>Unité</th>
-                                    <th>Qté</th>
+                                    <th>Quantité</th>
+                                    <th>Date livraison tôt</th>
+                                    <th>Date livraison tard</th>
+                                    <th>Imputation</th>
+                                    <th>Observations</th>
+                                    <th>Validation</th>
+                                    <th>Validé par</th>
+                                    <th>Image</th>
                                     <th>Prix HT</th>
                                     <th>Total HT</th>
-                                    <th>Au plus tôt</th>
-                                    <th>Au plus tard</th>
                                     <th>Délais Paiement</th>
-                                    <th>Statut</th>
-                                    <th></th>
                                   </tr>
                                 </thead>
 
                                 <tbody>
                                   <% demandeFourniture.items.forEach((item)=> { %>
-
-                                    <!-- MAIN ROW -->
                                     <tr data-item-id="<%= item.id %>">
                                       <td>
                                         <%= item.code ?? '-' %>
@@ -684,110 +640,74 @@
                                         <%= item.designation ?? '-' %>
                                       </td>
                                       <td>
+                                        <%= item.lot ?? '-' %>
+                                      </td>
+                                      <td>
                                         <%= item.unité ?? '-' %>
                                       </td>
                                       <td class="cell-quantite">
                                         <%= item.quantité ?? 0 %>
                                       </td>
-
+                                      <td>
+                                        <small>
+                                          <%= item.auPlutot ? new Date(item.auPlutot).toLocaleDateString('fr-FR') : '-' %>
+                                        </small>
+                                      </td>
+                                      <td>
+                                        <small>
+                                          <%= item.auPlutart ? new Date(item.auPlutart).toLocaleDateString('fr-FR') : '-' %>
+                                        </small>
+                                      </td>
+                                      <td>
+                                        <%= item.imputation ?? '-' %>
+                                      </td>
+                                      <td>
+                                        <%= item.observation ?? '-' %>
+                                      </td>
+                                      <td>
+                                        <% if (item.validation===true) { %>
+                                          <span class="badge badge-success">Validée</span>
+                                        <% } else if (item.validation===false) { %>
+                                          <span class="badge badge-danger">Refusée</span>
+                                        <% } else { %>
+                                          <span class="badge badge-secondary">En attente</span>
+                                        <% } %>
+                                      </td>
+                                      <td>
+                                        <%= item.validepar ?? '-' %>
+                                      </td>
+                                      <td class="text-center">
+                                        <% if (item.image) { %>
+                                          <img src="<%= item.image %>" style="max-height:32px;cursor:pointer;"
+                                            class="img-thumbnail ml-2" onclick="window.open('<%= item.image %>', '_blank')">
+                                          <% } else { %>
+                                            <span class="text-muted">Aucune image</span>
+                                          <% } %>
+                                      </td>
                                       <td>
                                         <input type="number" class="form-control form-control-sm prixU" step="0.01"
                                           min="0" value="<%= item.prixU ?? '' %>">
                                       </td>
-
                                       <td class="text-end">
                                         <span class="itemTotalHt">
-                                          <%= Number(item.totalHt ?? 0).toLocaleString('fr-FR', { minimumFractionDigits:
-                                            2 }) %>
+                                          <%= Number(item.totalHt ?? 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %>
                                         </span>
                                       </td>
-
-                                      <td class="text-center">
-                                        <small>
-                                          <%= item.auPlutot ? new Date(item.auPlutot).toLocaleDateString('fr-FR') : '-'
-                                            %>
-                                        </small>
-                                      </td>
-                                      <td class="text-center">
-                                        <small>
-                                          <%= item.auPlutart ? new Date(item.auPlutart).toLocaleDateString('fr-FR')
-                                            : '-' %>
-                                        </small>
-                                      </td>
-
                                       <td>
                                         <select class="form-control form-control-sm delaisPaiement">
-                                          <option value="" <%=!item.delaisPaiement ? 'selected' : '' %>>Sélectionner un
-                                            délai</option>
-                                          <option value="à vue" <%=item.delaisPaiement==='à vue' ? 'selected' : '' %>>À
-                                            vue</option>
-                                          <option value="30 jours" <%=item.delaisPaiement==='30 jours' ? 'selected' : ''
-                                            %>>30 jours</option>
-                                          <option value="60 jours" <%=item.delaisPaiement==='60 jours' ? 'selected' : ''
-                                            %>>60 jours</option>
-                                          <option value="90 jours" <%=item.delaisPaiement==='90 jours' ? 'selected' : ''
-                                            %>>90 jours</option>
-                                          <option value="120 jours" <%=item.delaisPaiement==='120 jours' ? 'selected'
-                                            : '' %>>120 jours</option>
+                                          <option value="" <%=!item.delaisPaiement ? 'selected' : '' %>>Sélectionner un délai</option>
+                                          <option value="à vue" <%=item.delaisPaiement==='à vue' ? 'selected' : '' %>>À vue</option>
+                                          <option value="30 jours" <%=item.delaisPaiement==='30 jours' ? 'selected' : '' %>>30 jours</option>
+                                          <option value="60 jours" <%=item.delaisPaiement==='60 jours' ? 'selected' : '' %>>60 jours</option>
+                                          <option value="90 jours" <%=item.delaisPaiement==='90 jours' ? 'selected' : '' %>>90 jours</option>
+                                          <option value="120 jours" <%=item.delaisPaiement==='120 jours' ? 'selected' : '' %>>120 jours</option>
                                         </select>
                                       </td>
+                                   
+                                        
+                                        </tr>
 
-                                      <td>
-                                        <% if (item.validation===true) { %>
-                                          <span class="badge bg-success" style="color: white;">Validée</span>
-                                          <% } else if (item.validation===false) { %>
-                                            <span class="badge bg-danger" style="color: white;">Refusée</span>
-                                            <% } else { %>
-                                              <span class="badge bg-secondary" style="color: white;">En attente</span>
-                                              <% } %>
-                                      </td>
-
-                                      <td>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary toggle-details">
-                                          Détails
-                                        </button>
-
-                                      </td>
-                                    </tr>
-
-                                    <!-- DETAILS ROW -->
-                                    <tr class="details-row d-none">
-                                      <td colspan="11" class="text-start bg-light">
-                                        <div class="details-grid">
-
-                                          <div>
-                                            <strong>Référence :</strong><br>
-                                            <%= item.lot ?? '-' %>
-                                          </div>
-
-                                          <div>
-                                            <strong>Imputation :</strong><br>
-                                            <%= item.imputation ?? '-' %>
-                                          </div>
-
-                                          <div>
-                                            <strong>Observations :</strong><br>
-                                            <%= item.observation ?? 'Aucune' %>
-                                          </div>
-
-                                          <div>
-                                            <strong>Validé par :</strong><br>
-                                            <%= item.validepar ?? '-' %>
-                                          </div>
-
-                                          <div>
-                                            <strong>Image :</strong><br>
-                                            <% if (item.image) { %>
-                                              <img src="<%= item.image %>" class="detail-image"
-                                                onclick="window.open('<%= item.image %>', '_blank')">
-                                              <% } else { %>
-                                                Aucune image
-                                                <% } %>
-                                          </div>
-
-                                        </div>
-                                      </td>
-                                    </tr>
+                                
 
                                     <% }) %>
                                 </tbody>
@@ -842,7 +762,7 @@
                               function calculateTotals() {
                                 let totalHt = 0;
                                 // Sum up all item totals
-                                document.querySelectorAll('#confondaTable .itemTotalHt').forEach(el => {
+                                document.querySelectorAll('#productsTable .itemTotalHt').forEach(el => {
                                   // Skip invisible rows
                                   if (el.closest('tr').classList.contains('d-none')) return;
 
@@ -970,7 +890,7 @@
                               // Filter Logic
                               $('#filterDelaisPaiement').on('change', function () {
                                 const selectedVal = $(this).val();
-                                $('#confondaTable tbody tr').each(function () {
+                                $('#productsTable tbody tr').each(function () {
                                   // Skip details rows
                                   if ($(this).hasClass('details-row')) return;
 
@@ -1046,7 +966,7 @@
                                 const $list = $('#itemsList');
                                 $list.empty();
 
-                                $('#confondaTable tbody tr').each(function () {
+                                $('#productsTable tbody tr').each(function () {
                                   const $tr = $(this);
                                   if ($tr.hasClass('d-none')) return;
 
@@ -1160,8 +1080,8 @@
 
                               // Save Pricing for CONFONDA
                               $(document).on('click', '#btnSavePricing', function () {
-                                const items = [];
-                                $('#confondaTable tbody tr').each(function () {
+                                let items = [];
+                                $('#productsTable tbody tr').each(function () {
                                   const $tr = $(this);
                                   const itemId = $tr.data('item-id');
                                   if (!itemId) return;

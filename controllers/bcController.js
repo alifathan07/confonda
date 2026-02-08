@@ -5,7 +5,7 @@ import axios from "axios";
 import { fileURLToPath } from "url";
 import { log } from "console";
 import crypto from "crypto";
-import {  buildPublicBcUrl, normalizeNumber, numberToFrenchWords, PUBLIC_BC_SECRET } from "../utils/utils.js";
+import { buildPublicBcUrl, normalizeNumber, numberToFrenchWords, PUBLIC_BC_SECRET } from "../utils/utils.js";
 import ExcelJS from 'exceljs';
 import { sendEmail } from "../services/emailservice.js";
 import { downloadpdf, getpdfBuffer } from "../services/pdfbcService.js";
@@ -330,7 +330,7 @@ export const sendBcEmail = async (req, res) => {
     if (!to) {
       return res.status(400).json({ success: false, error: "Email fournisseur manquant" });
     }
-     // Response Headers
+    // Response Headers
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
@@ -339,18 +339,18 @@ export const sendBcEmail = async (req, res) => {
 
     const pdfBuffer = await getpdfBuffer(bc, req);
 
-      await sendEmail({
-        to,
-        subject: `Bon de Commande N° ${bc.numero}`,
-        text: `Bonjour,\n\nVeuillez trouver en pièce jointe notre bon de commande N° ${bc.numero}.\n\nCordialement. \n\nKhbazi Mustapha\n\nRésp. Service Achats\n\n Tél.  06 44 00 05 47.`,
-        attachments: [
-          {
-            filename: `bonCommande_${bc.numero}.pdf`,
-            content: pdfBuffer,
-            contentType: 'application/pdf'
-          }
-        ]
-      })    
+    await sendEmail({
+      to,
+      subject: `Bon de Commande N° ${bc.numero}`,
+      text: `Bonjour,\n\nVeuillez trouver en pièce jointe notre bon de commande N° ${bc.numero}.\n\nCordialement. \n\nKhbazi Mustapha\n\nRésp. Service Achats\n\n Tél.  06 44 00 05 47.`,
+      attachments: [
+        {
+          filename: `bonCommande_${bc.numero}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf'
+        }
+      ]
+    })
     console.log(pdfBuffer)
     return res.json({ success: true });
   } catch (error) {
@@ -411,7 +411,7 @@ export const editBc = async (req, res) => {
     const publicBcUrl = buildPublicBcUrl(req, bc.id);
     const listfourniture = await prisma.fourniture_list.findMany();
 
-    res.render('dashboard/achats/bc/edit', { bc, fournisseurs, chantiers, publicBcUrl,  listfourniture});
+    res.render('dashboard/achats/bc/edit', { bc, fournisseurs, chantiers, publicBcUrl, listfourniture });
   } catch (err) {
     console.error('Erreur affichage bon de commande:', err);
     res.status(500).json({ success: false, error: "Erreur serveur" });
@@ -485,7 +485,24 @@ export const updateBc = async (req, res) => {
     const tvaRate = parseFloat(tauxTva) || 0;
     const montantTva = totalHt * (tvaRate > 0 ? tvaRate : 0) / 100;
     const totalTtc = totalHt + montantTva;
-
+      await prisma.$transaction(async (tx) => {
+  for (const item of toCreate) {
+    await tx.fourniture_list.upsert({
+      where: {
+        designation_reference: {
+          designation: item.designation,
+          reference: item.reference,
+        },
+      },
+      update: {}, // do nothing if exists
+      create: {
+        designation: item.designation,
+        reference: item.reference,
+        prixUnitaire: item.prixUnitaire || null,
+      },
+    });
+  }
+});
     // First, perform the main update on BC and items (create/update fields)
     // We ignore distribution in this step
     await prisma.bondeCommande.update({
@@ -746,6 +763,25 @@ export const storeBc = async (req, res) => {
       }
     }
     const nextNumCounter = maxNum + 1;
+
+    await prisma.$transaction(async (tx) => {
+  for (const item of toCreate) {
+    await tx.fourniture_list.upsert({
+      where: {
+        designation_reference: {
+          designation: item.designation,
+          reference: item.reference,
+        },
+      },
+      update: {}, // do nothing if exists
+      create: {
+        designation: item.designation,
+        reference: item.reference,
+        prixUnitaire: item.prixUnitaire || null,
+      },
+    });
+  }
+});
 
     // Step 1: Create BC + items
     const bc = await prisma.bondeCommande.create({
