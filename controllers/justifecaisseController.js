@@ -674,7 +674,7 @@ export const saveAllData = async (req, res) => {
 // Fetch all justifCaisse
 export const getAllJustifCaisse = async (req, res) => {
   try {
-    
+
     const justifCaisse = await prisma.justifCaisse.findMany({
       where: { userId: req.session.user.id, chantierId: parseInt(req.params.chantierId) },
       select: {
@@ -747,7 +747,7 @@ export const adminUserList = async (req, res) => {
 export const justifeCaisseListUser = async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
-    
+
     if (!userId || isNaN(userId)) {
       return res.status(400).render("error", { error: "ID utilisateur invalide" });
     }
@@ -1421,7 +1421,7 @@ export const addJustifCaisseUserFirstTime = async (req, res) => {
     const chantierId = parseInt(req.body.chantierId);
     const mois = parseInt(req.body.mois);
 
-    
+
     // Validate userId
     const user = await prisma.user.findUnique({
       where: { id: parseInt(userId) },
@@ -1607,7 +1607,7 @@ export const generateJustifCaissePDF = async (req, res) => {
     doc
       .font("Helvetica-Bold")
       .fontSize(16)
-      .fillColor("#8B0000")
+      .fillColor("#000")
       .text("JUSTIFICATIFS DE CAISSE", 0, 40, { align: "center" });
 
     doc
@@ -1619,7 +1619,7 @@ export const generateJustifCaissePDF = async (req, res) => {
 
   const drawInfoBox = (yPosition) => {
     let y = yPosition || 110;
-    doc.rect(MARGIN, y, CONTENT_WIDTH, 70).stroke();
+    doc.rect(MARGIN, y, CONTENT_WIDTH, 90).stroke();
 
     doc.font("Helvetica-Bold").text("Informations", MARGIN + 5, y + 5);
     doc.font("Helvetica").fontSize(10);
@@ -1628,11 +1628,16 @@ export const generateJustifCaissePDF = async (req, res) => {
     doc.text(`Chantier : ${justif.chantier?.nom ?? "-"}`, MARGIN + 10, y + 40);
     doc.text(`Mois : ${justif.designation ?? "-"}`, PAGE_WIDTH / 2, y + 25);
     doc.text(
-      `Solde final : ${Number(justif.soldeFinal).toFixed(2)} MAD`,
-      PAGE_WIDTH / 2,
-      y + 40
+      `Solde Précédent : ${Number(justif.soldePrecedent).toFixed(2)} MAD`,
+      MARGIN + 10,
+      y + 55
     );
-    return y + 85;
+    doc.text(
+      `Solde Final : ${Number(justif.soldeFinal).toFixed(2)} MAD`,
+      PAGE_WIDTH / 2,
+      y + 55
+    );
+    return y + 105;
   };
 
   const drawFooter = (yPosition) => {
@@ -1665,47 +1670,60 @@ export const generateJustifCaissePDF = async (req, res) => {
       { label: "Montant", w: 100 },
     ];
 
-    const rowH = 22;
+    const minRowH = 22;
     const tableX = MARGIN;
 
     const drawRow = (yy, values, bold = false) => {
       let x = tableX;
       doc.font(bold ? "Helvetica-Bold" : "Helvetica").fontSize(9);
 
+      // Calculate required height for each cell
+      let maxHeight = minRowH;
       cols.forEach((c, i) => {
-        doc.rect(x, yy, c.w, rowH).stroke();
+        const textHeight = doc.heightOfString(values[i] || "", {
+          width: c.w - 8,
+          align: i === 2 ? "right" : "left",
+        });
+        maxHeight = Math.max(maxHeight, textHeight + 12); // 12 = padding
+      });
+
+      // Draw cells with calculated height
+      cols.forEach((c, i) => {
+        doc.rect(x, yy, c.w, maxHeight).stroke();
         doc.text(values[i], x + 4, yy + 6, {
           width: c.w - 8,
           align: i === 2 ? "right" : "left",
         });
         x += c.w;
       });
+
+      return maxHeight;
     };
 
     // Section title
-    doc.font("Helvetica-Bold").fontSize(12).fillColor("#8B0000")
+    doc.font("Helvetica-Bold").fontSize(12).fillColor("#000")
       .text("RECETTES", MARGIN, yPosition);
     yPosition += 25;
 
     // Header
-    drawRow(yPosition, cols.map(c => c.label), true);
-    yPosition += rowH;
+    const headerHeight = drawRow(yPosition, cols.map(c => c.label), true);
+    yPosition += headerHeight;
 
     // Data
     let totalRecettes = 0;
     justif.recettes.forEach(r => {
       totalRecettes += Number(r.montant ?? 0);
-      drawRow(yPosition, [
+      const rowHeight = drawRow(yPosition, [
         new Date(r.dateRecette).toLocaleDateString("fr-FR"),
         r.source ?? "",
         Number(r.montant ?? 0).toFixed(2),
       ]);
-      yPosition += rowH;
+      yPosition += rowHeight;
     });
 
     // Total
-    drawRow(yPosition, ["TOTAL", "", totalRecettes.toFixed(2)], true);
-    yPosition += rowH + 20;
+    const totalHeight = drawRow(yPosition, ["TOTAL", "", totalRecettes.toFixed(2)], true);
+    yPosition += totalHeight + 20;
 
     return yPosition;
   };
@@ -1720,33 +1738,46 @@ export const generateJustifCaissePDF = async (req, res) => {
       { label: "Non Justifié", w: 70 },
     ];
 
-    const rowH = 22;
+    const minRowH = 22;
     const tableX = MARGIN;
 
     const drawRow = (yy, values, bold = false) => {
       let x = tableX;
       doc.font(bold ? "Helvetica-Bold" : "Helvetica").fontSize(9);
 
+      // Calculate required height for each cell
+      let maxHeight = minRowH;
       cols.forEach((c, i) => {
-        doc.rect(x, yy, c.w, rowH).stroke();
+        const textHeight = doc.heightOfString(values[i] || "", {
+          width: c.w - 8,
+          align: i >= 4 ? "right" : "left",
+        });
+        maxHeight = Math.max(maxHeight, textHeight + 12); // 12 = padding
+      });
+
+      // Draw cells with calculated height
+      cols.forEach((c, i) => {
+        doc.rect(x, yy, c.w, maxHeight).stroke();
         doc.text(values[i], x + 4, yy + 6, {
           width: c.w - 8,
           align: i >= 4 ? "right" : "left",
         });
         x += c.w;
       });
+
+      return maxHeight;
     };
 
     // Section title
-    doc.font("Helvetica-Bold").fontSize(12).fillColor("#8B0000")
+    doc.font("Helvetica-Bold").fontSize(12).fillColor("#000")
       .text("DÉPENSES", MARGIN, yPosition);
     yPosition += 25;
 
     // Header
-    drawRow(yPosition, cols.map(c => c.label), true);
-    yPosition += rowH;
+    const headerHeight = drawRow(yPosition, cols.map(c => c.label), true);
+    yPosition += headerHeight;
 
-    return { yPosition, drawRow, cols, rowH };
+    return { yPosition, drawRow, cols, minRowH };
   };
 
   // Main logic
@@ -1764,7 +1795,7 @@ export const generateJustifCaissePDF = async (req, res) => {
 
   const getMaxRowsForPage = (yStartRows) => {
     const available = (PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT) - yStartRows;
-    return Math.max(1, Math.floor(available / depensesTable.rowH));
+    return Math.max(1, Math.floor(available / depensesTable.minRowH));
   };
 
   let maxRowsPerPage = getMaxRowsForPage(currentY);
@@ -1777,7 +1808,8 @@ export const generateJustifCaissePDF = async (req, res) => {
     totalJ += Number(d.montantJustifie ?? 0);
     totalNJ += Number(d.montantNonJustifie ?? 0);
 
-    if (rowsOnPage >= maxRowsPerPage) {
+    // Check if we need a new page (estimate with minRowH)
+    if (currentY + depensesTable.minRowH > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT) {
       doc.addPage();
       drawHeader();
       currentY = MARGIN + 80;
@@ -1786,7 +1818,7 @@ export const generateJustifCaissePDF = async (req, res) => {
       rowsOnPage = 0;
     }
 
-    depensesTable.drawRow(currentY, [
+    const rowHeight = depensesTable.drawRow(currentY, [
       new Date(d.dateDepense).toLocaleDateString("fr-FR"),
       d.numeroPiece ?? "",
       d.natureDepense ?? "",
@@ -1794,13 +1826,13 @@ export const generateJustifCaissePDF = async (req, res) => {
       Number(d.montantJustifie ?? 0).toFixed(2),
       Number(d.montantNonJustifie ?? 0).toFixed(2),
     ]);
-    currentY += depensesTable.rowH;
+    currentY += rowHeight;
     rowsOnPage += 1;
   }
 
   // Empty rows
   for (let i = 0; i < 8; i++) {
-    if (rowsOnPage >= maxRowsPerPage) {
+    if (currentY + depensesTable.minRowH > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT) {
       doc.addPage();
       drawHeader();
       currentY = MARGIN + 80;
@@ -1808,21 +1840,30 @@ export const generateJustifCaissePDF = async (req, res) => {
       maxRowsPerPage = getMaxRowsForPage(currentY);
       rowsOnPage = 0;
     }
-    depensesTable.drawRow(currentY, ["", "", "", "", "", ""]);
-    currentY += depensesTable.rowH;
+    const rowHeight = depensesTable.drawRow(currentY, ["", "", "", "", "", ""]);
+    currentY += rowHeight;
     rowsOnPage += 1;
   }
 
-  // Totals
-  if (rowsOnPage >= maxRowsPerPage - 1) {
+  // Totals - ensure we have space for both rows
+  if (currentY + (depensesTable.minRowH * 2) > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT) {
     doc.addPage();
     drawHeader();
     currentY = MARGIN + 80;
   }
 
-  depensesTable.drawRow(
+  const totalRowHeight = depensesTable.drawRow(
     currentY,
     ["TOTAL", "", "", "", totalJ.toFixed(2), totalNJ.toFixed(2)],
+    true
+  );
+  currentY += totalRowHeight;
+
+  // General Total
+  const totalGeneral = totalJ + totalNJ;
+  depensesTable.drawRow(
+    currentY,
+    ["TOTAL GÉNÉRAL", "", "", "", "", totalGeneral.toFixed(2)],
     true
   );
 

@@ -200,24 +200,24 @@ export const storeDemandeFourniture = async (req, res) => {
     const totalHt = processedItems.reduce((acc, it) => acc + (parseInt(it.quantité, 10) * (it.prixUnitaire || 0)), 0);
     const tva = totalHt * 0.20;
     const totalTTC = totalHt + tva;
-  await prisma.$transaction(async (tx) => {
-  for (const item of processedItems) {
-    await tx.fourniture_list.upsert({
-      where: {
-        designation_reference: {
-          designation: item.designation,
-          reference: item.lot,
-        },
-      },
-      update: {}, // do nothing if exists
-      create: {
-        designation: item.designation,
-        reference: item.lot,
-        prixUnitaire: item.prixUnitaire || null,
-      },
+    await prisma.$transaction(async (tx) => {
+      for (const item of processedItems) {
+        await tx.fourniture_list.upsert({
+          where: {
+            designation_reference: {
+              designation: item.designation,
+              reference: item.lot,
+            },
+          },
+          update: {}, // do nothing if exists
+          create: {
+            designation: item.designation,
+            reference: item.lot,
+            prixUnitaire: item.prixUnitaire || null,
+          },
+        });
+      }
     });
-  }
-});
 
     const demandeFourniture = await prisma.demandeFourniture.create({
       data: {
@@ -253,7 +253,7 @@ export const storeDemandeFourniture = async (req, res) => {
       },
       include: { items: true },
     });
-  
+
     return res.json({ success: true, redirect: `/achats/fourniture/${demandeFourniture.id}` });
   } catch (error) {
     console.error("storeDemandeFourniture error:", error);
@@ -329,23 +329,23 @@ export const updateDemandeFourniture = async (req, res) => {
     // 3. Get existing items from DB
     // -------------------------------------------------
     await prisma.$transaction(async (tx) => {
-  for (const item of parsedItems) {
-    await tx.fourniture_list.upsert({
-      where: {
-        designation_reference: {
-          designation: item.designation,
-          reference: item.lot,
-        },
-      },
-      update: {}, // do nothing if exists
-      create: {
-        designation: item.designation,
-        reference: item.lot,
-        prixUnitaire: item.prixUnitaire || null,
-      },
+      for (const item of parsedItems) {
+        await tx.fourniture_list.upsert({
+          where: {
+            designation_reference: {
+              designation: item.designation,
+              reference: item.lot,
+            },
+          },
+          update: {}, // do nothing if exists
+          create: {
+            designation: item.designation,
+            reference: item.lot,
+            prixUnitaire: item.prixUnitaire || null,
+          },
+        });
+      }
     });
-  }
-});
     const existing = await prisma.itemFourniture.findMany({
       where: { demandeFournitureId: parseInt(id, 10) },
       select: { id: true, image: true, validation: true, validepar: true },
@@ -1260,9 +1260,9 @@ export const addpricingforDemande = async (req, res) => {
       effectiveTva = tva;
     }
 
-    // -------------------------------------------------
+    // -------------------------------------------------//
     // 4. Fetch existing items
-    // -------------------------------------------------
+    // -------------------------------------------------//
     const existingItems = await prisma.itemFourniture.findMany({
       where: { demandeFournitureId: parseInt(id, 10) },
       select: { id: true, quantité: true },

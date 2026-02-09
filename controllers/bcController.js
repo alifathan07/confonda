@@ -485,24 +485,24 @@ export const updateBc = async (req, res) => {
     const tvaRate = parseFloat(tauxTva) || 0;
     const montantTva = totalHt * (tvaRate > 0 ? tvaRate : 0) / 100;
     const totalTtc = totalHt + montantTva;
-      await prisma.$transaction(async (tx) => {
-  for (const item of toCreate) {
-    await tx.fourniture_list.upsert({
-      where: {
-        designation_reference: {
-          designation: item.designation,
-          reference: item.reference,
-        },
-      },
-      update: {}, // do nothing if exists
-      create: {
-        designation: item.designation,
-        reference: item.reference,
-        prixUnitaire: item.prixUnitaire || null,
-      },
+    await prisma.$transaction(async (tx) => {
+      for (const item of toCreate) {
+        await tx.fourniture_list.upsert({
+          where: {
+            designation_reference: {
+              designation: item.designation,
+              reference: item.reference,
+            },
+          },
+          update: {}, // do nothing if exists
+          create: {
+            designation: item.designation,
+            reference: item.reference,
+            prixUnitaire: item.prixUnitaire || null,
+          },
+        });
+      }
     });
-  }
-});
     // First, perform the main update on BC and items (create/update fields)
     // We ignore distribution in this step
     await prisma.bondeCommande.update({
@@ -765,23 +765,23 @@ export const storeBc = async (req, res) => {
     const nextNumCounter = maxNum + 1;
 
     await prisma.$transaction(async (tx) => {
-  for (const item of toCreate) {
-    await tx.fourniture_list.upsert({
-      where: {
-        designation_reference: {
-          designation: item.designation,
-          reference: item.reference,
-        },
-      },
-      update: {}, // do nothing if exists
-      create: {
-        designation: item.designation,
-        reference: item.reference,
-        prixUnitaire: item.prixUnitaire || null,
-      },
+      for (const item of toCreate) {
+        await tx.fourniture_list.upsert({
+          where: {
+            designation_reference: {
+              designation: item.designation,
+              reference: item.reference,
+            },
+          },
+          update: {}, // do nothing if exists
+          create: {
+            designation: item.designation,
+            reference: item.reference,
+            prixUnitaire: item.prixUnitaire || null,
+          },
+        });
+      }
     });
-  }
-});
 
     // Step 1: Create BC + items
     const bc = await prisma.bondeCommande.create({
@@ -1168,3 +1168,7 @@ export const importBcInfo = async (req, res) => {
 
 
 
+export const updateSupplier = async (req, res) => {
+  const { id, supplierId } = req.body;
+
+}
