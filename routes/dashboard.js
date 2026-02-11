@@ -26,7 +26,7 @@ import { addJustifCaisse, addJustifCaisseAdminAuto, addJustifCaisseUserFirstTime
 import { addpricingforDemande, createDemandeFourniture, deleteDemandeFourniture, downloadImageFourniture, editDemandeFourniture, generateDemandeFourniturePDF, indexDemandeFourniture, storeDemandeFourniture, updateDemandeFourniture, updateDemandeStatus, updateValidationFourniture, uploadFour, uploadImageFourniture, uploadTempImage, validateAllFourniture, viewDemandeFourniture } from '../controllers/demandeFourniture.js';
 import { fileURLToPath } from 'url';
 import { EditDemandePrix, listDemandePrix, postDemandePrixViaFourniture, updateDemandePrix, viewDemandePrix, deleteDemandePrix, deleteArticle, createDemandePrix, storeDemandePrix, generateDemandePrixPDF, sendDemandePrixEmail } from '../controllers/demandeprixController.js';
-import { editBc, postBcDemandeFourniture, updateBc, deleteBcItem, createBcForm, storeBc, generateBcPDF, sendBcEmail, listBc, deleteBc, updateBcItemDistribution, updateBcItem, importBcInfo } from '../controllers/bcController.js';
+import { editBc, postBcDemandeFourniture, updateBc, deleteBcItem, createBcForm, storeBc, generateBcPDF, sendBcEmail, listBc, deleteBc, updateBcItemDistribution, updateBcItem, importBcInfo, updateSupplier } from '../controllers/bcController.js';
 import { bmceDelete, bmceDownload, bmcePay, bmcePreview, bmceUpload, indexVirementPay } from '../controllers/virementpayController.js';
 import { getListFourniture } from '../controllers/listfournitureController.js';
 
@@ -426,6 +426,7 @@ dashboardRouter.get("/achat/bc/:id/edit", editBc);
 dashboardRouter.put("/achat/bc/:id", updateBc);
 // Update a single item (designation, unite, quantite, prixUnitaire)
 dashboardRouter.put('/achat/bc/item/:itemId', updateBcItem);
+dashboardRouter.patch('/achat/bc/supplier/update', updateSupplier);
 // Update distribution for a single commandesItems (AJAX)
 dashboardRouter.patch('/achat/bc/item/:itemId/distribution', updateBcItemDistribution);
 dashboardRouter.delete("/achat/bc/article/:id", deleteBcItem);

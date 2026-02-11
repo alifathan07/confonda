@@ -681,11 +681,6 @@ export const updateBcItemDistribution = async (req, res) => {
     return res.status(500).json({ success: false, error: 'Erreur serveur' });
   }
 };
-
-
-
-
-
 export const createBcForm = async (req, res) => {
   try {
     const fournisseurs = await prisma.fournisseur.findMany();
@@ -1169,6 +1164,22 @@ export const importBcInfo = async (req, res) => {
 
 
 export const updateSupplier = async (req, res) => {
-  const { id, supplierId } = req.body;
+  const { supplierId, name , email , telFournisseur } = req.body;
+  
+  try {
+    const fournisseur = await prisma.fournisseur.update({
+      where: {
+        id : parseInt(supplierId)
+      },
+      data: {
+        name,
+        email,
+        telFournisseur
+      }
+    })
+    res.status(200).send('Supplier updated successfully.');
+  } catch (error) {
+    res.status(500).send('Server error during Excel import.');
+  }
 
 }

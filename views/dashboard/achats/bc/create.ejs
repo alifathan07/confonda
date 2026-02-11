@@ -765,6 +765,9 @@
                         <div class="info-line"><i class="fas fa-phone"></i>
                           <input type="text" id="fourTelBc" class="form-control">
                         </div>
+                        <div class="info-line">
+                          <button onclick="editSupplier(document.getElementById('fournisseurSelectBc').value)">Sauvegarder</button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -2215,6 +2218,34 @@
       }
     }
 
+    async function editSupplier(id) {
+      if (!id) {
+        alert('Selectioner un fournisseur ! ')
+        return;
+      }
+
+      // Get values from the correct input fields
+      const nameVal = document.getElementById('fourNameBc').value;
+      const emailVal = document.getElementById('fourEmailBc').value;
+      const telVal = document.getElementById('fourTelBc').value;
+
+      try {
+        const res = await fetch(`/achat/bc/supplier/update`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            supplierId: id,
+            name: nameVal,
+            email: emailVal,
+            telFournisseur: telVal,
+          })
+        });
+        if (!res.ok) { throw new Error(`Modification échouée (${res.status})`); }
+        window.location.reload();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
 
 
 

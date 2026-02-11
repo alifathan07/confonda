@@ -220,6 +220,11 @@
       border-radius: 8px;
       padding: 0.75rem 0.9rem;
       background: #fff;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
 
     .qr-box h5 {
@@ -247,6 +252,47 @@
       border-radius: 8px;
       padding: 0.75rem 0.9rem;
       box-shadow: none;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .fournisseur-box h5 {
+      font-size: 0.9rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+      color: var(--gray-900);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .fournisseur-box .form-control {
+      border-radius: 8px;
+      border: 1px solid #cfd6df;
+      min-height: 38px;
+      font-size: 0.9rem;
+    }
+
+    .fournisseur-box .form-control:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.1);
+    }
+
+    .fournisseur-box .info-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 0.5rem;
+    }
+
+    .fournisseur-box .info-line i {
+      color: var(--blue);
+      width: 16px;
+      text-align: center;
+    }
+
+    .fournisseur-box .info-line .form-control {
+      flex: 1;
     }
 
     .topline {
@@ -285,7 +331,7 @@
       width: auto;
     }
 
-    .topline > div:last-child {
+    .topline>div:last-child {
       position: absolute;
       right: 0;
       top: 50%;
@@ -618,7 +664,7 @@
       align-items: stretch;
     }
 
-    .bc-two-cols > .bc-col {
+    .bc-two-cols>.bc-col {
       flex: 1 1 520px;
       min-width: 320px;
     }
@@ -763,9 +809,14 @@
                     <div class="fournisseur-box">
                       <input type="date" name="date" value="<%= new Date(bc.date).toISOString().slice(0,10) %>" hidden>
                       <div class="meta-grid">
-                        <div class="meta-item"><strong>BC N° :</strong><%= bc.numero || bc.id %></div>
+                        <div class="meta-item"><strong>BC N° :</strong>
+                          <%= bc.numero || bc.id %>
+                        </div>
                         <br>
-                        <div class="meta-item"><strong>Date :</strong> <%= new Date(bc.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) %></div>
+                        <div class="meta-item"><strong>Date :</strong>
+                          <%= new Date(bc.date).toLocaleDateString('fr-FR', { day: '2-digit' , month: '2-digit' ,
+                            year: 'numeric' }) %>
+                        </div>
                       </div>
                     </div>
 
@@ -773,14 +824,13 @@
                       <div style="text-align:center;">
                         <img
                           src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=<%= encodeURIComponent(publicBcUrl || '') %>"
-                          alt="QR Code"
-                        />
+                          alt="QR Code" />
                       </div>
                     </div>
 
                     <div class="fournisseur-box">
-                      <h5 class="mb-3"><i class="fas fa-building"></i> Fournisseur</h5>
-                      <select id="fournisseurSelectBc" class="form-control mb-3" name="supplier">
+                      <h5><i class="fas fa-building"></i> Fournisseur</h5>
+                      <select id="fournisseurSelectBc" class="form-control mb-2" name="supplier">
                         <option value="">-- Choisir un fournisseur --</option>
                         <% fournisseurs.forEach(f=> { %>
                           <option value="<%= f.id %>" <%=f.id===bc.fournisseur.id ? 'selected' : '' %>><%= f.name %>
@@ -788,16 +838,23 @@
                           </option>
                           <% }) %>
                       </select>
-                      <div class="small">
-                        <div class="info-line"><i class="fas fa-user-tie"></i> <strong id="fourNameBc">
-                            <%= bc.fournisseur.name %>
-                          </strong></div>
-                        <div class="info-line"><i class="fas fa-envelope"></i> <span id="fourEmailBc">
-                            <%= bc.fournisseur.email %>
-                          </span></div>
-                        <div class="info-line"><i class="fas fa-phone"></i> <span id="fourTelBc">
-                            <%= bc.fournisseur.telFournisseur || 'Non renseigné' %>
-                          </span></div>
+                      <div class="small mt-auto">
+                        <input type="hidden" id="fournisseurId" hidden>
+                        <div class="info-line"><i class="fas fa-user-tie"></i>
+                          <input type="text" id="fourNameBc" name="name" class="form-control"
+                            value="<%= bc.fournisseur.name %>">
+                        </div>
+                        <div class="info-line"><i class="fas fa-envelope"></i>
+                          <input type="text" id="fourEmailBc" name="email" class="form-control"
+                            value="<%= bc.fournisseur.email %>">
+                        </div>
+                        <div class="info-line"><i class="fas fa-phone"></i>
+                          <input type="text" id="fourTelBc" name="telFournisseur" class="form-control"
+                            value="<%= bc.fournisseur.telFournisseur || '' %>">
+                        </div>
+                        <div class="info-line">
+                          <button onclick="editSupplier(<%= bc.fournisseur.id %>)">Sauvegarder</button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -811,9 +868,9 @@
                         <div class="bc-extra-label">Mode de règlement</div>
                         <select id="modeReglement" name="modeReg" class="form-control bc-extra-input">
                           <option value="">-- Choisir --</option>
-                          <option value="virement" <%= bc.modeReg === 'virement' ? 'selected' : '' %>>Virement</option>
-                          <option value="cheque" <%= bc.modeReg === 'cheque' ? 'selected' : '' %>>Chèque</option>
-                          <option value="effets" <%= bc.modeReg === 'effets' ? 'selected' : '' %>>Effets</option>
+                          <option value="virement" <%=bc.modeReg==='virement' ? 'selected' : '' %>>Virement</option>
+                          <option value="cheque" <%=bc.modeReg==='cheque' ? 'selected' : '' %>>Chèque</option>
+                          <option value="effets" <%=bc.modeReg==='effets' ? 'selected' : '' %>>Effets</option>
                         </select>
                       </div>
 
@@ -821,12 +878,12 @@
                         <div class="bc-extra-label">Délais de règlement</div>
                         <select id="delaisReglement" name="delaiReg" class="form-control bc-extra-input">
                           <option value="">-- Choisir --</option>
-                          <option value="a_vue" <%= bc.delaiReg === 'a_vue' ? 'selected' : '' %>>À vue</option>
-                          <option value="30_jours" <%= bc.delaiReg === '30_jours' ? 'selected' : '' %>>30 jours</option>
-                          <option value="60_jours" <%= bc.delaiReg === '60_jours' ? 'selected' : '' %>>60 jours</option>
+                          <option value="a_vue" <%=bc.delaiReg==='a_vue' ? 'selected' : '' %>>À vue</option>
+                          <option value="30_jours" <%=bc.delaiReg==='30_jours' ? 'selected' : '' %>>30 jours</option>
+                          <option value="60_jours" <%=bc.delaiReg==='60_jours' ? 'selected' : '' %>>60 jours</option>
 
-                          <option value="90_jours" <%= bc.delaiReg === '90_jours' ? 'selected' : '' %>>90 jours</option>
-                          <option value="120_jours" <%= bc.delaiReg === '120_jours' ? 'selected' : '' %>>120 jours</option>
+                          <option value="90_jours" <%=bc.delaiReg==='90_jours' ? 'selected' : '' %>>90 jours</option>
+                          <option value="120_jours" <%=bc.delaiReg==='120_jours' ? 'selected' : '' %>>120 jours</option>
                         </select>
                       </div>
                     </div>
@@ -842,21 +899,26 @@
                         <select id="chantierSelect" class="form-control" multiple size="6" style="min-height:120px;">
 
                           <% chantiers.forEach(ch=> {
-                              const isUsed = bc.commandesItems.some(item => (item.BondeCommandeChantierItem || []).some(bcci => bcci.chantierId === ch.id));
+                            const isUsed = bc.commandesItems.some(item => (item.BondeCommandeChantierItem ||
+                            []).some(bcci => bcci.chantierId === ch.id));
                             %>
-                            <option value="<%= ch.id %>" data-chantier-name="<%= ch.nom %>" <%= isUsed ? 'selected' : '' %>><%= ch.nom %></option>
-                          <% }) %>
+                            <option value="<%= ch.id %>" data-chantier-name="<%= ch.nom %>" <%=isUsed ? 'selected' : ''
+                              %>><%= ch.nom %>
+                            </option>
+                            <% }) %>
                         </select>
                       </div>
 
                       <div class="bc-extra-field">
                         <div class="bc-extra-label">Date de livraison</div>
-                        <input id="dateLivraison" type="date" name="dateLivraison" class="form-control bc-extra-input" value="<%= bc.dateLivraison ? new Date(bc.dateLivraison).toISOString().slice(0,10) : '' %>" />
+                        <input id="dateLivraison" type="date" name="dateLivraison" class="form-control bc-extra-input"
+                          value="<%= bc.dateLivraison ? new Date(bc.dateLivraison).toISOString().slice(0,10) : '' %>" />
                       </div>
 
                       <div class="bc-extra-field">
                         <div class="bc-extra-label">Lieu de livraison</div>
-                        <input id="lieuLivraison" type="text" name="lieuLivraison" class="form-control bc-extra-input" placeholder="Ex: Dépôt / Chantier / Adresse" value="<%= bc.lieuLivraison || '' %>" />
+                        <input id="lieuLivraison" type="text" name="lieuLivraison" class="form-control bc-extra-input"
+                          placeholder="Ex: Dépôt / Chantier / Adresse" value="<%= bc.lieuLivraison || '' %>" />
                       </div>
                     </div>
                   </div>
@@ -1008,7 +1070,8 @@
                             <th class="text-right">Montant TVA</th>
                             <td class="text-right">
                               <span id="montantTvaValue">
-                                <%= (bc.montantTva || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                                <%= (bc.montantTva || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2 }) %>
                               </span>
                               <input type="number" name="montantTva" id="montantTva" value="<%= bc.montantTva || 0 %>"
                                 hidden />
@@ -1052,7 +1115,8 @@
                       <h6><i class="fas fa-user"></i> Utilisateur</h6>
                       <div class="form-group mb-0">
                         <label class="bc-extra-label" style="margin-bottom: 0.45rem;">Nom</label>
-                        <input type="text" class="form-control bc-input bc-readonly" readonly value="<%= (typeof bonCommande !=='undefined' ? bonCommande.demandeur : (bc ? bc.demandeur : '' )) || '' %>" />
+                        <input type="text" class="form-control bc-input bc-readonly" readonly
+                          value="<%= (typeof bonCommande !=='undefined' ? bonCommande.demandeur : (bc ? bc.demandeur : '' )) || '' %>" />
                       </div>
                     </div>
 
@@ -1066,10 +1130,11 @@
                         });
                         });
                         %>
-                      <div class="form-group mb-0">
-                        <label class="bc-extra-label" style="margin-bottom: 0.45rem;">Nom</label>
-                        <input type="text" class="form-control bc-input bc-readonly" readonly value="<%= (Array.from(chantierNames).join(', ') || 'Non renseigné') %>" />
-                      </div>
+                        <div class="form-group mb-0">
+                          <label class="bc-extra-label" style="margin-bottom: 0.45rem;">Nom</label>
+                          <input type="text" class="form-control bc-input bc-readonly" readonly
+                            value="<%= (Array.from(chantierNames).join(', ') || 'Non renseigné') %>" />
+                        </div>
                     </div>
                   </div>
 
@@ -1101,7 +1166,7 @@
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
       <script>
         function sendEmail() {
@@ -1128,11 +1193,11 @@
         }
 
         // Fournisseurs data for BC edit (UI only)
-        const fournisseursDataBc = <%- JSON.stringify(fournisseurs.map(f => ({
+        const fournisseursDataBc = <%-JSON.stringify(fournisseurs.map(f => ({
           id: String(f.id),
-          name: f.name || '',
-          email: f.email || '',
-          tel: f.telFournisseur || ''
+          name: f.name ?? '',
+          email: f.email ?? '',
+          tel: f.telFournisseur ?? ''
         }))) %>;
 
         const selectBc = document.getElementById('fournisseurSelectBc');
@@ -1140,20 +1205,20 @@
           selectBc.addEventListener('change', function () {
             const f = fournisseursDataBc.find(x => x.id === this.value);
             if (f) {
+              let fournisseurId = document.getElementById('fournisseurId');
               const nameEl = document.getElementById('fourNameBc');
               const emailEl = document.getElementById('fourEmailBc');
               const telEl = document.getElementById('fourTelBc');
-              if (nameEl) nameEl.textContent = f.name;
-              if (emailEl) emailEl.textContent = f.email;
-              if (telEl) telEl.textContent = f.tel || 'Non renseigné';
+              if (nameEl) nameEl.value = f.name ?? '';
+              if (emailEl) emailEl.value = f.email ?? '';
+              if (telEl) telEl.value = f.tel ?? '';
+              if (fournisseurId) fournisseurId.value = f.id;
             }
-
-            // (No-op) chantier UI is initialized globally with Choices.js
           });
         }
 
         // Initialize Choices.js for chantierSelect to provide professional tag UI
-        (function initChantierChoices(){
+        (function initChantierChoices() {
           const sel = document.getElementById('chantierSelect');
           if (!sel || typeof Choices === 'undefined') return;
           window.chantierChoices = new Choices(sel, {
@@ -1861,13 +1926,13 @@
 
           // Step 1: First, update the item's basic data (qty, price, etc.) on the server
           const itemId = row.getAttribute('data-id');
-          
+
           // Extract current item data from the row
           const designationInput = row.querySelector('input[data-field="designation"]');
           const uniteInput = row.querySelector('input[data-field="unite"]');
           const quantiteInput = row.querySelector('input[data-field="quantite"]');
           const prixUnitaireInput = row.querySelector('input[data-field="prixUnitaire"]');
-          
+
           const designation = (designationInput && designationInput.value) || '';
           const unite = (uniteInput && uniteInput.value) || '';
           const quantiteRaw = (quantiteInput && quantiteInput.value) || '0';
@@ -2321,7 +2386,7 @@
               unite: (tr.querySelector('input[data-field="unite"]')?.value || '').trim(),
               reference: referenceVal.trim(),
               quantite,
-              imputation : imputationVal.trim(),
+              imputation: imputationVal.trim(),
               prixUnitaire,
               totalHt: quantite * prixUnitaire - montantRemiseRow,
               tauxRemise: tauxRemiseRow,
@@ -2381,8 +2446,35 @@
           }
         }
 
+        async function editSupplier(id) {
+          if (!id) {
+            alert('Selectioner un fournisseur ! ')
+            return;
+          }
 
+          // Get values from the correct input fields
+          const nameVal = document.getElementById('fourNameBc').value;
+          const emailVal = document.getElementById('fourEmailBc').value;
+          const telVal = document.getElementById('fourTelBc').value;
 
+          try {
+            const res = await fetch(`/achat/bc/supplier/update`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                supplierId: id,
+                name: nameVal,
+                email: emailVal,
+                telFournisseur: telVal,
+              })
+              
+            });
+            if (!res.ok) { throw new Error(`Modification échouée (${res.status})`); }
+           window.location.reload()
+          } catch (e) {
+            alert(e.message);
+          }
+        }
 
       </script>
 
