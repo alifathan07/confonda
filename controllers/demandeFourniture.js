@@ -886,7 +886,7 @@ export const generateDemandeFourniturePDF = async (req, res) => {
     const doc = new PDFDocument({
       size: "A4",
       layout: "landscape",
-      margin: 10,
+      margins: { top: 10, left: 10, right: 10, bottom: 0 },
     });
     doc.pipe(res);
 
@@ -920,8 +920,9 @@ export const generateDemandeFourniturePDF = async (req, res) => {
     const footerH = summaryTableH + signatureH + 20; // Fixed footer height
 
     // Calculate available space for items on first page and continuation pages
+    // Since header is now on ALL pages, the limits are the same
     const firstPageItemsLimit = pageH - margin - headerH - infoH - tableHeaderH - footerH - 10;
-    const continuationPageItemsLimit = pageH - margin - tableHeaderH - footerH - 10;
+    const continuationPageItemsLimit = firstPageItemsLimit;
 
     // --- COLUMN DEFINITIONS ---
     const col = {
@@ -946,7 +947,7 @@ export const generateDemandeFourniturePDF = async (req, res) => {
 
     // --- DRAWING HELPERS ---
 
-    const drawFirstPageHeader = () => {
+    const drawHeader = (pageNum) => {
       // Page Border
       doc.rect(margin, margin, contentW, pageH - margin * 2).lineWidth(thick).stroke();
 
@@ -970,6 +971,8 @@ export const generateDemandeFourniturePDF = async (req, res) => {
       doc.text("Version : 02", margin + leftW + centerW + 15, margin + 28);
       doc.text("Date : 27/01/2016", margin + leftW + centerW + 15, margin + 44);
 
+      // Removed "Page 1" from here
+
       // Info Row
       const infoY = margin + headerH;
       doc.rect(margin, infoY, contentW, infoH).lineWidth(thick).stroke();
@@ -983,11 +986,9 @@ export const generateDemandeFourniturePDF = async (req, res) => {
       doc.text(fmtDate(demande.dateDemande), splitX + 55, infoY + 8);
       doc.text(`N° : ${(demande.numero || demande.id).toString().padStart(3, "0")}/${new Date().getFullYear()}`, splitX + 120, infoY + 8);
       doc.text(`${demande.demandeur || ""}`, splitX + 220, infoY + 8);
-    };
 
-    const drawContinuationPageBorder = () => {
-      // Page Border only (no header)
-      doc.rect(margin, margin, contentW, pageH - margin * 2).lineWidth(thick).stroke();
+      // Page Number (Right aligned in info row)
+      doc.text(`Page ${pageNum}`, margin + contentW - 60, infoY + 8);
     };
 
     const drawTableHeader = (startY) => {
@@ -1054,9 +1055,14 @@ export const generateDemandeFourniturePDF = async (req, res) => {
       return maxHeight;
     };
 
-    const drawFixedFooter = (isLastPage = false) => {
+    const drawFixedFooter = (isLastPage = false, pageNum) => {
       // Calculate footer position (always at bottom of page)
       const footerStartY = pageH - margin - footerH;
+
+      // Draw Page Number at the very bottom
+      // const pageNumY = pageH - margin - 10;
+      // doc.fontSize(9).font("Helvetica");
+      // doc.text(`Page ${pageNum}`, margin, pageNumY, { width: contentW, align: "center" });
 
       // Draw Summary Table (Horizontal Layout - 3 columns side by side)
       const summaryTableH = 40; // Height for 2 rows (labels + values)
@@ -1143,20 +1149,21 @@ export const generateDemandeFourniturePDF = async (req, res) => {
     };
 
     // --- INITIAL RENDER (FIRST PAGE) ---
-    drawFirstPageHeader();
+    drawHeader(1);
     let tableY = margin + headerH + infoH;
     drawTableHeader(tableY);
 
     let currentY = tableY + tableHeaderH;
     let tableStartOnCurrentPage = currentY;
     let isFirstPage = true;
+    let currentPage = 1; // Track page numbers
     doc.fontSize(11);
 
     // --- ITEMS LOOP ---
     for (const item of demande.items || []) {
       const rowHeight = calculateRowHeight(item);
-      const itemsLimit = isFirstPage ? firstPageItemsLimit : continuationPageItemsLimit;
-      const itemsBottomY = isFirstPage ? (margin + headerH + infoH + tableHeaderH + itemsLimit) : (margin + tableHeaderH + itemsLimit);
+      // Absolute Y position where items must stop to leave room for footer
+      const itemsBottomY = pageH - margin - footerH - 10;
 
       // Check for Page Break
       if (currentY + rowHeight > itemsBottomY) {
@@ -1164,13 +1171,14 @@ export const generateDemandeFourniturePDF = async (req, res) => {
         drawVerticalGridLines(tableStartOnCurrentPage, currentY);
 
         // Draw fixed footer on current page (not last page, show XX)
-        drawFixedFooter(false);
+        drawFixedFooter(false, currentPage);
 
-        // New page (continuation - no header)
+        // New page (continuation - with header and page number)
         doc.addPage();
-        drawContinuationPageBorder();
+        currentPage++; // Increment page counter
+        drawHeader(currentPage);
 
-        tableY = margin;
+        tableY = margin + headerH + infoH;
         drawTableHeader(tableY);
 
         currentY = tableY + tableHeaderH;
@@ -1204,7 +1212,7 @@ export const generateDemandeFourniturePDF = async (req, res) => {
     drawVerticalGridLines(tableStartOnCurrentPage, currentY);
 
     // Draw fixed footer on last page (show real values)
-    drawFixedFooter(true);
+    drawFixedFooter(true, currentPage);
 
     doc.end();
   } catch (err) {
