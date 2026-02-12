@@ -291,7 +291,7 @@
                           const lastTwoWords = words.slice(-2).join(' ');
                           const designation = `${lastTwoWords}`; %>
                           <td contenteditable="true" data-name="designation"><%= designation || '' %></td>
-                          <td contenteditable="true" data-name="chantier"><%= d.chantier.nom || '' %></td>
+                          <td contenteditable="true" data-name="chantier"><%= d.chantier?.nom || '' %></td>
                           <td contenteditable="true" data-name="user"><%= d.user.name || '' %></td>
                           <td contenteditable="true" data-name="soldePrecedent">
                             <%= Number(d.soldePrecedent || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
