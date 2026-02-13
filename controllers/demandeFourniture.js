@@ -920,7 +920,8 @@ export const generateDemandeFourniturePDF = async (req, res) => {
     const signatureH = 90;
     const footerH = summaryTableH + signatureH + 20; // Fixed footer height
 
-    // Calculate available space for items on first page and continuation pages
+    // Calculate available space for items on first page
+    //  and continuation pages
     // Since header is now on ALL pages, the limits are the same
     const firstPageItemsLimit = pageH - margin - headerH - infoH - tableHeaderH - footerH - 10;
     const continuationPageItemsLimit = firstPageItemsLimit;
