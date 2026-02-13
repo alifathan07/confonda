@@ -887,6 +887,7 @@ export const generateDemandeFourniturePDF = async (req, res) => {
       size: "A4",
       layout: "landscape",
       margins: { top: 10, left: 10, right: 10, bottom: 0 },
+      bufferPages: true,
     });
     doc.pipe(res);
 
@@ -987,8 +988,8 @@ export const generateDemandeFourniturePDF = async (req, res) => {
       doc.text(`N° : ${(demande.numero || demande.id).toString().padStart(3, "0")}/${new Date().getFullYear()}`, splitX + 120, infoY + 8);
       doc.text(`${demande.demandeur || ""}`, splitX + 220, infoY + 8);
 
-      // Page Number (Right aligned in info row)
-      doc.text(`Page ${pageNum}`, margin + contentW - 60, infoY + 8);
+      // Page Number (Right aligned in info row) - Moved to end for Total Pages
+      // doc.text(`Page ${pageNum}`, margin + contentW - 60, infoY + 8);
     };
 
     const drawTableHeader = (startY) => {
@@ -1213,6 +1214,20 @@ export const generateDemandeFourniturePDF = async (req, res) => {
 
     // Draw fixed footer on last page (show real values)
     drawFixedFooter(true, currentPage);
+
+    // --- ADD PAGE NUMBERS (Page X / Y) ---
+    const range = doc.bufferedPageRange();
+    for (let i = range.start; i < range.start + range.count; i++) {
+      doc.switchToPage(i);
+      const infoY = margin + headerH;
+      doc.fontSize(12).font("Helvetica");
+      doc.text(
+        `Page ${i + 1} / ${range.count}`,
+        margin + contentW - 100, // Adjusted X for wider text
+        infoY + 8,
+        { width: 90, align: "right" }
+      );
+    }
 
     doc.end();
   } catch (err) {
