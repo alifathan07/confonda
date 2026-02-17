@@ -302,6 +302,10 @@ export const generateBcPDF = async (req, res) => {
 
 export const sendBcEmail = async (req, res) => {
   try {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const logoPath = path.join(__dirname, "../public/img/logo-4.png");
+
     const { id } = req.params;
     const bcId = parseInt(id, 10);
 
@@ -330,24 +334,125 @@ export const sendBcEmail = async (req, res) => {
     if (!to) {
       return res.status(400).json({ success: false, error: "Email fournisseur manquant" });
     }
-    // Response Headers
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=bonCommande_${bc.id}.pdf`
-    );
 
     const pdfBuffer = await getpdfBuffer(bc, req);
 
     await sendEmail({
       to,
       subject: `Bon de Commande N° ${bc.numero}`,
-      text: `Bonjour,\n\nVeuillez trouver en pièce jointe notre bon de commande N° ${bc.numero}.\n\nCordialement. \n\nKhbazi Mustapha\n\nRésp. Service Achats\n\n Tél.  06 44 00 05 47.`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              line-height: 1.5;
+              color: #2c3e50;
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 40px 20px;
+              background-color: #ffffff;
+            }
+            .header {
+              border-bottom: 2px solid #A22C29;
+              padding-bottom: 15px;
+              margin-bottom: 30px;
+            }
+            .header h2 {
+              margin: 0;
+              color: #A22C29;
+              font-size: 24px;
+              font-weight: 600;
+            }
+            .content p {
+              margin-bottom: 15px;
+              font-size: 16px;
+            }
+            .attachment-note {
+              background-color: #f8f9fa;
+              border-left: 4px solid #A22C29;
+              padding: 15px;
+              margin: 25px 0;
+              font-weight: 500;
+              color: #34495e;
+            }
+            .signature {
+              margin-top: 40px;
+              padding-top: 20px;
+              border-top: 1px solid #eee;
+            }
+            .signature p {
+              margin: 0 0 15px 0;
+              font-weight: 500;
+            }
+            .signature-logo img {
+              max-width: 120px;
+              height: auto;
+              margin-bottom: 15px;
+            }
+            .contact-details {
+              font-size: 14px;
+              color: #7f8c8d;
+              line-height: 1.6;
+            }
+            .contact-name {
+              color: #A22C29;
+              font-weight: 700;
+              display: block;
+              margin-bottom: 4px;
+              font-size: 15px;
+            }
+            .company-name {
+              display: block;
+              margin-top: 4px;
+              font-weight: 600;
+              color: #2c3e50;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2>Bon de Commande N° ${bc.numero}</h2>
+          </div>
+          
+          <div class="content">
+            <p>Bonjour,</p>
+            
+            <p>Veuillez trouver ci-joint notre bon de commande pour la référence citée en objet.</p>
+            
+          <div class="signature">
+            <p>Cordialement,</p>
+            
+            <div class="signature-logo">
+              <img src="cid:signature-logo" alt="Construction et Fondation" />
+            </div>
+            
+            <div class="contact-details">
+              <span class="contact-name">Khbazi Mustapha</span>
+              Responsable Service Achats<br>
+              Tél: 06 44 00 05 47<br>
+              <span class="company-name">Construction et Fondation</span>
+              "Pour des constructions bien fondées"
+            </div>
+          </div> </div>
+          
+         
+        </body>
+        </html>
+      `,
       attachments: [
         {
           filename: `bonCommande_${bc.numero}.pdf`,
           content: pdfBuffer,
           contentType: 'application/pdf'
+        },
+        {
+          filename: 'logo-4.png',
+          path: logoPath,
+          cid: 'signature-logo'
         }
       ]
     })
@@ -1164,12 +1269,12 @@ export const importBcInfo = async (req, res) => {
 
 
 export const updateSupplier = async (req, res) => {
-  const { supplierId, name , email , telFournisseur } = req.body;
-  
+  const { supplierId, name, email, telFournisseur } = req.body;
+
   try {
     const fournisseur = await prisma.fournisseur.update({
       where: {
-        id : parseInt(supplierId)
+        id: parseInt(supplierId)
       },
       data: {
         name,

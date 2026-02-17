@@ -10,20 +10,21 @@ export const mailTransporter = nodemailer.createTransport({
   },
 });
 
-export const sendEmail = async ({subject, to, text, attachments}) => {
-    try {
-        const mailOptions = {
-            from: "CONFONDA",
-            to,
-            subject,
-            text,
-            attachments,
-        };
-        
-        await mailTransporter.sendMail(mailOptions);
-        return { success: true };
-    } catch (error) {
-        console.error('Error in sendEmail:', error);
-        return { success: false, error: error.message || "Erreur serveur" };
-    }
+export const sendEmail = async ({ subject, to, text, html, attachments }) => {
+  try {
+    const mailOptions = {
+      from: '"CONFONDA" <confonda@gmail.com>', // improved sender format
+      to,
+      subject,
+      text,
+      html,
+      attachments,
+    };
+
+    await mailTransporter.sendMail(mailOptions);
+    return { success: true };
+  } catch (error) {
+    console.error('Error in sendEmail:', error);
+    return { success: false, error: error.message || "Erreur serveur" };
+  }
 };
