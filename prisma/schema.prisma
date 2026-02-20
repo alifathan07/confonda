@@ -211,8 +211,8 @@ model Fournisseur {
   telContact     String
   address        String?
   attestations   Attestation[] // One-to-many: a supplier can have many attestations
+  demandeandfournisseur demandeandfournisseur[]
 
-  demandes               DemandeDePrix[]
   prelevements           Prelevement[]
   cheques                Cheque[]
   commandes              BondeCommande[]
@@ -531,11 +531,22 @@ model EncaissementRecu {
 model DemandeDePrix {
   id            Int         @id @default(autoincrement())
   date          DateTime    @default(now())
-  fournisseur   Fournisseur @relation(fields: [fournisseurId], references: [id])
-  fournisseurId Int
   articles      Article[]
   devisPath     String? // PDF path
   sentByEmail   Boolean     @default(false)
+  demandeandfournisseur demandeandfournisseur[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+model demandeandfournisseur {
+  id            Int         @id @default(autoincrement())
+  demandeDePrixId Int
+  demandeDePrix   DemandeDePrix @relation(fields: [demandeDePrixId], references: [id])
+  fournisseurId  Int
+  fournisseur   Fournisseur @relation(fields: [fournisseurId], references: [id])
+  emailSentAt DateTime?
+  status  String? // envoyer , en attent 
+  
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 }

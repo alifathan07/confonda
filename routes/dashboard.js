@@ -403,13 +403,14 @@ dashboardRouter.get('/achat/fourniture/:id/download-image', downloadImageFournit
 
 /// Creation de La demande de prix :
 dashboardRouter.post('/achats/demande/prix', postDemandePrixViaFourniture)
+dashboardRouter.get("/achat/demande-prix/create", createDemandePrix)   // must be BEFORE /:id
+dashboardRouter.get("/achat/demandePrix/create", createDemandePrix)    // alias (old URL)
 dashboardRouter.get('/achat/demande-prix/:id', viewDemandePrix);
 dashboardRouter.get('/achat/demande-prix/:id/edit', EditDemandePrix);
 dashboardRouter.get("/achats/demande-prix", listDemandePrix)
 dashboardRouter.put("/achat/demande-prix/:id", updateDemandePrix)
 dashboardRouter.delete("/achat/demande-prix/:id", deleteDemandePrix)
 dashboardRouter.delete("/achat/demande-prix/article/:id", deleteArticle)
-dashboardRouter.get("/achat/demandePrix/create", createDemandePrix)
 dashboardRouter.post("/achat/demande-prix", storeDemandePrix)
 dashboardRouter.get("/achat/demande-prix/:id/pdf", generateDemandePrixPDF)
 dashboardRouter.post('/api/demandes-prix/:id/send-email', sendDemandePrixEmail)

@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Demande de Prix #<%= demandePrix.id %> - Édition</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
   <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
   <style>
     :root {
@@ -21,7 +23,10 @@
       --gray-900: #212529;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Inter', sans-serif;
       background: var(--gray-100);
@@ -32,10 +37,27 @@
     }
 
     @media print {
-      .no-print, .action-bar, .sidebar, .topbar { display: none !important; }
-      body { background: white; padding: 15px; }
-      .doc-card { box-shadow: none; border: 1px solid #eee; }
-      .table-container { overflow: visible !important; }
+
+      .no-print,
+      .action-bar,
+      .sidebar,
+      .topbar {
+        display: none !important;
+      }
+
+      body {
+        background: white;
+        padding: 15px;
+      }
+
+      .doc-card {
+        box-shadow: none;
+        border: 1px solid #eee;
+      }
+
+      .table-container {
+        overflow: visible !important;
+      }
     }
 
     .action-bar {
@@ -43,7 +65,7 @@
       border-bottom: 1px solid #dee2e6;
       padding: 1rem 1.5rem;
       margin-bottom: 1.5rem;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
       position: sticky;
       top: 0;
       z-index: 10;
@@ -75,24 +97,38 @@
       font-size: 0.85rem;
       border: none;
       transition: all 0.25s ease;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
 
     .btn-modern:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
     }
 
-    .btn-send { background: var(--blue); color: white; }
-    .btn-send:hover { background: #0041a3; }
-    .btn-outline { background: white; color: var(--blue); border: 2px solid var(--blue); }
-    .btn-outline:hover { background: var(--blue-light); }
+    .btn-send {
+      background: var(--blue);
+      color: white;
+    }
+
+    .btn-send:hover {
+      background: #0041a3;
+    }
+
+    .btn-outline {
+      background: white;
+      color: var(--blue);
+      border: 2px solid var(--blue);
+    }
+
+    .btn-outline:hover {
+      background: var(--blue-light);
+    }
 
     .doc-card {
       background: white;
       border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
       margin: 0 auto;
       max-width: 1000px;
     }
@@ -110,7 +146,9 @@
     }
 
     @media (min-width: 768px) {
-      .header-grid { grid-template-columns: 1fr 1fr; }
+      .header-grid {
+        grid-template-columns: 1fr 1fr;
+      }
     }
 
     .logo-title h1 {
@@ -138,7 +176,7 @@
       border: 2px solid var(--blue-light);
       border-radius: 16px;
       padding: 1.5rem;
-      box-shadow: 0 4px 15px rgba(0,82,204,0.08);
+      box-shadow: 0 4px 15px rgba(0, 82, 204, 0.08);
     }
 
     .fournisseur-box h5 {
@@ -146,20 +184,6 @@
       font-weight: 700;
       font-size: 1.1rem;
       margin-bottom: 1rem;
-    }
-
-    .info-line {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 0.7rem;
-      font-size: 0.92rem;
-    }
-
-    .info-line i {
-      color: var(--blue);
-      width: 18px;
-      font-size: 1rem;
     }
 
     .table-section {
@@ -197,7 +221,9 @@
       vertical-align: middle;
     }
 
-    .table-doc tbody tr:hover { background: var(--blue-light); }
+    .table-doc tbody tr:hover {
+      background: var(--blue-light);
+    }
 
     .num-circle {
       background: var(--blue);
@@ -235,7 +261,9 @@
     }
 
     @media (min-width: 640px) {
-      .signature-grid { grid-template-columns: 1fr 1fr; }
+      .signature-grid {
+        grid-template-columns: 1fr 1fr;
+      }
     }
 
     .sig-box {
@@ -274,495 +302,434 @@
     }
 
     @media (max-width: 576px) {
-      .action-bar { padding: 1rem; }
-      .action-bar h1 { font-size: 1.2rem; }
-      .btn-modern { padding: 0.6rem 1rem; font-size: 0.8rem; }
-      .doc-header { padding: 2rem 1.5rem; }
-      .logo-title h1 { font-size: 1.7rem; }
-      .table-section { padding: 1.5rem; }
-      .fournisseur-box { padding: 1.2rem; }
-      .info-line { font-size: 0.88rem; }
+      .action-bar {
+        padding: 1rem;
+      }
+
+      .action-bar h1 {
+        font-size: 1.2rem;
+      }
+
+      .btn-modern {
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
+      }
+
+      .doc-header {
+        padding: 2rem 1.5rem;
+      }
+
+      .logo-title h1 {
+        font-size: 1.7rem;
+      }
+
+      .table-section {
+        padding: 1.5rem;
+      }
+
+      .fournisseur-box {
+        padding: 1.2rem;
+      }
+    }
+
+    /* Select2 */
+    .select2-container .select2-selection--multiple {
+      border: 1px solid #d1d3e2;
+      border-radius: 8px;
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+      background-color: var(--blue);
+      border: none;
+      color: white;
+      border-radius: 15px;
+      padding: 2px 8px;
+    }
+
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+      color: white;
+      margin-right: 5px;
     }
   </style>
 </head>
+
 <body>
 
-<div id="wrapper">
-  <%- include('../../../layouts/sidebar') %>
-  <div id="content-wrapper" class="d-flex flex-column">
-    <div id="content">
-      <%- include('../../../layouts/topbar') %>
+  <div id="wrapper">
+    <%- include('../../../layouts/sidebar') %>
+      <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+          <%- include('../../../layouts/topbar') %>
 
-      <div class="container-fluid px-3 px-md-4">
+            <div class="container-fluid px-3 px-md-4">
 
-       <!-- Action Bar -->
-        <div class="action-bar no-print">
-          <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
-            <h1>
-              <i class="fas fa-file-invoice-dollar"></i>
-              Demande de Prix
-              <span class="badge">#<%= demandePrix.id %></span>
-            </h1>
-            <div class="d-flex flex-wrap gap-2">
-              <button onclick="sendEmail()" class="btn btn-modern btn-send" id="btnSend">
-                <i class="fas fa-paper-plane"></i> <span class="d-none d-sm-inline">Envoyer</span>
-              </button>
-              <button class="btn btn-modern btn-outline" title="PDF" id="downloadPdfBtn" data-id="<%= demandePrix.id %>">
-                <i class="fas fa-file-pdf"></i> <span class="d-none d-sm-inline">PDF</span>
-              </button>
-              <button id="btnSave" class="btn btn-modern btn-outline" style="background-color: green; color: white;" title="Sauvegarder les modifications">
-                <i class="fas fa-save"></i> <span class="d-none d-sm-inline">Sauvegarder</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Document -->
-        <div class="doc-card">
-
-          <div class="doc-header">
-            <div class="header-grid">
-              <div class="logo-title">
-                <img src="/img/logo-4.png" alt="Logo" class="logo-img">
-                <h1>Demande de Prix</h1>
-                <input type="date" name="date" value="<%= new Date(demandePrix.date).toISOString().slice(0,10) %>" hidden>
-                <p>N° <%= demandePrix.id %> • <%= demandePrix.date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) %></p>
-              </div>
-
-              <div class="fournisseur-box">
-                <h5><i class="fas fa-building"></i> Fournisseur</h5>
-                <select id="fournisseurSelect" class="form-control mb-3" name="supplier">
-                  <option value="">-- Choisir un fournisseur --</option>
-                  <% fournisseurs.forEach(f => { %>
-                    <option value="<%= f.id %>" <%= f.id === demandePrix.fournisseur.id ? 'selected' : '' %>><%= f.name %> <%= f.ville ? '- ' + f.ville : '' %></option>
-                  <% }) %>
-                </select>
-                <div class="small">
-                  <div class="info-line"><i class="fas fa-user-tie"></i> <strong id="fourName"><%= demandePrix.fournisseur.name %></strong></div>
-                  <div class="info-line"><i class="fas fa-envelope"></i> <span id="fourEmail"><%= demandePrix.fournisseur.email %></span></div>
-                  <div class="info-line"><i class="fas fa-phone"></i> <span id="fourTel"><%= demandePrix.fournisseur.telFournisseur || 'Non renseigné' %></span></div>
+              <!-- Action Bar -->
+              <div class="action-bar no-print">
+                <div
+                  class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                  <h1>
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    Demande de Prix
+                    <span class="badge">#<%= demandePrix.id %></span>
+                  </h1>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button onclick="sendEmail()" class="btn btn-modern btn-send" id="btnSend"
+                      title="Envoie un email + PDF personnalisé à chaque fournisseur sélectionné">
+                      <i class="fas fa-paper-plane"></i>
+                      <span class="d-none d-sm-inline">Envoyer
+                        (<span id="btnSendCount">
+                          <%= (demandePrix.fournisseurs||[]).length %>
+                        </span>)
+                      </span>
+                    </button>
+                    <button class="btn btn-modern btn-outline" title="PDF" id="downloadPdfBtn"
+                      data-id="<%= demandePrix.id %>">
+                      <i class="fas fa-file-pdf"></i> <span class="d-none d-sm-inline">PDF</span>
+                    </button>
+                    <button id="btnSave" class="btn btn-modern btn-outline"
+                      style="background-color: green; color: white;" title="Sauvegarder les modifications">
+                      <i class="fas fa-save"></i> <span class="d-none d-sm-inline">Sauvegarder</span>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <div class="table-section">
-            <div class="table-container">
-              <table class="table-doc" id="articlesTable">
-                <thead>
-                  <tr>
-                    <th style="width:6%; text-align:center; border: 1px solid #dee2e6;">N°</th>
-                    <th style="width:40%; border: 1px solid #dee2e6;">Désignation</th>
-                    <th style="width:18%; text-align:center; border: 1px solid #dee2e6;">Référence</th>
-                    <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Unité</th>
-                    <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Quantité</th>
-                    <th style="width:6%; text-align:center; border: 1px solid #dee2e6;" class="no-print">Action</th>
-                  </tr>
-                </thead>
-                <tbody id="articlesBody">
-                  <% demandePrix.articles.forEach((art, i) => { %>
-                    <tr data-id="<%= art.id %>" class="<%= i % 2 === 0 ? 'dp-row-even' : 'dp-row-odd' %>">
-                      <td style="text-align:center; border: 1px solid #dee2e6;">
-                        <div class="num-circle"><%= i + 1 %></div>
-                      </td>
-                      <td style="border: 1px solid #dee2e6;">
-                        <input type="text" class="form-control form-control-sm" placeholder="Désignation" value="<%= art.designation || '' %>" name="designation">
-                      </td>
-                      <td style="text-align:center; border: 1px solid #dee2e6;">
-                        <input type="text" class="form-control form-control-sm text-center" placeholder="Réf / Lot" value="<%= art.lot || art.reference || '' %>" name="reference">
-                      </td>
-                      <td style="text-align:center; border: 1px solid #dee2e6;">
-                        <input type="text" class="form-control form-control-sm text-center" placeholder="Unité" value="<%= art.unite || '' %>" name="unite">
-                      </td>
-                      <td style="text-align:center; border: 1px solid #dee2e6;">
-                        <input type="number" min="1" class="qty-pill" style="border:none; outline:none; max-width: 110px; text-align:center;" value="<%= art.quantite %>" name="quantite">
-                      </td>
-                      <td style="text-align:center; border: 1px solid #dee2e6;" class="no-print">
-                        <i class="fas fa-trash-alt delete-btn" style="cursor:pointer" onclick="deleteArticleRow(this)"></i>
-                      </td>
-                    </tr>
-                  <% }) %>
-                </tbody>
-              </table>
-            </div>
+              <!-- Document -->
+              <div class="doc-card">
 
-            <div class="text-center mt-3 no-print">
-              <button type="button" onclick="addArticleRow()" class="btn btn-modern btn-outline">
-                Ajouter une ligne
-              </button>
-            </div>
-          </div>
+                <div class="doc-header">
+                  <div class="header-grid">
+                    <div class="logo-title">
+                      <img src="/img/logo-4.png" alt="Logo" class="logo-img">
+                      <h1>Demande de Prix</h1>
+                      <div class="d-flex align-items-center gap-2 mt-2">
+                        <label for="dpDate" class="text-muted small mb-0" style="white-space:nowrap;">Date :</label>
+                        <input type="date" name="date" id="dpDate" class="form-control form-control-sm"
+                          style="max-width:180px; font-weight:600;"
+                          value="<%= new Date(demandePrix.date).toISOString().slice(0,10) %>">
+                      </div>
+                      <p class="mt-1 mb-0">N° <%= demandePrix.id %> •
+                          <%= new Date(demandePrix.date).toLocaleDateString('fr-FR', { weekday: 'long' , day: 'numeric'
+                            , month: 'long' , year: 'numeric' }) %>
+                      </p>
+                    </div>
 
-          <div class="signature-area">
-            <div class="signature-grid">
-              <div class="sig-box">
-                <h6>Cachet & Signature du Fournisseur</h6>
-                <div class="sig-line"></div>
+                    <div class="fournisseur-box">
+                      <h5><i class="fas fa-building"></i> Fournisseurs
+                        <span class="badge ms-2"
+                          style="background:#e0ecff;color:#0052cc;font-size:0.75rem;border-radius:20px;padding:3px 10px;"
+                          id="supplierCount">
+                          <%= (demandePrix.fournisseurs || []).length %> sélectionné(s)
+                        </span>
+                      </h5>
+                      <select id="fournisseurSelect" class="form-control mb-2" name="supplier" multiple="multiple"
+                        style="width:100%;">
+                        <% fournisseurs.forEach(f=> { %>
+                          <option value="<%= f.id %>">
+                            <%= f.name %>
+                              <%= f.ville ? ' - ' + f.ville : '' %>
+                          </option>
+                          <% }) %>
+                      </select>
+                      <!-- Email preview list -->
+                      <div id="emailPreview" class="mt-2">
+                        <% if (demandePrix.fournisseurs && demandePrix.fournisseurs.length> 0) { %>
+                          <div class="small text-muted mb-1"><i class="fas fa-envelope"></i> Emails de destination :
+                          </div>
+                          <% demandePrix.fournisseurs.forEach(f=> { %>
+                            <div class="small d-flex align-items-center gap-1 mb-1" data-fid="<%= f.id %>">
+                              <i class="fas fa-circle"
+                                style="color:<%= f.email ? '#10b981' : '#ef4444' %>;font-size:7px;"></i>
+                              <strong>
+                                <%= f.name %>
+                              </strong>
+                              <span class="text-muted">— <%= f.email || '<em>Pas d\' email</em>' %></span>
+                            </div>
+                            <% }) %>
+                              <% } else { %>
+                                <div class="small text-muted">Aucun fournisseur sélectionné.</div>
+                                <% } %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="table-section">
+                  <div class="table-container">
+                    <table class="table-doc" id="articlesTable">
+                      <thead>
+                        <tr>
+                          <th style="width:6%; text-align:center; border: 1px solid #dee2e6;">N°</th>
+                          <th style="width:40%; border: 1px solid #dee2e6;">Désignation</th>
+                          <th style="width:18%; text-align:center; border: 1px solid #dee2e6;">Référence</th>
+                          <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Unité</th>
+                          <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Quantité</th>
+                          <th style="width:6%; text-align:center; border: 1px solid #dee2e6;" class="no-print">Action
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody id="articlesBody">
+                        <% demandePrix.articles.forEach((art, i)=> { %>
+                          <tr data-id="<%= art.id %>" class="<%= i % 2 === 0 ? 'dp-row-even' : 'dp-row-odd' %>">
+                            <td style="text-align:center; border: 1px solid #dee2e6;">
+                              <div class="num-circle">
+                                <%= i + 1 %>
+                              </div>
+                            </td>
+                            <td style="border: 1px solid #dee2e6;">
+                              <input type="text" class="form-control form-control-sm" placeholder="Désignation"
+                                value="<%= art.designation || '' %>" name="designation">
+                            </td>
+                            <td style="text-align:center; border: 1px solid #dee2e6;">
+                              <input type="text" class="form-control form-control-sm text-center"
+                                placeholder="Réf / Lot" value="<%= art.lot || art.reference || '' %>" name="reference">
+                            </td>
+                            <td style="text-align:center; border: 1px solid #dee2e6;">
+                              <input type="text" class="form-control form-control-sm text-center" placeholder="Unité"
+                                value="<%= art.unite || '' %>" name="unite">
+                            </td>
+                            <td style="text-align:center; border: 1px solid #dee2e6;">
+                              <input type="number" min="1" class="qty-pill"
+                                style="border:none; outline:none; max-width: 110px; text-align:center;"
+                                value="<%= art.quantite %>" name="quantite">
+                            </td>
+                            <td style="text-align:center; border: 1px solid #dee2e6;" class="no-print">
+                              <i class="fas fa-trash-alt delete-btn" style="cursor:pointer"
+                                onclick="deleteArticleRow(this)"></i>
+                            </td>
+                          </tr>
+                          <% }) %>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div class="text-center mt-3 no-print">
+                    <button type="button" onclick="addArticleRow()" class="btn btn-modern btn-outline">
+                      Ajouter une ligne
+                    </button>
+                  </div>
+                </div>
+
+                <div class="signature-area">
+                  <div class="signature-grid">
+                    <div class="sig-box">
+                      <h6>Cachet & Signature du Fournisseur</h6>
+                      <div class="sig-line"></div>
+                    </div>
+                    <div class="sig-box">
+                      <h6>Le Responsable Achats</h6>
+                      <div class="sig-line"></div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
-              <div class="sig-box">
-                <h6>Le Responsable Achats</h6>
-                <div class="sig-line"></div>
-              </div>
             </div>
-          </div>
-
         </div>
       </div>
-    </div>
   </div>
-</div>
 
-<!-- <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Payload envoyé</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-      </div>
-      <div class="modal-body">
-        <pre id="payloadPreview" style="white-space:pre-wrap; word-break:break-word; background:#f8f9fa; padding:12px; border-radius:8px;">
-        </pre>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
-      </div>
-    </div>
-  </div>
-</div> -->
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-<script type="application/json" id="fournisseursDataJson"><%- JSON.stringify(fournisseurs.map(f => ({
-  id: String(f.id),
-  name: f.name || '',
-  email: f.email || '',
-  tel: (f.telFournisseur || '')
-}))) %></script>
+  <script>
+    // ── EJS data ─────────────────────────────────────────────────────────────
+    var selectedSupplierIds = <%- JSON.stringify((demandePrix.fournisseurIds || []).map(String)) %>;
+    var _fList = <%- JSON.stringify((fournisseurs || []).map(f => ({ id: String(f.id), name: f.name, email: f.email || '' }))) %>;
 
-<script>
-  function sendEmail() {
-    const btn = $('#btnSend');
-    btn.html('<i class="fas fa-spinner fa-spin"></i> Envoi...').prop('disabled', true);
-
-    $.post('/api/demandes-prix/<%= demandePrix.id %>/send-email', {
-      email: '<%= demandePrix.fournisseur.email %>'
-    })
-    .done(() => {
-      alert('Email envoyé avec succès !');
-    })
-    .fail(() => {
-      alert('Échec de l\'envoi !');
-    });
-  }
-
-  async function downloadPDF(id) {
-    try {
-      const res = await fetch(`/achat/demande-prix/${id}/pdf`);
-      if (!res.ok) throw new Error('Erreur lors du téléchargement');
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `demande_prix_${id}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error(err);
-      alert('Erreur lors du téléchargement du PDF');
+    var fournisseursMap = {};
+    for (var i = 0; i < _fList.length; i++) {
+      fournisseursMap[_fList[i].id] = _fList[i];
     }
-  }
 
-// Fournisseurs data
-window.__deletedArticles = [];
-const fournisseursData = JSON.parse((document.getElementById('fournisseursDataJson')?.textContent || '[]'));
+    window.__deletedArticles = [];
 
-  (function () {
-    const btn = document.getElementById('downloadPdfBtn');
-    if (!btn) return;
-    btn.addEventListener('click', function () {
-      const id = parseInt(this.getAttribute('data-id'), 10);
-      if (!id || Number.isNaN(id)) return;
-      downloadPDF(id);
-    });
-  })();
+    // ── SELECT2 + live email preview ─────────────────────────────────────────
+    $(document).ready(function () {
+      var $select = $('#fournisseurSelect');
+      $select.select2({ placeholder: 'Choisir des fournisseurs', allowClear: true });
+      $select.val(selectedSupplierIds).trigger('change');
 
-document.getElementById('fournisseurSelect').addEventListener('change', function() {
-  const f = fournisseursData.find(x => x.id === this.value);
-  if(f) {
-    document.getElementById('fourName').textContent = f.name;
-    document.getElementById('fourEmail').textContent = f.email;
-    document.getElementById('fourTel').textContent = f.tel || 'Non renseigné';
-  }
-});
+      $select.on('change', function () {
+        var selected = $(this).val() || [];
+        $('#supplierCount').text(selected.length + ' sélectionné(s)');
+        $('#btnSendCount').text(selected.length);
 
-// Ajouter ligne
-function addArticleRow() {
-  const tbody = document.getElementById('articlesBody');
-  const row = tbody.insertRow();
-  const idx = tbody.rows.length;
-  row.innerHTML = `
-    <td style="text-align:center; border: 1px solid #dee2e6;">
-      <div class="num-circle">${idx}</div>
-    </td>
-    <td style="border: 1px solid #dee2e6;">
-      <input type="text" class="form-control form-control-sm" placeholder="Désignation" value="">
-    </td>
-    <td style="text-align:center; border: 1px solid #dee2e6;">
-      <input type="text" class="form-control form-control-sm text-center" placeholder="Réf / Lot" value="" name="reference">
-    </td>
-    <td style="text-align:center; border: 1px solid #dee2e6;">
-      <input type="text" class="form-control form-control-sm text-center" placeholder="Unité" value="" name="unite">
-    </td>
-    <td style="text-align:center; border: 1px solid #dee2e6;">
-      <input type="number" min="1" class="qty-pill" style="border:none; outline:none; max-width: 110px; text-align:center;" value="1" name="quantite">
-    </td>
-    <td style="text-align:center; border: 1px solid #dee2e6;" class="no-print"><i class="fas fa-trash-alt delete-btn" style="cursor:pointer" onclick="deleteArticleRow(this)"></i></td>
-  `;
-}
+        var preview = $('#emailPreview');
+        if (selected.length === 0) {
+          preview.html('<div class="small text-muted">Aucun fournisseur sélectionné.</div>');
+          return;
+        }
+        var html = '<div class="small text-muted mb-1"><i class="fas fa-envelope"></i> Emails de destination :</div>';
+        for (var j = 0; j < selected.length; j++) {
+          var f = fournisseursMap[selected[j]];
+          if (!f) continue;
+          var dot = f.email ? '#10b981' : '#ef4444';
+          var et = f.email ? f.email : '<em>Pas email</em>';
+          html += '<div class="small d-flex align-items-center gap-1 mb-1">' +
+            '<i class="fas fa-circle" style="color:' + dot + ';font-size:7px;"></i>' +
+            '<strong>' + f.name + '</strong>' +
+            '<span class="text-muted">&mdash; ' + et + '</span>' +
+            '</div>';
+        }
+        preview.html(html);
+      });
 
-// Renumber rows
-function renumberRows() {
-  document.querySelectorAll('#articlesBody tr').forEach((tr, i) => {
-    tr.cells[0].querySelector('div').textContent = i + 1;
-  });
-}
-
-async function deleteArticleRow(el){
-  if(!confirm('Confirmer la suppression de cette ligne ?')) return;
-  const tr = el.closest('tr');
-  const id = parseInt(tr.getAttribute('data-id'));
-  if (id) { 
-    try {
-      const res = await fetch(`/achat/demande-prix/article/${id}`, { method: 'DELETE' });
-      if (!res.ok) { throw new Error(`Suppression échouée (${res.status})`); }
-    } catch(e) {
-      alert(e.message);
-      return;
-    }
-  }
-  tr.remove();
-  renumberRows();
-}
-
-// Sauvegarder
-function collectPayload(){
-  const articles = [];
-  document.querySelectorAll('#articlesBody tr').forEach(tr => {
-    const cells = tr.cells;
-    articles.push({
-      id: parseInt(tr.getAttribute('data-id')) || null,
-      designation: (cells[1].querySelector('input')?.value || '').trim(),
-      reference: (cells[2].querySelector('input')?.value || '').trim(),
-      unite: (cells[3].querySelector('input')?.value || '').trim(),
-      quantite: parseInt(cells[4].querySelector('input')?.value) || 1
-    });
-  });
-  const supplierVal = document.getElementById('fournisseurSelect').value;
-  const dateVal = document.querySelector('input[name="date"]').value;
-  return {
-    supplier: supplierVal ? parseInt(supplierVal) : null,
-    date: dateVal || null,
-    articles,
-    deletedArticleIds: Array.from(new Set(window.__deletedArticles || []))
-  };
-}
-
-const btnPreview = document.getElementById('btnPreview');
-if (btnPreview) {
-  btnPreview.addEventListener('click', function(){
-    const data = collectPayload();
-    const pretty = JSON.stringify(data, null, 2);
-    document.getElementById('payloadPreview').textContent = pretty;
-    if (window.jQuery) { jQuery('#previewModal').modal('show'); }
-  });
-}
-
-document.getElementById('btnSave').addEventListener('click', function() {
-  const btn = this;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sauvegarde...';
-  btn.disabled = true;
-
-  const data = collectPayload();
-  // Validation basique côté client
-  if (!data.supplier || Number.isNaN(data.supplier)) {
-    alert('Sélectionnez un fournisseur.');
-    btn.innerHTML = 'SAUVEGARDER LES MODIFICATIONS';
-    btn.disabled = false;
-    return;
-  }
-  const d = new Date(data.date);
-  if (!(d instanceof Date) || isNaN(d.getTime())) {
-    alert('La date est invalide.');
-    btn.innerHTML = 'SAUVEGARDER LES MODIFICATIONS';
-    btn.disabled = false;
-    return;
-  }
-
-  try { console.log('Payload demande de prix', data); } catch(e) {}
-
-  fetch('/achat/demande-prix/<%= demandePrix.id %>', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)  
-  })
-  .then(r => r.json())
-  .then(res => {
-    btn.innerHTML = '<i class="fas fa-check"></i> Sauvegardé !';
-    btn.style.background = '#10b981';
-    setTimeout(() => location.reload(), 1500);
-  })
-  .catch(() => {
-    btn.innerHTML = '<i class="fas fa-times"></i> Erreur';
-    btn.style.background = '#ef4444';
-    setTimeout(() => {
-      btn.innerHTML = 'SAUVEGARDER LES MODIFICATIONS';
-      btn.disabled = false;
-      btn.style.background = '';
-    }, 2000);
-  });
-});
-
-
-
-
-  const pdfBtn = document.getElementById("downloadPdfBtn");
-  if (pdfBtn) {
-    pdfBtn.addEventListener("click", function () {
-          const table = document.getElementById("editableTable");
-          const rows = table.querySelectorAll("tbody tr"); // Fixed: removed :not(:last-child)
-          if (rows.length === 0) {
-            alert("Aucune donnée à exporter en PDF.");
-            return;
-          }
-    
-          try {
-            const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-            const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
-            const title = document.querySelector(".card-header h6").innerText;
-    
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(18);
-            doc.setTextColor(40, 40, 40);
-            doc.text(title, 10, 20);
-    
-            const tableData = [];
-            rows.forEach(row => {
-              if (row.style.display !== "none") {
-                const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
-                  let value = "";
-                  const select = cell.querySelector("select");
-                  if (select) {
-                    value = select.options[select.selectedIndex].text.trim();
-                  } else if (cell.innerText) {
-                    value = cell.innerText.trim();
-                  }
-    
-                  if (cell.dataset.name === "dateEcheance" && value) {
-                    if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                      const [year, month, day] = value.split('-');
-                      value = `${day}/${month}/${year}`;
-                    } else if (!value.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-                      const date = new Date(value);
-                      if (!isNaN(date.getTime())) {
-                        const day = String(date.getDate()).padStart(2, '0');
-                        const month = String(date.getMonth() + 1).padStart(2, '0');
-                        const year = date.getFullYear();
-                        value = `${day}/${month}/${year}`;
-                      }
-                    }
-                  }
-    
-                  if (cell.dataset.name === "montant" && value) {
-                    let cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-                    const number = parseFloat(cleaned);
-                    if (!isNaN(number)) {
-                      const parts = number.toFixed(2).split('.');
-                      const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-                      value = `${integerPart},${parts[1]}`;
-                    }
-                  }
-    
-                  return value || "";
-                });
-                tableData.push(rowData);
-              }
-            });
-    
-            doc.autoTable({
-              head: [headers],
-              body: tableData,
-              startY: 30,
-              theme: 'grid',
-              styles: {
-                font: 'helvetica',
-                fontSize: 8,
-                textColor: [40, 40, 40],
-                cellPadding: 2,
-                lineColor: [200, 200, 200],
-                lineWidth: 0.1,
-                minCellHeight: 10,
-                overflow: 'linebreak'
-              },
-              headStyles: {
-                fillColor: [22, 160, 133],
-                textColor: [255, 255, 255],
-                fontSize: 7,
-                fontStyle: 'bold',
-                halign: 'center',
-                cellPadding: 2
-              },
-              bodyStyles: {
-                fillColor: [255, 255, 255]
-              },
-              alternateRowStyles: {
-                fillColor: [245, 245, 245]
-              },
-              columnStyles: {
-                0: { cellWidth: 30, halign: 'center' },
-                1: { cellWidth: 30, halign: 'left' },
-                2: { cellWidth: 30, halign: 'right' },
-                3: { cellWidth: 30, halign: 'center' },
-                4: { cellWidth: 30, halign: 'left' },
-                5: { cellWidth: 30, halign: 'left' }
-              },
-              margin: { top: 30, left: 10, right: 10 },
-              tableWidth: 'wrap'
-            });
-    
-            const pageCount = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= pageCount; i++) {
-              doc.setPage(i);
-              doc.setFontSize(8);
-              doc.setTextColor(100);
-              doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
-            }
-    
-            let total = document.getElementById("total").innerText || "0";
-            total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-            const totalNumber = parseFloat(total);
-            if (!isNaN(totalNumber)) {
-              const parts = totalNumber.toFixed(2).split('.');
-              const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-              total = `${integerPart},${parts[1]}`;
-            }
-    
-            const finalY = doc.lastAutoTable.finalY || 30;
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(12);
-            doc.setTextColor(22, 160, 133);
-            doc.text(`Total: ${total} MAD`, 10, finalY + 15);
-    
-            doc.save("liste_mises_a_disposition.pdf");
-          } catch (err) {
-            console.error("Erreur génération PDF:", err);
-            alert("Erreur lors de la génération du PDF. Veuillez vérifier la console.");
-          }
+      // ── PDF download ────────────────────────────────────────────────────────
+      var dlBtn = document.getElementById('downloadPdfBtn');
+      if (dlBtn) {
+        dlBtn.addEventListener('click', function () {
+          var pid = parseInt(this.getAttribute('data-id'), 10);
+          if (pid && !isNaN(pid)) downloadPDF(pid);
         });
-  }
-    
+      }
 
+      // ── Save ────────────────────────────────────────────────────────────────
+      document.getElementById('btnSave').addEventListener('click', function () {
+        var btn = this;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sauvegarde...';
+        btn.disabled = true;
 
-</script>
+        var data = collectPayload();
+        if (!data.suppliers || data.suppliers.length === 0) {
+          alert('Sélectionnez au moins un fournisseur.');
+          btn.innerHTML = '<i class="fas fa-save"></i> Sauvegarder';
+          btn.disabled = false;
+          return;
+        }
+        var chkDate = new Date(data.date);
+        if (isNaN(chkDate.getTime())) {
+          alert('La date est invalide.');
+          btn.innerHTML = '<i class="fas fa-save"></i> Sauvegarder';
+          btn.disabled = false;
+          return;
+        }
+
+        fetch('/achat/demande-prix/<%= demandePrix.id %>', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        }).then(function (r) {
+          return r.json();
+        }).then(function (res) {
+          if (res.success) {
+            btn.innerHTML = '<i class="fas fa-check"></i> Sauvegardé !';
+            btn.style.background = '#10b981';
+            setTimeout(function () { location.reload(); }, 1500);
+          } else {
+            throw new Error(res.error || 'Erreur inconnue');
+          }
+        }).catch(function (e) {
+          alert('Erreur: ' + e.message);
+          btn.innerHTML = '<i class="fas fa-times"></i> Erreur';
+          btn.style.background = '#ef4444';
+          setTimeout(function () {
+            btn.innerHTML = '<i class="fas fa-save"></i> Sauvegarder';
+            btn.disabled = false;
+            btn.style.background = '';
+          }, 2000);
+        });
+      });
+    });
+
+    // ── sendEmail ─────────────────────────────────────────────────────────────
+    function sendEmail() {
+      var btn = $('#btnSend');
+      var orig = btn.html();
+      var val = $('#fournisseurSelect').val();
+      if (!val || val.length === 0) {
+        alert('Veuillez sélectionner au moins un fournisseur.');
+        return;
+      }
+      if (!confirm('Êtes-vous sûr de vouloir envoyer à tous les fournisseurs sélectionnés ?')) return;
+      btn.html('<i class="fas fa-spinner fa-spin"></i> Envoi...').prop('disabled', true);
+      $.post('/api/demandes-prix/<%= demandePrix.id %>/send-email')
+        .done(function (res) { alert(res.message || 'Email envoyé !'); })
+        .fail(function (err) {
+          alert('Erreur: ' + ((err.responseJSON && err.responseJSON.error) ? err.responseJSON.error : 'Echec envoi'));
+        })
+        .always(function () { btn.html(orig).prop('disabled', false); });
+    }
+
+    // ── downloadPDF ───────────────────────────────────────────────────────────
+    async function downloadPDF(id) {
+      try {
+        var r = await fetch('/achat/demande-prix/' + id + '/pdf');
+        if (!r.ok) throw new Error('Erreur téléchargement');
+        var blob = await r.blob();
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'demande_prix_' + id + '.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        alert('Erreur lors du téléchargement du PDF');
+      }
+    }
+
+    // ── addArticleRow ─────────────────────────────────────────────────────────
+    function addArticleRow() {
+      var tbody = document.getElementById('articlesBody');
+      var row = tbody.insertRow();
+      var idx = tbody.rows.length;
+      row.innerHTML =
+        '<td style="text-align:center;border:1px solid #dee2e6"><div class="num-circle">' + idx + '</div></td>' +
+        '<td style="border:1px solid #dee2e6"><input type="text" class="form-control form-control-sm" placeholder="Désignation"></td>' +
+        '<td style="text-align:center;border:1px solid #dee2e6"><input type="text" class="form-control form-control-sm text-center" name="reference" placeholder="Réf / Lot"></td>' +
+        '<td style="text-align:center;border:1px solid #dee2e6"><input type="text" class="form-control form-control-sm text-center" name="unite" placeholder="Unité"></td>' +
+        '<td style="text-align:center;border:1px solid #dee2e6"><input type="number" min="1" class="qty-pill" name="quantite" style="border:none;outline:none;max-width:110px;text-align:center" value="1"></td>' +
+        '<td style="text-align:center;border:1px solid #dee2e6" class="no-print"><i class="fas fa-trash-alt" style="cursor:pointer" onclick="deleteArticleRow(this)"></i></td>';
+    }
+
+    function renumberRows() {
+      var rows = document.querySelectorAll('#articlesBody tr');
+      for (var k = 0; k < rows.length; k++) {
+        rows[k].cells[0].querySelector('div').textContent = k + 1;
+      }
+    }
+
+    function deleteArticleRow(el) {
+      if (!confirm('Confirmer la suppression ?')) return;
+      var tr = el.closest('tr');
+      var artId = parseInt(tr.getAttribute('data-id'));
+      if (artId) window.__deletedArticles.push(artId);
+      tr.remove();
+      renumberRows();
+    }
+
+    function collectPayload() {
+      var articles = [];
+      var rows = document.querySelectorAll('#articlesBody tr');
+      for (var m = 0; m < rows.length; m++) {
+        var cells = rows[m].cells;
+        var inp1 = cells[1].querySelector('input');
+        var inp2 = cells[2].querySelector('input');
+        var inp3 = cells[3].querySelector('input');
+        var inp4 = cells[4].querySelector('input');
+        articles.push({
+          id: parseInt(rows[m].getAttribute('data-id')) || null,
+          designation: inp1 ? inp1.value.trim() : '',
+          reference: inp2 ? inp2.value.trim() : '',
+          unite: inp3 ? inp3.value.trim() : '',
+          quantite: inp4 ? (parseInt(inp4.value) || 1) : 1
+        });
+      }
+      var sup = $('#fournisseurSelect').val();
+      var dateEl = document.getElementById('dpDate') || document.querySelector('input[name="date"]');
+      return {
+        suppliers: sup || [],
+        date: dateEl ? dateEl.value : null,
+        articles: articles,
+        deletedArticleIds: Array.from(new Set(window.__deletedArticles || []))
+      };
+    }
+  </script>
 
 </body>
+
 </html>
+

@@ -1,0 +1,90 @@
+DEBUGGING PROMPT: JavaScript Not Working in EJS Template
+========================================================
+
+CONTEXT:
+I have a Node.js/Express application using EJS templates. The edit.ejs file for "demande de prix" (price request) has JavaScript that is completely not working - no console logs, no button clicks, no Select2 functionality.
+
+CURRENT SITUATION:
+- File: views/dashboard/Achats/demandeprix/edit.ejs
+- jQuery, Bootstrap, and Select2 are loaded via CDN/local files
+- EJS template renders HTML correctly but JavaScript is dead
+- No errors visible in browser console (suggests JS isn't even running)
+- Try-catch block added but still no output
+
+SPECIFIC ISSUES TO INVESTIGATE:
+
+1. **EJS-JavaScript Conflicts**: Check if EJS output is breaking JavaScript syntax
+   - Look for: <%= %> vs <%- %> usage
+   - Check for unescaped quotes, newlines, or special characters
+   - Verify JSON.stringify() calls within EJS tags
+
+2. **Script Loading Order**: Verify dependencies load before main script
+   - jQuery must load before Bootstrap and Select2
+   - Check for 404 errors on script sources
+   - Verify CDN accessibility
+
+3. **Template Data Issues**: Check if undefined variables break JS execution
+   - demandePrix.fournisseurIds might be undefined
+   - fournisseurs array might be empty/undefined
+   - Missing null checks in EJS output
+
+4. **Syntax Errors**: Look for JavaScript syntax breaking issues
+   - Missing semicolons, brackets
+   - EJS output containing quotes that break JS strings
+   - Incorrect variable declarations
+
+5. **Browser Compatibility**: Check for browser-specific issues
+   - ES6+ features not supported
+   - Console.log not working in some browsers
+   - Security policies blocking scripts
+
+DEBUGGING STEPS TO PERFORM:
+
+1. **View Source**: Check rendered HTML output
+   - Right-click → View Page Source
+   - Look for malformed JavaScript in the rendered output
+   - Check if EJS variables are properly escaped
+
+2. **Network Tab**: Check script loading
+   - Open DevTools → Network tab
+   - Reload page and filter by "JS"
+   - Look for 404 errors on jQuery/Bootstrap/Select2
+
+3. **Console Errors**: Force JavaScript errors to appear
+   - Add `console.log('SCRIPT START')` at very beginning
+   - Add `throw new Error('TEST ERROR')` to see if JS runs
+   - Check if any errors are suppressed
+
+4. **Simplify Template**: Create minimal test case
+   - Remove all EJS variables, use hardcoded data
+   - Test with just jQuery and simple alert
+   - Gradually add back complexity
+
+5. **Check EJS Rendering**: Server-side debugging
+   - Add console.log in Express route before render
+   - Verify data structure being passed to template
+   - Check if flattenFournisseurs() works correctly
+
+SPECIFIC CODE AREAS TO EXAMINE:
+
+```javascript
+// Lines around 546-551 in edit.ejs:
+const selectedSupplierIds = <%- JSON.stringify((demandePrix.fournisseurIds || []).map(String)) %>;
+const _fList = <%- JSON.stringify((fournisseurs || []).map(f => ({ id: String(f.id), name: f.name, email: f.email || '' }))) %>;
+```
+
+```javascript
+// Check if this data exists in controller:
+res.render('dashboard/achats/demandeprix/edit', {
+  demandePrix: flattenFournisseurs(dp),
+  fournisseurs
+});
+```
+
+EXPECTED OUTCOME:
+- Identify why JavaScript is completely non-functional
+- Provide specific fixes for EJS-JavaScript integration
+- Ensure Select2, jQuery, and all event handlers work
+- Get console logs appearing for debugging
+
+Please analyze the template systematically and provide concrete fixes.

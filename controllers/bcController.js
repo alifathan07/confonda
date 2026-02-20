@@ -457,6 +457,8 @@ export const sendBcEmail = async (req, res) => {
       ]
     })
     console.log(pdfBuffer)
+
+  
     return res.json({ success: true });
   } catch (error) {
     console.error('Error in sendBcEmail:', error);
