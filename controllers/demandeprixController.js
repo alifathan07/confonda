@@ -4,6 +4,11 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from 'url';
 import { sendEmail } from "../services/emailservice.js";
+import { 
+  getDemandePrixWithFlattenedSuppliers, 
+  updateDemandePrixSuppliers,
+  createDemandePrixWithSuppliers 
+} from "../migrate_demandeprix_data.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -88,12 +93,12 @@ export const viewDemandePrix = async (req, res) => {
 export const EditDemandePrix = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const dp = await prisma.demandeDePrix.findUnique({ where: { id }, include: dpInclude });
-    if (!dp) return res.status(404).send('Demande non trouvée');
+    const demandePrix = await getDemandePrixWithFlattenedSuppliers(id);
+    if (!demandePrix) return res.status(404).send('Demande non trouvée');
 
     const fournisseurs = await prisma.fournisseur.findMany({ orderBy: { name: 'asc' } });
     res.render('dashboard/achats/demandeprix/edit', {
-      demandePrix: flattenFournisseurs(dp),
+      demandePrix,
       fournisseurs
     });
   } catch (err) {
@@ -123,16 +128,15 @@ export const storeDemandePrix = async (req, res) => {
       }))
       .filter(a => a.designation);
 
-    const created = await prisma.demandeDePrix.create({
-      data: {
+    const created = await createDemandePrixWithSuppliers(
+      {
         date: jsDate,
-        demandeandfournisseur: {
-          create: supplierIds.map(sid => ({ fournisseurId: sid, status: 'En attente' }))
-        },
-        articles: { create: articlesToCreate }
+        devisPath: null, // You can add this field to req.body if needed
+        sentByEmail: false,
+        articles: articlesToCreate
       },
-      select: { id: true }
-    });
+      supplierIds
+    );
 
     return res.json({ success: true, id: created.id, redirect: `/achat/demande-prix/${created.id}/edit` });
   } catch (err) {
@@ -195,26 +199,8 @@ export const updateDemandePrix = async (req, res) => {
         }
       });
 
-      // 2. Sync suppliers (add new, remove removed)
-      const currentLinks = await tx.demandeandfournisseur.findMany({
-        where: { demandeDePrixId: id },
-        select: { fournisseurId: true }
-      });
-      const currentIds = currentLinks.map(l => l.fournisseurId);
-
-      const toAdd = supplierIds.filter(sid => !currentIds.includes(sid));
-      const toRemove = currentIds.filter(sid => !supplierIds.includes(sid));
-
-      if (toRemove.length > 0) {
-        await tx.demandeandfournisseur.deleteMany({
-          where: { demandeDePrixId: id, fournisseurId: { in: toRemove } }
-        });
-      }
-      if (toAdd.length > 0) {
-        await tx.demandeandfournisseur.createMany({
-          data: toAdd.map(sid => ({ demandeDePrixId: id, fournisseurId: sid, status: 'En attente' }))
-        });
-      }
+      // 2. Update suppliers using helper function
+      await updateDemandePrixSuppliers(id, supplierIds);
     });
 
     return res.json({ success: true, message: 'Demande de prix mise à jour avec succès.' });
