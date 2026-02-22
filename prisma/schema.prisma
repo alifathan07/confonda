@@ -83,7 +83,7 @@ model DemandeFourniture {
   chantierId Int?
   chantier   Chantier? @relation(fields: [chantierId], references: [id])
   status     String    @default("En Attente") // En Attente // Commandé // Livré // Annulé
-
+  etat String?
   items    ItemFourniture[]
   totalHt  Float?
   Tva      Float?
@@ -546,6 +546,7 @@ model demandeandfournisseur {
   fournisseur   Fournisseur @relation(fields: [fournisseurId], references: [id])
   emailSentAt DateTime?
   status  String? // envoyer , en attent 
+  etat String? // en cours , accepter , refuser
   
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt

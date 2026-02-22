@@ -246,7 +246,7 @@
                 <small class="card-subtitle">Justif de caisse</small>
               </a>
             </div>
-            <% } else if (user.role === 'user') { %>
+            <% } else if (user.role === 'user' || user.role === 'granduser') { %>
               <div class="achat-buttons d-flex flex-wrap justify-content-center gap-4">
                 <a href="/achats/demandeCaisse" class="achat-card shadow">
                   <div class="card-icon-wrapper">

@@ -23,7 +23,7 @@ import { deleteTelePai, indexTelePai, storeTelePai, updateTelePai } from '../con
 import { createEncaissement, indexEncaissement, updateEncaissement } from '../controllers/encaisementController.js';
 import { addCaisseItem, createDemandeCaisse, deleteDemandeCaisse, deleteDemandeCaisseItem, generateDemandeExcel, generateDemandePdf, indexDemandeCaisse, storeDemandeCaisse, updateDemandeCaisseItem, updateDemandeCaisseItemValidation, updateDemandeCaisseStatut, updateDemandeCaisseValidationAll, viewDemandeCaisse } from '../controllers/demandecaisseController.js';
 import { addJustifCaisse, addJustifCaisseAdminAuto, addJustifCaisseUserFirstTime, adminUserList, createJustifCaisse, createJustifCaisseAdmin, createOrUpdateDepenses, createOrUpdateRecettes, deleteDepense, deleteJustifeCaisse, deleteRecette, generateJustifCaisseExcel, generateJustifCaissePDF, getAllJustifCaisse, justifeCaisseListUser, listChantierUser, saveAllData, saveRecettesAdmin, updateDepenceValidation, updateSoldePrecedentAdmin, validateAllDepenses, viewJustifCaisse, viewJustifCaisseAdmin } from '../controllers/justifecaisseController.js';
-import { addpricingforDemande, createDemandeFourniture, deleteDemandeFourniture, downloadImageFourniture, editDemandeFourniture, generateDemandeFourniturePDF, indexDemandeFourniture, storeDemandeFourniture, updateDemandeFourniture, updateDemandeStatus, updateValidationFourniture, uploadFour, uploadImageFourniture, uploadTempImage, validateAllFourniture, viewDemandeFourniture } from '../controllers/demandeFourniture.js';
+import { addpricingforDemande, createDemandeFourniture, deleteDemandeFourniture, downloadImageFourniture, editDemandeFourniture, generateDemandeFourniturePDF, indexDemandeFourniture, storeDemandeFourniture, updateDemandeFourniture, updateDemandeStatus, updateEtat, updateValidationFourniture, uploadFour, uploadImageFourniture, uploadTempImage, validateAllFourniture, viewDemandeFourniture } from '../controllers/demandeFourniture.js';
 import { fileURLToPath } from 'url';
 import { EditDemandePrix, listDemandePrix, postDemandePrixViaFourniture, updateDemandePrix, viewDemandePrix, deleteDemandePrix, deleteArticle, createDemandePrix, storeDemandePrix, generateDemandePrixPDF, sendDemandePrixEmail } from '../controllers/demandeprixController.js';
 import { editBc, postBcDemandeFourniture, updateBc, deleteBcItem, createBcForm, storeBc, generateBcPDF, sendBcEmail, listBc, deleteBc, updateBcItemDistribution, updateBcItem, importBcInfo, updateSupplier } from '../controllers/bcController.js';
@@ -337,6 +337,7 @@ dashboardRouter.delete("/demandes/caisse/items/:id", deleteDemandeCaisseItem);
 dashboardRouter.put("/demandes/caisse/items/:id", updateDemandeCaisseItem);
 dashboardRouter.post("/demandes/caisse/:id", addCaisseItem);
 dashboardRouter.patch("/achats/demandes/caisse/updateStatus/:id", updateDemandeCaisseStatut);
+dashboardRouter.patch("/achats/demandes/caisse/updateEtat/:id", updateEtat);
 dashboardRouter.patch("/achats/demandes/caisse/updateValidation/:id", updateDemandeCaisseItemValidation);
 dashboardRouter.get('/achats/demandes/caisse/:id/pdf', generateDemandePdf);
 dashboardRouter.delete('/achats/demandes/caisse/delete/:id', deleteDemandeCaisse);

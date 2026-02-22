@@ -116,6 +116,8 @@
                       <th draggable="true">Demandeur</th>
                       <th draggable="true">Chantier</th>
                       <th draggable="true">Statut</th>
+                      <th draggable="true">Etat</th>
+                      
                       <th style="width:130px;">Actions</th>
                     </tr>
                   </thead>
@@ -124,8 +126,11 @@
                       <tr><td colspan="8" class="text-center">Aucune demande disponible.</td></tr>
                     <% } else { %>
                       <% demande.forEach(d => { %>
-                        <% if (user.role==='admin' || user.role==='grandadmin' || d.userId===user.id) { %>
+                        <% if (user.role==='admin' || user.role==='grandadmin' || d.userId===user.id || user.role==='granduser') { %>
                           <tr data-id="<%= d.id %>"
+                              data-chantier-id="<%= d.chantierId || '' %>"
+                              data-user-id="<%= d.userId || '' %>"
+                              data-status="<%= d.status || '' %>"
                               style="<%- d.color==='green' ? 'background:#c6efc5;' : '' %>
                                      <%- d.color==='blue' ? 'background:#f49797;color:#fff;' : '' %>
                                      <%- d.color==='gray' ? 'background:#f5f5f5;' : '' %>">
@@ -135,7 +140,7 @@
                             <td contenteditable data-name="chantier"><%= d.chantier.nom ||'e' %></td>
                            
 
-                            <% if (user.role==='user') { %>
+                            <% if (user.role==='user' || user.role==='granduser') { %>
                               <td data-name="status" class="text-center">
                                 <span class="badge rounded-pill px-3 py-2"
                                       style="min-width:100px;<%
@@ -165,7 +170,9 @@
                                 </select>
                               </td>
                             <% } %>
-
+                            <td data-name="etat">
+                              <input type="text" class="form-control form-control-sm" value="<%= d.etat || '' %>" />
+                            </td>
                             <td>
                               <div class="btn-group" role="group">
                                 <a href="/achats/fourniture/<%= d.id %>" class="btn btn-info btn-sm"><i class="fas fa-eye"></i> Voir</a>
@@ -181,12 +188,39 @@
                   <tfoot>
                     <tr>
                       <td colspan="5" class="text-right font-weight-bold">Total :</td>
-                      <td id="total" class="font-weight-bold">0,00</td>
+                      <td id="total" class="font-weight-bold">0</td>
                       <td colspan="2"></td>
                     </tr>
                   </tfoot>
                 </table>
               </div>
+
+              <% if (typeof pagination !== 'undefined' && pagination && pagination.totalPages > 1) { %>
+                <nav aria-label="Pagination" class="mt-3">
+                  <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item <%= pagination.page <= 1 ? 'disabled' : '' %>">
+                      <a class="page-link" href="/achats/fourniture?page=<%= pagination.page - 1 %>&pageSize=<%= pagination.pageSize %>">Précédent</a>
+                    </li>
+
+                    <% 
+                      const startPage = Math.max(1, pagination.page - 2);
+                      const endPage = Math.min(pagination.totalPages, pagination.page + 2);
+                      for (let p = startPage; p <= endPage; p++) { 
+                    %>
+                      <li class="page-item <%= p === pagination.page ? 'active' : '' %>">
+                        <a class="page-link" href="/achats/fourniture?page=<%= p %>&pageSize=<%= pagination.pageSize %>"><%= p %></a>
+                      </li>
+                    <% } %>
+
+                    <li class="page-item <%= pagination.page >= pagination.totalPages ? 'disabled' : '' %>">
+                      <a class="page-link" href="/achats/fourniture?page=<%= pagination.page + 1 %>&pageSize=<%= pagination.pageSize %>">Suivant</a>
+                    </li>
+                  </ul>
+                  <div class="text-center small text-muted mt-2">
+                    Page <%= pagination.page %> / <%= pagination.totalPages %> — Total: <%= pagination.totalCount %>
+                  </div>
+                </nav>
+              <% } %>
 
               <div class="modal fade" id="deleteConfirmModal" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered" role="document">
@@ -240,6 +274,26 @@
           }catch(e){ alert('Erreur réseau'); }
         }
 
+        async function updateEtat(id, etat) {
+          try {
+            const r = await fetch(`/achats/demandes/caisse/updateEtat/${id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ etat })
+            });
+
+            if (!r.ok) {
+              const j = await r.json().catch(() => null);
+              alert((j && (j.error || j.message)) || 'Erreur etat');
+              return false;
+            }
+            return true;
+          } catch (e) {
+            alert('Erreur réseau');
+            return false;
+          }
+        }
+
         // ---------- AUTO-SAVE ROW ----------
         const debouncedSave = debounce(async row => {
           const id = row.dataset.id;
@@ -251,12 +305,9 @@
             if(k==='status'){
               const sel = td.querySelector('select'); if(sel) data[k]=sel.value||null;
             }else{
-              let v = sanitize(td.innerText.trim());
-              if(k==='montant'){
-                v = parseFloat(v.replace(/\s/g,'').replace(',','.'));
-                if(isNaN(v)) invalid=true;
-                else data[k]=v;
-              }else if(k==='dateSaisie'){
+              const inp = td.querySelector('input');
+              let v = sanitize((inp ? inp.value : td.innerText).trim());
+              if(k==='dateSaisie'){
                 const iso = v.split('/').reverse().join('-');
                 if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)) invalid=true;
                 else data[k]=iso;
@@ -267,7 +318,7 @@
           if(invalid){ alert('Valeur invalide dans la ligne'); return; }
 
           try{
-            const r = await fetch(`/achats/demandes/fourniture/update/${id}`,{
+            const r = await fetch(`/achats/demandes/fourniture/updateEtat/${id}`,{
               method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
             });
             const j = await r.json();
@@ -278,54 +329,77 @@
           }catch(e){ alert('Erreur réseau'); }
         },600);
 
+        // ---------- ETAT INPUT SAVE ON TAB/BLUR ----------
+        const tableEl = document.getElementById('editableTable');
+        if (tableEl) {
+          tableEl.addEventListener('keydown', (e) => {
+            const inp = e.target && e.target.closest('td[data-name="etat"] input');
+            if (!inp) return;
+            if (e.key === 'Tab') {
+              const tr = inp.closest('tr[data-id]');
+              if (!tr) return;
+              tr.dataset.dirty = 'true';
+              tr.classList.add('excel-dirty-row');
+              setTimeout(async () => {
+                const ok = await updateEtat(tr.dataset.id, inp.value);
+                if (ok) {
+                  tr.classList.remove('excel-dirty-row');
+                  tr.removeAttribute('data-dirty');
+                }
+              }, 0);
+            }
+          });
+
+          tableEl.addEventListener('blur', (e) => {
+            const inp = e.target && e.target.closest('td[data-name="etat"] input');
+            if (!inp) return;
+            const tr = inp.closest('tr[data-id]');
+            if (!tr) return;
+            tr.dataset.dirty = 'true';
+            tr.classList.add('excel-dirty-row');
+            (async () => {
+              const ok = await updateEtat(tr.dataset.id, inp.value);
+              if (ok) {
+                tr.classList.remove('excel-dirty-row');
+                tr.removeAttribute('data-dirty');
+              }
+            })();
+          }, true);
+        }
+
         // ---------- FILTERS ----------
         const applyFilters = () => {
-          const c = document.getElementById('chantierFilter')?.value||'';
-          const u = document.getElementById('demandeurFilter')?.value||'';
-          const m = document.getElementById('moisFilter')?.value ? 
-                     `${document.getElementById('moisFilter').value.toLowerCase()}-${new Date().getFullYear()}` : '';
-          const s = document.getElementById('statusFilter')?.value||'';
+          const c = document.getElementById('chantierFilter')?.value || '';
+          const u = document.getElementById('demandeurFilter')?.value || '';
+          const s = document.getElementById('statusFilter')?.value || '';
 
-          
-          document.querySelectorAll('#editableTable tbody tr[data-id]').forEach(tr=>{
+          document.querySelectorAll('#editableTable tbody tr[data-id]').forEach(tr => {
             let show = true;
 
-            if(c){
-              const txt = tr.querySelector('td[data-name="chantier"]').innerText.trim();
-              const opt = document.querySelector(`#chantierFilter option[value="${c}"]`).innerText;
-              show = show && txt===opt;
+            if (c) {
+              show = show && String(tr.dataset.chantierId || '') === String(c);
             }
-            if(u){
-              const txt = tr.querySelector('td[data-name="demandeur"]').innerText.trim();
-              const opt = document.querySelector(`#demandeurFilter option[value="${u}"]`).innerText;
-              show = show && txt===opt;
+
+            if (u) {
+              show = show && String(tr.dataset.userId || '') === String(u);
             }
-            if(m){
-              const txt = tr.querySelector('td[data-name="designation"]').innerText.trim().toLowerCase();
-              show = show && txt===m;
+
+            if (s) {
+              const rowStatus = (tr.dataset.status || '').trim();
+              show = show && rowStatus === s;
             }
-            if(s){
-              const sel = tr.querySelector('select[data-name="status"]');
-              const txt = sel ? sel.value : tr.querySelector('td[data-name="status"] span').innerText.trim();
-              show = show && txt===s;
-            }
-            if(dp){
-              const txt = tr.querySelector('td[data-name="delaisPaiement"]').innerText.trim();
-              show = show && txt===dp;
-            }
+
             tr.style.display = show ? '' : 'none';
           });
+
           updateTotal();
         };
 
         // ---------- TOTAL ----------
         const updateTotal = () => {
-          let sum = 0;
-          document.querySelectorAll('#editableTable tbody tr[data-id]:not([style*="display: none"]) td[data-name="montant"]').forEach(td=>{
-            const v = parseFloat(td.innerText.replace(/\s/g,'').replace(',','.'));
-            if(!isNaN(v)) sum+=v;
-          });
-          document.getElementById('total').innerText = sum.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2});
+          const visibleCount = [...document.querySelectorAll('#editableTable tbody tr[data-id]')]
+            .filter(tr => tr.style.display !== 'none').length;
+          document.getElementById('total').innerText = String(visibleCount);
         };
 
         // ---------- DRAG COLUMNS ----------
@@ -360,12 +434,15 @@
         });
 
         // ---------- FILTER LISTENERS ----------
-        ['chantierFilter','demandeurFilter','moisFilter','statusFilter'].forEach(id=>{
+        ['chantierFilter', 'demandeurFilter', 'statusFilter'].forEach(id => {
           const el=document.getElementById(id);
           if(el) el.addEventListener('change',applyFilters);
         });
         document.getElementById('resetFilters')?.addEventListener('click',()=>{
-          ['chantierFilter','demandeurFilter','moisFilter','statusFilter'].forEach(id=>document.getElementById(id).value='');
+          ['chantierFilter', 'demandeurFilter', 'statusFilter'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+          });
           document.querySelectorAll('#editableTable tbody tr[data-id]').forEach(r=>r.style.display='');
           updateTotal();
         });
@@ -426,8 +503,8 @@
         });
 
         // ---------- INIT ----------
-        document.addEventListener('DOMContentLoaded',()=>{ updateTotal(); });
-
+        updateTotal();
+        applyFilters();
 
         let __deleteDemandeId = null;
 
@@ -442,6 +519,7 @@
           btn.addEventListener('click', async () => {
             if (!__deleteDemandeId) return;
             btn.disabled = true;
+
             try {
               const response = await fetch(`/achats/fourniture/${__deleteDemandeId}`, {
                 method: 'DELETE',

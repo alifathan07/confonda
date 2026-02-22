@@ -27,29 +27,74 @@ export const uploadFour = multer({ storage });
 /* -------------------------- LIST -------------------------- */
 export const indexDemandeFourniture = async (req, res) => {
 
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const pageSize = Math.min(Math.max(parseInt(req.query.pageSize, 10) || 25, 1), 200);
 
-  const demande = await prisma.demandeFourniture.findMany({
-    include: { user: true, items: true, chantier: true },
-    orderBy: { id: "desc" },
-  });
+  const include = { user: true, items: true, chantier: true };
+  const pendingWhere = { status: "En Attente" };
+  const otherWhere = { NOT: { status: "En Attente" } };
 
-  const sortedDemande = demande.sort((a, b) => {
-    if (a.status === "En Attente" && b.status !== "En Attente") return -1;
-    if (a.status !== "En Attente" && b.status === "En Attente") return 1;
-    return 0;
-  });
+  const [pendingCount, otherCount] = await Promise.all([
+    prisma.demandeFourniture.count({ where: pendingWhere }),
+    prisma.demandeFourniture.count({ where: otherWhere })
+  ]);
+
+  const totalCount = pendingCount + otherCount;
+  const totalPages = Math.max(Math.ceil(totalCount / pageSize), 1);
+  const safePage = Math.min(page, totalPages);
+  const globalSkip = (safePage - 1) * pageSize;
+
+  let demande = [];
+
+  if (globalSkip < pendingCount) {
+    const pendingSkip = globalSkip;
+    const pendingTake = Math.min(pageSize, pendingCount - pendingSkip);
+
+    const pendingRows = await prisma.demandeFourniture.findMany({
+      where: pendingWhere,
+      include,
+      orderBy: { id: "desc" },
+      skip: pendingSkip,
+      take: pendingTake,
+    });
+
+    const remaining = pageSize - pendingRows.length;
+    if (remaining > 0) {
+      const otherRows = await prisma.demandeFourniture.findMany({
+        where: otherWhere,
+        include,
+        orderBy: { id: "desc" },
+        skip: 0,
+        take: remaining,
+      });
+      demande = [...pendingRows, ...otherRows];
+    } else {
+      demande = pendingRows;
+    }
+  } else {
+    const otherSkip = globalSkip - pendingCount;
+    demande = await prisma.demandeFourniture.findMany({
+      where: otherWhere,
+      include,
+      orderBy: { id: "desc" },
+      skip: otherSkip,
+      take: pageSize,
+    });
+  }
 
   const users = await prisma.user.findMany({ where: { role: "user" } });
   const chantiers = await prisma.chantier.findMany();
 
-
-
-
   res.render("dashboard/achats/fourniture/index", {
-    demande: sortedDemande,
+    demande,
     users,
     chantiers,
-
+    pagination: {
+      page: safePage,
+      pageSize,
+      totalCount,
+      totalPages,
+    },
   });
 };
 
@@ -1347,3 +1392,64 @@ export const addpricingforDemande = async (req, res) => {
   }
 };
 
+
+export const updateEtat = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { etat } = req.body;
+    const admin = req.session?.user;
+    if (id) {
+      console.log('yup im here !');
+      
+    }
+
+    // -------------------------------------------------
+    // 1. Basic validation
+    // -------------------------------------------------
+    if (!admin) {
+      return res.status(401).json({ success: false, error: 'Utilisateur non authentifié' });
+    }
+
+    if (!["admin", "grandadmin"].includes(admin.role)) {
+      return res.status(403).json({ success: false, error: 'Accès refusé' });
+    }
+
+    if (!etat) {
+      return res.status(400).json({ success: false, error: 'etat requis' });
+    }
+
+    const demandeId = parseInt(id, 10);
+    if (isNaN(demandeId)) {
+      return res.status(400).json({ success: false, error: 'ID invalide' });
+    }
+
+    
+
+    // -------------------------------------------------
+    // 3. Update demande status
+    // -------------------------------------------------
+    const updated = await prisma.demandeFourniture.update({
+      where: { id: demandeId },
+      data: { etat },
+    });
+
+    // -------------------------------------------------
+    // 4. Success response
+    // -------------------------------------------------
+    res.json({ success: true, data: updated });
+
+  } catch (error) {
+    console.error('updateDemandeStatus error:', error);
+
+    // Prisma record-not-found
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      return res.status(404).json({ success: false, error: 'Demande non trouvée' });
+    }
+
+    // Any other error
+    res.status(500).json({
+      success: false,
+      error: 'Erreur serveur',
+    });
+  }
+};

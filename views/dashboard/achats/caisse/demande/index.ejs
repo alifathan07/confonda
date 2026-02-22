@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -127,132 +128,143 @@
     }
   </style>
 </head>
+
 <body id="page-top">
   <div id="wrapper">
     <%- include('../../../../layouts/sidebar') %>
-    <div id="content-wrapper" class="d-flex flex-column">
-      <div id="content">
-        <%- include('../../../../layouts/topbar') %>
-        <div class="container-fluid">
-          <div class="card shadow mb-4">
-            <div class="card-header py-3">
-              <h6 class="m-0 font-weight-bold text-primary">Liste des Demandes de Caisse</h6>
-            </div>
-            <div class="card-body">
-              <div class="d-flex justify-content-end" style="gap: 10px;">
-                <a href="/achats/create/demandeCaisse" class="btn btn-primary custom-btn">
-                  <i class="fas fa-save"></i> Ajouter
-                </a>
-                <button id="downloadPdfBtn" class="btn btn-success custom-btn">
-                  <i class="fas fa-file-pdf"></i> Exporter PDF
-                </button>
-                <button id="downloadExcelBtn" class="btn btn-outline-success custom-btn">
-                  <i class="fas fa-file-excel"></i> Exporter Excel
-                </button>
-              </div>
-              <% if ( user.role !== 'user') { %>
-                <div class="form-group mt-3">
-                  <div class="d-flex" style="gap: 10px; align-items: flex-end;">
-                    <div class="flex-grow-1">
-                      <label for="chantierFilter">Choisir un chantier</label>
-                      <select id="chantierFilter" class="form-control custom-select">
-                        <option value="">Tous</option>
-                        <% chantiers.forEach(chantier => { %>
-                          <option value="<%= chantier.id %>"><%= chantier.nom %></option>
-                        <% }) %>
-                      </select>
-                    </div>
-                    <div class="flex-grow-1">
-                      <label for="demandeurFilter">Choisir un demandeur</label>
-                      <select id="demandeurFilter" class="form-control custom-select">
-                        <option value="">Tous</option>
-                        <% users.forEach(user => { %>
-                          <option value="<%= user.id %>"><%= user.name %></option>
-                        <% }) %>
-                      </select>
-                    </div>
-                    <div class="flex-grow-1">
-                      <label for="moisFilter">Choisir un mois</label>
-                      <select id="moisFilter" class="form-control custom-select">
-                        <option value="">Tous</option>
-                        <option value="janvier">Janvier</option>
-                        <option value="février">Février</option>
-                        <option value="mars">Mars</option>
-                        <option value="avril">Avril</option>
-                        <option value="mai">Mai</option>
-                        <option value="juin">Juin</option>
-                        <option value="juillet">Juillet</option>
-                        <option value="août">Août</option>
-                        <option value="septembre">Septembre</option>
-                        <option value="octobre">Octobre</option>
-                        <option value="novembre">Novembre</option>
-                        <option value="décembre">Décembre</option>
-                      </select>
-                    </div>
-                    <div class="flex-grow-1">
-                      <label for="statusFilter">Choisir un statut</label>
-                      <select id="statusFilter" class="form-control custom-select">
-                        <option value="">Tous</option>
-                        <option value="En Attente">En Attente</option>
-                        <option value="Versée">Versée</option>
-                        <option value="Annulée">Annulée</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <button id="resetFilters" class="btn btn-secondary custom-btn" style="margin-bottom: 0;">
-                        <i class="fas fa-undo"></i> Réinitialiser
-                      </button>
-                    </div>
-                  </div>
+      <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+          <%- include('../../../../layouts/topbar') %>
+            <div class="container-fluid">
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Liste des Demandes de Caisse</h6>
                 </div>
-              <% } %>
-              <br>
-              <div class="table-responsive">
-                <% 
-                  function formatDateToDDMMYYYY(dateInput) {
-                      if (!dateInput) return '';
-                      const date = new Date(dateInput);
-                      if (isNaN(date)) return dateInput; 
-                      const day = String(date.getDate()).padStart(2, '0');
-                      const month = String(date.getMonth() + 1).padStart(2, '0');
-                      const year = date.getFullYear();
-                      return `${day}/${month}/${year}`;
-                  }
-                %>
-                <table id="editableTable" class="excel-table">
-                  <thead>
-                    <tr style="position: sticky; top: 0; background-color: white; z-index: 1;">
-                      <th draggable="true">Numéro</th>
-                      <th draggable="true">Date Demande</th>
-                      <th draggable="true">Caisse Du Mois</th>
-                      <th draggable="true">Demandeur</th>
-                      <th draggable="true">Chantier</th>
-                      <th draggable="true">Montant Demandé</th>
-                      <th draggable="true">Status</th>
-                      <th style="width: 120px;">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% if (!demande || demande.length === 0) { %>
-                      <tr>
-                        <td colspan="8" style="text-align: center;">Aucune demande disponible.</td>
-                      </tr>
-                    <% } else { %>
-                      <% demande.forEach(d => { %>
-                        <% if (user.role === 'admin' || user.role === 'grandadmin' || d.userId === user.id) { %>
-                          <tr data-id="<%= d.id %>" style="<%= d.color === 'green' ? 'background-color: #c6efc5;' : '' %> <%= d.color === 'blue' ? 'background-color: #f49797; color: white' : '' %> <%= d.color === 'gray' ? 'background-color: #f5f5f5;' : '' %>">
-                            <td contenteditable="true" data-name="numero"><%= d.numero || '' %></td>
-                            <td contenteditable="true" data-name="dateSaisie"><%= formatDateToDDMMYYYY(d.dateDemande) %></td>
-                            <td contenteditable="true" data-name="designation"><%= d.designation || '' %></td>
-                            <td contenteditable="true" data-name="demandeur"><%= d.user?.name || '' %></td>
-                            <td contenteditable="true" data-name="chantier"><%= d.chantier?.nom || '' %></td>
-                            <td contenteditable="true" data-name="montant">
-                              <%= Number(d.montantTotal || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
-                            </td>
-                            <% if (user.role === 'user' || user.role === 'grandadmin') { %>
-                              <td data-name="status" style="text-align: center; padding: 6px;">
-                                <span style="
+                <div class="card-body">
+                  <div class="d-flex justify-content-end" style="gap: 10px;">
+                    <a href="/achats/create/demandeCaisse" class="btn btn-primary custom-btn">
+                      <i class="fas fa-save"></i> Ajouter
+                    </a>
+                    <button id="downloadPdfBtn" class="btn btn-success custom-btn">
+                      <i class="fas fa-file-pdf"></i> Exporter PDF
+                    </button>
+                    <button id="downloadExcelBtn" class="btn btn-outline-success custom-btn">
+                      <i class="fas fa-file-excel"></i> Exporter Excel
+                    </button>
+                  </div>
+                  <% if ( user.role !=='user' ) { %>
+                    <div class="form-group mt-3">
+                      <div class="d-flex" style="gap: 10px; align-items: flex-end;">
+                        <div class="flex-grow-1">
+                          <label for="chantierFilter">Choisir un chantier</label>
+                          <select id="chantierFilter" class="form-control custom-select">
+                            <option value="">Tous</option>
+                            <% chantiers.forEach(chantier=> { %>
+                              <option value="<%= chantier.id %>">
+                                <%= chantier.nom %>
+                              </option>
+                              <% }) %>
+                          </select>
+                        </div>
+                        <div class="flex-grow-1">
+                          <label for="demandeurFilter">Choisir un demandeur</label>
+                          <select id="demandeurFilter" class="form-control custom-select">
+                            <option value="">Tous</option>
+                            <% users.forEach(user=> { %>
+                              <option value="<%= user.id %>">
+                                <%= user.name %>
+                              </option>
+                              <% }) %>
+                          </select>
+                        </div>
+                        <div class="flex-grow-1">
+                          <label for="moisFilter">Choisir un mois</label>
+                          <select id="moisFilter" class="form-control custom-select">
+                            <option value="">Tous</option>
+                            <option value="janvier">Janvier</option>
+                            <option value="février">Février</option>
+                            <option value="mars">Mars</option>
+                            <option value="avril">Avril</option>
+                            <option value="mai">Mai</option>
+                            <option value="juin">Juin</option>
+                            <option value="juillet">Juillet</option>
+                            <option value="août">Août</option>
+                            <option value="septembre">Septembre</option>
+                            <option value="octobre">Octobre</option>
+                            <option value="novembre">Novembre</option>
+                            <option value="décembre">Décembre</option>
+                          </select>
+                        </div>
+                        <div class="flex-grow-1">
+                          <label for="statusFilter">Choisir un statut</label>
+                          <select id="statusFilter" class="form-control custom-select">
+                            <option value="">Tous</option>
+                            <option value="En Attente">En Attente</option>
+                            <option value="Versée">Versée</option>
+                            <option value="Annulée">Annulée</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <button id="resetFilters" class="btn btn-secondary custom-btn" style="margin-bottom: 0;">
+                            <i class="fas fa-undo"></i> Réinitialiser
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <% } %>
+                      <br>
+                      <div class="table-responsive">
+                        <% function formatDateToDDMMYYYY(dateInput) { if (!dateInput) return '' ; const date=new
+                          Date(dateInput); if (isNaN(date)) return dateInput; const
+                          day=String(date.getDate()).padStart(2, '0' ); const month=String(date.getMonth() +
+                          1).padStart(2, '0' ); const year=date.getFullYear(); return `${day}/${month}/${year}`; } %>
+                          <table id="editableTable" class="excel-table">
+                            <thead>
+                              <tr style="position: sticky; top: 0; background-color: white; z-index: 1;">
+                                <th draggable="true">Numéro</th>
+                                <th draggable="true">Date Demande</th>
+                                <th draggable="true">Caisse Du Mois</th>
+                                <th draggable="true">Demandeur</th>
+                                <th draggable="true">Chantier</th>
+                                <th draggable="true">Montant Demandé</th>
+                                <th draggable="true">Statut</th>
+                                <th draggable="true">Etat</th>
+                                <th>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <% if (!demande || demande.length===0) { %>
+                                <tr>
+                                  <td colspan="9" style="text-align: center;">Aucune demande disponible.</td>
+                                </tr>
+                                <% } else { %>
+                                  <% demande.forEach(d=> { %>
+                                    <% if (user.role==='admin' || user.role==='grandadmin' || d.userId===user.id) { %>
+                                      <tr data-id="<%= d.id %>"
+                                        style="<%= d.color === 'green' ? 'background-color: #c6efc5;' : '' %> <%= d.color === 'blue' ? 'background-color: #f49797; color: white' : '' %> <%= d.color === 'gray' ? 'background-color: #f5f5f5;' : '' %>">
+                                        <td contenteditable="true" data-name="numero">
+                                          <%= d.numero || '' %>
+                                        </td>
+                                        <td contenteditable="true" data-name="dateSaisie">
+                                          <%= formatDateToDDMMYYYY(d.dateDemande) %>
+                                        </td>
+                                        <td contenteditable="true" data-name="designation">
+                                          <%= d.designation || '' %>
+                                        </td>
+                                        <td contenteditable="true" data-name="demandeur">
+                                          <%= d.user?.name || '' %>
+                                        </td>
+                                        <td contenteditable="true" data-name="chantier">
+                                          <%= d.chantier?.nom || '' %>
+                                        </td>
+                                        <td contenteditable="true" data-name="montant">
+                                          <%= Number(d.montantTotal || 0).toLocaleString('fr-FR', {
+                                            minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                                        </td>
+                                        <% if (user.role==='user' || user.role==='grandadmin' ) { %>
+                                          <td data-name="status" style="text-align: center; padding: 6px;">
+                                            <span style="
                                   display: inline-block;
                                   min-width: 100px;
                                   text-align: center;
@@ -276,574 +288,743 @@
                                     color: #6C757D;
                                   <% } %>
                                 ">
-                                  <%= d.status || '—' %>
-                                </span>
-                              </td>
-                            <% } else if (user.role === 'admin') { %>
-                              <td>
-                                <select class="form-control" data-name="status" onchange="updateStatus(<%= d.id %>, this.value)">
-                                  <option value="" <% if (!d.status) { %> selected <% } %>>Sélectionner</option>
-                                  <option value="Versée" <% if (d.status === 'Versée') { %> selected <% } %>>Versée</option>
-                                  <option value="Annulée" <% if (d.status === 'Annulée') { %> selected <% } %>>Annulée</option>
-                                  <option value="En Attente" <% if (d.status === 'En Attente') { %> selected <% } %>>En Attente</option>
-                                </select>
-                              </td>
-                            <% } %>
-                            <td>
-                              <div class="btn-group" role="group">
-                                <a href="/achats/demandes/caisse/<%= d.id %>" class="btn btn-info btn-sm" style="width: 60px;">
-                                  <i class="fas fa-eye"></i> Voir
-                                </a>
-                                <a href="/achats/demandes/caisse/<%= d.id %>/pdf" class="btn btn-danger btn-sm" style="width: 60px;">
-                                  <i class="fas fa-file-pdf"></i> PDF
-                                </a>
-                                <a href="/achats/demandes/caisse/<%= d.id %>/excel" class="btn btn-success btn-sm" style="width: 60px;">
-                                  <i class="fas fa-file-excel"></i> Excel
-                                </a>
+                                              <%= d.status || '—' %>
+                                            </span>
+                                          </td>
+                                          <% } else if (user.role==='admin' ) { %>
+                                            <td>
+                                              <select class="form-control" data-name="status"
+                                                onchange="updateStatus(<%= d.id %>, this.value)">
+                                                <option value="" <% if (!d.status) { %> selected <% } %>>Sélectionner
+                                                </option>
+                                                <option value="Versée" <% if (d.status==='Versée' ) { %> selected <% }
+                                                    %>>Versée</option>
+                                                <option value="Annulée" <% if (d.status==='Annulée' ) { %> selected <% }
+                                                    %>>Annulée</option>
+                                                <option value="En Attente" <% if (d.status==='En Attente' ) { %>
+                                                  selected <% } %>>En Attente</option>
+                                              </select>
+                                            </td>
+                                            <% } %>
 
-                                <% if (user.role === 'admin' || user.role === 'grandadmin') { %>
-                                  <button onclick="supprimerdemande(<%= d.id %>)" class="excel-delete-btn">
-                                    <i class="fas fa-trash"></i>
-                                  </button>
-                                <% } %>
-                              </div>
-                            </td>
-                          </tr>
-                        <% } %>
-                      <% }); %>
-                    <% } %>
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <td colspan="5" style="text-align: right; font-weight: bold;">Total:</td>
-                      <td id="total" style="font-weight: bold;">0,00</td>
-                      <td colspan="2"></td>
-                    </tr>
-                  </tfoot>
-                </table>
+                                            <% if (user.role==='user' || user.role==='grandadmin') { %>
+                                              <td data-name="etat" style="text-align: center; padding: 6px;">
+                                                <span class="badge badge-light" style="min-width:100px; padding:6px 12px; border-radius:20px; font-weight:600;">
+                                                  <%= d.etat || '—' %>
+                                                </span>
+                                              </td>
+                                              <% } else if (user.role==='admin') { %>
+                                                <td>
+                                                  <select class="form-control" data-name="etat" onchange="updateEtat(<%= d.id %>, this.value)">
+                                                    <option value="" <%= !d.etat ? 'selected' : '' %>>Sélectionner</option>
+                                                    <option value="En cours" <%= d.etat==='En cours' ? 'selected' : '' %>>En cours</option>
+                                                    <option value="Accepter" <%= d.etat==='Accepter' ? 'selected' : '' %>>Accepter</option>
+                                                    <option value="Refuser" <%= d.etat==='Refuser' ? 'selected' : '' %>>Refuser</option>
+                                                  </select>
+                                                </td>
+                                                <% } %>
+
+                                              <td>
+                                                <div class="btn-group" role="group">
+                                                  <a href="/achats/demandes/caisse/<%= d.id %>"
+                                                    class="btn btn-info btn-sm" style="width: 60px;">
+                                                    <i class="fas fa-eye"></i> Voir
+                                                  </a>
+                                                  <a href="/achats/demandes/caisse/<%= d.id %>/pdf"
+                                                    class="btn btn-danger btn-sm" style="width: 60px;">
+                                                    <i class="fas fa-file-pdf"></i> PDF
+                                                  </a>
+                                                  <a href="/achats/demandes/caisse/<%= d.id %>/excel"
+                                                    class="btn btn-success btn-sm" style="width: 60px;">
+                                                    <i class="fas fa-file-excel"></i> Excel
+                                                  </a>
+
+                                                  <% if (user.role==='admin' || user.role==='grandadmin' ) { %>
+                                                    <button onclick="supprimerdemande(<%= d.id %>)"
+                                                      class="excel-delete-btn">
+                                                      <i class="fas fa-trash"></i>
+                                                    </button>
+                                                    <% } %>
+                                                </div>
+                                              </td>
+                                      </tr>
+                                      <% } %>
+                                        <% }); %>
+                                          <% } %>
+                            </tbody>
+                            <tfoot>
+                              <tr>
+                                <td colspan="7" style="text-align: right; font-weight: bold;">Total:</td>
+                                <td id="total" style="font-weight: bold;">0,00</td>
+                                <td></td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                      </div>
+                </div>
               </div>
             </div>
-          </div>
         </div>
-      </div>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-      <script>
-        const { jsPDF } = window.jspdf;
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script
+          src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+        <script>
+          const { jsPDF } = window.jspdf;
 
-        // Debounce function to limit rapid PATCH requests
-        function debounce(func, wait) {
-          let timeout;
-          return function (...args) {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), wait);
-          };
-        }
+          // Debounce function to limit rapid PATCH requests
+          function debounce(func, wait) {
+            let timeout;
+            return function (...args) {
+              clearTimeout(timeout);
+              timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+          }
 
-        async function supprimerdemande(id) {
-          try {
-            if (confirm('Êtes-vous sûr de vouloir supprimer cette demande ?')) {
-              const res = await fetch(`/achats/demandes/caisse/delete/${id}`, {
-                
-                method: 'DELETE'
+          async function supprimerdemande(id) {
+            try {
+              if (confirm('Êtes-vous sûr de vouloir supprimer cette demande ?')) {
+                const res = await fetch(`/achats/demandes/caisse/delete/${id}`, {
+
+                  method: 'DELETE'
+                });
+                if (res.ok) {
+                  alert('Demande supprimée avec succès.');
+                  location.reload();
+                } else {
+                  console.error(res);
+                  alert('Erreur lors de la suppression de la demande.');
+                }
+              }
+            } catch (error) {
+              console.error(error);
+              alert('Erreur réseau lors de la suppression.');
+            }
+          }
+
+          async function downloadPDF(id) {
+            try {
+              const res = await fetch(`/tresorerie/demandes/banque/${id}/pdf`);
+              if (!res.ok) throw new Error('Erreur lors du téléchargement');
+              const blob = await res.blob();
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = `demande_${id}.pdf`;
+              document.body.appendChild(link);
+              link.click();
+              link.remove();
+              URL.revokeObjectURL(url);
+            } catch (err) {
+              console.error(err);
+              alert('Erreur lors du téléchargement du PDF');
+            }
+          }
+
+          async function updateStatus(id, status) {
+            try {
+              const res = await fetch(`/achats/demandes/caisse/updateStatus/${id}`, {
+                method: 'PATCH',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status })
               });
               if (res.ok) {
-                alert('Demande supprimée avec succès.');
+                alert('Statut mis à jour avec succès.');
                 location.reload();
               } else {
-                console.error(res);
-                alert('Erreur lors de la suppression de la demande.');
+                alert('Erreur lors de la mise à jour du statut.');
               }
-            }
-          } catch (error) {
-            console.error(error);
-            alert('Erreur réseau lors de la suppression.');
-          }
-        }
-
-        async function downloadPDF(id) {
-          try {
-            const res = await fetch(`/tresorerie/demandes/banque/${id}/pdf`);
-            if (!res.ok) throw new Error('Erreur lors du téléchargement');
-            const blob = await res.blob();
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `demande_${id}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            URL.revokeObjectURL(url);
-          } catch (err) {
-            console.error(err);
-            alert('Erreur lors du téléchargement du PDF');
-          }
-        }
-
-        async function updateStatus(id, status) {
-          try {
-            const res = await fetch(`/achats/demandes/caisse/updateStatus/${id}`, {
-              method: 'PATCH',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ status })
-            });
-            if (res.ok) {
-              alert('Status mis à jour avec succès.');
-              location.reload();
-            } else {
-              alert('Erreur lors de la mise à jour du status.');
-            }
-          } catch (error) {
-            console.error(error);
-            alert('Erreur réseau lors de la mise à jour du status.');
-          }
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-          const table = document.getElementById("editableTable");
-          const chantierFilter = document.getElementById('chantierFilter');
-          const demandeurFilter = document.getElementById('demandeurFilter');
-          const moisFilter = document.getElementById('moisFilter');
-          const statusFilter = document.getElementById('statusFilter');
-          const resetFilters = document.getElementById('resetFilters');
-
-          // Client-side function to format dates to dd/mm/yyyy
-          function formatDateToDDMMYYYY(dateInput) {
-            if (!dateInput) return '';
-            const date = new Date(dateInput);
-            if (isNaN(date)) return dateInput;
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = date.getFullYear();
-            return `${day}/${month}/${year}`;
-          }
-
-          // Convert number to French words
-          const montantWordsCache = new Map();
-          function numberToFrenchWords(n) {
-            if (montantWordsCache.has(n)) return montantWordsCache.get(n);
-            let input = n;
-            if (typeof n === "string") n = n.replace(/\s/g, '').replace(',', '.');
-            n = Math.floor(Number(n));
-
-            if (n === 0) {
-              montantWordsCache.set(input, "ZÉRO");
-              return "ZÉRO";
-            }
-
-            const ones = ["", "UN", "DEUX", "TROIS", "QUATRE", "CINQ", "SIX", "SEPT", "HUIT", "NEUF"];
-            const teens = ["DIX", "ONZE", "DOUZE", "TREIZE", "QUATORZE", "QUINZE", "SEIZE", "DIX-SEPT", "DIX-HUIT", "DIX-NEUF"];
-            const tens = ["", "DIX", "VINGT", "TRENTE", "QUARANTE", "CINQUANTE", "SOIXANTE", "SOIXANTE", "QUATRE-VINGT", "QUATRE-VINGT"];
-            const scales = ["", "MILLE", "MILLION", "MILLIARD", "BILLION", "BILLIARD", "TRILLION"];
-
-            function chunkNumber(num) {
-              let chunks = [];
-              while (num > 0) {
-                chunks.push(num % 1000);
-                num = Math.floor(num / 1000);
-              }
-              return chunks;
-            }
-
-            function chunkToWords(chunk) {
-              let h = Math.floor(chunk / 100);
-              let t = Math.floor((chunk % 100) / 10);
-              let o = chunk % 10;
-              let str = "";
-
-              if (h > 0) {
-                str += (h === 1 ? "CENT" : ones[h] + " CENT");
-                if (h > 1 && t === 0 && o === 0) str += "S";
-                if (t !== 0 || o !== 0) str += " ";
-              }
-
-              let num2 = t * 10 + o;
-              if (num2 > 0) {
-                if (num2 < 10) {
-                  str += ones[num2];
-                } else if (num2 < 20) {
-                  str += teens[num2 - 10];
-                } else {
-                  let tenVal = t;
-                  let oneVal = o;
-                  if (tenVal === 7 || tenVal === 9) {
-                    let connector = "-";
-                    if (tenVal === 7 && oneVal === 1) connector = " ET ";
-                    str += tens[tenVal] + connector + teens[oneVal];
-                  } else if (tenVal === 8) {
-                    str += "QUATRE-VINGT" + (oneVal === 0 ? "S" : "-" + ones[oneVal]);
-                  } else if (oneVal === 1 && tenVal !== 8) {
-                    str += tens[tenVal] + "-ET-UN";
-                  } else if (oneVal > 0) {
-                    str += tens[tenVal] + "-" + ones[oneVal];
-                  } else {
-                    str += tens[tenVal];
-                  }
-                }
-              }
-
-              return str.trim();
-            }
-
-            let chunks = chunkNumber(n);
-            let words = [];
-
-            for (let i = chunks.length - 1; i >= 0; i--) {
-              let chunk = chunks[i];
-              if (chunk === 0) continue;
-              let chunkWord = chunkToWords(chunk);
-              if (i > 0) {
-                if (i === 1 && chunk === 1) chunkWord = scales[i];
-                else chunkWord += " " + scales[i];
-                if (chunk > 1 && i > 1) chunkWord += "S";
-              }
-              words.push(chunkWord);
-            }
-
-            let result = words.join(" ").replace(/\s+/g, ' ').trim();
-            montantWordsCache.set(input, result);
-            return result;
-          }
-
-          function convertMontantToLettre(montant) {
-            if (!montant || isNaN(montant)) return null;
-            let parts = String(montant).split(".");
-            let integerPart = parts[0];
-            let decimalPart = parts[1] || "";
-            let text = numberToFrenchWords(integerPart) + " DIRHAMS";
-            if (decimalPart && parseInt(decimalPart, 10) > 0) {
-              decimalPart = decimalPart.padEnd(2, "0").slice(0, 2);
-              text += " " + numberToFrenchWords(decimalPart) + " CENTIMES";
-            }
-            return text;
-          }
-
-          function convertDateToISO(dateStr) {
-            if (!dateStr || dateStr.trim() === '') return null;
-            const parts = dateStr.split('/');
-            if (parts.length !== 3) return null;
-            const [day, month, year] = parts.map(part => part.trim());
-            if (!day || !month || !year || isNaN(day) || isNaN(month) || isNaN(year)) return null;
-            const parsedDate = new Date(`${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
-            return isNaN(parsedDate) ? null : parsedDate.toISOString().split('T')[0];
-          }
-
-          function sanitizeInput(input) {
-            const div = document.createElement('div');
-            div.textContent = input;
-            return div.innerHTML;
-          }
-
-          function updateTotal() {
-            const rows = document.querySelectorAll("#editableTable tbody tr[data-id]");
-            let total = 0;
-            rows.forEach(row => {
-              if (row.style.display !== "none") {
-                const montantCell = row.querySelector("td[data-name='montant']");
-                if (montantCell) {
-                  const value = parseFloat(montantCell.innerText.replace(/\s/g, '').replace(',', '.'));
-                  if (!isNaN(value)) total += value;
-                }
-              }
-            });
-            const totalCell = document.getElementById("total");
-            if (totalCell) {
-              totalCell.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            } catch (error) {
+              console.error(error);
+              alert('Erreur réseau lors de la mise à jour du statut.');
             }
           }
 
-          // Filter function
-        function applyFilters() {
-  const chantierValue = chantierFilter.value;
-  const demandeurValue = demandeurFilter?.value || '';
-  const moisValue = moisFilter?.value ? moisFilter.value.toLowerCase() + '-' + new Date().getFullYear() : '';
-  const statusValue = statusFilter?.value || '';
-
-  const rows = table.querySelectorAll('tbody tr[data-id]');
-
-  rows.forEach(row => {
-    let showRow = true;
-
-    // Filter by chantier
-    if (chantierValue) {
-      const chantierCell = row.querySelector("td[data-name='chantier']");
-      const chantierText = chantierCell?.innerText.trim() || '';
-      showRow = showRow && chantierText === chantierFilter.options[chantierFilter.selectedIndex].text;
-    }
-
-    // Filter by demandeur
-    if (demandeurValue) {
-      const demandeurCell = row.querySelector("td[data-name='demandeur']");
-      const demandeurText = demandeurCell?.innerText.trim() || '';
-      showRow = showRow && demandeurText === demandeurFilter.options[demandeurFilter.selectedIndex].text;
-    }
-
-    // Filter by month
-    if (moisValue) {
-      const moisCell = row.querySelector("td[data-name='designation']");
-      const moisText = moisCell?.innerText.trim().toLowerCase() || '';
-      showRow = showRow && moisText === moisValue;
-    }
-
-    // Filter by status ✅
-    if (statusValue) {
-      const statusCell = row.querySelector("td[data-name='status']");
-      let statusText = '';
-      if (statusCell) {
-        const select = statusCell.querySelector("select");
-        statusText = select ? select.value : statusCell.innerText.trim();
-      }
-      showRow = showRow && statusText === statusValue;
-    }
-
-    row.style.display = showRow ? '' : 'none';
-  });
-
-  updateTotal(); // Recalculate total for visible rows
-}
-
-          // Drag and drop columns
-          let dragSrcIdx = null;
-          function swapColumns(table, fromIdx, toIdx) {
-            const headerRow = table.tHead.rows[0];
-            if (fromIdx === toIdx || fromIdx >= headerRow.cells.length - 1 || toIdx >= headerRow.cells.length - 1) return;
-            headerRow.insertBefore(headerRow.children[fromIdx], headerRow.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
-            Array.from(table.tBodies[0].rows).forEach(row => {
-              row.insertBefore(row.children[fromIdx], row.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
-            });
-          }
-
-          Array.from(table.tHead.rows[0].cells).forEach((th, idx) => {
-            if (idx < table.tHead.rows[0].cells.length - 1) {
-              th.draggable = true;
-              th.addEventListener('dragstart', function (e) {
-                dragSrcIdx = idx;
-                e.dataTransfer.effectAllowed = 'move';
-                th.classList.add('dragging');
-              });
-              th.addEventListener('dragend', function () {
-                dragSrcIdx = null;
-                th.classList.remove('dragging');
-                Array.from(table.tHead.rows[0].cells).forEach(cell => cell.classList.remove('drag-over'));
-              });
-              th.addEventListener('dragover', function (e) {
-                e.preventDefault();
-                th.classList.add('drag-over');
-              });
-              th.addEventListener('dragleave', function () {
-                th.classList.remove('drag-over');
-              });
-              th.addEventListener('drop', function (e) {
-                e.preventDefault();
-                th.classList.remove('drag-over');
-                if (dragSrcIdx !== null && dragSrcIdx !== idx) {
-                  swapColumns(table, dragSrcIdx, idx);
-                }
-              });
-            }
-          });
-
-          // Mark row as dirty on cell edit and trigger auto-update
-          const debouncedAutoUpdateRow = debounce(async (row) => {
-            const success = await autoUpdateRow(row);
-            if (success) {
-              updateTotal();
-            }
-          }, 500);
-
-          table.addEventListener("input", function(e) {
-            const cell = e.target.closest("td[data-name]");
-            if (cell) {
-              const row = cell.parentElement;
-              row.setAttribute("data-dirty", "true");
-              row.classList.add("excel-dirty-row");
-              if (cell.getAttribute("data-name") === "montant") updateTotal();
-            }
-          });
-
-          table.addEventListener("change", function(e) {
-            if (e.target.tagName === "SELECT" && e.target.getAttribute("data-name") === "status") {
-              const row = e.target.closest("tr");
-              row.setAttribute("data-dirty", "true");
-              row.classList.add("excel-dirty-row");
-            }
-          });
-
-          document.addEventListener("click", async function(e) {
-            if (!table.contains(e.target)) {
-              const dirtyRows = table.querySelectorAll("tbody tr[data-dirty='true']");
-              for (const row of dirtyRows) {
-                await autoUpdateRow(row);
-              }
-            }
-          });
-
-          async function autoUpdateRow(row) {
-            if (!row.getAttribute("data-dirty")) return true;
-            const cells = Array.from(row.querySelectorAll("td[data-name]"));
-            const data = {};
-            const id = row.getAttribute("data-id");
-
-            let hasInvalidDate = false;
-
-            cells.forEach(cell => {
-              const key = cell.getAttribute("data-name");
-              if (key === "status") {
-                const select = cell.querySelector("select[data-name='status']");
-                if (select) data[key] = select.value || null;
-              } else {
-                let value = sanitizeInput(cell.innerText.trim());
-                if (key === "montant") {
-                  value = parseFloat(value.replace(/\s/g, '').replace(',', '.'));
-                  if (isNaN(value)) return;
-                  data[key] = value;
-                  data.montantLettre = convertMontantToLettre(value);
-                } else if (key === "dateSaisie") {
-                  value = convertDateToISO(value);
-                  if (!value) {
-                    hasInvalidDate = true;
-                    return;
-                  }
-                  data[key] = value;
-                } else if (value !== '') {
-                  data[key] = value;
-                }
-              }
-            });
-
-            if (hasInvalidDate) {
-              alert(`Erreur : La date de saisie est invalide ou vide pour la ligne avec ID ${id}. Veuillez entrer une date au format JJ/MM/AAAA.`);
-              return false;
-            }
-
-            if (!id) {
-              alert(`Erreur : Aucun ID de demande trouvé pour la ligne.`);
-              return false;
-            }
-
-            function getCaretPosition(el) {
-              const sel = window.getSelection();
-              if (!sel.rangeCount) return 0;
-              const range = sel.getRangeAt(0);
-              const preRange = range.cloneRange();
-              preRange.selectNodeContents(el);
-              preRange.setEnd(range.endContainer, range.endOffset);
-              return preRange.toString().length;
-            }
-
-            function setCaretPosition(el, pos) {
-              const range = document.createRange();
-              const sel = window.getSelection();
-              const textLength = el.innerText.length;
-              const safePos = Math.min(pos, textLength);
-              range.selectNodeContents(el);
-              range.setStart(el.firstChild || el, safePos);
-              range.collapse(true);
-              sel.removeAllRanges();
-              sel.addRange(range);
-            }
-
+          async function updateEtat(id, etat) {
             try {
-              const response = await fetch(`/tresorerie/demandes/update/${id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data)
+              const res = await fetch(`/achats/demandes/caisse/updateEtat/${id}`, {
+                method: 'PATCH',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ etat })
               });
-              const result = await response.json();
 
-              if (response.ok) {
-                row.removeAttribute("data-dirty");
-                row.classList.remove("excel-dirty-row");
-                const updatedDemande = result.demande || {};
-
-                cells.forEach(cell => {
-                  const key = cell.getAttribute("data-name");
-                  if (!(key in updatedDemande) || updatedDemande[key] === null || updatedDemande[key] === undefined) return;
-
-                  const isFocused = document.activeElement === cell;
-                  let caretPos = 0;
-                  if (isFocused && key !== "status") caretPos = getCaretPosition(cell);
-
-                  if (key === "status") {
-                    const select = cell.querySelector("select[data-name='status']");
-                    if (select) select.value = updatedDemande[key] || '';
-                  } else if (key === "montant") {
-                    cell.innerText = Number(updatedDemande[key]).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                  } else if (key === "dateSaisie") {
-                    cell.innerText = updatedDemande[key] ? formatDateToDDMMYYYY(updatedDemande[key]) : '';
-                  } else {
-                    cell.innerText = updatedDemande[key].toString().trim();
-                  }
-
-                  if (isFocused && key !== "status") setCaretPosition(cell, caretPos);
-                });
-
-                return true;
+              if (res.ok) {
+                alert('Etat mis à jour avec succès.');
+                location.reload();
               } else {
-                alert(`Erreur lors de la mise à jour de la ligne ${id}: ${result.message || 'Erreur inconnue'}`);
-                return false;
+                const j = await res.json().catch(() => null);
+                alert((j && (j.error || j.message)) || 'Erreur lors de la mise à jour de l\'etat');
               }
-            } catch (err) {
-              console.error("Error updating row", id, ":", err.message);
-              alert(`Erreur réseau lors de la mise à jour de la ligne ${id}: ${err.message}`);
-              return false;
+            } catch (error) {
+              console.error(error);
+              alert('Erreur réseau');
             }
           }
 
-          // Add event listeners for filters
-          if (chantierFilter) chantierFilter.addEventListener('change', applyFilters);
-          if (demandeurFilter) demandeurFilter.addEventListener('change', applyFilters);
-          if (moisFilter) moisFilter.addEventListener('change', applyFilters);
-          if (statusFilter) statusFilter.addEventListener('change', applyFilters);
-
-          // Reset filters
-          if (resetFilters) {
-            resetFilters.addEventListener('click', () => {
-              if (chantierFilter) chantierFilter.value = '';
-              if (demandeurFilter) demandeurFilter.value = '';
-              if (moisFilter) moisFilter.value = '';
-              if (statusFilter) statusFilter.value = '';
-
-              const rows = table.querySelectorAll('tbody tr[data-id]');
-              rows.forEach(row => {
-                row.style.display = '';
-              });
-
-              updateTotal();
-            });
-          }
-
-          // PDF Download
-          document.getElementById("downloadPdfBtn")?.addEventListener("click", function () {
+          document.addEventListener("DOMContentLoaded", function () {
             const table = document.getElementById("editableTable");
-            const rows = table.querySelectorAll("tbody tr[data-id]");
-            if (rows.length === 0) {
-              alert("Aucune donnée à exporter en PDF.");
-              return;
+            const chantierFilter = document.getElementById('chantierFilter');
+            const demandeurFilter = document.getElementById('demandeurFilter');
+            const moisFilter = document.getElementById('moisFilter');
+            const statusFilter = document.getElementById('statusFilter');
+            const resetFilters = document.getElementById('resetFilters');
+
+            // Client-side function to format dates to dd/mm/yyyy
+            function formatDateToDDMMYYYY(dateInput) {
+              if (!dateInput) return '';
+              const date = new Date(dateInput);
+              if (isNaN(date)) return dateInput;
+              const day = String(date.getDate()).padStart(2, '0');
+              const month = String(date.getMonth() + 1).padStart(2, '0');
+              const year = date.getFullYear();
+              return `${day}/${month}/${year}`;
             }
 
-            try {
-              const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-              const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
-              const title = document.querySelector(".card-header h6").innerText;
+            // Convert number to French words
+            const montantWordsCache = new Map();
+            function numberToFrenchWords(n) {
+              if (montantWordsCache.has(n)) return montantWordsCache.get(n);
+              let input = n;
+              if (typeof n === "string") n = n.replace(/\s/g, '').replace(',', '.');
+              n = Math.floor(Number(n));
 
-              doc.setFont("helvetica", "bold");
-              doc.setFontSize(18);
-              doc.setTextColor(40, 40, 40);
-              doc.text(title, 10, 20);
+              if (n === 0) {
+                montantWordsCache.set(input, "ZÉRO");
+                return "ZÉRO";
+              }
 
-              const tableData = [];
+              const ones = ["", "UN", "DEUX", "TROIS", "QUATRE", "CINQ", "SIX", "SEPT", "HUIT", "NEUF"];
+              const teens = ["DIX", "ONZE", "DOUZE", "TREIZE", "QUATORZE", "QUINZE", "SEIZE", "DIX-SEPT", "DIX-HUIT", "DIX-NEUF"];
+              const tens = ["", "DIX", "VINGT", "TRENTE", "QUARANTE", "CINQUANTE", "SOIXANTE", "SOIXANTE", "QUATRE-VINGT", "QUATRE-VINGT"];
+              const scales = ["", "MILLE", "MILLION", "MILLIARD", "BILLION", "BILLIARD", "TRILLION"];
+
+              function chunkNumber(num) {
+                let chunks = [];
+                while (num > 0) {
+                  chunks.push(num % 1000);
+                  num = Math.floor(num / 1000);
+                }
+                return chunks;
+              }
+
+              function chunkToWords(chunk) {
+                let h = Math.floor(chunk / 100);
+                let t = Math.floor((chunk % 100) / 10);
+                let o = chunk % 10;
+                let str = "";
+
+                if (h > 0) {
+                  str += (h === 1 ? "CENT" : ones[h] + " CENT");
+                  if (h > 1 && t === 0 && o === 0) str += "S";
+                  if (t !== 0 || o !== 0) str += " ";
+                }
+
+                let num2 = t * 10 + o;
+                if (num2 > 0) {
+                  if (num2 < 10) {
+                    str += ones[num2];
+                  } else if (num2 < 20) {
+                    str += teens[num2 - 10];
+                  } else {
+                    let tenVal = t;
+                    let oneVal = o;
+                    if (tenVal === 7 || tenVal === 9) {
+                      let connector = "-";
+                      if (tenVal === 7 && oneVal === 1) connector = " ET ";
+                      str += tens[tenVal] + connector + teens[oneVal];
+                    } else if (tenVal === 8) {
+                      str += "QUATRE-VINGT" + (oneVal === 0 ? "S" : "-" + ones[oneVal]);
+                    } else if (oneVal === 1 && tenVal !== 8) {
+                      str += tens[tenVal] + "-ET-UN";
+                    } else if (oneVal > 0) {
+                      str += tens[tenVal] + "-" + ones[oneVal];
+                    } else {
+                      str += tens[tenVal];
+                    }
+                  }
+                }
+
+                return str.trim();
+              }
+
+              let chunks = chunkNumber(n);
+              let words = [];
+
+              for (let i = chunks.length - 1; i >= 0; i--) {
+                let chunk = chunks[i];
+                if (chunk === 0) continue;
+                let chunkWord = chunkToWords(chunk);
+                if (i > 0) {
+                  if (i === 1 && chunk === 1) chunkWord = scales[i];
+                  else chunkWord += " " + scales[i];
+                  if (chunk > 1 && i > 1) chunkWord += "S";
+                }
+                words.push(chunkWord);
+              }
+
+              let result = words.join(" ").replace(/\s+/g, ' ').trim();
+              montantWordsCache.set(input, result);
+              return result;
+            }
+
+            function convertMontantToLettre(montant) {
+              if (!montant || isNaN(montant)) return null;
+              let parts = String(montant).split(".");
+              let integerPart = parts[0];
+              let decimalPart = parts[1] || "";
+              let text = numberToFrenchWords(integerPart) + " DIRHAMS";
+              if (decimalPart && parseInt(decimalPart, 10) > 0) {
+                decimalPart = decimalPart.padEnd(2, "0").slice(0, 2);
+                text += " " + numberToFrenchWords(decimalPart) + " CENTIMES";
+              }
+              return text;
+            }
+
+            function convertDateToISO(dateStr) {
+              if (!dateStr || dateStr.trim() === '') return null;
+              const parts = dateStr.split('/');
+              if (parts.length !== 3) return null;
+              const [day, month, year] = parts.map(part => part.trim());
+              if (!day || !month || !year || isNaN(day) || isNaN(month) || isNaN(year)) return null;
+              const parsedDate = new Date(`${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+              return isNaN(parsedDate) ? null : parsedDate.toISOString().split('T')[0];
+            }
+
+            function sanitizeInput(input) {
+              const div = document.createElement('div');
+              div.textContent = input;
+              return div.innerHTML;
+            }
+
+            function updateTotal() {
+              const rows = document.querySelectorAll("#editableTable tbody tr[data-id]");
+              let total = 0;
               rows.forEach(row => {
                 if (row.style.display !== "none") {
-                  const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
+                  const montantCell = row.querySelector("td[data-name='montant']");
+                  if (montantCell) {
+                    const value = parseFloat(montantCell.innerText.replace(/\s/g, '').replace(',', '.'));
+                    if (!isNaN(value)) total += value;
+                  }
+                }
+              });
+              const totalCell = document.getElementById("total");
+              if (totalCell) {
+                totalCell.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              }
+            }
+
+            // Filter function
+            function applyFilters() {
+              const chantierValue = chantierFilter.value;
+              const demandeurValue = demandeurFilter?.value || '';
+              const moisValue = moisFilter?.value ? moisFilter.value.toLowerCase() + '-' + new Date().getFullYear() : '';
+              const statusValue = statusFilter?.value || '';
+
+              const rows = table.querySelectorAll('tbody tr[data-id]');
+
+              rows.forEach(row => {
+                let showRow = true;
+
+                // Filter by chantier
+                if (chantierValue) {
+                  const chantierCell = row.querySelector("td[data-name='chantier']");
+                  const chantierText = chantierCell?.innerText.trim() || '';
+                  showRow = showRow && chantierText === chantierFilter.options[chantierFilter.selectedIndex].text;
+                }
+
+                // Filter by demandeur
+                if (demandeurValue) {
+                  const demandeurCell = row.querySelector("td[data-name='demandeur']");
+                  const demandeurText = demandeurCell?.innerText.trim() || '';
+                  showRow = showRow && demandeurText === demandeurFilter.options[demandeurFilter.selectedIndex].text;
+                }
+
+                // Filter by month
+                if (moisValue) {
+                  const moisCell = row.querySelector("td[data-name='designation']");
+                  const moisText = moisCell?.innerText.trim().toLowerCase() || '';
+                  showRow = showRow && moisText === moisValue;
+                }
+
+                // Filter by status 
+                if (statusValue) {
+                  const statusCell = row.querySelector("td[data-name='status']");
+                  let statusText = '';
+                  if (statusCell) {
+                    const select = statusCell.querySelector("select");
+                    statusText = select ? select.value : statusCell.innerText.trim();
+                  }
+                  showRow = showRow && statusText === statusValue;
+                }
+
+                row.style.display = showRow ? '' : 'none';
+              });
+
+              updateTotal(); // Recalculate total for visible rows
+            }
+
+            // Drag and drop columns
+            let dragSrcIdx = null;
+            function swapColumns(table, fromIdx, toIdx) {
+              const headerRow = table.tHead.rows[0];
+              if (fromIdx === toIdx || fromIdx >= headerRow.cells.length - 1 || toIdx >= headerRow.cells.length - 1) return;
+              headerRow.insertBefore(headerRow.children[fromIdx], headerRow.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
+              Array.from(table.tBodies[0].rows).forEach(row => {
+                row.insertBefore(row.children[fromIdx], row.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
+              });
+            }
+
+            Array.from(table.tHead.rows[0].cells).forEach((th, idx) => {
+              if (idx < table.tHead.rows[0].cells.length - 1) {
+                th.draggable = true;
+                th.addEventListener('dragstart', function (e) {
+                  dragSrcIdx = idx;
+                  e.dataTransfer.effectAllowed = 'move';
+                  th.classList.add('dragging');
+                });
+                th.addEventListener('dragend', function () {
+                  dragSrcIdx = null;
+                  th.classList.remove('dragging');
+                  Array.from(table.tHead.rows[0].cells).forEach(cell => cell.classList.remove('drag-over'));
+                });
+                th.addEventListener('dragover', function (e) {
+                  e.preventDefault();
+                  th.classList.add('drag-over');
+                });
+                th.addEventListener('dragleave', function () {
+                  th.classList.remove('drag-over');
+                });
+                th.addEventListener('drop', function (e) {
+                  e.preventDefault();
+                  th.classList.remove('drag-over');
+                  if (dragSrcIdx !== null && dragSrcIdx !== idx) {
+                    swapColumns(table, dragSrcIdx, idx);
+                  }
+                });
+              }
+            });
+
+            // Mark row as dirty on cell edit and trigger auto-update
+            const debouncedAutoUpdateRow = debounce(async (row) => {
+              const success = await autoUpdateRow(row);
+              if (success) {
+                updateTotal();
+              }
+            }, 500);
+
+            table.addEventListener("input", function (e) {
+              const cell = e.target.closest("td[data-name]");
+              if (cell) {
+                const row = cell.parentElement;
+                row.setAttribute("data-dirty", "true");
+                row.classList.add("excel-dirty-row");
+                if (cell.getAttribute("data-name") === "montant") updateTotal();
+              }
+            });
+
+            table.addEventListener("change", function (e) {
+              if (e.target.tagName === "SELECT" && (e.target.getAttribute("data-name") === "status" || e.target.getAttribute("data-name") === "etat")) {
+                const row = e.target.closest("tr");
+                row.setAttribute("data-dirty", "true");
+                row.classList.add("excel-dirty-row");
+              }
+            });
+
+            document.addEventListener("click", async function (e) {
+              if (!table.contains(e.target)) {
+                const dirtyRows = table.querySelectorAll("tbody tr[data-dirty='true']");
+                for (const row of dirtyRows) {
+                  await autoUpdateRow(row);
+                }
+              }
+            });
+
+            async function autoUpdateRow(row) {
+              if (!row.getAttribute("data-dirty")) return true;
+              const cells = Array.from(row.querySelectorAll("td[data-name]"));
+              const data = {};
+              const id = row.getAttribute("data-id");
+
+              let hasInvalidDate = false;
+
+              cells.forEach(cell => {
+                const key = cell.getAttribute("data-name");
+                if (key === "status") {
+                  const select = cell.querySelector("select[data-name='status']");
+                  if (select) data[key] = select.value || null;
+                } else {
+                  let value = sanitizeInput(cell.innerText.trim());
+                  if (key === "montant") {
+                    value = parseFloat(value.replace(/\s/g, '').replace(',', '.'));
+                    if (isNaN(value)) return;
+                    data[key] = value;
+                    data.montantLettre = convertMontantToLettre(value);
+                  } else if (key === "dateSaisie") {
+                    value = convertDateToISO(value);
+                    if (!value) {
+                      hasInvalidDate = true;
+                      return;
+                    }
+                    data[key] = value;
+                  } else if (value !== '') {
+                    data[key] = value;
+                  }
+                }
+              });
+
+              if (hasInvalidDate) {
+                alert(`Erreur : La date de saisie est invalide ou vide pour la ligne avec ID ${id}. Veuillez entrer une date au format JJ/MM/AAAA.`);
+                return false;
+              }
+
+              if (!id) {
+                alert(`Erreur : Aucun ID de demande trouvé pour la ligne.`);
+                return false;
+              }
+
+              function getCaretPosition(el) {
+                const sel = window.getSelection();
+                if (!sel.rangeCount) return 0;
+                const range = sel.getRangeAt(0);
+                const preRange = range.cloneRange();
+                preRange.selectNodeContents(el);
+                preRange.setEnd(range.endContainer, range.endOffset);
+                return preRange.toString().length;
+              }
+
+              function setCaretPosition(el, pos) {
+                const range = document.createRange();
+                const sel = window.getSelection();
+                const textLength = el.innerText.length;
+                const safePos = Math.min(pos, textLength);
+                range.selectNodeContents(el);
+                range.setStart(el.firstChild || el, safePos);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+              }
+
+              try {
+                const response = await fetch(`/tresorerie/demandes/update/${id}`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(data)
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                  row.removeAttribute("data-dirty");
+                  row.classList.remove("excel-dirty-row");
+                  const updatedDemande = result.demande || {};
+
+                  cells.forEach(cell => {
+                    const key = cell.getAttribute("data-name");
+                    if (!(key in updatedDemande) || updatedDemande[key] === null || updatedDemande[key] === undefined) return;
+
+                    const isFocused = document.activeElement === cell;
+                    let caretPos = 0;
+                    if (isFocused && key !== "status") caretPos = getCaretPosition(cell);
+
+                    if (key === "status") {
+                      const select = cell.querySelector("select[data-name='status']");
+                      if (select) select.value = updatedDemande[key] || '';
+                    } else if (key === "montant") {
+                      cell.innerText = Number(updatedDemande[key]).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    } else if (key === "dateSaisie") {
+                      cell.innerText = updatedDemande[key] ? formatDateToDDMMYYYY(updatedDemande[key]) : '';
+                    } else {
+                      cell.innerText = updatedDemande[key].toString().trim();
+                    }
+
+                    if (isFocused && key !== "status") setCaretPosition(cell, caretPos);
+                  });
+
+                  return true;
+                } else {
+                  alert(`Erreur lors de la mise à jour de la ligne ${id}: ${result.message || 'Erreur inconnue'}`);
+                  return false;
+                }
+              } catch (err) {
+                console.error("Error updating row", id, ":", err.message);
+                alert(`Erreur réseau lors de la mise à jour de la ligne ${id}: ${err.message}`);
+                return false;
+              }
+            }
+
+            // Add event listeners for filters
+            if (chantierFilter) chantierFilter.addEventListener('change', applyFilters);
+            if (demandeurFilter) demandeurFilter.addEventListener('change', applyFilters);
+            if (moisFilter) moisFilter.addEventListener('change', applyFilters);
+            if (statusFilter) statusFilter.addEventListener('change', applyFilters);
+
+            // Reset filters
+            if (resetFilters) {
+              resetFilters.addEventListener('click', () => {
+                if (chantierFilter) chantierFilter.value = '';
+                if (demandeurFilter) demandeurFilter.value = '';
+                if (moisFilter) moisFilter.value = '';
+                if (statusFilter) statusFilter.value = '';
+
+                const rows = table.querySelectorAll('tbody tr[data-id]');
+                rows.forEach(row => {
+                  row.style.display = '';
+                });
+
+                updateTotal();
+              });
+            }
+
+            // PDF Download
+            document.getElementById("downloadPdfBtn")?.addEventListener("click", function () {
+              const table = document.getElementById("editableTable");
+              const rows = table.querySelectorAll("tbody tr[data-id]");
+              if (rows.length === 0) {
+                alert("Aucune donnée à exporter en PDF.");
+                return;
+              }
+
+              try {
+                const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+                const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
+                const title = document.querySelector(".card-header h6").innerText;
+
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(18);
+                doc.setTextColor(40, 40, 40);
+                doc.text(title, 10, 20);
+
+                const tableData = [];
+                rows.forEach(row => {
+                  if (row.style.display !== "none") {
+                    const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
+                      let value = "";
+                      const select = cell.querySelector("select");
+                      if (select) {
+                        value = select.options[select.selectedIndex].text;
+                      } else if (cell.innerText) {
+                        value = cell.innerText.trim();
+                      }
+
+                      if (cell.dataset.name === "montant" && value) {
+                        const cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+                        const number = parseFloat(cleaned);
+                        if (!isNaN(number)) {
+                          const parts = number.toFixed(2).split('.');
+                          const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                          value = `${integerPart},${parts[1]}`;
+                        }
+                      }
+
+                      return value || "";
+                    });
+                    tableData.push(rowData);
+                  }
+                });
+
+                doc.autoTable({
+                  head: [headers],
+                  body: tableData,
+                  startY: 30,
+                  theme: 'grid',
+                  styles: {
+                    font: 'helvetica',
+                    fontSize: 8,
+                    textColor: [40, 40, 40],
+                    cellPadding: 2,
+                    lineColor: [200, 200, 200],
+                    lineWidth: 0.1,
+                    minCellHeight: 10,
+                    overflow: 'linebreak'
+                  },
+                  headStyles: {
+                    fillColor: [22, 160, 133],
+                    textColor: [255, 255, 255],
+                    fontSize: 7,
+                    fontStyle: 'bold',
+                    halign: 'center',
+                    cellPadding: 2
+                  },
+                  bodyStyles: {
+                    fillColor: [255, 255, 255]
+                  },
+                  alternateRowStyles: {
+                    fillColor: [245, 245, 245]
+                  },
+                  columnStyles: {
+                    0: { cellWidth: 28, halign: 'center' },
+                    1: { cellWidth: 28, halign: 'left' },
+                    2: { cellWidth: 28, halign: 'left' },
+                    3: { cellWidth: 28, halign: 'center' },
+                    4: { cellWidth: 28, halign: 'left' },
+                    5: { cellWidth: 28, halign: 'right' },
+                    6: { cellWidth: 28, halign: 'center' }
+                  },
+                  margin: { top: 30, left: 10, right: 10 },
+                  tableWidth: 'wrap',
+                  didDrawPage: function (data) {
+                    console.log('Table Width:', data.table.width);
+                    console.log('Page Width:', doc.internal.pageSize.width);
+                  }
+                });
+
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                  doc.setPage(i);
+                  doc.setFontSize(8);
+                  doc.setTextColor(100);
+                  doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
+                }
+
+                let total = document.getElementById("total").innerText || "0";
+                total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+                const totalNumber = parseFloat(total);
+                if (!isNaN(totalNumber)) {
+                  const parts = totalNumber.toFixed(2).split('.');
+                  const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                  total = `${integerPart},${parts[1]}`;
+                }
+
+                const finalY = doc.lastAutoTable.finalY || 30;
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(12);
+                doc.setTextColor(22, 160, 133);
+                doc.text(`Total: ${total} MAD`, 10, finalY + 15);
+
+                doc.save("liste_demande.pdf");
+              } catch (err) {
+                console.error("PDF generation error:", err);
+                alert("Erreur lors de la génération du PDF. Veuillez vérifier la console.");
+              }
+            });
+
+            // Excel Download
+            document.getElementById("downloadExcelBtn")?.addEventListener("click", function () {
+              const table = document.getElementById("editableTable");
+              const rows = table.querySelectorAll("tbody tr[data-id]");
+              let visibleRows = Array.from(rows).filter(row => row.style.display !== "none");
+
+              if (visibleRows.length === 0) {
+                alert("Aucune donnée visible à exporter en Excel. Veuillez vérifier le filtre de recherche.");
+                return;
+              }
+
+              try {
+                const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
+                const tableData = [];
+                let invalidData = null;
+
+                visibleRows.forEach((row, rowIndex) => {
+                  const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map((cell, colIndex) => {
                     let value = "";
                     const select = cell.querySelector("select");
                     if (select) {
-                      value = select.options[select.selectedIndex].text;
+                      value = select.options[select.selectedIndex].text.trim();
                     } else if (cell.innerText) {
                       value = cell.innerText.trim();
                     }
@@ -852,189 +1033,47 @@
                       const cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
                       const number = parseFloat(cleaned);
                       if (!isNaN(number)) {
-                        const parts = number.toFixed(2).split('.');
-                        const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-                        value = `${integerPart},${parts[1]}`;
+                        value = number;
+                      } else {
+                        invalidData = `Montant non numérique à la ligne ${rowIndex + 1}: "${value}"`;
                       }
                     }
 
                     return value || "";
                   });
+
+                  while (rowData.length < headers.length) rowData.push("");
                   tableData.push(rowData);
-                }
-              });
-
-              doc.autoTable({
-                head: [headers],
-                body: tableData,
-                startY: 30,
-                theme: 'grid',
-                styles: {
-                  font: 'helvetica',
-                  fontSize: 8,
-                  textColor: [40, 40, 40],
-                  cellPadding: 2,
-                  lineColor: [200, 200, 200],
-                  lineWidth: 0.1,
-                  minCellHeight: 10,
-                  overflow: 'linebreak'
-                },
-                headStyles: {
-                  fillColor: [22, 160, 133],
-                  textColor: [255, 255, 255],
-                  fontSize: 7,
-                  fontStyle: 'bold',
-                  halign: 'center',
-                  cellPadding: 2
-                },
-                bodyStyles: {
-                  fillColor: [255, 255, 255]
-                },
-                alternateRowStyles: {
-                  fillColor: [245, 245, 245]
-                },
-                columnStyles: {
-                  0: { cellWidth: 28, halign: 'center' },
-                  1: { cellWidth: 28, halign: 'left' },
-                  2: { cellWidth: 28, halign: 'left' },
-                  3: { cellWidth: 28, halign: 'center' },
-                  4: { cellWidth: 28, halign: 'left' },
-                  5: { cellWidth: 28, halign: 'right' },
-                  6: { cellWidth: 28, halign: 'center' }
-                },
-                margin: { top: 30, left: 10, right: 10 },
-                tableWidth: 'wrap',
-                didDrawPage: function (data) {
-                  console.log('Table Width:', data.table.width);
-                  console.log('Page Width:', doc.internal.pageSize.width);
-                }
-              });
-
-              const pageCount = doc.internal.getNumberOfPages();
-              for (let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setFontSize(8);
-                doc.setTextColor(100);
-                doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
-              }
-
-              let total = document.getElementById("total").innerText || "0";
-              total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-              const totalNumber = parseFloat(total);
-              if (!isNaN(totalNumber)) {
-                const parts = totalNumber.toFixed(2).split('.');
-                const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-                total = `${integerPart},${parts[1]}`;
-              }
-
-              const finalY = doc.lastAutoTable.finalY || 30;
-              doc.setFont("helvetica", "bold");
-              doc.setFontSize(12);
-              doc.setTextColor(22, 160, 133);
-              doc.text(`Total: ${total} MAD`, 10, finalY + 15);
-
-              doc.save("liste_demande.pdf");
-            } catch (err) {
-              console.error("PDF generation error:", err);
-              alert("Erreur lors de la génération du PDF. Veuillez vérifier la console.");
-            }
-          });
-
-          // Excel Download
-          document.getElementById("downloadExcelBtn")?.addEventListener("click", function () {
-            const table = document.getElementById("editableTable");
-            const rows = table.querySelectorAll("tbody tr[data-id]");
-            let visibleRows = Array.from(rows).filter(row => row.style.display !== "none");
-
-            if (visibleRows.length === 0) {
-              alert("Aucune donnée visible à exporter en Excel. Veuillez vérifier le filtre de recherche.");
-              return;
-            }
-
-            try {
-              const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
-              const tableData = [];
-              let invalidData = null;
-
-              visibleRows.forEach((row, rowIndex) => {
-                const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map((cell, colIndex) => {
-                  let value = "";
-                  const select = cell.querySelector("select");
-                  if (select) {
-                    value = select.options[select.selectedIndex].text.trim();
-                  } else if (cell.innerText) {
-                    value = cell.innerText.trim();
-                  }
-
-                  if (cell.dataset.name === "montant" && value) {
-                    const cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-                    const number = parseFloat(cleaned);
-                    if (!isNaN(number)) {
-                      value = number;
-                    } else {
-                      invalidData = `Montant non numérique à la ligne ${rowIndex + 1}: "${value}"`;
-                    }
-                  }
-
-                  return value || "";
                 });
 
-                while (rowData.length < headers.length) rowData.push("");
-                tableData.push(rowData);
-              });
+                if (invalidData) throw new Error(invalidData);
 
-              if (invalidData) throw new Error(invalidData);
+                let total = document.getElementById("total")?.innerText || "0";
+                total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+                const totalNumber = parseFloat(total);
+                const totalRow = ["Total", "", "", "", "", !isNaN(totalNumber) ? totalNumber : 0, ""];
+                tableData.push(totalRow);
 
-              let total = document.getElementById("total")?.innerText || "0";
-              total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-              const totalNumber = parseFloat(total);
-              const totalRow = ["Total", "", "", "", "", !isNaN(totalNumber) ? totalNumber : 0, ""];
-              tableData.push(totalRow);
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet([headers, ...tableData], { skipHeader: false });
 
-              const wb = XLSX.utils.book_new();
-              const ws = XLSX.utils.aoa_to_sheet([headers, ...tableData], { skipHeader: false });
+                ws['!cols'] = [
+                  { wch: 18 },
+                  { wch: 18 },
+                  { wch: 25 },
+                  { wch: 25 },
+                  { wch: 25 },
+                  { wch: 18 },
+                  { wch: 23 }
+                ];
 
-              ws['!cols'] = [
-                { wch: 18 },
-                { wch: 18 },
-                { wch: 25 },
-                { wch: 25 },
-                { wch: 25 },
-                { wch: 18 },
-                { wch: 23 }
-              ];
-
-              headers.forEach((_, i) => {
-                const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
-                if (!ws[cellRef]) ws[cellRef] = { v: headers[i], t: 's' };
-                ws[cellRef].s = {
-                  font: { bold: true },
-                  fill: { fgColor: { rgb: "16A085" } },
-                  alignment: { horizontal: i === 5 ? 'right' : i === 3 || i === 6 ? 'center' : 'left' },
-                  border: {
-                    top: { style: 'thin' },
-                    bottom: { style: 'thin' },
-                    left: { style: 'thin' },
-                    right: { style: 'thin' }
-                  }
-                };
-              });
-
-              tableData.forEach((row, rowIndex) => {
-                row.forEach((value, colIndex) => {
-                  const cellRef = XLSX.utils.encode_cell({ r: rowIndex + 1, c: colIndex });
-                  const isMontantColumn = colIndex === 5;
-
-                  if (!ws[cellRef]) {
-                    ws[cellRef] = { 
-                      v: value || "", 
-                      t: isMontantColumn && typeof value === 'number' ? 'n' : 's' 
-                    };
-                  }
-
+                headers.forEach((_, i) => {
+                  const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
+                  if (!ws[cellRef]) ws[cellRef] = { v: headers[i], t: 's' };
                   ws[cellRef].s = {
-                    fill: { fgColor: { rgb: rowIndex % 2 === 0 ? "FFFFFF" : "F5F5F5" } },
-                    alignment: { horizontal: isMontantColumn ? 'right' : colIndex === 3 || colIndex === 6 ? 'center' : 'left' },
+                    font: { bold: true },
+                    fill: { fgColor: { rgb: "16A085" } },
+                    alignment: { horizontal: i === 5 ? 'right' : i === 3 || i === 6 ? 'center' : 'left' },
                     border: {
                       top: { style: 'thin' },
                       bottom: { style: 'thin' },
@@ -1042,43 +1081,68 @@
                       right: { style: 'thin' }
                     }
                   };
-
-                  if (rowIndex === tableData.length - 1 && (colIndex === 0 || isMontantColumn)) {
-                    ws[cellRef].s.font = { bold: true };
-                  }
                 });
-              });
 
-              XLSX.utils.book_append_sheet(wb, ws, "demandes");
-              XLSX.writeFile(wb, "liste_demande.xlsx");
-            } catch (err) {
-              console.error("Excel generation error:", err);
-              alert(`Erreur lors de la génération du fichier Excel : ${err.message}`);
-            }
-          });
+                tableData.forEach((row, rowIndex) => {
+                  row.forEach((value, colIndex) => {
+                    const cellRef = XLSX.utils.encode_cell({ r: rowIndex + 1, c: colIndex });
+                    const isMontantColumn = colIndex === 5;
 
-          // Initialize total on page load
-          updateTotal();
-        });
-      </script>
-      <script src="/vendor/jquery/jquery.min.js"></script>
-      <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-      <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
-      <script src="/js/sb-admin-2.min.js"></script>
-      <script src="/vendor/datatables/jquery.dataTables.min.js"></script>
-      <script src="/vendor/datatables/dataTables.bootstrap4.min.js"></script>
-      <script>
-        // Override DataTables initialization to disable conflicting features
-        $(document).ready(function() {
-          $('#editableTable').DataTable({
-            searching: false, // Disable DataTables search to avoid conflicts
-            ordering: false, // Disable sorting to maintain custom drag-and-drop
-            paging: false, // Disable pagination for simplicity
-            info: false // Disable info text
+                    if (!ws[cellRef]) {
+                      ws[cellRef] = {
+                        v: value || "",
+                        t: isMontantColumn && typeof value === 'number' ? 'n' : 's'
+                      };
+                    }
+
+                    ws[cellRef].s = {
+                      fill: { fgColor: { rgb: rowIndex % 2 === 0 ? "FFFFFF" : "F5F5F5" } },
+                      alignment: { horizontal: isMontantColumn ? 'right' : colIndex === 3 || colIndex === 6 ? 'center' : 'left' },
+                      border: {
+                        top: { style: 'thin' },
+                        bottom: { style: 'thin' },
+                        left: { style: 'thin' },
+                        right: { style: 'thin' }
+                      }
+                    };
+
+                    if (rowIndex === tableData.length - 1 && (colIndex === 0 || isMontantColumn)) {
+                      ws[cellRef].s.font = { bold: true };
+                    }
+                  });
+                });
+
+                XLSX.utils.book_append_sheet(wb, ws, "demandes");
+                XLSX.writeFile(wb, "liste_demande.xlsx");
+              } catch (err) {
+                console.error("Excel generation error:", err);
+                alert(`Erreur lors de la génération du fichier Excel : ${err.message}`);
+              }
+            });
+
+            // Initialize total on page load
+            updateTotal();
           });
-        });
-      </script>
-    </div>
+        </script>
+        <script src="/vendor/jquery/jquery.min.js"></script>
+        <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+        <script src="/js/sb-admin-2.min.js"></script>
+        <script src="/vendor/datatables/jquery.dataTables.min.js"></script>
+        <script src="/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+        <script>
+          // Override DataTables initialization to disable conflicting features
+          $(document).ready(function () {
+            $('#editableTable').DataTable({
+              searching: false, // Disable DataTables search to avoid conflicts
+              ordering: false, // Disable sorting to maintain custom drag-and-drop
+              paging: false, // Disable pagination for simplicity
+              info: false // Disable info text
+            });
+          });
+        </script>
+      </div>
   </div>
 </body>
+
 </html>

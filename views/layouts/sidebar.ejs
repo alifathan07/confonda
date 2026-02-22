@@ -187,7 +187,7 @@
                 </a>
             </li>
 
-          <% } else if (user && user.role === 'user') { %>
+          <% } else if (user && user.role === 'user' || user.role === 'granduser') { %>
             <li class="nav-item">
                 <a class="nav-link py-3" href="/achats/caisse">
                     <i class="fas fa-fw fa-cash-register" style="font-size: 17px;"></i>
