@@ -12,7 +12,6 @@ export const getListFourniture = async (req, res) => {
     try {
         const listfourniture = await prisma.fourniture_list.findMany();
         res.json({ listfourniture });
-        console.log({ listfourniture });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Erreur lors de la récupération des fournitures" });

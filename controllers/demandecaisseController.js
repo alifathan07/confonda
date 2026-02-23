@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import ExcelJS from 'exceljs';
+import { whatsappService } from "../services/whatssapservice.js";
 
 
 export const indexDemandeCaisse = async (req, res) => {
@@ -133,9 +134,25 @@ export const createDemandeCaisse = async(req , res) => {
           },
           include: { items: true },
         });
-    
+        const chantierNom = await prisma.chantier.findUnique({
+          where: { id: parseInt(chantier) },
+          select: { nom: true },
+        });
+        
         console.log('Created DemandeCaisse:', demandeCaisse);
-    
+        const parsedDate = new Date(demandeCaisse.dateDemande);
+          const message = `Nouvelle demande de caisse créée par ${req.session.user.name}. Numéro de demande: ${numero}. Date de création: ${parsedDate.toLocaleDateString()}.chantier: ${chantierNom.nom}.Montant total demandé : ${montantTotal} MAD .`;
+            const numbers = [
+            "+212638940422",
+           
+          ];
+        
+            numbers.forEach(number => {
+              whatsappService
+                .sendMessage(number, message)
+                .catch(err => console.error(`WhatsApp failed for ${number}`, err));
+            });
+              
         // Return JSON response
         res.status(200).json({ success: true, data: demandeCaisse, id: demandeCaisse.id });
       } catch (error) {

@@ -1,0 +1,16 @@
+2026/02/23-05:24:53.480 5480 Reusing MANIFEST C:\Users\alifa\Desktop\confonda\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/02/23-05:24:53.481 5480 Recovering log #61
+2026/02/23-05:24:53.579 5480 Reusing old log C:\Users\alifa\Desktop\confonda\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000061.log 
+2026/02/23-05:24:55.909 586c Level-0 table #68: started
+2026/02/23-05:24:55.958 586c Level-0 table #68: 1214513 bytes OK
+2026/02/23-05:24:55.959 586c Delete type=0 #61
+2026/02/23-05:24:56.227 586c Compacting 1@1 + 3@2 files
+2026/02/23-05:24:56.432 586c Generated table #69@1: 50962 keys, 2222542 bytes
+2026/02/23-05:24:56.517 586c Generated table #70@1: 13035 keys, 2187476 bytes
+2026/02/23-05:24:56.625 586c Generated table #71@1: 54192 keys, 1764609 bytes
+2026/02/23-05:24:56.625 586c Compacted 1@1 + 3@2 files => 6174627 bytes
+2026/02/23-05:24:56.626 586c compacted to: files[ 0 0 3 0 0 0 0 ]
+2026/02/23-05:24:56.626 586c Delete type=2 #63
+2026/02/23-05:24:56.627 586c Delete type=2 #64
+2026/02/23-05:24:56.627 586c Delete type=2 #65
+2026/02/23-05:24:56.627 586c Delete type=2 #68

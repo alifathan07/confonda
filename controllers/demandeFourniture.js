@@ -6,6 +6,7 @@ import ExcelJS from "exceljs";
 import multer from "multer";
 import { fileURLToPath } from 'url';
 import { error } from "console";
+import { whatsappService } from "../services/whatssapservice.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -298,8 +299,23 @@ export const storeDemandeFourniture = async (req, res) => {
       },
       include: { items: true },
     });
+    const chantierName = await prisma.chantier.findUnique({
+      where: { id: demandeFourniture.chantierId },
+      select: { nom: true },
+    });
+    const message = `Nouvelle commande créée par ${user.name}. Numéro de commande: ${numero}. Date de création: ${parsedDate.toLocaleDateString()}.chantier: ${chantierName.nom}.`;
+    const numbers = [
+    "+212638940422",
+   
+  ];
 
-    return res.json({ success: true, redirect: `/achats/fourniture/${demandeFourniture.id}` });
+    numbers.forEach(number => {
+      whatsappService
+        .sendMessage(number, message)
+        .catch(err => console.error(`WhatsApp failed for ${number}`, err));
+    });
+      
+return res.json({ success: true, redirect: `/achats/fourniture/${demandeFourniture.id}` });
   } catch (error) {
     console.error("storeDemandeFourniture error:", error);
     return res.status(500).json({ success: false, error: `Erreur serveur : ${error.message}` });
@@ -975,6 +991,7 @@ export const generateDemandeFourniturePDF = async (req, res) => {
     const col = {
       code: 60,
       des: 200,
+      imp: 80,
       lot: 70,
       unit: 40,
       qd: 50,
@@ -1055,6 +1072,7 @@ export const generateDemandeFourniturePDF = async (req, res) => {
       doc.fontSize(10);
       doc.text("Code\narticle", x.code + 2, startY + 4, { width: col.code, align: "center" });
       doc.text("Désignations", x.des, startY + 12, { width: col.des, align: "center" });
+      doc.text("Imputation", x.imp, startY + 12, { width: col.imp, align: "center" });
       doc.text("Unité", x.unit, startY + 12, { width: col.unit, align: "center" });
       doc.text("Quantité", x.qd, startY + 12, { width: col.qd, align: "center" });
       doc.text("P.U. HT", x.pu, startY + 12, { width: col.pu, align: "center" });
@@ -1084,6 +1102,7 @@ export const generateDemandeFourniturePDF = async (req, res) => {
       const columnsToCheck = [
         { text: item.code, width: col.code },
         { text: item.designation, width: col.des },
+        { text: item.imputation, width: col.imp },
         { text: item.lot, width: col.lot },
         { text: item.observation, width: col.obs },
         { text: item.unité || item.unite, width: col.unit },
@@ -1243,6 +1262,7 @@ export const generateDemandeFourniturePDF = async (req, res) => {
 
       doc.text(item.code || "", x.code + 2, textY, { width: col.code, align: "center" });
       doc.text(item.designation || "", x.des + 2, textY, { width: col.des, align: "left" });
+      doc.text(item.imputation || "", x.imp + 2, textY, { width: col.imp, align: "left" });
       doc.text(item.lot || "", x.lot, textY, { width: col.lot, align: "center" });
       doc.text(item.unité || item.unite || "", x.unit, textY, { width: col.unit, align: "center" });
       doc.text(item.quantité || item.quantite || "", x.qd, textY, { width: col.qd, align: "center" });
@@ -1453,3 +1473,4 @@ export const updateEtat = async (req, res) => {
     });
   }
 };
+
