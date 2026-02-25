@@ -5,8 +5,13 @@ import qrcode from "qrcode-terminal";
 const { Client, LocalAuth } = pkg;
 
 // Initialize WhatsApp client
-export const client = new Client({ authStrategy: new LocalAuth() });
-
+export const client = new Client({
+    authStrategy: new LocalAuth(),
+    puppeteer: {
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+    }
+});
 export let _isReady = false;
 let _readyResolve;
 export const readyPromise = new Promise((resolve) => {
