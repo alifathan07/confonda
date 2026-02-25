@@ -1,3 +1,26 @@
-2026/02/23-04:53:39.554 3eec Reusing MANIFEST C:\Users\alifa\Desktop\confonda\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2026/02/23-04:53:39.554 3eec Recovering log #61
-2026/02/23-04:53:39.629 3eec Reusing old log C:\Users\alifa\Desktop\confonda\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000061.log 
+2026/02/25-03:45:07.940 3b88 Reusing MANIFEST C:\Users\alifa\Desktop\confonda\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/02/25-03:45:07.942 3b88 Recovering log #277
+2026/02/25-03:45:08.430 3b88 Reusing old log C:\Users\alifa\Desktop\confonda\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000277.log 
+2026/02/25-03:45:28.833 6284 Level-0 table #295: started
+2026/02/25-03:45:28.903 6284 Level-0 table #295: 1159072 bytes OK
+2026/02/25-03:45:28.913 6284 Delete type=0 #277
+2026/02/25-03:46:16.220 6284 Compacting 1@1 + 8@2 files
+2026/02/25-03:46:16.457 6284 Generated table #296@1: 83414 keys, 2233021 bytes
+2026/02/25-03:46:16.591 6284 Generated table #297@1: 40346 keys, 2246077 bytes
+2026/02/25-03:46:16.687 6284 Generated table #298@1: 19462 keys, 2195410 bytes
+2026/02/25-03:46:16.733 6284 Generated table #299@1: 3218 keys, 2128408 bytes
+2026/02/25-03:46:16.827 6284 Generated table #300@1: 68062 keys, 2208724 bytes
+2026/02/25-03:46:16.936 6284 Generated table #301@1: 90064 keys, 2238648 bytes
+2026/02/25-03:46:17.065 6284 Generated table #302@1: 90042 keys, 2240063 bytes
+2026/02/25-03:46:17.152 6284 Generated table #303@1: 38382 keys, 1044384 bytes
+2026/02/25-03:46:17.153 6284 Compacted 1@1 + 8@2 files => 16534735 bytes
+2026/02/25-03:46:17.154 6284 compacted to: files[ 0 0 9 0 0 0 0 ]
+2026/02/25-03:46:17.156 6284 Delete type=2 #285
+2026/02/25-03:46:17.157 6284 Delete type=2 #286
+2026/02/25-03:46:17.157 6284 Delete type=2 #287
+2026/02/25-03:46:17.157 6284 Delete type=2 #288
+2026/02/25-03:46:17.158 6284 Delete type=2 #289
+2026/02/25-03:46:17.158 6284 Delete type=2 #290
+2026/02/25-03:46:17.159 6284 Delete type=2 #291
+2026/02/25-03:46:17.159 6284 Delete type=2 #292
+2026/02/25-03:46:17.159 6284 Delete type=2 #295

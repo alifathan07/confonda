@@ -6,19 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="Tableau de bord fournisseurs et règlements">
     <meta name="author" content="Confonda">
-    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet">
-    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="/css/sb-admin-2.min.css" rel="stylesheet">
     <style>
         :root {
             --primary-color: #3829ab;
             --second-color: #4232b6;
+            --sidebar-text: rgba(255, 255, 255, 0.92);
+            --sidebar-muted: rgba(255, 255, 255, 0.65);
+            --sidebar-hover: rgba(255, 255, 255, 0.10);
+            --sidebar-active: rgba(255, 255, 255, 0.16);
             --sidebar-width: 250px;
         }
 
         /* Sidebar styling */
         .sidebar {
-            background: var(--second-color);
+            background: linear-gradient(180deg, #4b2fe0 0%, #3526a8 55%, #2a1f86 100%);
             position: sticky;
             top: 0;
             height: 100vh;
@@ -28,15 +32,94 @@
             width: var(--sidebar-width);
         }
 
-        .navbar-nav .nav-item .nav-link {
-            color: white;
-            background: var(--primary-color);
-            font-size: 15px;
-            padding: 15px;
+        .sidebar {
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.18);
         }
 
-        .nav-item {
-            background: var(--second-color);
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.18);
+            border-radius: 10px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.26);
+        }
+
+        .sidebar-brand {
+            padding: 18px 12px;
+        }
+
+        .sidebar-brand .sidebar-brand-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.14);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+        }
+
+        .sidebar-brand-text {
+            letter-spacing: 0.4px;
+            color: var(--sidebar-text);
+        }
+
+        .sidebar .sidebar-brand-text {
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.95rem;
+        }
+
+        .navbar-nav .nav-item {
+            background: transparent;
+        }
+
+        .navbar-nav .nav-item .nav-link {
+            color: var(--sidebar-text);
+            background: transparent;
+            font-size: 0.95rem;
+            padding: 12px 14px;
+            margin: 4px 10px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.18s ease, transform 0.18s ease;
+        }
+
+        /* Prevent Bootstrap utility classes (ex: py-3) from breaking spacing */
+        .navbar-nav .nav-item .nav-link.py-3 {
+            padding-top: 12px !important;
+            padding-bottom: 12px !important;
+        }
+
+        .navbar-nav .nav-item .nav-link i {
+            width: 22px;
+            text-align: center;
+        }
+
+        .navbar-nav .nav-item .nav-link i {
+            opacity: 0.95;
+        }
+
+        .navbar-nav .nav-item .nav-link span {
+            color: var(--sidebar-text);
+            font-weight: 600;
+        }
+
+        .navbar-nav .nav-item .nav-link:hover {
+            background: var(--sidebar-hover);
+            transform: translateX(2px);
+        }
+
+        .navbar-nav .nav-item.active .nav-link,
+        .navbar-nav .nav-item .nav-link[aria-current="page"] {
+            background: var(--sidebar-active);
         }
 
         /* Main content styling */
@@ -46,15 +129,20 @@
             transition: margin-left 0.3s ease-in-out;
         }
 
+        .sidebar-divider {
+            border-top: 1px solid rgba(255, 255, 255, 0.14);
+            margin: 10px 14px;
+        }
+
+        .sidebar-divider.my-0 {
+            margin-top: 6px !important;
+            margin-bottom: 6px !important;
+        }
+
         /* Mobile sidebar styles */
         @media (max-width: 767.98px) {
             .sidebar {
                 transform: translateX(-100%);
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: var(--sidebar-width);
-                z-index: 1100;
             }
 
             .sidebar.active {
@@ -68,7 +156,7 @@
                 top: 15px;
                 left: 15px;
                 z-index: 1200;
-                background: var(--second-color);
+                background: rgba(26, 18, 86, 0.92);
                 color: white;
                 border: none;
                 border-radius: 50%;
@@ -184,6 +272,14 @@
                 <a class="nav-link py-3" href="/virementpay">
                     <i class="fas fa-fw fa-hand-holding-usd" style="font-size: 17px;"></i>
                     <span>Virement Des Salaires</span>
+                </a>
+            </li>
+
+            <hr class="sidebar-divider">
+            <li class="nav-item">
+                <a class="nav-link py-3" href="/settings">
+                    <i class="fas fa-fw fa-cog" style="font-size: 17px;"></i>
+                    <span>Paramètres</span>
                 </a>
             </li>
 

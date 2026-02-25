@@ -29,6 +29,7 @@ import { EditDemandePrix, listDemandePrix, postDemandePrixViaFourniture, updateD
 import { editBc, postBcDemandeFourniture, updateBc, deleteBcItem, createBcForm, storeBc, generateBcPDF, sendBcEmail, listBc, deleteBc, updateBcItemDistribution, updateBcItem, importBcInfo, updateSupplier } from '../controllers/bcController.js';
 import { bmceDelete, bmceDownload, bmcePay, bmcePreview, bmceUpload, indexVirementPay } from '../controllers/virementpayController.js';
 import { getListFourniture } from '../controllers/listfournitureController.js';
+import { addNumbers, deleteNum, editSettingNum, settingsIndex } from '../controllers/settingsController.js';
 
 const virementpayUpload = multer({
   dest: 'uploads/',
@@ -47,6 +48,8 @@ dashboardRouter.use((req, res, next) => {
 
   next();
 });
+
+
 dashboardRouter.get('/dashboard', isAdmin, async (req, res) => {
   try {
     // Fetch all banks
@@ -469,4 +472,14 @@ dashboardRouter.post('/virementpay/bmce/files/:fileId/delete', bmceDelete);
 
 /// list fourniture
 dashboardRouter.get('/achats/listfourniture', getListFourniture);
+
+
+// settings 
+dashboardRouter.get('/settings', isGrandAdmin,settingsIndex);
+
+dashboardRouter.post('/settings/whatsapp-recipients', isGrandAdmin, addNumbers);
+
+dashboardRouter.post('/settings/whatsapp-recipients/:id', isGrandAdmin, editSettingNum);
+
+dashboardRouter.post('/settings/whatsapp-recipients/:id/delete', isGrandAdmin, deleteNum );
 

@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import ExcelJS from 'exceljs';
 import { whatsappService } from "../services/whatssapservice.js";
-
+import { PassThrough } from "stream";
 
 export const indexDemandeCaisse = async (req, res) => {
   const demande = await prisma.demandeCaisse.findMany({
@@ -141,17 +141,32 @@ export const createDemandeCaisse = async(req , res) => {
         
         console.log('Created DemandeCaisse:', demandeCaisse);
         const parsedDate = new Date(demandeCaisse.dateDemande);
-          const message = `Nouvelle demande de caisse créée par ${req.session.user.name}. Numéro de demande: ${numero}. Date de création: ${parsedDate.toLocaleDateString()}.chantier: ${chantierNom.nom}.Montant total demandé : ${montantTotal} MAD .`;
-            const numbers = [
-            "+212638940422",
-           
-          ];
-        
-            numbers.forEach(number => {
-              whatsappService
-                .sendMessage(number, message)
-                .catch(err => console.error(`WhatsApp failed for ${number}`, err));
+          const message = `Nouvelle demande de caisse créée par ${req.session.user.name}. Numéro de demande: ${demandeCaisse.numero}. Date de création: ${parsedDate.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" })}.chantier: ${chantierNom.nom}.Montant total demandé : ${montantTotal} MAD .`;
+
+            const recipients = await prisma.whatsAppNotificationRecipient.findMany({
+              where: {
+                active: true,
+                notifyCaisse: true,
+              },
+              select: { phone: true },
             });
+
+            const numbers = recipients.map((r) => r.phone);
+
+            (async () => {
+              const pdfBuffer = await generateDemandeCaissePDFBuffer(demandeCaisse.id);
+              const filename = `DemandeCaisse_${demandeCaisse.numero}.pdf`;
+
+              await Promise.allSettled(
+                numbers.map((number) =>
+                  whatsappService.sendMessage(number, message, {
+                    data: pdfBuffer,
+                    filename,
+                    mimetype: "application/pdf",
+                  })
+                )
+              );
+            })().catch((err) => console.error("WhatsApp DemandeCaisse PDF send failed:", err));
               
         // Return JSON response
         res.status(200).json({ success: true, data: demandeCaisse, id: demandeCaisse.id });
@@ -496,13 +511,6 @@ export const deleteDemandeCaisse = async(req , res) => {
     }
 }
 
-
-
-
-
-
-
-
 // Constants for consistent styling
 const COLORS = {
   PRIMARY: '#A52A2A', // Softer red for branding
@@ -803,6 +811,235 @@ doc
   }
 };
 
+export const generateDemandeCaissePDFBuffer = async (demandeCaisseId) => {
+  const id = parseInt(demandeCaisseId, 10);
+  if (isNaN(id)) {
+    throw new Error('ID de demandeCaisse invalide');
+  }
+
+  const demandeCaisse = await prisma.demandeCaisse.findUnique({
+    where: { id },
+    include: {
+      items: true,
+      user: true,
+      chantier: true,
+    },
+  });
+
+  if (!demandeCaisse) {
+    throw new Error('DemandeCaisse non trouvée');
+  }
+
+  const chunks = [];
+  const pass = new PassThrough();
+  pass.on('data', (c) => chunks.push(c));
+
+  const finished = new Promise((resolve, reject) => {
+    pass.on('end', resolve);
+    pass.on('error', reject);
+  });
+
+  const COLORS = {
+    PRIMARY: '#A52A2A',
+    SECONDARY: '#333333',
+    BACKGROUND: '#FAFAFA',
+    TABLE_HEADER: '#4A4A4A',
+    WHITE: '#FFFFFF',
+    BORDER: '#E0E0E0',
+  };
+
+  const FONTS = {
+    REGULAR: 'Helvetica',
+    BOLD: 'Helvetica-Bold',
+    ITALIC: 'Helvetica-Oblique',
+  };
+
+  const SIZES = {
+    TITLE: 18,
+    SUBTITLE: 12,
+    BODY: 10,
+    SMALL: 8,
+    MARGIN: 50,
+    PAGE_WIDTH: 595,
+    PAGE_HEIGHT: 842,
+    FOOTER_HEIGHT: 70,
+    ROW_HEIGHT: 25,
+  };
+
+  const { PAGE_WIDTH, PAGE_HEIGHT, FOOTER_HEIGHT, MARGIN } = SIZES;
+  const footerY = PAGE_HEIGHT - FOOTER_HEIGHT;
+
+  // we simulate the height (approximate)
+  const contentHeight = 350 + demandeCaisse.items.length * SIZES.ROW_HEIGHT + 100;
+  const availableHeight = PAGE_HEIGHT - 2 * MARGIN;
+  const scaleFactor = contentHeight > availableHeight ? availableHeight / contentHeight : 1;
+
+  const doc = new PDFDocument({ margin: 0, size: 'A4' });
+  doc.pipe(pass);
+
+  const translateX = (PAGE_WIDTH - PAGE_WIDTH * scaleFactor) / 2;
+  const translateY = (PAGE_HEIGHT - PAGE_HEIGHT * scaleFactor) / 2;
+  doc.save();
+  doc.translate(translateX, translateY).scale(scaleFactor);
+
+  const logoPath = path.join(__dirname, '../public/img/logo-4.png');
+  if (fs.existsSync(logoPath)) {
+    doc.image(logoPath, MARGIN, 25, { width: 100 });
+  }
+
+  doc
+    .font(FONTS.BOLD)
+    .fontSize(SIZES.TITLE)
+    .fillColor(COLORS.PRIMARY)
+    .text('DEMANDE DE CAISSE', 0, 40, { align: 'center' });
+
+  doc
+    .font(FONTS.REGULAR)
+    .fontSize(SIZES.BODY)
+    .fillColor(COLORS.SECONDARY)
+    .text(`N° Demande: D-${demandeCaisse.numero}`, PAGE_WIDTH - 180, 35)
+    .text(
+      `Date: ${new Date(demandeCaisse.dateDemande).toLocaleDateString('fr-FR')}`,
+      PAGE_WIDTH - 180,
+      50
+    );
+
+  doc.moveDown(10);
+  const infoY = doc.y;
+  doc
+    .rect(MARGIN, infoY - 5, PAGE_WIDTH - MARGIN * 2, 80)
+    .fillAndStroke(COLORS.BACKGROUND, COLORS.BORDER);
+
+  doc
+    .font(FONTS.BOLD)
+    .fontSize(SIZES.SUBTITLE)
+    .fillColor(COLORS.PRIMARY)
+    .text('Informations de la Demande', MARGIN + 10, infoY);
+
+  doc
+    .font(FONTS.REGULAR)
+    .fontSize(SIZES.BODY)
+    .fillColor(COLORS.SECONDARY)
+    .text(`Demandeur : ${demandeCaisse.user?.name || 'Non spécifié'}`, MARGIN + 10, infoY + 20)
+    .text(`Chantier : ${demandeCaisse.chantier?.nom || 'Non spécifié'}`, MARGIN + 10, infoY + 35)
+    .text(`Mois : ${demandeCaisse.designation || 'N/A'}`, MARGIN + 10, infoY + 50)
+    .text(
+      `Montant Total : ${demandeCaisse.montantTotal
+        .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        .replace(/[\u00A0\u202F]/g, ' ')}`,
+      PAGE_WIDTH - MARGIN - 180,
+      infoY + 20
+    );
+
+  doc.moveDown(5);
+
+  const startX = MARGIN;
+  let y = doc.y + 10;
+  const colWidths = [90, 220, 100, 85];
+  const tableWidth = colWidths.reduce((a, b) => a + b, 0);
+  const headerHeight = 28;
+
+  doc
+    .rect(startX, y, tableWidth, headerHeight)
+    .strokeColor('#000000')
+    .lineWidth(0.5)
+    .stroke();
+
+  doc
+    .font(FONTS.BOLD)
+    .fontSize(SIZES.BODY)
+    .fillColor(COLORS.PRIMARY)
+    .text('Date', startX + 5, y + 8, { width: colWidths[0] - 5, align: 'left' })
+    .text('Désignation', startX + colWidths[0] + 5, y + 8, { width: colWidths[1] - 5, align: 'left' })
+    .text('Imputation', startX + colWidths[0] + colWidths[1] + 5, y + 8, { width: colWidths[2] - 5, align: 'left' })
+    .text('Montant (DH)', startX + colWidths[0] + colWidths[1] + colWidths[2] + 5, y + 8, { width: colWidths[3] - 10, align: 'right' });
+
+  let x = startX;
+  colWidths.forEach((w) => {
+    doc.moveTo(x, y).lineTo(x, y + headerHeight).stroke();
+    x += w;
+  });
+  doc.moveTo(x, y).lineTo(x, y + headerHeight).stroke();
+
+  y += headerHeight;
+
+  demandeCaisse.items.forEach((item) => {
+    const rowHeight = SIZES.ROW_HEIGHT;
+    const rowY = y;
+
+    doc
+      .rect(startX, rowY, tableWidth, rowHeight)
+      .strokeColor('#000000')
+      .lineWidth(0.3)
+      .stroke();
+
+    const rowData = [
+      new Date(item.dateCaisse).toLocaleDateString('fr-FR'),
+      item.designation || '-',
+      item.imputation || '-',
+      item.montant
+        .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        .replace(/[\u00A0\u202F]/g, ' '),
+    ];
+
+    doc
+      .font(FONTS.REGULAR)
+      .fontSize(SIZES.BODY)
+      .fillColor(COLORS.SECONDARY);
+
+    let x = startX + 5;
+    rowData.forEach((data, i) => {
+      doc.text(data, x, rowY + 7, { width: colWidths[i] - 10, align: i === 3 ? 'right' : 'left' });
+      x += colWidths[i];
+    });
+
+    let colX = startX;
+    colWidths.forEach((w) => {
+      doc.moveTo(colX, rowY).lineTo(colX, rowY + rowHeight).stroke();
+      colX += w;
+    });
+    doc.moveTo(colX, rowY).lineTo(colX, rowY + rowHeight).stroke();
+
+    y += rowHeight;
+  });
+
+  doc
+    .font(FONTS.BOLD)
+    .fontSize(SIZES.SUBTITLE)
+    .fillColor(COLORS.PRIMARY)
+    .text(
+      `Total : ${demandeCaisse.montantTotal
+        .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        .replace(/[\u00A0\u202F]/g, ' ')}`,
+      startX,
+      y + 10,
+      { align: 'right', width: tableWidth }
+    );
+
+  doc.rect(0, footerY, PAGE_WIDTH, FOOTER_HEIGHT).fill(COLORS.PRIMARY);
+  doc
+    .font(FONTS.REGULAR)
+    .fontSize(SIZES.SMALL)
+    .fillColor(COLORS.WHITE)
+    .text(
+      '82, angle Bd Abdelmoumen et rue Soumaya Imm. Shahrazad III, 2ème étage Casablanca',
+      0,
+      footerY + 20,
+      { align: 'center', width: PAGE_WIDTH }
+    )
+    .text(
+      'Tél: 0522-23-39-70 | Fax: 0522-23-42-60 | Capital: 18 500 000 DH | ICE: 001526422000063',
+      0,
+      footerY + 35,
+      { align: 'center', width: PAGE_WIDTH }
+    );
+
+  doc.restore();
+  doc.end();
+
+  await finished;
+  return Buffer.concat(chunks);
+};
 
 export const generateDemandeExcel = async (req, res) => {
   const { id } = req.params;

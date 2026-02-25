@@ -7,6 +7,7 @@ import multer from "multer";
 import { fileURLToPath } from 'url';
 import { error } from "console";
 import { whatsappService } from "../services/whatssapservice.js";
+import { PassThrough } from "stream";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -303,17 +304,32 @@ export const storeDemandeFourniture = async (req, res) => {
       where: { id: demandeFourniture.chantierId },
       select: { nom: true },
     });
-    const message = `Nouvelle commande créée par ${user.name}. Numéro de commande: ${numero}. Date de création: ${parsedDate.toLocaleDateString()}.chantier: ${chantierName.nom}.`;
-    const numbers = [
-    "+212638940422",
-   
-  ];
-
-    numbers.forEach(number => {
-      whatsappService
-        .sendMessage(number, message)
-        .catch(err => console.error(`WhatsApp failed for ${number}`, err));
+    const message = `Nouvelle commande créée par ${user.name}. Numéro de commande: ${numero}. Date de création: ${parsedDate.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" })}.chantier: ${chantierName.nom}.`;
+    const recipients = await prisma.whatsAppNotificationRecipient.findMany({
+      where: {
+        active: true,
+        notifyFourniture: true,
+      },
+      select: { phone: true },
     });
+
+    const numbers = recipients.map((r) => r.phone);
+   
+
+    (async () => {
+      const pdfBuffer = await generateDemandeFourniturePDFBuffer(demandeFourniture.id);
+      const filename = `demande_fourniture_${demandeFourniture.numero}.pdf`;
+
+      await Promise.allSettled(
+        numbers.map((number) =>
+          whatsappService.sendMessage(number, message, {
+            data: pdfBuffer,
+            filename,
+            mimetype: "application/pdf",
+          })
+        )
+      );
+    })().catch((err) => console.error("WhatsApp PDF send failed:", err));
       
 return res.json({ success: true, redirect: `/achats/fourniture/${demandeFourniture.id}` });
   } catch (error) {
@@ -952,353 +968,299 @@ export const generateDemandeFourniturePDF = async (req, res) => {
     });
     doc.pipe(res);
 
-    const pageW = 841.89;
-    const pageH = 595.28;
-    const margin = 10;
-    const contentW = pageW - margin * 2;
-    const thin = 0.5;
-    const thick = 1.5;
-
-    const fmtDate = (d) => d ? new Date(d).toLocaleDateString("fr-FR") : "";
-    const logoPath = path.join(__dirname, "../public/img/logo-4.png");
-
-    function parseNumber(value) {
-      if (value === undefined || value === null || value === "") return "";
-      const num = Number(value);
-      if (isNaN(num)) {
-        return String(value).replace(/\//g, ' ');
-      }
-      const parts = num.toFixed(2).split('.');
-      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-      return parts.join(',').replace(/\//g, ' ');
-    }
-
-    // --- LAYOUT CONSTANTS ---
-    const headerH = 70;
-    const infoH = 28;
-    const tableHeaderH = 44; // 22 + 22
-    const summaryTableH = 40; // Horizontal summary table (2 rows: labels + values)
-    const signatureH = 90;
-    const footerH = summaryTableH + signatureH + 20; // Fixed footer height
-
-    // Calculate available space for items on first page
-    //  and continuation pages
-    // Since header is now on ALL pages, the limits are the same
-    const firstPageItemsLimit = pageH - margin - headerH - infoH - tableHeaderH - footerH - 10;
-    const continuationPageItemsLimit = firstPageItemsLimit;
-
-    // --- COLUMN DEFINITIONS ---
-    const col = {
-      code: 60,
-      des: 200,
-      imp: 80,
-      lot: 70,
-      unit: 40,
-      qd: 50,
-      pu: 60,
-      tht: 70,
-      d1: 65,
-      d2: 65,
-    };
-    col.obs = contentW - Object.values(col).reduce((a, b) => a + b, 0);
-
-    const x = {};
-    let acc = margin;
-    Object.entries(col).forEach(([k, w]) => {
-      x[k] = acc;
-      acc += w;
-    });
-
-    // --- DRAWING HELPERS ---
-
-    const drawHeader = (pageNum) => {
-      // Page Border
-      doc.rect(margin, margin, contentW, pageH - margin * 2).lineWidth(thick).stroke();
-
-      // Main Header
-      const leftW = 110;
-      const rightW = 150;
-      const centerW = contentW - leftW - rightW;
-
-      doc.rect(margin, margin, contentW, headerH).lineWidth(thick).stroke();
-      doc.moveTo(margin + leftW, margin).lineTo(margin + leftW, margin + headerH).lineWidth(thick).stroke();
-      doc.moveTo(margin + leftW + centerW, margin).lineTo(margin + leftW + centerW, margin + headerH).lineWidth(thick).stroke();
-
-      if (fs.existsSync(logoPath)) {
-        doc.image(logoPath, margin + 20, margin + 8, { width: 85 });
-      }
-
-      doc.font("Helvetica-Bold").fontSize(20).text("DEMANDE DE FOURNITURES", margin + leftW, margin + 22, { width: centerW, align: "center" });
-
-      doc.fontSize(10).font("Helvetica");
-      doc.text("Code : EN 53 02 001", margin + leftW + centerW + 15, margin + 12);
-      doc.text("Version : 02", margin + leftW + centerW + 15, margin + 28);
-      doc.text("Date : 27/01/2016", margin + leftW + centerW + 15, margin + 44);
-
-      // Removed "Page 1" from here
-
-      // Info Row
-      const infoY = margin + headerH;
-      doc.rect(margin, infoY, contentW, infoH).lineWidth(thick).stroke();
-      const splitX = margin + contentW * 0.65 - 90;
-      doc.moveTo(splitX, infoY).lineTo(splitX, infoY + infoH).stroke();
-
-      doc.fontSize(12);
-      doc.text("Code / Chantier :", margin + 10, infoY + 8);
-      doc.text(demande.chantier?.nom || "", margin + 120, infoY + 8);
-      doc.text("Date :", splitX + 10, infoY + 8);
-      doc.text(fmtDate(demande.dateDemande), splitX + 55, infoY + 8);
-      doc.text(`N° : ${(demande.numero || demande.id).toString().padStart(3, "0")}/${new Date().getFullYear()}`, splitX + 120, infoY + 8);
-      doc.text(`${demande.demandeur || ""}`, splitX + 220, infoY + 8);
-
-      // Page Number (Right aligned in info row) - Moved to end for Total Pages
-      // doc.text(`Page ${pageNum}`, margin + contentW - 60, infoY + 8);
-    };
-
-    const drawTableHeader = (startY) => {
-      const h1 = 22;
-      const h2 = 22;
-
-      // Header Border
-      doc.rect(margin, startY, contentW, h1 + h2).lineWidth(thick).stroke();
-
-      // Vertical lines WITHIN header
-      Object.values(x).forEach((vx) => {
-        doc.moveTo(vx, startY).lineTo(vx, startY + h1 + h2).lineWidth(thin).stroke();
-      });
-      doc.moveTo(margin + contentW, startY).lineTo(margin + contentW, startY + h1 + h2).lineWidth(thin).stroke();
-
-      // Headers Text
-      doc.fontSize(10);
-      doc.text("Code\narticle", x.code + 2, startY + 4, { width: col.code, align: "center" });
-      doc.text("Désignations", x.des, startY + 12, { width: col.des, align: "center" });
-      doc.text("Imputation", x.imp, startY + 12, { width: col.imp, align: "center" });
-      doc.text("Unité", x.unit, startY + 12, { width: col.unit, align: "center" });
-      doc.text("Quantité", x.qd, startY + 12, { width: col.qd, align: "center" });
-      doc.text("P.U. HT", x.pu, startY + 12, { width: col.pu, align: "center" });
-      doc.text("Total HT", x.tht, startY + 12, { width: col.tht, align: "center" });
-      doc.text("Date de livraison", x.d1, startY + 4, { width: col.d1 + col.d2, align: "center" });
-      doc.text("Reference", x.lot, startY + 12, { width: col.lot, align: "center" });
-      doc.text("Recommandations et Observations", x.obs, startY + 4, { width: col.obs, align: "center" });
-
-      doc.fontSize(9);
-      doc.text("Au plutôt", x.d1, startY + h1 + 6, { width: col.d1, align: "center" });
-      doc.text("Au plus tard", x.d2, startY + h1 + 6, { width: col.d2, align: "center" });
-    };
-
-    const drawVerticalGridLines = (topY, bottomY) => {
-      Object.values(x).forEach((vx) => {
-        doc.moveTo(vx, topY).lineTo(vx, bottomY).lineWidth(thin).stroke();
-      });
-      // Right border
-      doc.moveTo(margin + contentW, topY).lineTo(margin + contentW, bottomY).lineWidth(thin).stroke();
-      // Bottom border for this section
-      doc.moveTo(margin, bottomY).lineTo(margin + contentW, bottomY).lineWidth(thin).stroke();
-    };
-
-    const calculateRowHeight = (item) => {
-      const baseRowH = 22;
-      let maxHeight = baseRowH;
-      const columnsToCheck = [
-        { text: item.code, width: col.code },
-        { text: item.designation, width: col.des },
-        { text: item.imputation, width: col.imp },
-        { text: item.lot, width: col.lot },
-        { text: item.observation, width: col.obs },
-        { text: item.unité || item.unite, width: col.unit },
-        { text: item.quantité || item.quantite, width: col.qd },
-        { text: item.auPlutot ? fmtDate(item.auPlutot) : "", width: col.d1 },
-        { text: item.auPlutart ? fmtDate(item.auPlutart) : "", width: col.d2 },
-        { text: parseNumber(item.prixU), width: col.pu },
-        { text: parseNumber(item.totalHt), width: col.tht }
-      ];
-      columnsToCheck.forEach(colData => {
-        if (colData.text) {
-          const textHeight = doc.heightOfString(String(colData.text), { width: colData.width - 4 });
-          maxHeight = Math.max(maxHeight, textHeight + 10);
-        }
-      });
-      return maxHeight;
-    };
-
-    const drawFixedFooter = (isLastPage = false, pageNum) => {
-      // Calculate footer position (always at bottom of page)
-      const footerStartY = pageH - margin - footerH;
-
-      // Draw Page Number at the very bottom
-      // const pageNumY = pageH - margin - 10;
-      // doc.fontSize(9).font("Helvetica");
-      // doc.text(`Page ${pageNum}`, margin, pageNumY, { width: contentW, align: "center" });
-
-      // Draw Summary Table (Horizontal Layout - 3 columns side by side)
-      const summaryTableH = 40; // Height for 2 rows (labels + values)
-
-      // Make table narrower (60% of content width) and center it horizontally
-      const tableWidth = contentW * 0.6;
-      const tableX = margin + (contentW - tableWidth) / 2; // Center horizontally
-      const sumY = footerStartY;
-
-      // Define 3 equal columns for the summary
-      const colWidth = tableWidth / 3;
-
-      doc.fontSize(10);
-
-      // Draw the summary table border
-      doc.rect(tableX, sumY, tableWidth, summaryTableH).lineWidth(thick).stroke();
-
-      // Draw vertical separators for 3 columns
-      for (let i = 1; i < 3; i++) {
-        doc.moveTo(tableX + colWidth * i, sumY).lineTo(tableX + colWidth * i, sumY + summaryTableH).stroke();
-      }
-
-      // Draw horizontal separator (between labels and values)
-      const labelRowH = 20;
-      doc.moveTo(tableX, sumY + labelRowH).lineTo(tableX + tableWidth, sumY + labelRowH).stroke();
-
-      // Calculate TVA rate
-      const tvaRate = demande.totalHt > 0 ? ((demande.Tva / demande.totalHt) * 100) : 20;
-
-      // Define labels and values (3 columns now)
-      const columns = isLastPage ? [
-        { label: "Total HT", value: parseNumber(demande.totalHt) + " DH" },
-        { label: "Montant TVA (" + parseNumber(tvaRate) + "%)", value: parseNumber(demande.Tva) + " DH" },
-        { label: "Total TTC", value: parseNumber(demande.totalTTC) + " DH", bold: true }
-      ] : [
-        { label: "Total HT", value: "XX" },
-        { label: "Montant TVA (%)", value: "XX" },
-        { label: "Total TTC", value: "XX", bold: true }
-      ];
-
-      // Draw labels (top row)
-      columns.forEach((col, i) => {
-        doc.font("Helvetica").fontSize(9);
-        doc.text(col.label, tableX + colWidth * i + 5, sumY + 5, {
-          width: colWidth - 10,
-          align: "center"
-        });
-      });
-
-      // Draw values (bottom row)
-      columns.forEach((col, i) => {
-        if (col.bold) doc.font("Helvetica-Bold");
-        else doc.font("Helvetica");
-        doc.fontSize(10);
-        doc.text(col.value, tableX + colWidth * i + 5, sumY + labelRowH + 5, {
-          width: colWidth - 10,
-          align: "center"
-        });
-      });
-
-      const summaryY = sumY + summaryTableH + 20; // Gap after summary
-
-      // --- SIGNATURES ---
-      const sigY = summaryY;
-      const sigH = 90;
-
-      // Grid for signatures
-      doc.fontSize(11).font("Helvetica");
-      doc.rect(margin, sigY, contentW, sigH).lineWidth(thick).stroke();
-
-      const sigW = contentW / 4;
-      for (let i = 1; i < 4; i++) {
-        doc.moveTo(margin + sigW * i, sigY).lineTo(margin + sigW * i, sigY + sigH).stroke();
-      }
-
-      ["Magasinier", "Conducteur des travaux", "Chef Chantier", "Service Approvisionnement"]
-        .forEach((t, i) => {
-          doc.rect(margin + sigW * i + 5, sigY + 5, sigW - 10, sigH - 10).lineWidth(0.5).stroke();
-          doc.text(t, margin + sigW * i + 10, sigY + sigH - 25, { width: sigW - 10, align: "left" });
-
-          const lineY = sigY + 45;
-          doc.moveTo(margin + sigW * i + 15, lineY).lineTo(margin + sigW * (i + 1) - 15, lineY).lineWidth(0.8).stroke();
-        });
-    };
-
-    // --- INITIAL RENDER (FIRST PAGE) ---
-    drawHeader(1);
-    let tableY = margin + headerH + infoH;
-    drawTableHeader(tableY);
-
-    let currentY = tableY + tableHeaderH;
-    let tableStartOnCurrentPage = currentY;
-    let isFirstPage = true;
-    let currentPage = 1; // Track page numbers
-    doc.fontSize(11);
-
-    // --- ITEMS LOOP ---
-    for (const item of demande.items || []) {
-      const rowHeight = calculateRowHeight(item);
-      // Absolute Y position where items must stop to leave room for footer
-      const itemsBottomY = pageH - margin - footerH - 10;
-
-      // Check for Page Break
-      if (currentY + rowHeight > itemsBottomY) {
-        // Draw grid lines for previous page
-        drawVerticalGridLines(tableStartOnCurrentPage, currentY);
-
-        // Draw fixed footer on current page (not last page, show XX)
-        drawFixedFooter(false, currentPage);
-
-        // New page (continuation - with header and page number)
-        doc.addPage();
-        currentPage++; // Increment page counter
-        drawHeader(currentPage);
-
-        tableY = margin + headerH + infoH;
-        drawTableHeader(tableY);
-
-        currentY = tableY + tableHeaderH;
-        tableStartOnCurrentPage = currentY;
-        isFirstPage = false;
-        doc.fontSize(11);
-      }
-
-      // Draw horizontal separator
-      doc.moveTo(margin, currentY).lineTo(margin + contentW, currentY).lineWidth(thin).stroke();
-
-      // Render Text
-      const textTopPadding = 5;
-      const textY = currentY + textTopPadding;
-
-      doc.text(item.code || "", x.code + 2, textY, { width: col.code, align: "center" });
-      doc.text(item.designation || "", x.des + 2, textY, { width: col.des, align: "left" });
-      doc.text(item.imputation || "", x.imp + 2, textY, { width: col.imp, align: "left" });
-      doc.text(item.lot || "", x.lot, textY, { width: col.lot, align: "center" });
-      doc.text(item.unité || item.unite || "", x.unit, textY, { width: col.unit, align: "center" });
-      doc.text(item.quantité || item.quantite || "", x.qd, textY, { width: col.qd, align: "center" });
-      doc.text(parseNumber(item.prixU), x.pu, textY, { width: col.pu, align: "center" });
-      doc.text(parseNumber(item.totalHt), x.tht, textY, { width: col.tht, align: "center" });
-      doc.text(item.auPlutot ? fmtDate(item.auPlutot) : "", x.d1, textY, { width: col.d1, align: "center" });
-      doc.text(item.auPlutart ? fmtDate(item.auPlutart) : "", x.d2, textY, { width: col.d2, align: "center" });
-      doc.text(item.observation || "", x.obs + 2, textY, { width: col.obs, align: "left" });
-
-      currentY += rowHeight;
-    }
-
-    // Draw final grid lines for the last page
-    drawVerticalGridLines(tableStartOnCurrentPage, currentY);
-
-    // Draw fixed footer on last page (show real values)
-    drawFixedFooter(true, currentPage);
-
-    // --- ADD PAGE NUMBERS (Page X / Y) ---
-    const range = doc.bufferedPageRange();
-    for (let i = range.start; i < range.start + range.count; i++) {
-      doc.switchToPage(i);
-      const infoY = margin + headerH;
-      doc.fontSize(12).font("Helvetica");
-      doc.text(
-        `Page ${i + 1} / ${range.count}`,
-        margin + contentW - 100, // Adjusted X for wider text
-        infoY + 8,
-        { width: 90, align: "right" }
-      );
-    }
-
+    renderDemandeFourniturePdf(doc, demande);
     doc.end();
   } catch (err) {
     console.error(err);
     res.status(500).send("Erreur génération PDF");
+  }
+};
+
+export const generateDemandeFourniturePDFBuffer = async (demandeId) => {
+  const id = parseInt(demandeId, 10);
+  if (Number.isNaN(id)) throw new Error("ID invalide");
+
+  const demande = await prisma.demandeFourniture.findUnique({
+    where: { id },
+    include: { chantier: true, items: true },
+  });
+
+  if (!demande) throw new Error("Demande non trouvée");
+
+  const pass = new PassThrough();
+  const chunks = [];
+
+  pass.on("data", (c) => chunks.push(c));
+
+  const finished = new Promise((resolve, reject) => {
+    pass.on("end", resolve);
+    pass.on("error", reject);
+  });
+
+  const doc = new PDFDocument({
+    size: "A4",
+    layout: "landscape",
+    margins: { top: 10, left: 10, right: 10, bottom: 0 },
+    bufferPages: true,
+  });
+
+  doc.pipe(pass);
+  renderDemandeFourniturePdf(doc, demande);
+  doc.end();
+
+  await finished;
+  return Buffer.concat(chunks);
+};
+
+const renderDemandeFourniturePdf = (doc, demande) => {
+  const pageW = 841.89;
+  const pageH = 595.28;
+  const margin = 10;
+  const contentW = pageW - margin * 2;
+  const thin = 0.5;
+  const thick = 1.5;
+
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString("fr-FR") : "";
+  const logoPath = path.join(__dirname, "../public/img/logo-4.png");
+
+  function parseNumber(value) {
+    if (value === undefined || value === null || value === "") return "";
+    const num = Number(value);
+    if (isNaN(num)) return String(value).replace(/\//g, ' ');
+    const parts = num.toFixed(2).split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    return parts.join(',').replace(/\//g, ' ');
+  }
+
+  const headerH = 70;
+  const infoH = 28;
+  const tableHeaderH = 44;
+  const summaryTableH = 40;
+  const signatureH = 90;
+  const footerH = summaryTableH + signatureH + 20;
+
+  const col = {
+    code: 60,
+    des: 200,
+    imp: 80,
+    lot: 70,
+    unit: 40,
+    qd: 50,
+    pu: 60,
+    tht: 70,
+    d1: 65,
+    d2: 65,
+  };
+  col.obs = contentW - Object.values(col).reduce((a, b) => a + b, 0);
+
+  const x = {};
+  let acc = margin;
+  Object.entries(col).forEach(([k, w]) => {
+    x[k] = acc;
+    acc += w;
+  });
+
+  const drawHeader = () => {
+    doc.rect(margin, margin, contentW, pageH - margin * 2).lineWidth(thick).stroke();
+
+    const leftW = 110;
+    const rightW = 150;
+    const centerW = contentW - leftW - rightW;
+
+    doc.rect(margin, margin, contentW, headerH).lineWidth(thick).stroke();
+    doc.moveTo(margin + leftW, margin).lineTo(margin + leftW, margin + headerH).lineWidth(thick).stroke();
+    doc.moveTo(margin + leftW + centerW, margin).lineTo(margin + leftW + centerW, margin + headerH).lineWidth(thick).stroke();
+
+    if (fs.existsSync(logoPath)) {
+      doc.image(logoPath, margin + 20, margin + 8, { width: 85 });
+    }
+
+    doc.font("Helvetica-Bold").fontSize(20).text("DEMANDE DE FOURNITURES", margin + leftW, margin + 22, { width: centerW, align: "center" });
+
+    doc.fontSize(10).font("Helvetica");
+    doc.text("Code : EN 53 02 001", margin + leftW + centerW + 15, margin + 12);
+    doc.text("Version : 02", margin + leftW + centerW + 15, margin + 28);
+    doc.text("Date : 27/01/2016", margin + leftW + centerW + 15, margin + 44);
+
+    const infoY = margin + headerH;
+    doc.rect(margin, infoY, contentW, infoH).lineWidth(thick).stroke();
+    const splitX = margin + contentW * 0.65 - 90;
+    doc.moveTo(splitX, infoY).lineTo(splitX, infoY + infoH).stroke();
+
+    doc.fontSize(12);
+    doc.text("Code / Chantier :", margin + 10, infoY + 8);
+    doc.text(demande.chantier?.nom || "", margin + 120, infoY + 8);
+    doc.text("Date :", splitX + 10, infoY + 8);
+    doc.text(fmtDate(demande.dateDemande), splitX + 55, infoY + 8);
+    doc.text(`N° : ${(demande.numero || demande.id).toString().padStart(3, "0")}/${new Date().getFullYear()}`, splitX + 120, infoY + 8);
+    doc.text(`${demande.demandeur || ""}`, splitX + 220, infoY + 8);
+  };
+
+  const drawTableHeader = (startY) => {
+    const h1 = 22;
+    const h2 = 22;
+    doc.rect(margin, startY, contentW, h1 + h2).lineWidth(thick).stroke();
+
+    Object.values(x).forEach((vx) => {
+      doc.moveTo(vx, startY).lineTo(vx, startY + h1 + h2).lineWidth(thin).stroke();
+    });
+    doc.moveTo(margin + contentW, startY).lineTo(margin + contentW, startY + h1 + h2).lineWidth(thin).stroke();
+
+    doc.fontSize(10);
+    doc.text("Code\narticle", x.code + 2, startY + 4, { width: col.code, align: "center" });
+    doc.text("Désignations", x.des, startY + 12, { width: col.des, align: "center" });
+    doc.text("Imputation", x.imp, startY + 12, { width: col.imp, align: "center" });
+    doc.text("Unité", x.unit, startY + 12, { width: col.unit, align: "center" });
+    doc.text("Quantité", x.qd, startY + 12, { width: col.qd, align: "center" });
+    doc.text("P.U. HT", x.pu, startY + 12, { width: col.pu, align: "center" });
+    doc.text("Total HT", x.tht, startY + 12, { width: col.tht, align: "center" });
+    doc.text("Date de livraison", x.d1, startY + 4, { width: col.d1 + col.d2, align: "center" });
+    doc.text("Reference", x.lot, startY + 12, { width: col.lot, align: "center" });
+    doc.text("Recommandations et Observations", x.obs, startY + 4, { width: col.obs, align: "center" });
+
+    doc.fontSize(9);
+    doc.text("Au plutôt", x.d1, startY + h1 + 6, { width: col.d1, align: "center" });
+    doc.text("Au plus tard", x.d2, startY + h1 + 6, { width: col.d2, align: "center" });
+  };
+
+  const drawVerticalGridLines = (topY, bottomY) => {
+    Object.values(x).forEach((vx) => {
+      doc.moveTo(vx, topY).lineTo(vx, bottomY).lineWidth(thin).stroke();
+    });
+    doc.moveTo(margin + contentW, topY).lineTo(margin + contentW, bottomY).lineWidth(thin).stroke();
+    doc.moveTo(margin, bottomY).lineTo(margin + contentW, bottomY).lineWidth(thin).stroke();
+  };
+
+  const calculateRowHeight = (item) => {
+    const baseRowH = 22;
+    let maxHeight = baseRowH;
+    const columnsToCheck = [
+      { text: item.code, width: col.code },
+      { text: item.designation, width: col.des },
+      { text: item.imputation, width: col.imp },
+      { text: item.lot, width: col.lot },
+      { text: item.observation, width: col.obs },
+      { text: item.unité || item.unite, width: col.unit },
+      { text: item.quantité || item.quantite, width: col.qd },
+      { text: item.auPlutot ? fmtDate(item.auPlutot) : "", width: col.d1 },
+      { text: item.auPlutart ? fmtDate(item.auPlutart) : "", width: col.d2 },
+      { text: parseNumber(item.prixU), width: col.pu },
+      { text: parseNumber(item.totalHt), width: col.tht },
+    ];
+    columnsToCheck.forEach((colData) => {
+      if (colData.text) {
+        const textHeight = doc.heightOfString(String(colData.text), { width: colData.width - 4 });
+        maxHeight = Math.max(maxHeight, textHeight + 10);
+      }
+    });
+    return maxHeight;
+  };
+
+  const drawFixedFooter = (isLastPage) => {
+    const footerStartY = pageH - margin - footerH;
+    const summaryTableHLocal = 40;
+    const tableWidth = contentW * 0.6;
+    const tableX = margin + (contentW - tableWidth) / 2;
+    const sumY = footerStartY;
+    const colWidth = tableWidth / 3;
+
+    doc.fontSize(10);
+    doc.rect(tableX, sumY, tableWidth, summaryTableHLocal).lineWidth(thick).stroke();
+    for (let i = 1; i < 3; i++) {
+      doc.moveTo(tableX + colWidth * i, sumY).lineTo(tableX + colWidth * i, sumY + summaryTableHLocal).stroke();
+    }
+    const labelRowH = 20;
+    doc.moveTo(tableX, sumY + labelRowH).lineTo(tableX + tableWidth, sumY + labelRowH).stroke();
+
+    const tvaRate = demande.totalHt > 0 ? ((demande.Tva / demande.totalHt) * 100) : 20;
+    const columns = isLastPage ? [
+      { label: "Total HT", value: parseNumber(demande.totalHt) + " DH" },
+      { label: "Montant TVA (" + parseNumber(tvaRate) + "%)", value: parseNumber(demande.Tva) + " DH" },
+      { label: "Total TTC", value: parseNumber(demande.totalTTC) + " DH", bold: true },
+    ] : [
+      { label: "Total HT", value: "XX" },
+      { label: "Montant TVA (%)", value: "XX" },
+      { label: "Total TTC", value: "XX", bold: true },
+    ];
+
+    columns.forEach((c, i) => {
+      doc.font("Helvetica").fontSize(9);
+      doc.text(c.label, tableX + colWidth * i + 5, sumY + 5, { width: colWidth - 10, align: "center" });
+    });
+    columns.forEach((c, i) => {
+      doc.font(c.bold ? "Helvetica-Bold" : "Helvetica").fontSize(10);
+      doc.text(c.value, tableX + colWidth * i + 5, sumY + labelRowH + 5, { width: colWidth - 10, align: "center" });
+    });
+
+    const sigY = sumY + summaryTableHLocal + 20;
+    const sigH = 90;
+    doc.fontSize(11).font("Helvetica");
+    doc.rect(margin, sigY, contentW, sigH).lineWidth(thick).stroke();
+
+    const sigW = contentW / 4;
+    for (let i = 1; i < 4; i++) {
+      doc.moveTo(margin + sigW * i, sigY).lineTo(margin + sigW * i, sigY + sigH).stroke();
+    }
+
+    ["Magasinier", "Conducteur des travaux", "Chef Chantier", "Service Approvisionnement"].forEach((t, i) => {
+      doc.rect(margin + sigW * i + 5, sigY + 5, sigW - 10, sigH - 10).lineWidth(0.5).stroke();
+      doc.text(t, margin + sigW * i + 10, sigY + sigH - 25, { width: sigW - 10, align: "left" });
+      const lineY = sigY + 45;
+      doc.moveTo(margin + sigW * i + 15, lineY).lineTo(margin + sigW * (i + 1) - 15, lineY).lineWidth(0.8).stroke();
+    });
+  };
+
+  drawHeader();
+  let tableY = margin + headerH + infoH;
+  drawTableHeader(tableY);
+
+  let currentY = tableY + tableHeaderH;
+  const tableStartOnCurrentPage = currentY;
+  let currentPage = 1;
+
+  for (const item of demande.items || []) {
+    const rowHeight = calculateRowHeight(item);
+    const itemsBottomY = pageH - margin - footerH - 10;
+
+    if (currentY + rowHeight > itemsBottomY) {
+      drawVerticalGridLines(tableStartOnCurrentPage, currentY);
+      drawFixedFooter(false);
+
+      doc.addPage();
+      currentPage++;
+      drawHeader();
+      tableY = margin + headerH + infoH;
+      drawTableHeader(tableY);
+      currentY = tableY + tableHeaderH;
+    }
+
+    doc.moveTo(margin, currentY).lineTo(margin + contentW, currentY).lineWidth(thin).stroke();
+
+    const textY = currentY + 5;
+    doc.text(item.code || "", x.code + 2, textY, { width: col.code, align: "center" });
+    doc.text(item.designation || "", x.des + 2, textY, { width: col.des, align: "left" });
+    doc.text(item.imputation || "", x.imp + 2, textY, { width: col.imp, align: "left" });
+    doc.text(item.lot || "", x.lot, textY, { width: col.lot, align: "center" });
+    doc.text(item.unité || item.unite || "", x.unit, textY, { width: col.unit, align: "center" });
+    doc.text(item.quantité || item.quantite || "", x.qd, textY, { width: col.qd, align: "center" });
+    doc.text(parseNumber(item.prixU), x.pu, textY, { width: col.pu, align: "center" });
+    doc.text(parseNumber(item.totalHt), x.tht, textY, { width: col.tht, align: "center" });
+    doc.text(item.auPlutot ? fmtDate(item.auPlutot) : "", x.d1, textY, { width: col.d1, align: "center" });
+    doc.text(item.auPlutart ? fmtDate(item.auPlutart) : "", x.d2, textY, { width: col.d2, align: "center" });
+    doc.text(item.observation || "", x.obs + 2, textY, { width: col.obs, align: "left" });
+
+    currentY += rowHeight;
+  }
+
+  drawVerticalGridLines(tableStartOnCurrentPage, currentY);
+  drawFixedFooter(true);
+
+  const range = doc.bufferedPageRange();
+  for (let i = range.start; i < range.start + range.count; i++) {
+    doc.switchToPage(i);
+    const infoY = margin + headerH;
+    doc.fontSize(12).font("Helvetica");
+    doc.text(`Page ${i + 1} / ${range.count}`, margin + contentW - 100, infoY + 8, { width: 90, align: "right" });
   }
 };
 

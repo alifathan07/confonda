@@ -1,39 +1,7 @@
-// services/whatsappService.js
 import pkg from "whatsapp-web.js";
-import qrcode from "qrcode-terminal";
+import { client, _isReady, readyPromise } from "../setupwhats.js";
 
-const { Client, LocalAuth } = pkg;
-
-// Initialize WhatsApp client
-const client = new Client({ authStrategy: new LocalAuth() });
-
-let _isReady = false;
-let _readyResolve;
-const readyPromise = new Promise((resolve) => {
-    _readyResolve = resolve;
-});
-
-client.on("qr", qr => {
-    qrcode.generate(qr, { small: true });
-    console.log("Scan the QR code with WhatsApp");
-});
-
-client.on("ready", () => {
-    _isReady = true;
-    if (_readyResolve) _readyResolve(true);
-    console.log("WhatsApp is ready!");
-});
-
-client.on("auth_failure", (msg) => {
-    console.error("WhatsApp auth failure:", msg);
-});
-
-client.on("disconnected", (reason) => {
-    _isReady = false;
-    console.error("WhatsApp disconnected:", reason);
-});
-
-client.initialize();
+const { MessageMedia } = pkg;
 
 // Service class
 class WhatsAppService {
@@ -54,7 +22,7 @@ class WhatsAppService {
         ]);
     }
 
-    async sendMessage(number, message) {
+    async sendMessage(number, message, attachment) {
         try {
             await this.waitUntilReady();
 
@@ -62,7 +30,32 @@ class WhatsAppService {
             if (!normalized) throw new Error("Invalid WhatsApp number");
 
             const chatId = `${normalized}@c.us`;
-            await this.client.sendMessage(chatId, String(message ?? ""));
+            const text = String(message ?? "");
+
+            if (attachment) {
+                const filename = attachment?.filename || "document.pdf";
+                const mimetype = attachment?.mimetype || "application/pdf";
+
+                let dataBase64 = null;
+                if (Buffer.isBuffer(attachment)) {
+                    dataBase64 = attachment.toString("base64");
+                } else if (typeof attachment === "string") {
+                    dataBase64 = attachment;
+                } else if (attachment?.data && Buffer.isBuffer(attachment.data)) {
+                    dataBase64 = attachment.data.toString("base64");
+                } else if (attachment?.data && typeof attachment.data === "string") {
+                    dataBase64 = attachment.data;
+                }
+
+                if (!dataBase64) throw new Error("Invalid attachment: expected Buffer or base64 string");
+                console.log("Is buffer:", Buffer.isBuffer(attachment.data));
+                console.log("Type:", typeof attachment.data);
+                console.log("Chat ID:", chatId);
+                const media = new MessageMedia(mimetype, dataBase64, filename);
+                await this.client.sendMessage(chatId, media, { caption: text });
+            } else {
+                await this.client.sendMessage(chatId, text);
+            }
             console.log(`Message sent to ${chatId}`);
         } catch (err) {
             console.error("Failed to send WhatsApp message:", err);

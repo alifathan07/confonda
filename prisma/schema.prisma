@@ -665,7 +665,18 @@ model Fourniture_list {
   id           Int      @id @default(autoincrement())
   designation  String?
   reference    String?
-  prixUnitaire Decimal?
+  prixUnitaire  Decimal?
 
   @@unique([designation, reference])
+}
+
+model WhatsAppNotificationRecipient {
+  id              Int      @id @default(autoincrement())
+  phone           String   @unique
+  notifyCaisse    Boolean  @default(true)
+  notifyFourniture Boolean @default(true)
+  active          Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
