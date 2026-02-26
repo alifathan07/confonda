@@ -1,3 +1,54 @@
-2026/02/25-04:29:12.672 57e0 Reusing MANIFEST C:\Users\alifa\Desktop\confonda\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2026/02/25-04:29:12.675 57e0 Recovering log #294
-2026/02/25-04:29:12.699 57e0 Reusing old log C:\Users\alifa\Desktop\confonda\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000294.log 
+2026/02/25-23:51:22.267 3cbc Reusing MANIFEST C:\Users\alifa\Desktop\confonda\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/02/25-23:51:22.267 3cbc Recovering log #336
+2026/02/25-23:51:22.361 3cbc Reusing old log C:\Users\alifa\Desktop\confonda\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000336.log 
+2026/02/25-23:51:27.333 3cbc Level-0 table #355: started
+2026/02/25-23:51:27.380 3cbc Level-0 table #355: 812333 bytes OK
+2026/02/25-23:51:27.384 3cbc Delete type=0 #336
+2026/02/25-23:51:28.360 5114 Compacting 1@1 + 10@2 files
+2026/02/25-23:51:28.590 5114 Generated table #356@1: 81967 keys, 2228997 bytes
+2026/02/25-23:51:28.730 5114 Generated table #357@1: 52479 keys, 2263171 bytes
+2026/02/25-23:51:28.843 5114 Generated table #358@1: 10932 keys, 2185501 bytes
+2026/02/25-23:51:28.938 5114 Generated table #359@1: 13078 keys, 2143946 bytes
+2026/02/25-23:51:29.005 5114 Generated table #360@1: 25419 keys, 2147290 bytes
+2026/02/25-23:51:29.162 5114 Generated table #361@1: 88872 keys, 2237265 bytes
+2026/02/25-23:51:29.376 5114 Generated table #362@1: 89278 keys, 2239492 bytes
+2026/02/25-23:51:29.604 5114 Generated table #363@1: 89010 keys, 2237750 bytes
+2026/02/25-23:51:29.731 5114 Generated table #364@1: 57155 keys, 1529821 bytes
+2026/02/25-23:51:29.731 5114 Compacted 1@1 + 10@2 files => 19213233 bytes
+2026/02/25-23:51:29.732 5114 compacted to: files[ 0 0 9 0 0 0 0 ]
+2026/02/26-00:49:49.568 5114 Level-0 table #366: started
+2026/02/26-00:49:49.626 5114 Level-0 table #366: 1038556 bytes OK
+2026/02/26-00:49:49.631 5114 Delete type=2 #341
+2026/02/26-00:49:49.632 5114 Delete type=2 #342
+2026/02/26-00:49:49.633 5114 Delete type=2 #343
+2026/02/26-00:49:49.633 5114 Delete type=2 #344
+2026/02/26-00:49:49.634 5114 Delete type=2 #345
+2026/02/26-00:49:49.634 5114 Delete type=2 #346
+2026/02/26-00:49:49.635 5114 Delete type=2 #347
+2026/02/26-00:49:49.635 5114 Delete type=2 #350
+2026/02/26-00:49:49.636 5114 Delete type=2 #351
+2026/02/26-00:49:49.636 5114 Delete type=2 #352
+2026/02/26-00:49:49.637 5114 Delete type=0 #354
+2026/02/26-00:49:49.638 5114 Delete type=2 #355
+2026/02/26-00:51:32.077 3cbc Compacting 1@1 + 9@2 files
+2026/02/26-00:51:32.194 3cbc Generated table #367@1: 82929 keys, 2230331 bytes
+2026/02/26-00:51:32.297 3cbc Generated table #368@1: 51629 keys, 2260804 bytes
+2026/02/26-00:51:32.360 3cbc Generated table #369@1: 10889 keys, 2192856 bytes
+2026/02/26-00:51:32.418 3cbc Generated table #370@1: 13081 keys, 2148470 bytes
+2026/02/26-00:51:32.495 3cbc Generated table #371@1: 26470 keys, 2148651 bytes
+2026/02/26-00:51:32.611 3cbc Generated table #372@1: 88896 keys, 2237519 bytes
+2026/02/26-00:51:32.725 3cbc Generated table #373@1: 89267 keys, 2239415 bytes
+2026/02/26-00:51:32.840 3cbc Generated table #374@1: 89009 keys, 2237555 bytes
+2026/02/26-00:51:32.912 3cbc Generated table #375@1: 56092 keys, 1503965 bytes
+2026/02/26-00:51:32.912 3cbc Compacted 1@1 + 9@2 files => 19199566 bytes
+2026/02/26-00:51:32.913 3cbc compacted to: files[ 0 0 9 0 0 0 0 ]
+2026/02/26-00:51:32.914 3cbc Delete type=2 #356
+2026/02/26-00:51:32.915 3cbc Delete type=2 #357
+2026/02/26-00:51:32.915 3cbc Delete type=2 #358
+2026/02/26-00:51:32.916 3cbc Delete type=2 #359
+2026/02/26-00:51:32.917 3cbc Delete type=2 #360
+2026/02/26-00:51:32.917 3cbc Delete type=2 #361
+2026/02/26-00:51:32.918 3cbc Delete type=2 #362
+2026/02/26-00:51:32.918 3cbc Delete type=2 #363
+2026/02/26-00:51:32.919 3cbc Delete type=2 #364
+2026/02/26-00:51:32.919 3cbc Delete type=2 #366

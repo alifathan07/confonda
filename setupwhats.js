@@ -6,11 +6,17 @@ const { Client, LocalAuth } = pkg;
 
 // Initialize WhatsApp client
 export const client = new Client({
-    authStrategy: new LocalAuth(),
-    puppeteer: {
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-    }
+ puppeteer: {
+ headless: true,
+ args: [
+ "--no-sandbox",
+ "--disable-setuid-sandbox",
+ "--disable-dev-shm-usage",
+ "--disable-gpu",
+ "--no-zygote",
+ "--single-process"
+ ]
+ }
 });
 export let _isReady = false;
 let _readyResolve;
