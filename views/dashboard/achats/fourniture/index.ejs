@@ -34,7 +34,7 @@
 
               <!-- BUTTONS -->
               <div class="d-flex justify-content-end" style="gap: 10px;">
-               <% if (user.role === "user") { %>
+               <% if (user.role === "user" || user.role === "granduser") { %>
                  <a href="/achats/create/fourniture" class="btn btn-primary custom-btn">
                   <i class="fas fa-plus"></i> créer une nouvelle demande
                 </a>

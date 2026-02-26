@@ -8,5 +8,6 @@ nodemon.json
 
 
 algo.txt
-/.wwebjs_auth
-/.wwebjs_cache
+.wwebjs_auth
+.wwebjs_cache
+setupwhats.js
