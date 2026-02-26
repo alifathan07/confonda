@@ -109,12 +109,26 @@
     }
 
     .btn-send {
-      background: var(--blue);
-      color: white;
+      background-color: #16a34a !important;
+      border-color: #16a34a !important;
+      color: white !important;
     }
 
     .btn-send:hover {
-      background: #0041a3;
+      background-color: #15803d !important;
+      border-color: #15803d !important;
+    }
+
+    .btn-pdf {
+      background-color: #dc2626 !important;
+      border-color: #dc2626 !important;
+      color: white !important;
+    }
+
+    .btn-pdf:hover {
+      background-color: #b91c1c !important;
+      border-color: #b91c1c !important;
+      color: white !important;
     }
 
     .btn-outline {
@@ -128,10 +142,17 @@
     }
 
     .btn-save {
-      background: #16a34a;
-      color: white;
+      background-color: #2563eb !important;
+      border-color: #2563eb !important;
+      color: white !important;
       font-size: 1rem;
       padding: 0.8rem 2rem;
+    }
+
+    .btn-save:hover {
+      background-color: #1d4ed8 !important;
+      border-color: #1d4ed8 !important;
+      color: white !important;
     }
 
     .btn-add-line {
@@ -695,7 +716,7 @@
                       id="btnSend">
                       <i class="fas fa-paper-plane"></i> <span>Envoyer</span>
                     </button>
-                    <button class="btn btn-sm btn-modern btn-outline d-flex align-items-center gap-1" title="PDF"
+                    <button class="btn btn-sm btn-modern btn-pdf d-flex align-items-center gap-1" title="PDF"
                       onclick="downloadPDF()">
                       <i class="fas fa-file-pdf"></i> <span>PDF</span>
                     </button>

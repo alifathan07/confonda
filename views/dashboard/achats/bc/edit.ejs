@@ -108,12 +108,26 @@
     }
 
     .btn-send {
-      background: var(--blue);
-      color: white;
+      background-color: #16a34a !important;
+      border-color: #16a34a !important;
+      color: white !important;
     }
 
     .btn-send:hover {
-      background: #0041a3;
+      background-color: #15803d !important;
+      border-color: #15803d !important;
+    }
+
+    .btn-pdf {
+      background-color: #dc2626 !important;
+      border-color: #dc2626 !important;
+      color: white !important;
+    }
+
+    .btn-pdf:hover {
+      background-color: #b91c1c !important;
+      border-color: #b91c1c !important;
+      color: white !important;
     }
 
     .btn-outline {
@@ -127,10 +141,17 @@
     }
 
     .btn-save {
-      background: #16a34a;
-      color: white;
+      background-color: #2563eb !important;
+      border-color: #2563eb !important;
+      color: white !important;
       font-size: 1rem;
       padding: 0.8rem 2rem;
+    }
+
+    .btn-save:hover {
+      background-color: #1d4ed8 !important;
+      border-color: #1d4ed8 !important;
+      color: white !important;
     }
 
     .btn-add-line {
@@ -760,35 +781,37 @@
 
   <div id="wrapper">
     <%- include('../../../layouts/sidebar') %>
-      <div id="content-wrapper" class="d-flex flex-column">
-        <div id="content">
-          <%- include('../../../layouts/topbar') %>
-            <div class="container-fluid px-3 px-md-4">
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <%- include('../../../layouts/topbar') %>
+        <div class="container-fluid px-3 px-md-4">
 
-              <!-- Action Bar -->
-              <div class="action-bar no-print">
-                <div
-                  class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-                  <h1 style="font-size: 1.2rem;">
-                    <i class="fas fa-file-invoice-dollar"></i> Bon de Commande
-                    <span class="badge">#<%= bc.numero || bc.id %></span>
-                  </h1>
-                  <div class="d-flex flex-wrap gap-1">
-                    <button onclick="sendEmail()" class="btn btn-sm btn-modern btn-send d-flex align-items-center gap-1"
-                      id="btnSend">
-                      <i class="fas fa-paper-plane"></i> <span>Envoyer</span>
-                    </button>
-                    <button class="btn btn-sm btn-modern btn-outline d-flex align-items-center gap-1" title="PDF"
-                      onclick="downloadPDF(<%= bc.id %>)">
-                      <i class="fas fa-file-pdf"></i> <span>PDF</span>
-                    </button>
-                    <button id="btnSaveBc" class="btn btn-sm btn-modern btn-save d-flex align-items-center gap-1"
-                      title="Sauvegarder les modifications">
-                      <i class="fas fa-save"></i> <span>Sauvegarder</span>
-                    </button>
-                  </div>
-                </div>
-              </div> <!-- Close action-bar div -->
+          <!-- Action Bar -->
+          <div class="action-bar no-print">
+            <div
+              class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+              <h1 style="font-size: 1.2rem;">
+                <i class="fas fa-file-invoice-dollar"></i> Bon de Commande
+                <span class="badge">#<%= bc.numero || bc.id %></span>
+              </h1>
+              <div class="d-flex flex-wrap gap-1">
+                <button onclick="sendEmail()" class="btn btn-sm btn-modern btn-send d-flex align-items-center gap-1"
+                  id="btnSend">
+                  <i class="fas fa-paper-plane"></i> <span>Envoyer</span>
+                </button>
+                <button class="btn btn-sm btn-modern btn-pdf d-flex align-items-center gap-1" title="PDF"
+                  onclick="downloadPDF(<%= bc.id %>)">
+                  <i class="fas fa-file-pdf"></i> <span>PDF</span>
+                </button>
+                <button id="btnSaveBc" class="btn btn-sm btn-modern btn-save d-flex align-items-center gap-1"
+                  title="Sauvegarder les modifications">
+                  <i class="fas fa-save"></i> <span>Sauvegarder</span>
+                </button>
+              </div>
+            </div>
+          </div> <!-- Close action-bar div -->
+          <!-- Document -->
+          <div class="doc-card">
               <!-- Document -->
               <div class="doc-card">
 
