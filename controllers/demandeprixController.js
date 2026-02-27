@@ -200,8 +200,8 @@ export const updateDemandePrix = async (req, res) => {
       });
 
       // 2. Update suppliers using helper function
-      await updateDemandePrixSuppliers(id, supplierIds);
-    });
+      await updateDemandePrixSuppliers(id, supplierIds, tx);
+    }, { timeout: 20000 });
 
     return res.json({ success: true, message: 'Demande de prix mise à jour avec succès.' });
   } catch (err) {
@@ -247,16 +247,25 @@ export const postDemandePrixViaFourniture = async (req, res) => {
     if (!demandeId || !Array.isArray(items) || items.length === 0)
       return res.status(400).json({ success: false, error: 'Données invalides.' });
 
-    // Group item IDs by fournisseur
-    const byFournisseur = items.reduce((acc, { itemId, fournisseurId }) => {
-      const fid = parseInt(fournisseurId);
-      const iid = parseInt(itemId);
-      if (!acc[fid]) acc[fid] = [];
-      acc[fid].push(iid);
-      return acc;
-    }, {});
+    const supplierIds = Array.from(
+      new Set(
+        items
+          .map(i => parseInt(i?.fournisseurId))
+          .filter(n => Number.isFinite(n) && n > 0)
+      )
+    );
 
-    const allItemIds = items.map(i => parseInt(i.itemId));
+    const allItemIds = Array.from(
+      new Set(
+        items
+          .map(i => parseInt(i?.itemId))
+          .filter(n => Number.isFinite(n) && n > 0)
+      )
+    );
+
+    if (supplierIds.length === 0 || allItemIds.length === 0)
+      return res.status(400).json({ success: false, error: 'Sélectionnez au moins un article et un fournisseur.' });
+
     const demandeItems = await prisma.itemFourniture.findMany({
       where: { id: { in: allItemIds }, demandeFournitureId: parseInt(demandeId) },
       select: { id: true, designation: true, unité: true, quantité: true, observation: true, lot: true }
@@ -266,53 +275,40 @@ export const postDemandePrixViaFourniture = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Aucun article trouvé.' });
 
     const itemMap = Object.fromEntries(demandeItems.map(it => [it.id, it]));
-    const createdIds = [];
+    const validIds = allItemIds.filter(id => itemMap[id]);
+    if (validIds.length === 0)
+      return res.status(400).json({ success: false, error: 'Aucun article valide trouvé.' });
 
-    for (const [fournisseurId, itemIds] of Object.entries(byFournisseur)) {
-      const fid = parseInt(fournisseurId);
-      const fournisseur = await prisma.fournisseur.findUnique({ where: { id: fid } });
-      if (!fournisseur) continue;
+    const articles = validIds.map(id => {
+      const a = itemMap[id];
+      return {
+        designation: a.designation,
+        reference: a.lot ?? null,
+        unite: a.unité ?? null,
+        quantite: parseInt(a.quantité) || 1,
+        prixUnitaire: null,
+        totalHt: null,
+        delaiLivraison: null,
+        observation: a.observation ?? null,
+      };
+    });
 
-      const validIds = itemIds.filter(id => itemMap[id]);
-      if (validIds.length === 0) continue;
-
-      const articles = validIds.map(id => {
-        const a = itemMap[id];
-        return {
-          designation: a.designation,
-          reference: a.lot ?? null,
-          unite: a.unité ?? null,
-          quantite: parseInt(a.quantité) || 1,
-          prixUnitaire: null,
-          totalHt: null,
-          delaiLivraison: null,
-          observation: a.observation ?? null,
-        };
-      });
-
-      const dp = await prisma.demandeDePrix.create({
-        data: {
-          date: new Date(),
-          demandeandfournisseur: {
-            create: [{ fournisseurId: fid, status: 'En attente' }]
-          },
-          articles: { create: articles }
-        },
-        select: { id: true }
-      });
-
-      createdIds.push(dp.id);
-    }
-
-    if (createdIds.length === 0)
-      return res.status(400).json({ success: false, error: 'Aucune demande créée.' });
+    const dp = await createDemandePrixWithSuppliers(
+      {
+        date: new Date(),
+        devisPath: null,
+        sentByEmail: false,
+        articles
+      },
+      supplierIds
+    );
 
     return res.status(201).json({
       success: true,
-      count: createdIds.length,
-      demandePrixIds: createdIds,
-      primaryId: createdIds[0],
-      message: `${createdIds.length} demande(s) de prix créée(s).`
+      count: 1,
+      demandePrixIds: [dp.id],
+      primaryId: dp.id,
+      message: `Demande de prix créée avec succès.`
     });
   } catch (err) {
     console.error('Erreur postDemandePrixViaFourniture:', err);

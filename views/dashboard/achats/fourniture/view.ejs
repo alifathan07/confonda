@@ -979,6 +979,30 @@
 
                                   if (!designation) return;
 
+                                  const isDp = convertMode === 'devis';
+                                  const selectHelper = isDp
+                                    ? '<div class="small text-muted mt-1">Choisissez un ou plusieurs fournisseurs (sans Ctrl).</div>'
+                                    : '<div class="small text-muted mt-1">Choisissez un seul fournisseur.</div>';
+
+                                  const supplierInputHtml = isDp
+                                    ? `
+            <div class="fournisseurs-box border rounded p-2 bg-white" style="max-height: 160px; overflow:auto;">
+              ${fournisseurs.map(f => `
+                <div class="custom-control custom-checkbox mb-1">
+                  <input type="checkbox" class="custom-control-input supplier-checkbox" id="sup-${itemId}-${f.id}" value="${f.id}" disabled>
+                  <label class="custom-control-label" for="sup-${itemId}-${f.id}">${f.name} ${f.email ? `(${f.email})` : ''}</label>
+                </div>
+              `).join('')}
+            </div>
+            <div class="small text-muted mt-1">Cochez les fournisseurs.</div>
+          `
+                                    : `
+            <select class="form-control form-control-sm fournisseur-select" data-item-id="${itemId}" disabled>
+              <option value="">-- Choisir --</option>
+              ${fournisseurs.map(f => `<option value="${f.id}">${f.name} (${f.email})</option>`).join('')}
+            </select>
+          `;
+
                                   const itemHtml = `
         <div class="border rounded p-3 mb-2 article-item">
           <div class="custom-control custom-checkbox">
@@ -988,33 +1012,47 @@
             </label>
           </div>
           <div class="form-group mt-2 ml-4">
-            <label class="small">Fournisseur</label>
-            <select class="form-control form-control-sm fournisseur-select" data-item-id="${itemId}" disabled>
-              <option value="">-- Choisir --</option>
-              ${fournisseurs.map(f => `<option value="${f.id}">${f.name} (${f.email})</option>`).join('')}
-            </select>
+            <label class="small">Fournisseur${isDp ? 's' : ''}</label>
+            ${supplierInputHtml}
+            ${selectHelper}
           </div>
         </div>`;
                                   $list.append(itemHtml);
                                 });
 
                                 $list.off('change', '.item-checkbox').on('change', '.item-checkbox', function () {
-                                  const $select = $(this).closest('.article-item').find('.fournisseur-select');
+                                  const $article = $(this).closest('.article-item');
+                                  const $select = $article.find('.fournisseur-select');
+                                  const $supplierChecks = $article.find('.supplier-checkbox');
+
                                   $select.prop('disabled', !this.checked);
-                                  if (!this.checked) $select.val('');
+                                  $supplierChecks.prop('disabled', !this.checked);
+
+                                  if (!this.checked) {
+                                    $select.val('');
+                                    $supplierChecks.prop('checked', false);
+                                  }
                                 });
                               }
 
                               $(document).on('click', '#btnCreateDevis', function () {
                                 selectedItems = [];
+                                const isDp = convertMode === 'devis';
                                 let hasValidSelection = false;
 
                                 $('#itemsList .item-checkbox:checked').each(function () {
                                   const itemId = $(this).val();
-                                  const fournisseurId = $(this).closest('.article-item').find('.fournisseur-select').val();
-                                  if (fournisseurId) {
-                                    selectedItems.push({ itemId, fournisseurId });
-                                    hasValidSelection = true;
+                                  const $article = $(this).closest('.article-item');
+                                  const ids = isDp
+                                    ? $article.find('.supplier-checkbox:checked').map(function () { return $(this).val(); }).get()
+                                    : ($article.find('.fournisseur-select').val() ? [$article.find('.fournisseur-select').val()] : []);
+                                  if (ids.length) {
+                                    ids.forEach((fournisseurId) => {
+                                      if (!fournisseurId) return;
+                                      selectedItems.push({ itemId, fournisseurId });
+
+                                      hasValidSelection = true;
+                                    });
                                   }
                                 });
 

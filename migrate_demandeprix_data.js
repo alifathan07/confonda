@@ -161,24 +161,24 @@ async function getDemandePrixWithFlattenedSuppliers(id) {
 /**
  * Helper function to update DemandePrix suppliers
  */
-async function updateDemandePrixSuppliers(demandePrixId, supplierIds) {
+async function updateDemandePrixSuppliers(demandePrixId, supplierIds, prismaClient = prisma) {
   try {
     console.log(`🔄 Updating suppliers for DemandeDePrix #${demandePrixId}`);
 
     // 1. Delete existing relations
-    await prisma.demandeandfournisseur.deleteMany({
-      where: { demandeDePrixId }
+    await prismaClient.demandeandfournisseur.deleteMany({
+      where: { demandeDePrixId: demandePrixId }
     });
 
     // 2. Create new relations
     const newRelations = supplierIds.map(supplierId => ({
-      demandeDePrixId,
+      demandeDePrixId: demandePrixId,
       fournisseurId: supplierId,
       status: 'en attent',
       emailSentAt: null
     }));
 
-    await prisma.demandeandfournisseur.createMany({
+    await prismaClient.demandeandfournisseur.createMany({
       data: newRelations
     });
 

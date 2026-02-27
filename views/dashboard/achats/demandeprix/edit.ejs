@@ -586,23 +586,9 @@
   email: f.email || '',
   tel: (f.telFournisseur || '')
 }))) %></script>
+  <script type="application/json" id="initialSupplierIdsJson"><%- JSON.stringify(demandePrix.fournisseurIds || []) %></script>
 
   <script>
-    function sendEmail() {
-      const btn = $('#btnSend');
-      btn.html('<i class="fas fa-spinner fa-spin"></i> Envoi...').prop('disabled', true);
-
-      $.post('/api/demandes-prix/<%= demandePrix.id %>/send-email', {
-        email: '<%= demandePrix.fournisseur.email %>'
-      })
-        .done(() => {
-          alert('Email envoyé avec succès !');
-        })
-        .fail(() => {
-          alert('Échec de l\'envoi !');
-        });
-    }
-
     async function downloadPDF(id) {
       try {
         const res = await fetch(`/achat/demande-prix/${id}/pdf`);
@@ -624,7 +610,22 @@
 
     // Fournisseurs data
     window.__deletedArticles = [];
-    const fournisseursData = JSON.parse((document.getElementById('fournisseursDataJson')?.textContent || '[]'));
+    const normalizeSupplier = (s) => ({
+      id: parseInt(s?.id, 10),
+      name: s?.name || '',
+      email: s?.email || '',
+      tel: s?.tel || ''
+    });
+
+    const fournisseursData = JSON
+      .parse((document.getElementById('fournisseursDataJson')?.textContent || '[]'))
+      .map(normalizeSupplier)
+      .filter(s => Number.isFinite(s.id));
+
+    const initialSupplierIds = JSON
+      .parse((document.getElementById('initialSupplierIdsJson')?.textContent || '[]'))
+      .map(n => parseInt(n, 10))
+      .filter(n => Number.isFinite(n));
 
     (function () {
       const btn = document.getElementById('downloadPdfBtn');
@@ -636,14 +637,22 @@
       });
     })();
 
-    document.getElementById('fournisseurSelect').addEventListener('change', function () {
-      const f = fournisseursData.find(x => x.id === this.value);
-      if (f) {
-        document.getElementById('fourName').textContent = f.name;
-        document.getElementById('fourEmail').textContent = f.email;
-        document.getElementById('fourTel').textContent = f.tel || 'Non renseigné';
-      }
-    });
+    // Legacy single-supplier UI (not present on this edit page)
+    const fournisseurSelect = document.getElementById('fournisseurSelect');
+    if (fournisseurSelect) {
+      fournisseurSelect.addEventListener('change', function () {
+        const selectedId = parseInt(this.value, 10);
+        const f = fournisseursData.find(x => x.id === selectedId);
+        const fourName = document.getElementById('fourName');
+        const fourEmail = document.getElementById('fourEmail');
+        const fourTel = document.getElementById('fourTel');
+        if (f && fourName && fourEmail && fourTel) {
+          fourName.textContent = f.name;
+          fourEmail.textContent = f.email;
+          fourTel.textContent = f.tel || 'Non renseigné';
+        }
+      });
+    }
 
     // Ajouter ligne
     function addArticleRow() {
@@ -709,12 +718,7 @@
       });
       const dateVal = document.querySelector('input[name="date"]').value;
       return {
-        suppliers: selectedSuppliers.map(s => ({
-          id: s.id,
-          name: s.name,
-          email: s.email,
-          tel: s.tel
-        })),
+        suppliers: selectedSuppliers.map(s => parseInt(s.id, 10)).filter(n => Number.isFinite(n) && n > 0),
         date: dateVal || null,
         articles,
         deletedArticleIds: Array.from(new Set(window.__deletedArticles || []))
@@ -917,10 +921,17 @@
 
     // Supplier Management Functions
     let allSuppliers = [];
-    let selectedSuppliers = [];
+    let selectedSuppliers = (fournisseursData || []).filter(s => initialSupplierIds.includes(parseInt(s.id, 10)));
+
+    const dirtySupplierIds = new Set();
+
+    updateSelectedSuppliersDisplay();
 
     function openSupplierModal() {
-      allSuppliers = JSON.parse(document.getElementById('fournisseursDataJson').textContent);
+      allSuppliers = JSON
+        .parse(document.getElementById('fournisseursDataJson').textContent)
+        .map(normalizeSupplier)
+        .filter(s => Number.isFinite(s.id));
       renderAvailableSuppliers();
       renderSelectedSuppliers();
 
@@ -1036,6 +1047,7 @@
       const supplier = allSuppliers.find(s => s.id === id);
       if (supplier) {
         supplier[field] = value;
+        dirtySupplierIds.add(id);
       }
     }
 
@@ -1043,6 +1055,7 @@
       const supplier = selectedSuppliers.find(s => s.id === id);
       if (supplier) {
         supplier[field] = value;
+        dirtySupplierIds.add(id);
       }
     }
 
@@ -1061,7 +1074,7 @@
       countElement.textContent = selectedSuppliers.length;
     }
 
-    function saveSelectedSuppliers() {
+    async function saveSelectedSuppliers() {
       // Update the main suppliers data with changes
       selectedSuppliers.forEach(selected => {
         const originalIndex = allSuppliers.findIndex(s => s.id === selected.id);
@@ -1070,20 +1083,70 @@
         }
       });
 
+      // Persist supplier info edits (name/email/tel) to backend
+      const dirtyIds = Array.from(dirtySupplierIds);
+      if (dirtyIds.length) {
+        const updates = dirtyIds.map((id) => {
+          const sup = (allSuppliers || []).find(s => s.id === id) || (selectedSuppliers || []).find(s => s.id === id);
+          if (!sup) return Promise.resolve({ ok: true, id });
+          return fetch(`/achats/fournisseurs/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: sup.name,
+              email: sup.email,
+              phone: sup.tel
+            })
+          })
+            .then(async (r) => {
+              const j = await r.json().catch(() => ({}));
+              if (!r.ok) throw new Error(j?.error || `Erreur fournisseur #${id}`);
+              return { ok: true, id };
+            })
+            .catch((e) => ({ ok: false, id, error: e?.message || 'Erreur' }));
+        });
+
+        const results = await Promise.all(updates);
+        const failed = results.filter(r => !r.ok);
+        if (failed.length) {
+          alert(`Certains fournisseurs n'ont pas été mis à jour: ${failed.map(f => `#${f.id}`).join(', ')}`);
+        } else {
+          dirtySupplierIds.clear();
+        }
+      }
+
       // Update the fournisseursDataJson
       document.getElementById('fournisseursDataJson').textContent = JSON.stringify(
         allSuppliers.map(f => ({
           id: String(f.id),
           name: f.name || '',
           email: f.email || '',
-          tel: (f.telFournisseur || '')
+          tel: (f.tel || '')
         }))
       );
+
+      // Update badges/count immediately
+      updateSelectedSuppliersDisplay();
 
       // Close modal and remove backdrop
       closeModal();
 
-      alert('Fournisseurs sauvegardés avec succès !');
+      // Persist to backend so the selection is saved in DB
+      try {
+        const payload = collectPayload();
+        const res = await fetch('/achat/demande-prix/<%= demandePrix.id %>', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || json.success === false) {
+          throw new Error(json.error || 'Erreur lors de la sauvegarde des fournisseurs');
+        }
+        alert('Fournisseurs sauvegardés avec succès !');
+      } catch (e) {
+        alert(e?.message || 'Erreur lors de la sauvegarde des fournisseurs');
+      }
     }
 
     function closeModal() {
@@ -1102,28 +1165,38 @@
     }
 
     async function sendEmail() {
-      if (selectedSuppliers.length === 0) {
-        alert('Veuillez sélectionner au moins un fournisseur');
-        return;
-      }
-
       const btn = $('#btnSend');
       btn.html('<i class="fas fa-spinner fa-spin"></i> Envoi...').prop('disabled', true);
 
       try {
-        const emails = selectedSuppliers.map(s => s.email).filter(email => email);
+        // Persist latest supplier selection (and any article edits) before sending.
+        // Backend send-email reads suppliers from DB join table, so we must save first.
+        const payload = collectPayload();
+        if (!payload.suppliers || payload.suppliers.length === 0) {
+          throw new Error('Sélectionnez au moins un fournisseur avant l\'envoi.');
+        }
 
-        // Send to each selected supplier
-        const promises = emails.map(email =>
-          $.post('/api/demandes-prix/<%= demandePrix.id %>/send-email', { email })
-        );
+        const saveRes = await fetch('/achat/demande-prix/<%= demandePrix.id %>', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const saveJson = await saveRes.json().catch(() => ({}));
+        if (!saveRes.ok || saveJson.success === false) {
+          throw new Error(saveJson.error || 'Erreur lors de la sauvegarde avant envoi');
+        }
 
-        await Promise.all(promises);
-
-        alert(`Demande de prix envoyée à ${emails.length} fournisseur(s) avec succès !`);
-        btn.html('<i class="fas fa-paper-plane"></i> <span class="d-none d-sm-inline">Envoyer</span>').prop('disabled', false);
+        const res = await fetch('/api/demandes-prix/<%= demandePrix.id %>/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok || json.success === false) throw new Error(json.error || 'Échec de l\'envoi');
+        alert(json.message || 'Email envoyé avec succès !');
       } catch (error) {
-        alert('Erreur lors de l\'envoi des emails');
+        alert(error?.message || 'Erreur lors de l\'envoi des emails');
+      } finally {
         btn.html('<i class="fas fa-paper-plane"></i> <span class="d-none d-sm-inline">Envoyer</span>').prop('disabled', false);
       }
     }
