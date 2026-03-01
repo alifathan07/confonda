@@ -78,6 +78,99 @@ const parseExcelDate = (value) => {
   return isNaN(d.getTime()) ? null : d;
 };
 
+function getPaginationParams(req) {
+  const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+  const pageSize = Math.min(Math.max(parseInt(req.query.pageSize, 10) || 25, 1), 200);
+  const skip = (page - 1) * pageSize;
+  return { page, pageSize, skip };
+}
+
+function buildChequeWhereFromQuery(req, extraWhere = {}) {
+  const where = { ...extraWhere };
+
+  if (req.query.banqueId) where.banqueId = Number(req.query.banqueId);
+  if (req.query.fournisseurId) where.fournisseurId = Number(req.query.fournisseurId);
+  if (req.query.statut) where.statut = String(req.query.statut);
+
+  const chantierIdQuery = (req.query.chantierId || '').toString().trim();
+  const montantChantierQuery = (req.query.montantChantier || '').toString().trim();
+  const montantChantierMinQuery = (req.query.montantChantierMin || '').toString().trim();
+  const montantChantierMaxQuery = (req.query.montantChantierMax || '').toString().trim();
+
+  const chantierId = chantierIdQuery ? Number(chantierIdQuery) : null;
+  const montantChantier = montantChantierQuery ? Number(montantChantierQuery.replace(',', '.')) : null;
+  const montantChantierMin = montantChantierMinQuery ? Number(montantChantierMinQuery.replace(',', '.')) : null;
+  const montantChantierMax = montantChantierMaxQuery ? Number(montantChantierMaxQuery.replace(',', '.')) : null;
+
+  const hasValidChantierId = chantierIdQuery && !Number.isNaN(chantierId);
+  const hasMontantChantier = (montantChantierQuery && !Number.isNaN(montantChantier))
+    || (montantChantierMinQuery && !Number.isNaN(montantChantierMin))
+    || (montantChantierMaxQuery && !Number.isNaN(montantChantierMax));
+
+  const montantFilter = {};
+  if (montantChantierMinQuery && !Number.isNaN(montantChantierMin)) montantFilter.gte = montantChantierMin;
+  if (montantChantierMaxQuery && !Number.isNaN(montantChantierMax)) montantFilter.lte = montantChantierMax;
+  if (montantChantierQuery && !Number.isNaN(montantChantier)) {
+    const eps = 0.01;
+    montantFilter.gte = montantChantier - eps;
+    montantFilter.lte = montantChantier + eps;
+  }
+
+  // Chantier filtering rules:
+  // - chantierId only: include cheques that match legacy cheque.chantierId OR allocations.some({ chantierId })
+  // - chantierId + montantChantier: require matching allocation (legacy cheques have no allocation montant)
+  // - montantChantier only: allocations.some({ montant })
+  if (hasValidChantierId && hasMontantChantier) {
+    where.allocations = { some: { chantierId, montant: montantFilter } };
+  } else if (hasValidChantierId && !hasMontantChantier) {
+    where.OR = [
+      { chantierId },
+      { allocations: { some: { chantierId } } },
+    ];
+  } else if (!hasValidChantierId && hasMontantChantier) {
+    where.allocations = { some: { montant: montantFilter } };
+  }
+
+  const montantQuery = (req.query.montant || '').toString().trim();
+  const montantMinQuery = (req.query.montantMin || '').toString().trim();
+  const montantMaxQuery = (req.query.montantMax || '').toString().trim();
+
+  const montantMin = montantMinQuery ? Number(montantMinQuery.replace(',', '.')) : null;
+  const montantMax = montantMaxQuery ? Number(montantMaxQuery.replace(',', '.')) : null;
+  if (montantMinQuery && !Number.isNaN(montantMin)) where.montant = { ...(where.montant || {}), gte: montantMin };
+  if (montantMaxQuery && !Number.isNaN(montantMax)) where.montant = { ...(where.montant || {}), lte: montantMax };
+
+  if (montantQuery) {
+    const asNumber = Number(montantQuery.replace(',', '.'));
+    if (!Number.isNaN(asNumber)) {
+      const eps = 0.01;
+      where.montant = { ...(where.montant || {}), gte: asNumber - eps, lte: asNumber + eps };
+    }
+  }
+
+  const search = (req.query.search || '').toString().trim();
+  if (search) {
+    where.OR = [
+      { numero: { contains: search } },
+      { beneficiaire: { contains: search } },
+      { obs: { contains: search } },
+    ];
+  }
+
+  return where;
+}
+
+const chequeInclude = {
+  allocations: {
+    include: {
+      chantier: true,
+    },
+  },
+  fournisseur: true,
+  banque: true,
+  chantier: true,
+};
+
 export const importExelCheques = async (req, res) => {
   console.log('🚀 Starting Excel import for cheques...');
 
@@ -420,37 +513,48 @@ export const importExelCheques = async (req, res) => {
 // ✅ Render all cheques
 export const showCheques = async (req, res) => {
   try {
-    console.log('📋 Fetching cheques list...');
-    const cheques = await prisma.cheque.findMany({
-      orderBy: { id: 'desc' },
-      include: {
-        allocations: {
-          include: {
-            chantier: true
-          }
-        },
-        fournisseur: true,
-        banque: true,
-      },
-    });
-    console.log(`✅ Found ${cheques.length} cheques`);
+    const { page, pageSize, skip } = getPaginationParams(req);
+    const where = buildChequeWhereFromQuery(req);
 
-    const fournisseurs = await prisma.fournisseur.findMany();
-    console.log(`✅ Found ${fournisseurs.length} fournisseurs`);
+    const [total, cheques] = await Promise.all([
+      prisma.cheque.count({ where }),
+      prisma.cheque.findMany({
+        where,
+        orderBy: { id: 'desc' },
+        skip,
+        take: pageSize,
+        include: chequeInclude,
+      }),
+    ]);
 
-    const banques = await prisma.banque.findMany();
-    console.log(`✅ Found ${banques.length} banques`);
-    const { id } = req.params
-    const chantiers = await prisma.chantier.findMany({
-      orderBy: { nom: 'asc' },
-    });
-    console.log(`✅ Found ${chantiers.length} chantiers`);
+    const [fournisseurs, banques, chantiers] = await Promise.all([
+      prisma.fournisseur.findMany({ orderBy: { name: 'asc' } }),
+      prisma.banque.findMany({ orderBy: { name: 'asc' } }),
+      prisma.chantier.findMany({ orderBy: { nom: 'asc' } }),
+    ]);
+
     res.render("dashboard/tresorerie/reglements/cheques/index", {
       cheques,
       fournisseurs,
       banques,
       chantiers,
-      id
+      id: null,
+      banqueName: null,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.max(Math.ceil(total / pageSize), 1),
+      },
+      filters: {
+        banqueId: req.query.banqueId || '',
+        fournisseurId: req.query.fournisseurId || '',
+        statut: req.query.statut || '',
+        search: req.query.search || '',
+        montant: req.query.montant || '',
+        chantierId: req.query.chantierId || '',
+        montantChantier: req.query.montantChantier || '',
+      },
     });
   } catch (error) {
     console.error('❌ Error fetching cheques:', {
@@ -466,30 +570,127 @@ export const showCheques = async (req, res) => {
 
 // ✅ Cheques for specific banque
 export const showChequesForbanque = async (req, res) => {
-  const { id } = req.params
-  const cheques = await prisma.cheque.findMany({
-    where: {
-      banqueId: Number(req.params.id)
-    },
-    orderBy: {
-      numero: 'asc'
+  try {
+    const { id } = req.params;
+    const banqueId = Number(id);
+    const { page, pageSize, skip } = getPaginationParams(req);
+    const where = buildChequeWhereFromQuery(req, { banqueId });
 
-    },
-    include: {
-      banque: {
-        select: { name: true },
-      },
-      fournisseur: {
-        select: { name: true, agence: true },
-      },
-    },
-  });
-  const banqueName = await prisma.banque.findUnique({ where: { id: Number(id) } })
+    const [total, cheques] = await Promise.all([
+      prisma.cheque.count({ where }),
+      prisma.cheque.findMany({
+        where,
+        orderBy: { id: 'desc' },
+        skip,
+        take: pageSize,
+        include: chequeInclude,
+      }),
+    ]);
 
-  const banques = await prisma.banque.findMany();
-  const fournisseurs = await prisma.fournisseur.findMany()
-  res.render('dashboard/tresorerie/reglements/cheques/index', { cheques, banques, fournisseurs, id, banqueName });
+    const [banqueName, fournisseurs, banques, chantiers] = await Promise.all([
+      prisma.banque.findUnique({ where: { id: banqueId } }),
+      prisma.fournisseur.findMany({ orderBy: { name: 'asc' } }),
+      prisma.banque.findMany({ orderBy: { name: 'asc' } }),
+      prisma.chantier.findMany({ orderBy: { nom: 'asc' } }),
+    ]);
+
+    res.render('dashboard/tresorerie/reglements/cheques/index', {
+      cheques,
+      banques,
+      fournisseurs,
+      chantiers,
+      id,
+      banqueName,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.max(Math.ceil(total / pageSize), 1),
+      },
+      filters: {
+        banqueId: String(banqueId),
+        fournisseurId: req.query.fournisseurId || '',
+        statut: req.query.statut || '',
+        search: req.query.search || '',
+        montant: req.query.montant || '',
+        chantierId: req.query.chantierId || '',
+        montantChantier: req.query.montantChantier || '',
+      },
+    });
+  } catch (error) {
+    console.error('❌ Error fetching cheques for banque:', error);
+    res.status(500).json({ error: "Erreur lors de la récupération des cheques." });
+  }
 };
+
+export const listChequesApi = async (req, res) => {
+  try {
+    const banqueId = req.query.banqueId ? Number(req.query.banqueId) : null;
+    const { page, pageSize, skip } = getPaginationParams(req);
+    const where = buildChequeWhereFromQuery(req, banqueId ? { banqueId } : {});
+
+    const [total, cheques] = await Promise.all([
+      prisma.cheque.count({ where }),
+      prisma.cheque.findMany({
+        where,
+        orderBy: { id: 'desc' },
+        skip,
+        take: pageSize,
+        include: chequeInclude,
+      }),
+    ]);
+
+    res.json({
+      success: true,
+      data: cheques,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.max(Math.ceil(total / pageSize), 1),
+      },
+    });
+  } catch (error) {
+    console.error('❌ Error listChequesApi:', error);
+    res.status(500).json({ success: false, error: 'Erreur serveur.' });
+  }
+};
+
+export const updateChequeAllocations = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const chequeId = Number(id);
+    const allocations = Array.isArray(req.body.allocations) ? req.body.allocations : [];
+
+    await prisma.$transaction(async (tx) => {
+      await tx.chequeAllocation.deleteMany({ where: { chequeId } });
+
+      const data = allocations
+        .filter(a => a && a.chantierId && a.montant !== undefined && a.montant !== null)
+        .map(a => ({
+          chequeId,
+          chantierId: Number(a.chantierId),
+          montant: Number(a.montant),
+        }))
+        .filter(a => !Number.isNaN(a.chantierId) && !Number.isNaN(a.montant));
+
+      if (data.length) {
+        await tx.chequeAllocation.createMany({ data });
+      }
+    }, { timeout: 20000 });
+
+    const updated = await prisma.cheque.findUnique({
+      where: { id: chequeId },
+      include: chequeInclude,
+    });
+
+    res.json({ success: true, cheque: updated });
+  } catch (error) {
+    console.error('❌ Error updateChequeAllocations:', error);
+    res.status(500).json({ success: false, error: 'Erreur serveur.' });
+  }
+};
+
 export const deleteCheque = async (req, res) => {
   try {
     const { id } = req.params;
@@ -541,7 +742,8 @@ export const updateCheque = async (req, res) => {
           identifFiscal: ' ',
           telFournisseur: ' ',
           contact: ' ',
-          telContact: ' '
+          telContact: ' ',
+          rib : ''
         }
       });
     }
@@ -553,7 +755,7 @@ export const updateCheque = async (req, res) => {
       findBanque = await prisma.banque.create({
         data: {
           name: banque,
-          rib: 0,
+          rib: '0',
           agence: ' ',
           solde: 0,
           dateSolde: new Date(),
