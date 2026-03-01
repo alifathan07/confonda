@@ -6,6 +6,9 @@ const { Client, LocalAuth } = pkg;
 
 // Initialize WhatsApp client
 export const client = new Client({
+    authStrategy: new LocalAuth({
+    dataPath: './.wwebjs_auth' // optional but clean
+  }),
  puppeteer: {
  headless: true,
  args: [

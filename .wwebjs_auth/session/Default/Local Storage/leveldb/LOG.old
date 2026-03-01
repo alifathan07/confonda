@@ -1,3 +1,6 @@
-2026/02/25-23:28:55.018 3428 Reusing MANIFEST C:\Users\alifa\Desktop\confonda\.wwebjs_auth\session\Default\Local Storage\leveldb/MANIFEST-000001
-2026/02/25-23:28:55.115 3428 Recovering log #36
-2026/02/25-23:28:55.131 3428 Reusing old log C:\Users\alifa\Desktop\confonda\.wwebjs_auth\session\Default\Local Storage\leveldb/000036.log 
+2026/02/25-23:51:21.320 3be4 Reusing MANIFEST C:\Users\alifa\Desktop\confonda\.wwebjs_auth\session\Default\Local Storage\leveldb/MANIFEST-000001
+2026/02/25-23:51:21.329 3be4 Recovering log #36
+2026/02/25-23:51:21.336 3be4 Reusing old log C:\Users\alifa\Desktop\confonda\.wwebjs_auth\session\Default\Local Storage\leveldb/000036.log 
+2026/02/25-23:52:21.353 296c Level-0 table #40: started
+2026/02/25-23:52:21.377 296c Level-0 table #40: 15806 bytes OK
+2026/02/25-23:52:21.379 296c Delete type=0 #36
