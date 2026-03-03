@@ -59,7 +59,13 @@
             </div>
 
             <div class="d-flex" style="gap: 10px;">
-              <button id="btnAddCheque" class="btn btn-primary">
+              <button id="btnExportPdf" type="button" class="btn btn-outline-danger">
+                <i class="fas fa-file-pdf mr-2"></i>PDF
+              </button>
+              <button id="btnExportExcel" type="button" class="btn btn-outline-success">
+                <i class="fas fa-file-excel mr-2"></i>Excel
+              </button>
+              <button id="btnAddCheque" type="button" class="btn btn-primary">
                 <i class="fas fa-plus mr-2"></i>Nouveau
               </button>
             </div>
@@ -113,6 +119,14 @@
                 <div class="col-md-2 mb-2">
                   <label class="small text-muted mb-1">Montant chantier</label>
                   <input id="filterMontantChantier" class="form-control" value="<%= (filters && filters.montantChantier) ? filters.montantChantier : '' %>" placeholder="ex: 500" />
+                </div>
+                <div class="col-md-2 mb-2">
+                  <label class="small text-muted mb-1">Échéance du</label>
+                  <input id="filterEcheanceFrom" type="date" class="form-control" value="<%= (filters && filters.dateEcheanceFrom) ? filters.dateEcheanceFrom : '' %>" />
+                </div>
+                <div class="col-md-2 mb-2">
+                  <label class="small text-muted mb-1">Échéance au</label>
+                  <input id="filterEcheanceTo" type="date" class="form-control" value="<%= (filters && filters.dateEcheanceTo) ? filters.dateEcheanceTo : '' %>" />
                 </div>
                 <div class="col-md-2 mb-2">
                   <label class="small text-muted mb-1">Recherche</label>
@@ -208,13 +222,27 @@
                       </tr>
                     <% }) %>
                   </tbody>
+                  <tfoot>
+                    <tr>
+                      <th colspan="10" class="text-right">Total</th>
+                      <th class="text-right" id="totalMontantCell">0,00</th>
+                      <th></th>
+                    </tr>
+                    <tr id="totalMontantChantierRow" style="display:none;">
+                      <th colspan="8"></th>
+                      <th class="text-right">Total chantier</th>
+                      <th></th>
+                      <th class="text-right" id="totalMontantChantierCell">0,00</th>
+                      <th></th>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
 
               <div class="d-flex align-items-center justify-content-between mt-3">
                 <div class="small text-muted" id="paginationInfo">
                   <% if (pagination) { %>
-                    Page <%= pagination.page %> / <%= pagination.totalPages %>
+                    Page <%= pagination.page %> / <%= pagination.totalPages %> (<%= pagination.total %> résultat(s))
                   <% } %>
                 </div>
                 <nav aria-label="Pagination">
@@ -230,6 +258,8 @@
                         if (filters && filters.montant) params.set('montant', filters.montant);
                         if (filters && filters.chantierId) params.set('chantierId', filters.chantierId);
                         if (filters && filters.montantChantier) params.set('montantChantier', filters.montantChantier);
+                        if (filters && filters.dateEcheanceFrom) params.set('dateEcheanceFrom', filters.dateEcheanceFrom);
+                        if (filters && filters.dateEcheanceTo) params.set('dateEcheanceTo', filters.dateEcheanceTo);
                         params.set('page', String(page));
                         params.set('pageSize', String(pagination.pageSize));
                         return '?' + params.toString();
@@ -293,6 +323,8 @@
             montant: (filters && filters.montant) ? String(filters.montant) : '',
             chantierId: (filters && filters.chantierId) ? String(filters.chantierId) : '',
             montantChantier: (filters && filters.montantChantier) ? String(filters.montantChantier) : '',
+            dateEcheanceFrom: (filters && filters.dateEcheanceFrom) ? String(filters.dateEcheanceFrom) : '',
+            dateEcheanceTo: (filters && filters.dateEcheanceTo) ? String(filters.dateEcheanceTo) : '',
             search: (filters && filters.search) ? String(filters.search) : ''
           }
         }) %>
@@ -303,6 +335,10 @@
           const apiUrl = '/api/cheques';
           const $tbody = document.getElementById('chequeTbody');
           const $paginationInfo = document.getElementById('paginationInfo');
+          const $totalMontantCell = document.getElementById('totalMontantCell');
+          const $totalMontantChantierCell = document.getElementById('totalMontantChantierCell');
+          const $totalMontantChantierRow = document.getElementById('totalMontantChantierRow');
+
           const $paginationControls = document.getElementById('paginationControls');
 
           const $filterFournisseur = document.getElementById('filterFournisseur');
@@ -311,8 +347,12 @@
           const $filterMontant = document.getElementById('filterMontant');
           const $filterChantier = document.getElementById('filterChantier');
           const $filterMontantChantier = document.getElementById('filterMontantChantier');
+          const $filterEcheanceFrom = document.getElementById('filterEcheanceFrom');
+          const $filterEcheanceTo = document.getElementById('filterEcheanceTo');
           const $filterSearch = document.getElementById('filterSearch');
 
+          const $btnExportPdf = document.getElementById('btnExportPdf');
+          const $btnExportExcel = document.getElementById('btnExportExcel');
           const $btnAddCheque = document.getElementById('btnAddCheque');
           const $allocModal = $('#allocModal');
           const $allocList = document.getElementById('allocList');
@@ -333,6 +373,8 @@
             montant: (pageData.filters && pageData.filters.montant) ? pageData.filters.montant : '',
             chantierId: (pageData.filters && pageData.filters.chantierId) ? pageData.filters.chantierId : '',
             montantChantier: (pageData.filters && pageData.filters.montantChantier) ? pageData.filters.montantChantier : '',
+            dateEcheanceFrom: (pageData.filters && pageData.filters.dateEcheanceFrom) ? pageData.filters.dateEcheanceFrom : '',
+            dateEcheanceTo: (pageData.filters && pageData.filters.dateEcheanceTo) ? pageData.filters.dateEcheanceTo : '',
             search: (pageData.filters && pageData.filters.search) ? pageData.filters.search : '',
           };
 
@@ -370,29 +412,68 @@
             p.set('page', String(page || state.page || 1));
             p.set('pageSize', String(state.pageSize || 25));
             if (state.banqueId) p.set('banqueId', state.banqueId);
+
             if (state.fournisseurId) p.set('fournisseurId', state.fournisseurId);
             if (state.statut) p.set('statut', state.statut);
             if (state.search) p.set('search', state.search);
             if (state.montant) p.set('montant', state.montant);
             if (state.chantierId) p.set('chantierId', state.chantierId);
             if (state.montantChantier) p.set('montantChantier', state.montantChantier);
+            if (state.dateEcheanceFrom) p.set('dateEcheanceFrom', state.dateEcheanceFrom);
+            if (state.dateEcheanceTo) p.set('dateEcheanceTo', state.dateEcheanceTo);
+            return p;
+          }
+
+          function buildExportParams() {
+            const p = new URLSearchParams();
+            if (state.banqueId) p.set('banqueId', state.banqueId);
+            if (state.fournisseurId) p.set('fournisseurId', state.fournisseurId);
+            if (state.statut) p.set('statut', state.statut);
+            if (state.search) p.set('search', state.search);
+            if (state.montant) p.set('montant', state.montant);
+            if (state.chantierId) p.set('chantierId', state.chantierId);
+            if (state.montantChantier) p.set('montantChantier', state.montantChantier);
+            if (state.dateEcheanceFrom) p.set('dateEcheanceFrom', state.dateEcheanceFrom);
+            if (state.dateEcheanceTo) p.set('dateEcheanceTo', state.dateEcheanceTo);
             return p;
           }
 
           async function fetchPage(page) {
             const params = buildQuery(page);
             const res = await fetch(apiUrl + '?' + params.toString(), { headers: { 'Accept': 'application/json' } });
-            const json = await res.json();
+            const json = await res.json().catch(() => ({}));
             if (!res.ok || !json || json.success === false) {
               throw new Error(json && json.error ? json.error : 'Erreur chargement');
             }
             return json;
           }
 
-          function renderPagination(pagination) {
+          function setTotalMontant(v) {
+            if (!$totalMontantCell) return;
+            const n = Number(v || 0);
+            $totalMontantCell.textContent = n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          }
+
+          function setTotalMontantChantier(v, show) {
+            if ($totalMontantChantierRow) {
+              $totalMontantChantierRow.style.display = show ? '' : 'none';
+            }
+            if (!$totalMontantChantierCell) return;
+            const n = Number(v || 0);
+            $totalMontantChantierCell.textContent = n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          }
+
+          function renderPagination(pagination, totalMontant, totalMontantChantier, showChantierTotal) {
             const page = pagination.page;
             const totalPages = pagination.totalPages;
-            $paginationInfo.textContent = `Page ${page} / ${totalPages} (${pagination.total} résultat(s))`;
+            const n = Number(totalMontant || 0);
+            const base = `Page ${page} / ${totalPages} (${pagination.total} résultat(s)) - Total : ${n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            if (showChantierTotal) {
+              const m = Number(totalMontantChantier || 0);
+              $paginationInfo.textContent = `${base} - Total chantier : ${m.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            } else {
+              $paginationInfo.textContent = base;
+            }
 
             const start = Math.max(1, page - 2);
             const end = Math.min(totalPages, page + 2);
@@ -476,7 +557,10 @@
             const json = await fetchPage(page);
             state.page = json.pagination.page;
             renderRows(json.data || []);
-            renderPagination(json.pagination);
+            const showChantierTotal = !!(state.chantierId);
+            renderPagination(json.pagination, json.totalMontant, json.totalMontantChantier, showChantierTotal);
+            setTotalMontant(json.totalMontant);
+            setTotalMontantChantier(json.totalMontantChantier, showChantierTotal);
           }
 
           let debounceT = null;
@@ -533,6 +617,14 @@
             state.montantChantier = $filterMontantChantier.value;
             debounceRefresh();
           });
+          $filterEcheanceFrom.addEventListener('change', () => {
+            state.dateEcheanceFrom = $filterEcheanceFrom.value;
+            debounceRefresh();
+          });
+          $filterEcheanceTo.addEventListener('change', () => {
+            state.dateEcheanceTo = $filterEcheanceTo.value;
+            debounceRefresh();
+          });
           $filterSearch.addEventListener('input', () => {
             state.search = $filterSearch.value;
             debounceRefresh();
@@ -540,10 +632,16 @@
 
           if (window.jQuery && window.jQuery.fn && typeof window.jQuery.fn.select2 === 'function') {
             window.jQuery(function () {
-              window.jQuery('#filterFournisseur').select2({
+              const $ff = window.jQuery('#filterFournisseur');
+              $ff.select2({
                 placeholder: 'Tous',
                 allowClear: true,
                 width: '100%'
+              });
+
+              $ff.on('change select2:select select2:clear', function () {
+                state.fournisseurId = String(this.value || '');
+                debounceRefresh();
               });
             });
           }
@@ -697,14 +795,13 @@
 
             const sum = amounts.reduce((acc, v) => acc + Number(v || 0), 0);
             const chequeM = Number(editingAllocChequeMontant || 0);
-
+            const eps = 0.01;
             if (!chequeM) {
               el.textContent = `Total allocations: ${moneyFr(sum)}`;
               el.className = 'small text-muted';
               return;
             }
 
-            const eps = 0.01;
             const diff = sum - chequeM;
             const isOver = diff > eps;
             const isEqual = Math.abs(diff) <= eps;
@@ -795,6 +892,18 @@
             if (!res.ok || json.success === false) return alert(json.error || 'Erreur');
             $allocModal.modal('hide');
             await refresh(state.page);
+          });
+
+          $btnExportPdf.addEventListener('click', (e) => {
+            e.preventDefault();
+            const params = buildExportParams();
+            window.location.href = '/tresorerie/cheques/export/pdf?' + params.toString();
+          });
+
+          $btnExportExcel.addEventListener('click', (e) => {
+            e.preventDefault();
+            const params = buildExportParams();
+            window.location.href = '/tresorerie/cheques/export/excel?' + params.toString();
           });
 
           $btnAddCheque.addEventListener('click', async () => {

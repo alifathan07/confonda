@@ -3,7 +3,7 @@ import multer from 'multer';
 import ExcelJS from 'exceljs';
 import path from 'path';
 import fs from 'fs';
-
+import PDFDocument from 'pdfkit';
 
 // Multer upload setup
 export const upload = multer({
@@ -92,6 +92,27 @@ function buildChequeWhereFromQuery(req, extraWhere = {}) {
   if (req.query.fournisseurId) where.fournisseurId = Number(req.query.fournisseurId);
   if (req.query.statut) where.statut = String(req.query.statut);
 
+  const dateEcheanceFromQuery = (req.query.dateEcheanceFrom || '').toString().trim();
+  const dateEcheanceToQuery = (req.query.dateEcheanceTo || '').toString().trim();
+
+  if (dateEcheanceFromQuery || dateEcheanceToQuery) {
+    const range = {};
+    if (dateEcheanceFromQuery) {
+      const dFrom = new Date(dateEcheanceFromQuery);
+      if (!Number.isNaN(dFrom.getTime())) range.gte = dFrom;
+    }
+    if (dateEcheanceToQuery) {
+      const dTo = new Date(dateEcheanceToQuery);
+      if (!Number.isNaN(dTo.getTime())) {
+        dTo.setHours(23, 59, 59, 999);
+        range.lte = dTo;
+      }
+    }
+    if (range.gte || range.lte) {
+      where.dateEcheance = { ...(where.dateEcheance || {}), ...range };
+    }
+  }
+
   const chantierIdQuery = (req.query.chantierId || '').toString().trim();
   const montantChantierQuery = (req.query.montantChantier || '').toString().trim();
   const montantChantierMinQuery = (req.query.montantChantierMin || '').toString().trim();
@@ -129,6 +150,63 @@ function buildChequeWhereFromQuery(req, extraWhere = {}) {
     ];
   } else if (!hasValidChantierId && hasMontantChantier) {
     where.allocations = { some: { montant: montantFilter } };
+  }
+
+  const montantQuery = (req.query.montant || '').toString().trim();
+  const montantMinQuery = (req.query.montantMin || '').toString().trim();
+  const montantMaxQuery = (req.query.montantMax || '').toString().trim();
+
+  const montantMin = montantMinQuery ? Number(montantMinQuery.replace(',', '.')) : null;
+  const montantMax = montantMaxQuery ? Number(montantMaxQuery.replace(',', '.')) : null;
+  if (montantMinQuery && !Number.isNaN(montantMin)) where.montant = { ...(where.montant || {}), gte: montantMin };
+  if (montantMaxQuery && !Number.isNaN(montantMax)) where.montant = { ...(where.montant || {}), lte: montantMax };
+
+  if (montantQuery) {
+    const asNumber = Number(montantQuery.replace(',', '.'));
+    if (!Number.isNaN(asNumber)) {
+      const eps = 0.01;
+      where.montant = { ...(where.montant || {}), gte: asNumber - eps, lte: asNumber + eps };
+    }
+  }
+
+  const search = (req.query.search || '').toString().trim();
+  if (search) {
+    where.OR = [
+      { numero: { contains: search } },
+      { beneficiaire: { contains: search } },
+      { obs: { contains: search } },
+    ];
+  }
+
+  return where;
+}
+
+function buildChequeWhereFromQueryWithoutChantier(req, extraWhere = {}) {
+  const where = { ...extraWhere };
+
+  if (req.query.banqueId) where.banqueId = Number(req.query.banqueId);
+  if (req.query.fournisseurId) where.fournisseurId = Number(req.query.fournisseurId);
+  if (req.query.statut) where.statut = String(req.query.statut);
+
+  const dateEcheanceFromQuery = (req.query.dateEcheanceFrom || '').toString().trim();
+  const dateEcheanceToQuery = (req.query.dateEcheanceTo || '').toString().trim();
+
+  if (dateEcheanceFromQuery || dateEcheanceToQuery) {
+    const range = {};
+    if (dateEcheanceFromQuery) {
+      const dFrom = new Date(dateEcheanceFromQuery);
+      if (!Number.isNaN(dFrom.getTime())) range.gte = dFrom;
+    }
+    if (dateEcheanceToQuery) {
+      const dTo = new Date(dateEcheanceToQuery);
+      if (!Number.isNaN(dTo.getTime())) {
+        dTo.setHours(23, 59, 59, 999);
+        range.lte = dTo;
+      }
+    }
+    if (range.gte || range.lte) {
+      where.dateEcheance = { ...(where.dateEcheance || {}), ...range };
+    }
   }
 
   const montantQuery = (req.query.montant || '').toString().trim();
@@ -554,6 +632,8 @@ export const showCheques = async (req, res) => {
         montant: req.query.montant || '',
         chantierId: req.query.chantierId || '',
         montantChantier: req.query.montantChantier || '',
+        dateEcheanceFrom: req.query.dateEcheanceFrom || '',
+        dateEcheanceTo: req.query.dateEcheanceTo || '',
       },
     });
   } catch (error) {
@@ -564,9 +644,6 @@ export const showCheques = async (req, res) => {
     res.status(500).json({ error: "Erreur lors de la récupération des cheques." });
   }
 };
-
-// ✅ Create cheque (with linked fournisseur)
-
 
 // ✅ Cheques for specific banque
 export const showChequesForbanque = async (req, res) => {
@@ -615,6 +692,8 @@ export const showChequesForbanque = async (req, res) => {
         montant: req.query.montant || '',
         chantierId: req.query.chantierId || '',
         montantChantier: req.query.montantChantier || '',
+        dateEcheanceFrom: req.query.dateEcheanceFrom || '',
+        dateEcheanceTo: req.query.dateEcheanceTo || '',
       },
     });
   } catch (error) {
@@ -629,7 +708,70 @@ export const listChequesApi = async (req, res) => {
     const { page, pageSize, skip } = getPaginationParams(req);
     const where = buildChequeWhereFromQuery(req, banqueId ? { banqueId } : {});
 
-    const [total, cheques] = await Promise.all([
+    const chantierIdQuery = (req.query.chantierId || '').toString().trim();
+    const montantChantierQuery = (req.query.montantChantier || '').toString().trim();
+    const montantChantierMinQuery = (req.query.montantChantierMin || '').toString().trim();
+    const montantChantierMaxQuery = (req.query.montantChantierMax || '').toString().trim();
+
+    const chantierId = chantierIdQuery ? Number(chantierIdQuery) : null;
+    const montantChantier = montantChantierQuery ? Number(montantChantierQuery.replace(',', '.')) : null;
+    const montantChantierMin = montantChantierMinQuery ? Number(montantChantierMinQuery.replace(',', '.')) : null;
+    const montantChantierMax = montantChantierMaxQuery ? Number(montantChantierMaxQuery.replace(',', '.')) : null;
+
+    const hasValidChantierId = chantierIdQuery && !Number.isNaN(chantierId);
+    const hasMontantChantier = (montantChantierQuery && !Number.isNaN(montantChantier))
+      || (montantChantierMinQuery && !Number.isNaN(montantChantierMin))
+      || (montantChantierMaxQuery && !Number.isNaN(montantChantierMax));
+
+    const montantFilter = {};
+    if (montantChantierMinQuery && !Number.isNaN(montantChantierMin)) montantFilter.gte = montantChantierMin;
+    if (montantChantierMaxQuery && !Number.isNaN(montantChantierMax)) montantFilter.lte = montantChantierMax;
+    if (montantChantierQuery && !Number.isNaN(montantChantier)) {
+      const eps = 0.01;
+      montantFilter.gte = montantChantier - eps;
+      montantFilter.lte = montantChantier + eps;
+    }
+
+    const shouldUseAllocationTotal = hasValidChantierId || hasMontantChantier;
+    const chequeWhereNoChantier = buildChequeWhereFromQueryWithoutChantier(req, banqueId ? { banqueId } : {});
+
+    const totalMontantChequesPromise = prisma.cheque.aggregate({
+      where,
+      _sum: { montant: true },
+    }).then((agg) => Number(agg && agg._sum ? (agg._sum.montant || 0) : 0));
+
+    const totalMontantChantierPromise = (async () => {
+      if (!hasValidChantierId) return 0;
+
+      const allocWhere = {
+        chantierId,
+        cheque: chequeWhereNoChantier,
+      };
+      if (hasMontantChantier) allocWhere.montant = montantFilter;
+
+      const [allocAgg, legacyAgg] = await Promise.all([
+        prisma.chequeAllocation.aggregate({
+          where: allocWhere,
+          _sum: { montant: true },
+        }),
+        (!hasMontantChantier)
+          ? prisma.cheque.aggregate({
+            where: {
+              ...chequeWhereNoChantier,
+              chantierId,
+              allocations: { none: {} },
+            },
+            _sum: { montant: true },
+          })
+          : Promise.resolve(null),
+      ]);
+
+      const allocTotal = Number(allocAgg && allocAgg._sum ? (allocAgg._sum.montant || 0) : 0);
+      const legacyTotal = Number(legacyAgg && legacyAgg._sum ? (legacyAgg._sum.montant || 0) : 0);
+      return allocTotal + legacyTotal;
+    })();
+
+    const [total, cheques, totalMontant, totalMontantChantier] = await Promise.all([
       prisma.cheque.count({ where }),
       prisma.cheque.findMany({
         where,
@@ -638,11 +780,15 @@ export const listChequesApi = async (req, res) => {
         take: pageSize,
         include: chequeInclude,
       }),
+      totalMontantChequesPromise,
+      totalMontantChantierPromise,
     ]);
 
     res.json({
       success: true,
       data: cheques,
+      totalMontant,
+      totalMontantChantier,
       pagination: {
         page,
         pageSize,
@@ -653,6 +799,153 @@ export const listChequesApi = async (req, res) => {
   } catch (error) {
     console.error('❌ Error listChequesApi:', error);
     res.status(500).json({ success: false, error: 'Erreur serveur.' });
+  }
+};
+
+export const exportChequesExcel = async (req, res) => {
+  try {
+    const banqueId = req.query.banqueId ? Number(req.query.banqueId) : null;
+    const where = buildChequeWhereFromQuery(req, banqueId ? { banqueId } : {});
+
+    const cheques = await prisma.cheque.findMany({
+      where,
+      orderBy: { id: 'desc' },
+      include: chequeInclude,
+    });
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Cheques');
+
+    ws.columns = [
+      { header: 'Date', key: 'dateEtablissement', width: 12 },
+      { header: 'N° chèque', key: 'numero', width: 16 },
+      { header: 'Bénéficiaire', key: 'beneficiaire', width: 30 },
+      { header: 'Banque', key: 'banque', width: 18 },
+      { header: 'Échéance', key: 'dateEcheance', width: 12 },
+      { header: 'Statut', key: 'statut', width: 16 },
+      { header: 'Date règlement', key: 'dateReglement', width: 14 },
+      { header: 'Chantier', key: 'chantier', width: 22 },
+      { header: 'Observation', key: 'obs', width: 40 },
+      { header: 'Montant', key: 'montant', width: 14 },
+    ];
+
+    const fmtIso = (d) => {
+      if (!d) return '';
+      const dd = new Date(d);
+      if (Number.isNaN(dd.getTime())) return '';
+      return dd.toISOString().slice(0, 10);
+    };
+
+    for (const c of cheques) {
+      ws.addRow({
+        dateEtablissement: fmtIso(c.dateEtablissement),
+        numero: c.numero || '',
+        beneficiaire: c.beneficiaire || '',
+        banque: c.banque?.name || '',
+        dateEcheance: fmtIso(c.dateEcheance),
+        statut: c.statut || '',
+        dateReglement: fmtIso(c.dateReglement),
+        chantier: c.chantier?.nom || '',
+        obs: c.obs || '',
+        montant: Number(c.montant || 0),
+      });
+    }
+
+    ws.getRow(1).font = { bold: true };
+    ws.getColumn('montant').numFmt = '#,##0.00';
+
+    const filename = `cheques_export_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    await wb.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error('❌ Error exportChequesExcel:', error);
+    res.status(500).send('Erreur export Excel.');
+  }
+};
+
+export const exportChequesPdf = async (req, res) => {
+  try {
+    const banqueId = req.query.banqueId ? Number(req.query.banqueId) : null;
+    const where = buildChequeWhereFromQuery(req, banqueId ? { banqueId } : {});
+
+    const cheques = await prisma.cheque.findMany({
+      where,
+      orderBy: { id: 'desc' },
+      include: chequeInclude,
+    });
+
+    const filename = `cheques_export_${new Date().toISOString().slice(0, 10)}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    const doc = new PDFDocument({ size: 'A4', margin: 36 });
+    doc.pipe(res);
+
+    const fmtIso = (d) => {
+      if (!d) return '';
+      const dd = new Date(d);
+      if (Number.isNaN(dd.getTime())) return '';
+      return dd.toISOString().slice(0, 10);
+    };
+    const moneyFr = (n) => Number(n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    doc.font('Helvetica-Bold').fontSize(14).text('Export Chèques', { align: 'left' });
+    doc.moveDown(0.25);
+    doc.font('Helvetica').fontSize(9).fillColor('#444').text(`Généré le: ${new Date().toLocaleDateString('fr-FR')}`);
+    doc.moveDown(0.8);
+
+    const startX = doc.page.margins.left;
+    let y = doc.y;
+    const pageW = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+
+    const cols = [
+      { label: 'N°', w: 70 },
+      { label: 'Bénéficiaire', w: 210 },
+      { label: 'Banque', w: 110 },
+      { label: 'Échéance', w: 70 },
+      { label: 'Montant', w: 80 },
+    ];
+    const totalW = cols.reduce((a, c) => a + c.w, 0);
+    const scale = totalW > pageW ? (pageW / totalW) : 1;
+    cols.forEach(c => { c.w = c.w * scale; });
+
+    const rowH = 16;
+    const drawRow = (cells, isHeader) => {
+      if (y + rowH > doc.page.height - doc.page.margins.bottom) {
+        doc.addPage();
+        y = doc.page.margins.top;
+      }
+
+      let x = startX;
+      doc.lineWidth(0.5).strokeColor('#cccccc');
+      for (let i = 0; i < cols.length; i++) {
+        doc.rect(x, y, cols[i].w, rowH).stroke();
+        const text = (cells[i] == null) ? '' : String(cells[i]);
+        doc.font(isHeader ? 'Helvetica-Bold' : 'Helvetica').fontSize(8).fillColor('#111');
+        doc.text(text, x + 3, y + 4, { width: cols[i].w - 6, height: rowH - 6, ellipsis: true });
+        x += cols[i].w;
+      }
+      y += rowH;
+    };
+
+    drawRow(cols.map(c => c.label), true);
+    for (const c of cheques) {
+      drawRow([
+        c.numero || '',
+        c.beneficiaire || '',
+        c.banque?.name || '',
+        fmtIso(c.dateEcheance),
+        moneyFr(c.montant || 0),
+      ], false);
+    }
+
+    doc.end();
+  } catch (error) {
+    console.error('❌ Error exportChequesPdf:', error);
+    res.status(500).send('Erreur export PDF.');
   }
 };
 

@@ -7,7 +7,7 @@ import path from 'path';
 import fs from 'fs';
 import prisma from '../db.js';
 import { createBanque, deleteBanque, displayBanques, displayBanquesForcheques, getSituationBancaire, showCreate, updateChequeInStituation, updateChequeValidation, updateEffetInStituation, updateEffetValidation, updatePayValidation, updateSituationBancaire, showEditBanque, updateBanque, listBanques } from '../controllers/banquesController.js';
-import { awb, bmce, bmci, bp, cam, cdm, createCheque, deleteCheque, etablirCheque, importExelCheques, listBanquesCheques, listChequesApi, showCheques, showChequesForbanque, updateCheque, updateChequeAllocations, updateChequeStatut } from '../controllers/chequesController.js';
+import { awb, bmce, bmci, bp, cam, cdm, createCheque, deleteCheque, etablirCheque, exportChequesExcel, exportChequesPdf, importExelCheques, listBanquesCheques, listChequesApi, showCheques, showChequesForbanque, updateCheque, updateChequeAllocations, updateChequeStatut } from '../controllers/chequesController.js';
 import { createEffet, deleteEffet, Eawb, Ebmce, Ebmci, Ebp, Ecam, Ecdm, etablirEffet, importExelEffets, listBanquesEffets, showEffets, showEffetsForbanque, updateEffet, updateEffetStatut } from '../controllers/effetsController.js';
 import { createPayavenir, deletePayavenir, showPayavenir, updatePayavenir, updatePayavenirChantier, updatePayavenirStatut } from '../controllers/payavenirController.js';
 import { createRecavenir, deleteRecavenir, showRecavenir, updateRecavenir, updateRecavenirStatut } from '../controllers/recavenirController.js';
@@ -197,6 +197,9 @@ dashboardRouter.patch('/tresorerie/cheques/:id/allocations', updateChequeAllocat
 dashboardRouter.patch('/tresorerie/cheques/situation/:id', updateChequeInStituation);
 dashboardRouter.patch('/tresorerie/cheques/:id/validation', updateChequeValidation);
 dashboardRouter.put('/tresorerie/cheques/:id/update-statut', updateChequeStatut);
+
+dashboardRouter.get('/tresorerie/cheques/export/pdf', exportChequesPdf);
+dashboardRouter.get('/tresorerie/cheques/export/excel', exportChequesExcel);
 
 dashboardRouter.get('/api/cheques', listChequesApi);
 
