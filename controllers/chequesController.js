@@ -940,15 +940,49 @@ export const exportChequesPdf = async (req, res) => {
     let y = doc.y;
     const pageW = doc.page.width - doc.page.margins.left - doc.page.margins.right;
 
+    const rowStrings = cheques.map(c => ([
+      fmtFr(c.dateEtablissement),
+      c.numero || '',
+      c.beneficiaire || '',
+      c.banque?.name || '',
+      chantierLabel(c),
+      fmtFr(c.dateEcheance),
+      moneyFr(c.montant || 0),
+    ]));
+
+    const measure = (text, font, size) => {
+      const t = (text == null) ? '' : String(text);
+      doc.font(font).fontSize(size);
+      return doc.widthOfString(t);
+    };
+
+    // Desired widths based on content (auto-fit), with reasonable caps so the table always fits.
+    // Chantier is the most variable column => it will grow/shrink with content.
     const cols = [
-      { label: 'Date', w: 70 },
-      { label: 'N°', w: 70 },
-      { label: 'Bénéficiaire', w: 210 },
-      { label: 'Banque', w: 110 },
-      { label: 'Chantier', w: 120 },
-      { label: 'Échéance', w: 70 },
-      { label: 'Montant', w: 80 },
+      { label: 'Date', min: 60, max: 80 },
+      { label: 'N°', min: 55, max: 80 },
+      { label: 'Bénéficiaire', min: 140, max: 240 },
+      { label: 'Banque', min: 80, max: 140 },
+      { label: 'Chantier', min: 90, max: 240 },
+      { label: 'Échéance', min: 60, max: 85 },
+      { label: 'Montant', min: 70, max: 95 },
     ];
+
+    const cellPadding = 6; // x+3 left and x+3 right in drawRow
+    const contentMax = cols.map((col, idx) => {
+      let m = measure(col.label, 'Helvetica-Bold', 8);
+      for (const r of rowStrings) {
+        m = Math.max(m, measure(r[idx], 'Helvetica', 8));
+      }
+      return m;
+    });
+
+    cols.forEach((c, i) => {
+      const desired = contentMax[i] + cellPadding;
+      c.w = Math.max(c.min, Math.min(c.max, desired));
+    });
+
+    // If the sum doesn't fit, scale down proportionally (keeps column ratios based on content).
     const totalW = cols.reduce((a, c) => a + c.w, 0);
     const scale = totalW > pageW ? (pageW / totalW) : 1;
     cols.forEach(c => { c.w = c.w * scale; });
@@ -974,17 +1008,10 @@ export const exportChequesPdf = async (req, res) => {
 
     drawRow(cols.map(c => c.label), true);
     let totalMontant = 0;
-    for (const c of cheques) {
+    for (let i = 0; i < cheques.length; i++) {
+      const c = cheques[i];
       totalMontant += Number(c.montant || 0);
-      drawRow([
-        fmtFr(c.dateEtablissement),
-        c.numero || '',
-        c.beneficiaire || '',
-        c.banque?.name || '',
-        chantierLabel(c),
-        fmtFr(c.dateEcheance),
-        moneyFr(c.montant || 0),
-      ], false);
+      drawRow(rowStrings[i], false);
     }
 
     drawRow([
