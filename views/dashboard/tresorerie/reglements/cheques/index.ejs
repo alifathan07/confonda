@@ -117,10 +117,6 @@
                   </select>
                 </div>
                 <div class="col-md-2 mb-2">
-                  <label class="small text-muted mb-1">Montant chantier</label>
-                  <input id="filterMontantChantier" class="form-control" value="<%= (filters && filters.montantChantier) ? filters.montantChantier : '' %>" placeholder="ex: 500" />
-                </div>
-                <div class="col-md-2 mb-2">
                   <label class="small text-muted mb-1">Échéance du</label>
                   <input id="filterEcheanceFrom" type="date" class="form-control" value="<%= (filters && filters.dateEcheanceFrom) ? filters.dateEcheanceFrom : '' %>" />
                 </div>
@@ -154,16 +150,16 @@
                   </thead>
                   <tbody id="chequeTbody">
                     <% (cheques || []).forEach(c => { %>
-                      <tr data-id="<%= c.id %>">
-                        <td class="cell-edit" contenteditable="true" data-field="dateEtablissement"><%= c.dateEtablissement ? new Date(c.dateEtablissement).toISOString().slice(0,10) : '' %></td>
+                      <tr data-id="<%= c.id %>" data-banque-name="<%= (c.banque && c.banque.name) ? c.banque.name : '' %>">
+                        <td class="cell-edit" contenteditable="true" data-field="dateEtablissement"><%= c.dateEtablissement ? new Date(c.dateEtablissement).toLocaleDateString('fr-FR') : '' %></td>
                         <td class="cell-edit" contenteditable="true" data-field="numero"><%= c.numero || '' %></td>
                         <td class="cell-edit" contenteditable="true" data-field="beneficiaire"><%= c.beneficiaire || '' %></td>
                         <td><%= (c.banque && c.banque.name) ? c.banque.name : '' %></td>
-                        <td class="cell-edit" contenteditable="true" data-field="dateEcheance"><%= c.dateEcheance ? new Date(c.dateEcheance).toISOString().slice(0,10) : '' %></td>
+                        <td class="cell-edit" contenteditable="true" data-field="dateEcheance"><%= c.dateEcheance ? new Date(c.dateEcheance).toLocaleDateString('fr-FR') : '' %></td>
                         <td data-field="statut" class="statut-cell">
                           <span class="badge badge-statut <%= (c.statut || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-') %>" data-value="<%= c.statut || '' %>"><%= c.statut || '' %></span>
                         </td>
-                        <td class="cell-edit" contenteditable="true" data-field="dateReglement"><%= c.dateReglement ? new Date(c.dateReglement).toISOString().slice(0,10) : '' %></td>
+                        <td class="cell-edit" contenteditable="true" data-field="dateReglement"><%= c.dateReglement ? new Date(c.dateReglement).toLocaleDateString('fr-FR') : '' %></td>
                         <td>
                           <div class="allocations">
                             <% 
@@ -228,13 +224,6 @@
                       <th class="text-right" id="totalMontantCell">0,00</th>
                       <th></th>
                     </tr>
-                    <tr id="totalMontantChantierRow" style="display:none;">
-                      <th colspan="8"></th>
-                      <th class="text-right">Total chantier</th>
-                      <th></th>
-                      <th class="text-right" id="totalMontantChantierCell">0,00</th>
-                      <th></th>
-                    </tr>
                   </tfoot>
                 </table>
               </div>
@@ -257,7 +246,6 @@
                         if (filters && filters.search) params.set('search', filters.search);
                         if (filters && filters.montant) params.set('montant', filters.montant);
                         if (filters && filters.chantierId) params.set('chantierId', filters.chantierId);
-                        if (filters && filters.montantChantier) params.set('montantChantier', filters.montantChantier);
                         if (filters && filters.dateEcheanceFrom) params.set('dateEcheanceFrom', filters.dateEcheanceFrom);
                         if (filters && filters.dateEcheanceTo) params.set('dateEcheanceTo', filters.dateEcheanceTo);
                         params.set('page', String(page));
@@ -274,6 +262,57 @@
                   </ul>
                 </nav>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="createChequeModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Créer un chèque</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="small text-muted mb-1">Bénéficiaire (Fournisseur)</label>
+                  <select id="createFournisseur" class="form-control"></select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="small text-muted mb-1">Banque</label>
+                  <select id="createBanque" class="form-control"></select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="small text-muted mb-1">Date d'échéance</label>
+                  <input id="createDateEcheance" type="date" class="form-control" />
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="small text-muted mb-1">Montant (auto)</label>
+                  <input id="createMontant" class="form-control" readonly />
+                </div>
+                <div class="col-12 mb-2">
+                  <label class="small text-muted mb-1">Observation</label>
+                  <input id="createObs" class="form-control" />
+                </div>
+              </div>
+
+              <div class="d-flex align-items-center justify-content-between mt-2 mb-2">
+                <div class="small text-muted">Affectations chantiers</div>
+                <button id="btnCreateAddAlloc" class="btn btn-sm btn-outline-primary" type="button">
+                  <i class="fas fa-plus mr-2"></i>Ajouter chantier
+                </button>
+              </div>
+
+              <div id="createAllocList" class="d-grid" style="gap: 10px;"></div>
+              <div class="small text-muted mt-2" id="createAllocTotals"></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+              <button type="button" class="btn btn-primary" id="btnCreateChequeConfirm">Créer</button>
             </div>
           </div>
         </div>
@@ -309,6 +348,7 @@
 
       <script type="application/json" id="chequesPageData">
         <%- JSON.stringify({
+          fournisseurs: (fournisseurs || []).map(f => ({ id: f.id, name: f.name })),
           chantiers: (chantiers || []).map(c => ({ id: c.id, nom: c.nom })),
           banques: (banques || []).map(b => ({ id: b.id, name: b.name })),
           banqueName: (typeof banqueName !== 'undefined' && banqueName && banqueName.name) ? banqueName.name : '',
@@ -322,7 +362,6 @@
             statut: (filters && filters.statut) ? String(filters.statut) : '',
             montant: (filters && filters.montant) ? String(filters.montant) : '',
             chantierId: (filters && filters.chantierId) ? String(filters.chantierId) : '',
-            montantChantier: (filters && filters.montantChantier) ? String(filters.montantChantier) : '',
             dateEcheanceFrom: (filters && filters.dateEcheanceFrom) ? String(filters.dateEcheanceFrom) : '',
             dateEcheanceTo: (filters && filters.dateEcheanceTo) ? String(filters.dateEcheanceTo) : '',
             search: (filters && filters.search) ? String(filters.search) : ''
@@ -336,8 +375,6 @@
           const $tbody = document.getElementById('chequeTbody');
           const $paginationInfo = document.getElementById('paginationInfo');
           const $totalMontantCell = document.getElementById('totalMontantCell');
-          const $totalMontantChantierCell = document.getElementById('totalMontantChantierCell');
-          const $totalMontantChantierRow = document.getElementById('totalMontantChantierRow');
 
           const $paginationControls = document.getElementById('paginationControls');
 
@@ -346,7 +383,6 @@
           const $filterStatut = document.getElementById('filterStatut');
           const $filterMontant = document.getElementById('filterMontant');
           const $filterChantier = document.getElementById('filterChantier');
-          const $filterMontantChantier = document.getElementById('filterMontantChantier');
           const $filterEcheanceFrom = document.getElementById('filterEcheanceFrom');
           const $filterEcheanceTo = document.getElementById('filterEcheanceTo');
           const $filterSearch = document.getElementById('filterSearch');
@@ -355,11 +391,23 @@
           const $btnExportExcel = document.getElementById('btnExportExcel');
           const $btnAddCheque = document.getElementById('btnAddCheque');
           const $allocModal = $('#allocModal');
+          const $createChequeModal = $('#createChequeModal');
           const $allocList = document.getElementById('allocList');
           const $btnAddAllocLine = document.getElementById('btnAddAllocLine');
           const $btnSaveAlloc = document.getElementById('btnSaveAlloc');
 
+          const $createFournisseur = document.getElementById('createFournisseur');
+          const $createBanque = document.getElementById('createBanque');
+          const $createDateEcheance = document.getElementById('createDateEcheance');
+          const $createMontant = document.getElementById('createMontant');
+          const $createObs = document.getElementById('createObs');
+          const $createAllocList = document.getElementById('createAllocList');
+          const $createAllocTotals = document.getElementById('createAllocTotals');
+          const $btnCreateAddAlloc = document.getElementById('btnCreateAddAlloc');
+          const $btnCreateChequeConfirm = document.getElementById('btnCreateChequeConfirm');
+
           const pageData = JSON.parse(document.getElementById('chequesPageData').textContent);
+          const fournisseurs = pageData.fournisseurs || [];
           const chantiers = pageData.chantiers || [];
           const banques = pageData.banques || [];
           const fixedBanqueName = pageData.banqueName || '';
@@ -372,15 +420,16 @@
             statut: (pageData.filters && pageData.filters.statut) ? pageData.filters.statut : '',
             montant: (pageData.filters && pageData.filters.montant) ? pageData.filters.montant : '',
             chantierId: (pageData.filters && pageData.filters.chantierId) ? pageData.filters.chantierId : '',
-            montantChantier: (pageData.filters && pageData.filters.montantChantier) ? pageData.filters.montantChantier : '',
             dateEcheanceFrom: (pageData.filters && pageData.filters.dateEcheanceFrom) ? pageData.filters.dateEcheanceFrom : '',
             dateEcheanceTo: (pageData.filters && pageData.filters.dateEcheanceTo) ? pageData.filters.dateEcheanceTo : '',
-            search: (pageData.filters && pageData.filters.search) ? pageData.filters.search : '',
+            search: (pageData.filters && pageData.filters.search) ? pageData.filters.search : ''
           };
 
           let editingAllocChequeId = null;
           let editingAllocations = [];
           let editingAllocChequeMontant = null;
+
+          let createAllocations = [];
 
           function normalizeStatutClass(statut) {
             return String(statut || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-');
@@ -418,7 +467,6 @@
             if (state.search) p.set('search', state.search);
             if (state.montant) p.set('montant', state.montant);
             if (state.chantierId) p.set('chantierId', state.chantierId);
-            if (state.montantChantier) p.set('montantChantier', state.montantChantier);
             if (state.dateEcheanceFrom) p.set('dateEcheanceFrom', state.dateEcheanceFrom);
             if (state.dateEcheanceTo) p.set('dateEcheanceTo', state.dateEcheanceTo);
             return p;
@@ -432,7 +480,6 @@
             if (state.search) p.set('search', state.search);
             if (state.montant) p.set('montant', state.montant);
             if (state.chantierId) p.set('chantierId', state.chantierId);
-            if (state.montantChantier) p.set('montantChantier', state.montantChantier);
             if (state.dateEcheanceFrom) p.set('dateEcheanceFrom', state.dateEcheanceFrom);
             if (state.dateEcheanceTo) p.set('dateEcheanceTo', state.dateEcheanceTo);
             return p;
@@ -454,26 +501,11 @@
             $totalMontantCell.textContent = n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
           }
 
-          function setTotalMontantChantier(v, show) {
-            if ($totalMontantChantierRow) {
-              $totalMontantChantierRow.style.display = show ? '' : 'none';
-            }
-            if (!$totalMontantChantierCell) return;
-            const n = Number(v || 0);
-            $totalMontantChantierCell.textContent = n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-          }
-
-          function renderPagination(pagination, totalMontant, totalMontantChantier, showChantierTotal) {
+          function renderPagination(pagination, totalMontant) {
             const page = pagination.page;
             const totalPages = pagination.totalPages;
             const n = Number(totalMontant || 0);
-            const base = `Page ${page} / ${totalPages} (${pagination.total} résultat(s)) - Total : ${n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-            if (showChantierTotal) {
-              const m = Number(totalMontantChantier || 0);
-              $paginationInfo.textContent = `${base} - Total chantier : ${m.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-            } else {
-              $paginationInfo.textContent = base;
-            }
+            $paginationInfo.textContent = `Page ${page} / ${totalPages} (${pagination.total} résultat(s)) - Total : ${n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
             const start = Math.max(1, page - 2);
             const end = Math.min(totalPages, page + 2);
@@ -506,6 +538,7 @@
             for (const c of cheques) {
               const tr = document.createElement('tr');
               tr.dataset.id = String(c.id);
+              tr.dataset.banqueName = (c.banque && c.banque.name) ? String(c.banque.name) : '';
 
               const allocs = Array.isArray(c.allocations) ? c.allocations : [];
               const chantierFallback = c.chantier ? [{ chantier: c.chantier, montant: c.montant || 0 }] : [];
@@ -526,13 +559,13 @@
               const statutBadge = statutBadgeHtml(c.statut);
 
               tr.innerHTML = `
-                <td class="cell-edit" contenteditable="true" data-field="dateEtablissement">${c.dateEtablissement ? String(c.dateEtablissement).slice(0,10) : ''}</td>
+                <td class="cell-edit" contenteditable="true" data-field="dateEtablissement">${formatFrDateFromAny(c.dateEtablissement)}</td>
                 <td class="cell-edit" contenteditable="true" data-field="numero">${c.numero || ''}</td>
                 <td class="cell-edit" contenteditable="true" data-field="beneficiaire">${c.beneficiaire || ''}</td>
                 <td>${(c.banque && c.banque.name) ? c.banque.name : ''}</td>
-                <td class="cell-edit" contenteditable="true" data-field="dateEcheance">${c.dateEcheance ? String(c.dateEcheance).slice(0,10) : ''}</td>
+                <td class="cell-edit" contenteditable="true" data-field="dateEcheance">${formatFrDateFromAny(c.dateEcheance)}</td>
                 <td data-field="statut" class="statut-cell">${statutBadge}</td>
-                <td class="cell-edit" contenteditable="true" data-field="dateReglement">${c.dateReglement ? String(c.dateReglement).slice(0,10) : ''}</td>
+                <td class="cell-edit" contenteditable="true" data-field="dateReglement">${formatFrDateFromAny(c.dateReglement)}</td>
                 <td><div class="allocations">${chantierHtml}</div></td>
                 <td><div class="allocations">${chantierAmountHtml}</div></td>
                 <td class="cell-edit obs-cell" contenteditable="true" data-field="obs">${c.obs || ''}</td>
@@ -557,10 +590,8 @@
             const json = await fetchPage(page);
             state.page = json.pagination.page;
             renderRows(json.data || []);
-            const showChantierTotal = !!(state.chantierId);
-            renderPagination(json.pagination, json.totalMontant, json.totalMontantChantier, showChantierTotal);
+            renderPagination(json.pagination, json.totalMontant);
             setTotalMontant(json.totalMontant);
-            setTotalMontantChantier(json.totalMontantChantier, showChantierTotal);
           }
 
           let debounceT = null;
@@ -580,6 +611,20 @@
             return '';
           }
 
+          const patchQueues = new Map();
+          function enqueuePatchCheque(id, data) {
+            const key = String(id);
+            const prev = patchQueues.get(key) || Promise.resolve();
+            const next = prev
+              .catch(() => {})
+              .then(() => patchCheque(id, data));
+            patchQueues.set(key, next);
+            next.finally(() => {
+              if (patchQueues.get(key) === next) patchQueues.delete(key);
+            });
+            return next;
+          }
+
           async function patchCheque(id, data) {
             const res = await fetch(`/tresorerie/cheques/${id}`, {
               method: 'PATCH',
@@ -589,6 +634,59 @@
             const json = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(json && json.error ? json.error : 'Erreur mise à jour');
             return json;
+          }
+
+          function parseInputDateToIso(value) {
+            const s = String(value || '').trim();
+            if (!s) return null;
+
+            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+              if (!isValidIsoDate(s)) return null;
+              return s;
+            }
+
+            const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            if (!m) return null;
+
+            const dd = Number(m[1]);
+            const mm = Number(m[2]);
+            const yyyy = Number(m[3]);
+            if (Number.isNaN(dd) || Number.isNaN(mm) || Number.isNaN(yyyy)) return null;
+            if (mm < 1 || mm > 12) return null;
+            if (dd < 1 || dd > 31) return null;
+
+            const iso = String(yyyy).padStart(4, '0') + '-' + String(mm).padStart(2, '0') + '-' + String(dd).padStart(2, '0');
+            if (!isValidIsoDate(iso)) return null;
+            return iso;
+          }
+
+          function formatFrDateFromAny(d) {
+            if (!d) return '';
+            const s = String(d).trim();
+            if (!s) return '';
+
+            // If backend sends ISO date (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss...)
+            const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (iso) {
+              return `${iso[3]}/${iso[2]}/${iso[1]}`;
+            }
+
+            // If already in FR format
+            if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
+              return s;
+            }
+
+            const dd = new Date(s);
+            if (Number.isNaN(dd.getTime())) return '';
+            return dd.toLocaleDateString('fr-FR');
+          }
+
+          function isValidIsoDate(yyyyMMdd) {
+            const s = String(yyyyMMdd || '').trim();
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+
+            const d = new Date(s + 'T00:00:00.000Z');
+            return !Number.isNaN(d.getTime());
           }
 
           $filterFournisseur.addEventListener('change', () => {
@@ -611,10 +709,6 @@
           });
           $filterChantier.addEventListener('change', () => {
             state.chantierId = $filterChantier.value;
-            debounceRefresh();
-          });
-          $filterMontantChantier.addEventListener('input', () => {
-            state.montantChantier = $filterMontantChantier.value;
             debounceRefresh();
           });
           $filterEcheanceFrom.addEventListener('change', () => {
@@ -664,19 +758,44 @@
 
             try {
               const payload = {};
-              payload[field] = value;
+              if (field === 'dateReglement') {
+                if (value === '') {
+                  payload[field] = '';
+                } else {
+                  const iso = parseInputDateToIso(value);
+                  if (!iso) {
+                    alert('Format date règlement invalide. Utilisez JJ/MM/AAAA.');
+                    return;
+                  }
+                  payload[field] = iso;
+                }
+              } else if (field === 'dateEcheance' || field === 'dateEtablissement') {
+                if (value) {
+                  const iso = parseInputDateToIso(value);
+                  if (!iso) {
+                    alert('Format date invalide. Utilisez JJ/MM/AAAA.');
+                    return;
+                  }
+                  payload[field] = iso;
+                } else {
+                  payload[field] = value;
+                }
+              } else {
+                payload[field] = value;
+              }
 
               if (!payload.beneficiaire) {
                 const cell = tr.querySelector('td[data-field="beneficiaire"]');
                 payload.beneficiaire = cell ? cell.textContent.trim() : '';
               }
-              payload.banque = currentBanqueName();
+              // Use the cheque's actual bank from the row (never the filter placeholder like "Toutes")
+              payload.banque = (tr && tr.dataset && tr.dataset.banqueName) ? tr.dataset.banqueName : currentBanqueName();
 
               if (!payload.banque || !payload.beneficiaire) {
                 return;
               }
 
-              await patchCheque(id, payload);
+              await enqueuePatchCheque(id, payload);
             } catch (err) {
               alert(err.message || 'Erreur');
             }
@@ -722,10 +841,11 @@
 
               const cell = tr.querySelector('td[data-field="beneficiaire"]');
               payload.beneficiaire = cell ? cell.textContent.trim() : '';
-              payload.banque = currentBanqueName();
+              // Use the cheque's actual bank from the row (never the filter placeholder like "Toutes")
+              payload.banque = (tr && tr.dataset && tr.dataset.banqueName) ? tr.dataset.banqueName : currentBanqueName();
               if (!payload.banque || !payload.beneficiaire) return;
 
-              await patchCheque(id, payload);
+              await enqueuePatchCheque(id, payload);
 
               const td = select.closest('td[data-field="statut"]');
               if (td) td.innerHTML = statutBadgeHtml(value);
@@ -907,26 +1027,170 @@
           });
 
           $btnAddCheque.addEventListener('click', async () => {
-            const banqueText = currentBanqueName();
-            if (!banqueText) return alert('Sélectionne une banque');
-
-            const payload = {
-              montant: '0',
-              beneficiaire: ' ',
-              dateEcheance: new Date().toISOString().slice(0, 10),
-              banque: banqueText,
-              chantier: (chantiers[0] ? chantiers[0].nom : '')
-            };
-
-            const res = await fetch('/tresorerie/cheques/create', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
-            });
-            const json = await res.json().catch(() => ({}));
-            if (!res.ok) return alert(json.error || 'Erreur création');
-            await refresh(1);
+            openCreateModal();
           });
+
+          if ($btnCreateAddAlloc) {
+            $btnCreateAddAlloc.addEventListener('click', () => {
+              createAllocations.push({ chantierId: '', montant: '' });
+              renderCreateAllocEditor();
+            });
+          }
+
+          if ($btnCreateChequeConfirm) {
+            $btnCreateChequeConfirm.addEventListener('click', async () => {
+              try {
+                const bId = $createBanque ? String($createBanque.value || '').trim() : '';
+                const fId = $createFournisseur ? String($createFournisseur.value || '').trim() : '';
+                const echeance = $createDateEcheance ? String($createDateEcheance.value || '').trim() : '';
+                const obs = $createObs ? String($createObs.value || '').trim() : '';
+
+
+                if (!bId) return alert('Banque requise');
+                if (!fId) return alert('Fournisseur requis');
+                if (!echeance) return alert("Date d'échéance requise");
+
+                const payloadAllocs = (Array.isArray(createAllocations) ? createAllocations : [])
+                  .map(a => ({
+                    chantierId: String(a.chantierId || '').trim(),
+                    montant: parseMoney(a.montant),
+                  }))
+                  .filter(a => a.chantierId && a.montant !== null && a.montant > 0)
+                  .map(a => ({ chantierId: Number(a.chantierId), montant: Number(a.montant) }));
+
+                if (!payloadAllocs.length) {
+                  return alert('Ajoute au moins un chantier avec un montant > 0');
+                }
+
+                const res = await fetch('/tresorerie/cheques/create', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    banqueId: Number(bId),
+                    fournisseurId: Number(fId),
+                    dateEcheance: echeance,
+                    obs,
+                    allocations: payloadAllocs,
+                  })
+                });
+                const json = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                  return alert(json && json.error ? json.error : 'Erreur création');
+                }
+
+                $createChequeModal.modal('hide');
+                await refresh(1);
+              } catch (err) {
+                alert(err.message || 'Erreur');
+              }
+            });
+          }
+
+          function openCreateModal() {
+            if (!$createFournisseur || !$createBanque) return;
+
+            $createFournisseur.innerHTML = '';
+            const optF0 = document.createElement('option');
+            optF0.value = '';
+            optF0.textContent = '-- Fournisseur --';
+            $createFournisseur.appendChild(optF0);
+            for (const f of fournisseurs) {
+              const o = document.createElement('option');
+              o.value = String(f.id);
+              o.textContent = f.name;
+              $createFournisseur.appendChild(o);
+            }
+
+            $createBanque.innerHTML = '';
+            const optB0 = document.createElement('option');
+            optB0.value = '';
+            optB0.textContent = '-- Banque --';
+            $createBanque.appendChild(optB0);
+            for (const b of banques) {
+              const o = document.createElement('option');
+              o.value = String(b.id);
+              o.textContent = b.name;
+              if (state.banqueId && String(state.banqueId) === String(b.id)) o.selected = true;
+              $createBanque.appendChild(o);
+            }
+
+            if ($createDateEcheance) $createDateEcheance.value = new Date().toISOString().slice(0, 10);
+            if ($createObs) $createObs.value = '';
+
+
+            createAllocations = [{ chantierId: '', montant: '' }];
+            renderCreateAllocEditor();
+            $createChequeModal.modal('show');
+          }
+
+          function setCreateMontantFromAllocs() {
+            const amounts = (Array.isArray(createAllocations) ? createAllocations : [])
+              .map(a => parseMoney(a.montant))
+              .filter(v => v !== null);
+            const sum = amounts.reduce((acc, v) => acc + Number(v || 0), 0);
+            if ($createMontant) $createMontant.value = moneyFr(sum);
+            if ($createAllocTotals) $createAllocTotals.textContent = `Total affectations: ${moneyFr(sum)}`;
+          }
+
+          function renderCreateAllocEditor() {
+            if (!$createAllocList) return;
+            $createAllocList.innerHTML = '';
+
+
+            for (let i = 0; i < createAllocations.length; i++) {
+              const line = createAllocations[i];
+
+              const wrap = document.createElement('div');
+              wrap.className = 'd-flex align-items-center';
+              wrap.style.gap = '10px';
+
+              const sel = document.createElement('select');
+              sel.className = 'form-control';
+              sel.style.flex = '1';
+              const optEmpty = document.createElement('option');
+              optEmpty.value = '';
+              optEmpty.textContent = '-- Chantier --';
+              sel.appendChild(optEmpty);
+              for (const c of chantiers) {
+                const o = document.createElement('option');
+                o.value = String(c.id);
+                o.textContent = c.nom;
+                if (String(line.chantierId || '') === String(c.id)) o.selected = true;
+                sel.appendChild(o);
+              }
+
+              const input = document.createElement('input');
+              input.className = 'form-control';
+              input.placeholder = 'Montant';
+              input.style.width = '200px';
+              input.value = line.montant !== undefined && line.montant !== null ? String(line.montant) : '';
+
+
+              const btnRemove = document.createElement('button');
+              btnRemove.type = 'button';
+              btnRemove.className = 'btn btn-outline-danger';
+              btnRemove.innerHTML = '<i class="fas fa-times"></i>';
+
+
+              sel.addEventListener('change', () => { createAllocations[i].chantierId = sel.value; });
+              input.addEventListener('input', () => { createAllocations[i].montant = input.value; setCreateMontantFromAllocs(); });
+              btnRemove.addEventListener('click', () => {
+                createAllocations.splice(i, 1);
+                if (!createAllocations.length) createAllocations.push({ chantierId: '', montant: '' });
+                renderCreateAllocEditor();
+              });
+
+              wrap.appendChild(sel);
+              wrap.appendChild(input);
+              wrap.appendChild(btnRemove);
+              $createAllocList.appendChild(wrap);
+            }
+
+            setCreateMontantFromAllocs();
+          }
+
+          // Initial load: ensure totals are not stuck at 0 and data is in sync with API
+          refresh(state.page).catch(() => {});
 
         })();
       </script>

@@ -307,46 +307,52 @@
                                             </td>
                                             <% } %>
 
-                                            <% if (user.role==='user' || user.role==='grandadmin') { %>
-                                              <td data-name="etat" style="text-align: center; padding: 6px;">
-                                                <span class="badge badge-light" style="min-width:100px; padding:6px 12px; border-radius:20px; font-weight:600;">
-                                                  <%= d.etat || '—' %>
-                                                </span>
-                                              </td>
-                                              <% } else if (user.role==='admin') { %>
-                                                <td>
-                                                  <select class="form-control" data-name="etat" onchange="updateEtat(<%= d.id %>, this.value)">
-                                                    <option value="" <%= !d.etat ? 'selected' : '' %>>Sélectionner</option>
-                                                    <option value="En cours" <%= d.etat==='En cours' ? 'selected' : '' %>>En cours</option>
-                                                    <option value="Accepter" <%= d.etat==='Accepter' ? 'selected' : '' %>>Accepter</option>
-                                                    <option value="Refuser" <%= d.etat==='Refuser' ? 'selected' : '' %>>Refuser</option>
-                                                  </select>
+                                              <% if (user.role==='user' || user.role==='grandadmin' ) { %>
+                                                <td data-name="etat" style="text-align: center; padding: 6px;">
+                                                  <span class="badge badge-light"
+                                                    style="min-width:100px; padding:6px 12px; border-radius:20px; font-weight:600;">
+                                                    <%= d.etat || '—' %>
+                                                  </span>
                                                 </td>
-                                                <% } %>
+                                                <% } else if (user.role==='admin' ) { %>
+                                                  <td>
+                                                    <select class="form-control" data-name="etat"
+                                                      onchange="updateEtat(<%= d.id %>, this.value)">
+                                                      <option value="" <%=!d.etat ? 'selected' : '' %>>Sélectionner
+                                                      </option>
+                                                      <option value="En cours" <%=d.etat==='En cours' ? 'selected' : ''
+                                                        %>>En cours</option>
+                                                      <option value="Accepter" <%=d.etat==='Accepter' ? 'selected' : ''
+                                                        %>>Accepter</option>
+                                                      <option value="Refuser" <%=d.etat==='Refuser' ? 'selected' : '' %>
+                                                        >Refuser</option>
+                                                    </select>
+                                                  </td>
+                                                  <% } %>
 
-                                              <td>
-                                                <div class="btn-group" role="group">
-                                                  <a href="/achats/demandes/caisse/<%= d.id %>"
-                                                    class="btn btn-info btn-sm" style="width: 60px;">
-                                                    <i class="fas fa-eye"></i> Voir
-                                                  </a>
-                                                  <a href="/achats/demandes/caisse/<%= d.id %>/pdf"
-                                                    class="btn btn-danger btn-sm" style="width: 60px;">
-                                                    <i class="fas fa-file-pdf"></i> PDF
-                                                  </a>
-                                                  <a href="/achats/demandes/caisse/<%= d.id %>/excel"
-                                                    class="btn btn-success btn-sm" style="width: 60px;">
-                                                    <i class="fas fa-file-excel"></i> Excel
-                                                  </a>
+                                                    <td>
+                                                      <div class="btn-group" role="group">
+                                                        <a href="/achats/demandes/caisse/<%= d.id %>"
+                                                          class="btn btn-info btn-sm" style="width: 60px;">
+                                                          <i class="fas fa-eye"></i> Voir
+                                                        </a>
+                                                        <a href="/achats/demandes/caisse/<%= d.id %>/pdf"
+                                                          class="btn btn-danger btn-sm" style="width: 60px;">
+                                                          <i class="fas fa-file-pdf"></i> PDF
+                                                        </a>
+                                                        <a href="/achats/demandes/caisse/<%= d.id %>/excel"
+                                                          class="btn btn-success btn-sm" style="width: 60px;">
+                                                          <i class="fas fa-file-excel"></i> Excel
+                                                        </a>
 
-                                                  <% if (user.role==='admin' || user.role==='grandadmin' ) { %>
-                                                    <button onclick="supprimerdemande(<%= d.id %>)"
-                                                      class="excel-delete-btn">
-                                                      <i class="fas fa-trash"></i>
-                                                    </button>
-                                                    <% } %>
-                                                </div>
-                                              </td>
+                                                        <% if (user.role==='admin' || user.role==='grandadmin' ) { %>
+                                                          <button onclick="supprimerdemande(<%= d.id %>)"
+                                                            class="excel-delete-btn">
+                                                            <i class="fas fa-trash"></i>
+                                                          </button>
+                                                          <% } %>
+                                                      </div>
+                                                    </td>
                                       </tr>
                                       <% } %>
                                         <% }); %>

@@ -157,6 +157,11 @@
       background: white;
     }
 
+    .allocations { display: grid; gap: 6px; }
+    .alloc-line { display: flex; justify-content: space-between; gap: 10px; padding: 6px 10px; border: 1px solid #e9ecef; border-radius: 10px; background: #fff; }
+    .alloc-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .alloc-amount { white-space: nowrap; font-weight: 700; }
+
     .excel-table tfoot td {
       background: var(--light-color);
       color: var(--dark-color);
@@ -487,6 +492,15 @@
                   <% }) %>
                 </select>
               </div>
+              <div class="form-group mr-2">
+                <label for="chantierFilterOperations" class="mr-2">Chantier :</label>
+                <select id="chantierFilterOperations" class="form-control">
+                  <option value="">Tous</option>
+                  <% chantiers.forEach(c => { %>
+                    <option value="<%= c.nom %>"><%= c.nom %></option>
+                  <% }) %>
+                </select>
+              </div>
               <button type="button" class="btn btn-secondary" id="resetDateBtn" aria-label="Annuler filtre" style="background-color: #6a5ae7;">Annuler filtre</button>
             </form>
           </div>
@@ -520,7 +534,7 @@
                     </thead>
                     <tbody>
                       <% historique.forEach(c => { %>
-                        <tr class="operation-row" data-type="<%= c.type %>" data-fournisseur="<%= c.beneficiaire %>" data-banque="<%= c.banque %>" data-statut="<%= c.statut %>" data-date="<%= new Date(c.dateEtablissement).toISOString().split('T')[0] %>">
+                        <tr class="operation-row" data-type="<%= c.type %>" data-fournisseur="<%= c.beneficiaire %>" data-banque="<%= c.banque %>" data-chantier="<%= (c.chantierNames && c.chantierNames.length) ? c.chantierNames.join('|') : (c.chantier || '') %>" data-statut="<%= c.statut %>" data-date="<%= new Date(c.dateEtablissement).toISOString().split('T')[0] %>">
                           <td><%= new Date(c.dateEtablissement).toLocaleDateString('fr-FR') %></td>
                           <td><%= c.type %></td>
                           <td><%= c.numero %></td>
@@ -532,7 +546,20 @@
                                   : '' %>
                           </td>
                           <td><%= new Date(c.dateEcheance).toLocaleDateString('fr-FR') %></td>
-                          <td><%= c.chantier %></td>
+                          <td>
+                            <% if (c.type === 'Chèque' && c.chantierLines && c.chantierLines.length) { %>
+                              <div class="allocations">
+                                <% c.chantierLines.forEach(l => { %>
+                                  <div class="alloc-line" data-chantier="<%= l.nom %>">
+                                    <div class="alloc-name"><%= l.nom %></div>
+                                    <div class="alloc-amount"><%= (l.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %></div>
+                                  </div>
+                                <% }) %>
+                              </div>
+                            <% } else { %>
+                              <%= c.chantier %>
+                            <% } %>
+                          </td>
                           <td>
                             <form action="/tresorerie/cheques/situation/<%= c.id %>?_method=PATCH" method="POST">
                               <input id="obs" type="text" value="<%= c.obs %>" class="form-control" name="obs">
@@ -551,6 +578,20 @@
                       </tr>
                     </tfoot>
                   </table>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between mt-2" id="operationsPagination" style="gap: 10px;">
+                  <div class="small text-muted" id="operationsPageInfo"></div>
+                  <div class="d-flex align-items-center" style="gap: 8px;">
+                    <select id="operationsPageSize" class="form-control" style="width: 110px;">
+                      <option value="10">10</option>
+                      <option value="20" selected>20</option>
+                      <option value="50">50</option>
+                      <option value="100">100</option>
+                    </select>
+                    <button type="button" class="btn btn-secondary" id="operationsPrev" style="background-color: #6a5ae7;">Préc.</button>
+                    <button type="button" class="btn btn-secondary" id="operationsNext" style="background-color: #6a5ae7;">Suiv.</button>
+                  </div>
                 </div>
               <% } %>
             </div>
@@ -597,6 +638,15 @@
                   <% }) %>
                 </select>
               </div>
+              <div class="form-group mr-2">
+                <label for="chantierFilterEncaissements" class="mr-2">Chantier :</label>
+                <select id="chantierFilterEncaissements" class="form-control">
+                  <option value="">Tous</option>
+                  <% chantiers.forEach(c => { %>
+                    <option value="<%= c.nom %>"><%= c.nom %></option>
+                  <% }) %>
+                </select>
+              </div>
               <button type="button" class="btn btn-secondary" id="resetDateBtnEncaissements" aria-label="Annuler filtre" style="background-color: #6a5ae7;">Annuler filtre</button>
             </form>
           </div>
@@ -628,7 +678,7 @@
                     </thead>
                     <tbody>
                       <% encaissements.forEach(c => { %>
-                        <tr class="operation-row" data-type="<%= c.type %>" data-fournisseur="<%= c.client.name %>" data-banque="<%= c.banque.name %>" data-statut="<%= c.statut %>" data-date="<%= new Date(c.dateEtablissement).toISOString().split('T')[0] %>">
+                        <tr class="operation-row" data-type="<%= c.type %>" data-fournisseur="<%= c.client.name %>" data-banque="<%= c.banque.name %>" data-chantier="<%= c.chantier ? c.chantier.nom : '' %>" data-statut="<%= c.statut %>" data-date="<%= new Date(c.dateEtablissement).toISOString().split('T')[0] %>">
                           <td><%= new Date(c.dateEtablissement).toLocaleDateString('fr-FR') %></td>
                           <td><%= c.type %></td>
                           <td><%= c.banque.name %></td>
@@ -653,6 +703,20 @@
                       </tr>
                     </tfoot>
                   </table>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between mt-2" id="encaissementsPagination" style="gap: 10px;">
+                  <div class="small text-muted" id="encaissementsPageInfo"></div>
+                  <div class="d-flex align-items-center" style="gap: 8px;">
+                    <select id="encaissementsPageSize" class="form-control" style="width: 110px;">
+                      <option value="10">10</option>
+                      <option value="20" selected>20</option>
+                      <option value="50">50</option>
+                      <option value="100">100</option>
+                    </select>
+                    <button type="button" class="btn btn-secondary" id="encaissementsPrev" style="background-color: #6a5ae7;">Préc.</button>
+                    <button type="button" class="btn btn-secondary" id="encaissementsNext" style="background-color: #6a5ae7;">Suiv.</button>
+                  </div>
                 </div>
               <% } %>
             </div>
@@ -771,6 +835,7 @@
           type: document.getElementById('typeFilter'),
           fournisseur: document.getElementById('fournisseurFilterCheques'),
           banque: document.getElementById('banqueFilterCheques'),
+          chantier: document.getElementById('chantierFilterOperations'),
           dateFrom: document.getElementById('dateFromFilter'),
           dateTo: document.getElementById('dateToFilter'),
           resetButton: document.getElementById('resetDateBtn')
@@ -779,6 +844,7 @@
           type: document.getElementById('typeFilterEncaissements'),
           client: document.getElementById('clientFilterEncaissements'),
           banque: document.getElementById('banqueFilterEncaissements'),
+          chantier: document.getElementById('chantierFilterEncaissements'),
           dateFrom: document.getElementById('dateFromFilterEncaissements'),
           dateTo: document.getElementById('dateToFilterEncaissements'),
           resetButton: document.getElementById('resetDateBtnEncaissements')
@@ -812,6 +878,69 @@
         virements: document.getElementById('displayTotalVirements')
       };
 
+      const pagination = {
+        operations: {
+          page: 1,
+          pageSizeEl: document.getElementById('operationsPageSize'),
+          infoEl: document.getElementById('operationsPageInfo'),
+          prevBtn: document.getElementById('operationsPrev'),
+          nextBtn: document.getElementById('operationsNext')
+        },
+        encaissements: {
+          page: 1,
+          pageSizeEl: document.getElementById('encaissementsPageSize'),
+          infoEl: document.getElementById('encaissementsPageInfo'),
+          prevBtn: document.getElementById('encaissementsPrev'),
+          nextBtn: document.getElementById('encaissementsNext')
+        }
+      };
+
+      const setRowVisibility = (row) => {
+        const filterVisible = row.dataset.filterVisible === '1';
+        const pageVisible = row.dataset.pageVisible === '1';
+        row.style.display = (filterVisible && pageVisible) ? '' : 'none';
+      };
+
+      const getFilteredRows = (tableKey) => {
+        const list = Array.from(rows[tableKey] || []);
+        return list.filter(r => r.dataset.filterVisible === '1');
+      };
+
+      const applyPagination = (tableKey) => {
+        const p = pagination[tableKey];
+        if (!p) return;
+        const pageSize = p.pageSizeEl ? Number(p.pageSizeEl.value || 20) : 20;
+        const filtered = getFilteredRows(tableKey);
+        const total = filtered.length;
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        if (p.page > totalPages) p.page = totalPages;
+        if (p.page < 1) p.page = 1;
+
+        const start = (p.page - 1) * pageSize;
+        const end = start + pageSize;
+
+        filtered.forEach((row, idx) => {
+          row.dataset.pageVisible = (idx >= start && idx < end) ? '1' : '0';
+          setRowVisibility(row);
+        });
+
+        // ensure filtered-out rows remain hidden
+        (rows[tableKey] || []).forEach(row => {
+          if (row.dataset.filterVisible !== '1') {
+            row.dataset.pageVisible = '0';
+            setRowVisibility(row);
+          }
+        });
+
+        if (p.infoEl) {
+          const shownFrom = total === 0 ? 0 : (start + 1);
+          const shownTo = Math.min(end, total);
+          p.infoEl.textContent = `Affichage ${shownFrom}-${shownTo} / ${total}`;
+        }
+        if (p.prevBtn) p.prevBtn.disabled = p.page <= 1;
+        if (p.nextBtn) p.nextBtn.disabled = p.page >= totalPages;
+      };
+
       // Filter rows based on selected criteria
       const filterRows = () => {
         const selected = {
@@ -819,6 +948,7 @@
             type: filters.operations.type?.value.toLowerCase() || '',
             fournisseur: filters.operations.fournisseur?.value.toLowerCase() || '',
             banque: filters.operations.banque?.value.toLowerCase() || '',
+            chantier: filters.operations.chantier?.value.toLowerCase() || '',
             fromDate: filters.operations.dateFrom?.value ? new Date(filters.operations.dateFrom.value) : null,
             toDate: filters.operations.dateTo?.value ? new Date(filters.operations.dateTo.value) : null
           },
@@ -826,6 +956,7 @@
             type: filters.encaissements.type?.value.toLowerCase() || '',
             client: filters.encaissements.client?.value.toLowerCase() || '',
             banque: filters.encaissements.banque?.value.toLowerCase() || '',
+            chantier: filters.encaissements.chantier?.value.toLowerCase() || '',
             fromDate: filters.encaissements.dateFrom?.value ? new Date(filters.encaissements.dateFrom.value) : null,
             toDate: filters.encaissements.dateTo?.value ? new Date(filters.encaissements.dateTo.value) : null
           },
@@ -844,28 +975,34 @@
               const rowType = row.getAttribute('data-type')?.toLowerCase() || '';
               const rowFournisseur = row.getAttribute('data-fournisseur')?.toLowerCase() || '';
               const rowBanque = row.getAttribute('data-banque')?.toLowerCase() || '';
+              const rowChantier = row.getAttribute('data-chantier')?.toLowerCase() || '';
               const rowDate = new Date(row.getAttribute('data-date'));
 
               const showType = !selected.operations.type || rowType === selected.operations.type;
               const showFournisseur = !selected.operations.fournisseur || rowFournisseur === selected.operations.fournisseur;
               const showBanque = !selected.operations.banque || rowBanque === selected.operations.banque;
+              const showChantier = !selected.operations.chantier || rowChantier.split('|').includes(selected.operations.chantier);
               const showDate = (!selected.operations.fromDate || rowDate >= selected.operations.fromDate) && (!selected.operations.toDate || rowDate <= selected.operations.toDate);
 
-              row.style.display = showType && showFournisseur && showBanque && showDate ? '' : 'none';
-              if (row.style.display !== 'none') visibleRows++;
+              const ok = showType && showFournisseur && showBanque && showChantier && showDate;
+              row.dataset.filterVisible = ok ? '1' : '0';
+              if (ok) visibleRows++;
             } else if (filterType === 'encaissements') {
               const rowType = row.getAttribute('data-type')?.toLowerCase() || '';
               const rowClient = row.getAttribute('data-fournisseur')?.toLowerCase() || '';
               const rowBanque = row.getAttribute('data-banque')?.toLowerCase() || '';
+              const rowChantier = row.getAttribute('data-chantier')?.toLowerCase() || '';
               const rowDate = new Date(row.getAttribute('data-date'));
 
               const showType = !selected.encaissements.type || rowType === selected.encaissements.type;
               const showClient = !selected.encaissements.client || rowClient === selected.encaissements.client;
               const showBanque = !selected.encaissements.banque || rowBanque === selected.encaissements.banque;
+              const showChantier = !selected.encaissements.chantier || rowChantier === selected.encaissements.chantier;
               const showDate = (!selected.encaissements.fromDate || rowDate >= selected.encaissements.fromDate) && (!selected.encaissements.toDate || rowDate <= selected.encaissements.toDate);
 
-              row.style.display = showType && showClient && showBanque && showDate ? '' : 'none';
-              if (row.style.display !== 'none') visibleRows++;
+              const ok = showType && showClient && showBanque && showChantier && showDate;
+              row.dataset.filterVisible = ok ? '1' : '0';
+              if (ok) visibleRows++;
             } else if (filterType === 'virements') {
               const rowBanque = row.getAttribute('data-banque')?.toLowerCase() || '';
               const rowDate = new Date(row.getAttribute('data-date'));
@@ -873,8 +1010,9 @@
               const showBanque = !selected.virements.banque || rowBanque === selected.virements.banque;
               const showDate = (!selected.virements.fromDate || rowDate >= selected.virements.fromDate) && (!selected.virements.toDate || rowDate <= selected.virements.toDate);
 
-              row.style.display = showBanque && showDate ? '' : 'none';
-              if (row.style.display !== 'none') visibleRows++;
+              const ok = showBanque && showDate;
+              row.dataset.filterVisible = ok ? '1' : '0';
+              if (ok) visibleRows++;
             }
           });
 
@@ -897,6 +1035,32 @@
         filterTableRows(rows.encaissements, tables.encaissements, 'noEncaissementMsg', 7, 'encaissements');
         filterTableRows(rows.virements, tables.virements, 'noVirementMsg', 5, 'virements');
 
+        // reset pagination to first page when filters change
+        if (pagination.operations) pagination.operations.page = 1;
+        if (pagination.encaissements) pagination.encaissements.page = 1;
+
+        // Apply pagination display (no pagination for virements in this page as table may not exist)
+        applyPagination('operations');
+        applyPagination('encaissements');
+
+        // For cheque rows: if chantier filter is selected, show only that chantier line
+        const selectedChantier = selected.operations.chantier;
+        rows.operations.forEach(row => {
+          const rowType = row.getAttribute('data-type')?.toLowerCase() || '';
+          if (rowType !== 'chèque') return;
+          const lines = row.querySelectorAll('.alloc-line');
+          if (!lines || !lines.length) return;
+
+          lines.forEach(l => {
+            if (!selectedChantier) {
+              l.style.display = '';
+              return;
+            }
+            const n = (l.getAttribute('data-chantier') || '').toLowerCase();
+            l.style.display = (n === selectedChantier) ? '' : 'none';
+          });
+        });
+
         // Update totals
         updateTotals();
       };
@@ -908,21 +1072,21 @@
         let totalVirements = 0;
 
         rows.operations.forEach(row => {
-          if (row.style.display !== 'none') {
+          if (row.dataset.filterVisible === '1') {
             const montant = parseFrenchNumber(row.querySelector('.montant')?.textContent);
             totalOperations += montant;
           }
         });
 
         rows.encaissements.forEach(row => {
-          if (row.style.display !== 'none') {
+          if (row.dataset.filterVisible === '1') {
             const montant = parseFrenchNumber(row.querySelector('.montant')?.textContent);
             totalEncaissements += montant;
           }
         });
 
         rows.virements.forEach(row => {
-          if (row.style.display !== 'none') {
+          if (row.dataset.filterVisible === '1') {
             const montant = parseFrenchNumber(row.querySelector('.montant')?.textContent);
             totalVirements += montant;
           }
@@ -940,12 +1104,14 @@
           filters.operations.type.value = '';
           filters.operations.fournisseur.value = '';
           filters.operations.banque.value = '';
+          if (filters.operations.chantier) filters.operations.chantier.value = '';
           filters.operations.dateFrom.value = '';
           filters.operations.dateTo.value = '';
         } else if (table === 'encaissements') {
           filters.encaissements.type.value = '';
           filters.encaissements.client.value = '';
           filters.encaissements.banque.value = '';
+          if (filters.encaissements.chantier) filters.encaissements.chantier.value = '';
           filters.encaissements.dateFrom.value = '';
           filters.encaissements.dateTo.value = '';
         } else if (table === 'virements') {
@@ -956,206 +1122,23 @@
         filterRows();
       };
 
-      // PDF Generation Utilities
-      const loadScript = (src) => {
-        return new Promise((resolve, reject) => {
-          const script = document.createElement('script');
-          script.src = src;
-          script.onload = resolve;
-          script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
-          document.head.appendChild(script);
-        });
-      };
-
-      // Generate PDF for specified table
-      window.downloadPDF = async (tableId) => {
-        try {
-          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js');
-          
-          const { jsPDF } = window.jspdf;
-          const pdf = new jsPDF('l', 'mm', 'a4');
-          
-          pdf.setFontSize(20);
-          pdf.setTextColor(30, 30, 120);
-          const title = tableId === 'chequesTable' ? 'Historique des Opérations' : 'Encaissements Reçus';
-          pdf.text(title, 20, 20);
-          pdf.setFontSize(11);
-          pdf.setTextColor(80, 80, 80);
-          const now = new Date();
-          pdf.text(`Généré le : ${now.toLocaleString('fr-FR')}`, 20, 30);
-
-          const data = [];
-          let totalAmount = 0;
-          const rowsToProcess = tableId === 'chequesTable' ? rows.operations : rows.encaissements;
-          const isOperationsTable = tableId === 'chequesTable';
-
-          rowsToProcess.forEach(row => {
-            if (row.style.display !== 'none') {
-              const cells = row.querySelectorAll('td');
-              if (isOperationsTable && cells.length >= 9) {
-                const montant = parseFrenchNumber(cells[5].textContent);
-                totalAmount += montant;
-                data.push([
-                  cells[0].textContent.trim(),
-                  cells[1].textContent.trim(),
-                  cells[2].textContent.trim(),
-                  cells[3].textContent.trim(),
-                  cells[4].textContent.trim(),
-                  formatFrenchNumber(montant),
-                  cells[6].textContent.trim(),
-                  cells[7].textContent.trim(),
-                  cells[8].querySelector('input')?.value || cells[8].textContent.trim()
-                ]);
-              } else if (!isOperationsTable && cells.length >= 7) {
-                const montant = parseFrenchNumber(cells[4].textContent);
-                totalAmount += montant;
-                data.push([
-                  cells[0].textContent.trim(),
-                  cells[1].textContent.trim(),
-                  cells[2].textContent.trim(),
-                  cells[3].textContent.trim(),
-                  formatFrenchNumber(montant),
-                  cells[5].textContent.trim(),
-                  cells[6].textContent.trim()
-                ]);
-              }
-            }
-          });
-
-          if (data.length > 0) {
-            if (isOperationsTable) {
-              data.push(['', '', '', '', 'Total', formatFrenchNumber(totalAmount), '', '', '']);
-            } else {
-              data.push(['', '', '', 'Total', formatFrenchNumber(totalAmount), '', '']);
-            }
-          }
-
-          pdf.autoTable({
-            head: isOperationsTable 
-              ? [['Date Etablissement', 'Type', 'Numéro', 'Banque', 'Bénéficiaire', 'Montant', 'Date Échéance', 'Chantier', 'Observation']]
-              : [['Date', 'Méthode Paiement', 'Banque', 'Client', 'Montant', 'Chantier', 'Observation']],
-            body: data,
-            startY: 40,
-            theme: 'grid',
-            headStyles: { fillColor: [52, 152, 219], textColor: 255, fontStyle: 'bold', fontSize: 11 },
-            styles: { fontSize: 10, cellPadding: 3, lineColor: [230, 230, 230], lineWidth: 0.1 },
-            alternateRowStyles: { fillColor: [245, 245, 245] },
-            columnStyles: isOperationsTable 
-              ? {
-                  0: { halign: 'left', cellWidth: 40 },
-                  1: { halign: 'left', cellWidth: 30 },
-                  2: { halign: 'left', cellWidth: 30 },
-                  3: { halign: 'left', cellWidth: 30 },
-                  4: { halign: 'left', cellWidth: 35 },
-                  5: { halign: 'right', cellWidth: 30 },
-                  6: { halign: 'center', cellWidth: 30 },
-                  7: { halign: 'left', cellWidth: 30 },
-                  8: { halign: 'left', cellWidth: 40 }
-                }
-              : {
-                  0: { halign: 'left', cellWidth: 40 },
-                  1: { halign: 'left', cellWidth: 40 },
-                  2: { halign: 'left', cellWidth: 40 },
-                  3: { halign: 'left', cellWidth: 40 },
-                  4: { halign: 'right', cellWidth: 30 },
-                  5: { halign: 'left', cellWidth: 40 },
-                  6: { halign: 'left', cellWidth: 40 }
-                },
-            didParseCell: (tableData) => {
-              if (tableData.row.index === data.length - 1) {
-                tableData.cell.styles.fontStyle = 'bold';
-                tableData.cell.styles.fillColor = [230, 230, 230];
-              }
-            }
-          });
-
-          pdf.save(`${title.toLowerCase().replace(/\s/g, '-')}-${now.toISOString().split('T')[0]}.pdf`);
-        } catch (error) {
-          console.error('Erreur PDF:', error);
-          alert('Erreur lors de la génération du PDF');
-        }
-      };
-
-      // Generate Excel for specified table
-      window.downloadExcel = async (tableId) => {
-        try {
-          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
-          
-          const wb = XLSX.utils.book_new();
-          const isOperationsTable = tableId === 'chequesTable';
-          const ws_data = [
-            isOperationsTable 
-              ? ["Date Etablissement", "Type", "Numéro", "Banque", "Bénéficiaire", "Montant", "Date Échéance", "Chantier", "Observation"]
-              : ["Date", "Méthode Paiement", "Banque", "Client", "Montant", "Chantier", "Observation"]
-          ];
-          let total = 0;
-          const rowsToProcess = isOperationsTable ? rows.operations : rows.encaissements;
-
-          rowsToProcess.forEach(row => {
-            if (row.style.display !== 'none') {
-              const cells = row.querySelectorAll('td');
-              if (isOperationsTable && cells.length >= 9) {
-                const rowData = [];
-                for (let i = 0; i < 9; i++) {
-                  let text = cells[i].querySelector('input') ? cells[i].querySelector('input').value : cells[i].textContent.trim();
-                  if (i === 5) { // montant
-                    const num = parseFrenchNumber(text);
-                    total += num;
-                    rowData.push(num);
-                  } else {
-                    rowData.push(text);
-                  }
-                }
-                ws_data.push(rowData);
-              } else if (!isOperationsTable && cells.length >= 7) {
-                const rowData = [];
-                for (let i = 0; i < 7; i++) {
-                  let text = cells[i].textContent.trim();
-                  if (i === 4) { // montant
-                    const num = parseFrenchNumber(text);
-                    total += num;
-                    rowData.push(num);
-                  } else {
-                    rowData.push(text);
-                  }
-                }
-                ws_data.push(rowData);
-              }
-            }
-          });
-
-          if (isOperationsTable) {
-            ws_data.push(['', '', '', '', 'Total', total, '', '', '']);
-          } else {
-            ws_data.push(['', '', '', 'Total', total, '', '']);
-          }
-
-          const ws = XLSX.utils.aoa_to_sheet(ws_data);
-          const sheetName = isOperationsTable ? 'Historique' : 'Encaissements';
-          XLSX.utils.book_append_sheet(wb, ws, sheetName);
-          XLSX.writeFile(wb, `${sheetName.toLowerCase()}-${new Date().toISOString().split('T')[0]}.xlsx`);
-        } catch (error) {
-          console.error('Erreur Excel:', error);
-          alert('Erreur lors de la génération du fichier Excel');
-        }
-      };
-
       // Event Listeners
       filters.operations.type?.addEventListener('change', filterRows);
       filters.operations.fournisseur?.addEventListener('change', filterRows);
       filters.operations.banque?.addEventListener('change', filterRows);
+      filters.operations.chantier?.addEventListener('change', filterRows);
       filters.operations.dateFrom?.addEventListener('change', filterRows);
       filters.operations.dateTo?.addEventListener('change', filterRows);
       filters.operations.resetButton?.addEventListener('click', () => resetFilters('operations'));
-      
+
       filters.encaissements.type?.addEventListener('change', filterRows);
       filters.encaissements.client?.addEventListener('change', filterRows);
       filters.encaissements.banque?.addEventListener('change', filterRows);
+      filters.encaissements.chantier?.addEventListener('change', filterRows);
       filters.encaissements.dateFrom?.addEventListener('change', filterRows);
       filters.encaissements.dateTo?.addEventListener('change', filterRows);
       filters.encaissements.resetButton?.addEventListener('click', () => resetFilters('encaissements'));
-      
+
       filters.virements.banque?.addEventListener('change', filterRows);
       filters.virements.dateFrom?.addEventListener('change', filterRows);
       filters.virements.dateTo?.addEventListener('change', filterRows);

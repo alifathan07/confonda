@@ -20,6 +20,13 @@ export const indexHis = async (req, res) => {
         dateEtablissement: true,
         montant: true,
         chantier : {select: {nom: true}},
+        allocations: {
+          select: {
+            montant: true,
+            chantierId: true,
+            chantier: { select: { nom: true } },
+          },
+        },
         dateEcheance: true,
         validation: true,
         beneficiaire: true,
@@ -124,7 +131,45 @@ export const indexHis = async (req, res) => {
         numero: c.numero,
         dateEtablissement: c.dateEtablissement,
         montant: c.montant,
-        chantier : c.chantier?.nom || 'Aucun',
+        chantier: (() => {
+          const allocs = Array.isArray(c.allocations) ? c.allocations : [];
+          const names = allocs
+            .map(a => (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '')
+            .filter(Boolean);
+
+          if (names.length) {
+            return Array.from(new Set(names)).join(', ');
+          }
+
+          return c.chantier?.nom || 'Aucun';
+        })(),
+        chantierLines: (() => {
+          const allocs = Array.isArray(c.allocations) ? c.allocations : [];
+          const map = new Map();
+          for (const a of allocs) {
+            const nom = (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '';
+            if (!nom) continue;
+            const prev = map.get(nom) || 0;
+            map.set(nom, prev + Number(a.montant || 0));
+          }
+
+          const lines = Array.from(map.entries()).map(([nom, montant]) => ({ nom, montant }));
+          if (lines.length) return lines;
+
+          if (c.chantier?.nom) {
+            return [{ nom: c.chantier.nom, montant: Number(c.montant || 0) }];
+          }
+          return [];
+        })(),
+        chantierNames: (() => {
+          const allocs = Array.isArray(c.allocations) ? c.allocations : [];
+          const names = allocs
+            .map(a => (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '')
+            .filter(Boolean);
+          if (names.length) return Array.from(new Set(names));
+          if (c.chantier?.nom) return [String(c.chantier.nom)];
+          return [];
+        })(),
         dateEcheance: c.dateEcheance,
         validation: c.validation,
         beneficiaire: c.beneficiaire,
@@ -141,6 +186,8 @@ export const indexHis = async (req, res) => {
         dateEtablissement: e.dateEtablissement,
         montant: e.montant,
         chantier : e.chantier?.nom || 'Aucun',
+        chantierLines: [],
+        chantierNames: e.chantier?.nom ? [String(e.chantier.nom)] : [],
 
         dateEcheance: e.dateEcheance,
         validation: e.validation,
@@ -158,6 +205,8 @@ export const indexHis = async (req, res) => {
         dateEtablissement: v.date,
         montant: v.montant,
         chantier : v.chantier?.nom || 'Aucun',
+        chantierLines: [],
+        chantierNames: v.chantier?.nom ? [String(v.chantier.nom)] : [],
         dateEcheance: v.date,
         validation: false,
         beneficiaire: v.beneficiaire,
@@ -177,6 +226,8 @@ export const indexHis = async (req, res) => {
         dateEtablissement: m.date,
         montant: m.montant,
         chantier : m.chantier?.nom || 'Aucun',
+        chantierLines: [],
+        chantierNames: m.chantier?.nom ? [String(m.chantier.nom)] : [],
         
         dateEcheance: m.date,
         validation: false,
@@ -194,6 +245,8 @@ export const indexHis = async (req, res) => {
         dateEtablissement: t.dateEtablissement,
         montant: t.montant,
         chantier : t.chantier?.nom || 'Aucun',
+        chantierLines: [],
+        chantierNames: t.chantier?.nom ? [String(t.chantier.nom)] : [],
         dateEcheance: null,
         beneficiaire: t.fournisseur?.name || 'Aucun',
         obs: t.observation,
