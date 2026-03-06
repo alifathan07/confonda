@@ -963,7 +963,7 @@ export const generateDemandeFourniturePDF = async (req, res) => {
     const doc = new PDFDocument({
       size: "A4",
       layout: "landscape",
-      margins: { top: 10, left: 10, right: 10, bottom: 0 },
+      margins: { top: 8, left: 8, right: 8, bottom: 0 },
       bufferPages: true,
     });
     doc.pipe(res);
@@ -1000,7 +1000,7 @@ export const generateDemandeFourniturePDFBuffer = async (demandeId) => {
   const doc = new PDFDocument({
     size: "A4",
     layout: "landscape",
-    margins: { top: 10, left: 10, right: 10, bottom: 0 },
+    margins: { top: 8, left: 8, right: 8, bottom: 0 },
     bufferPages: true,
   });
 
@@ -1015,7 +1015,7 @@ export const generateDemandeFourniturePDFBuffer = async (demandeId) => {
 const renderDemandeFourniturePdf = (doc, demande) => {
   const pageW = 841.89;
   const pageH = 595.28;
-  const margin = 10;
+  const margin = 8;
   const contentW = pageW - margin * 2;
   const thin = 0.5;
   const thick = 1.5;
@@ -1032,24 +1032,22 @@ const renderDemandeFourniturePdf = (doc, demande) => {
     return parts.join(',').replace(/\//g, ' ');
   }
 
-  const headerH = 70;
-  const infoH = 28;
-  const tableHeaderH = 44;
-  const summaryTableH = 40;
-  const signatureH = 90;
+  const headerH = 60;
+  const infoH = 24;
+  const tableHeaderH = 34;
+  const summaryTableH = 34;
+  const signatureH = 76;
   const footerH = summaryTableH + signatureH + 20;
 
   const col = {
-    code: 60,
-    des: 200,
-    imp: 80,
-    lot: 70,
-    unit: 40,
-    qd: 50,
-    pu: 60,
-    tht: 70,
-    d1: 65,
-    d2: 65,
+    code: 50,
+    des: 220,
+    imp: 70,
+    lot: 90,
+    unit: 35,
+    qd: 45,
+    pu: 55,
+    tht: 60,
   };
   col.obs = contentW - Object.values(col).reduce((a, b) => a + b, 0);
 
@@ -1072,12 +1070,17 @@ const renderDemandeFourniturePdf = (doc, demande) => {
     doc.moveTo(margin + leftW + centerW, margin).lineTo(margin + leftW + centerW, margin + headerH).lineWidth(thick).stroke();
 
     if (fs.existsSync(logoPath)) {
-      doc.image(logoPath, margin + 20, margin + 8, { width: 85 });
+      const pad = 6;
+      doc.image(logoPath, margin + pad, margin + pad, {
+        fit: [leftW - pad * 2, headerH - pad * 2],
+        align: "center",
+        valign: "center",
+      });
     }
 
-    doc.font("Helvetica-Bold").fontSize(20).text("DEMANDE DE FOURNITURES", margin + leftW, margin + 22, { width: centerW, align: "center" });
+    doc.font("Helvetica-Bold").fontSize(16).text("DEMANDE DE FOURNITURES", margin + leftW, margin + 18, { width: centerW, align: "center" });
 
-    doc.fontSize(10).font("Helvetica");
+    doc.fontSize(9).font("Helvetica");
     doc.text("Code : EN 53 02 001", margin + leftW + centerW + 15, margin + 12);
     doc.text("Version : 02", margin + leftW + centerW + 15, margin + 28);
     doc.text("Date : 27/01/2016", margin + leftW + centerW + 15, margin + 44);
@@ -1087,7 +1090,7 @@ const renderDemandeFourniturePdf = (doc, demande) => {
     const splitX = margin + contentW * 0.65 - 90;
     doc.moveTo(splitX, infoY).lineTo(splitX, infoY + infoH).stroke();
 
-    doc.fontSize(12);
+    doc.fontSize(10);
     doc.text("Code / Chantier :", margin + 10, infoY + 8);
     doc.text(demande.chantier?.nom || "", margin + 120, infoY + 8);
     doc.text("Date :", splitX + 10, infoY + 8);
@@ -1097,8 +1100,8 @@ const renderDemandeFourniturePdf = (doc, demande) => {
   };
 
   const drawTableHeader = (startY) => {
-    const h1 = 22;
-    const h2 = 22;
+    const h1 = 17;
+    const h2 = 17;
     doc.rect(margin, startY, contentW, h1 + h2).lineWidth(thick).stroke();
 
     Object.values(x).forEach((vx) => {
@@ -1106,7 +1109,7 @@ const renderDemandeFourniturePdf = (doc, demande) => {
     });
     doc.moveTo(margin + contentW, startY).lineTo(margin + contentW, startY + h1 + h2).lineWidth(thin).stroke();
 
-    doc.fontSize(10);
+    doc.fontSize(9);
     doc.text("Code\narticle", x.code + 2, startY + 4, { width: col.code, align: "center" });
     doc.text("Désignations", x.des, startY + 12, { width: col.des, align: "center" });
     doc.text("Imputation", x.imp, startY + 12, { width: col.imp, align: "center" });
@@ -1114,13 +1117,8 @@ const renderDemandeFourniturePdf = (doc, demande) => {
     doc.text("Quantité", x.qd, startY + 12, { width: col.qd, align: "center" });
     doc.text("P.U. HT", x.pu, startY + 12, { width: col.pu, align: "center" });
     doc.text("Total HT", x.tht, startY + 12, { width: col.tht, align: "center" });
-    doc.text("Date de livraison", x.d1, startY + 4, { width: col.d1 + col.d2, align: "center" });
     doc.text("Reference", x.lot, startY + 12, { width: col.lot, align: "center" });
     doc.text("Recommandations et Observations", x.obs, startY + 4, { width: col.obs, align: "center" });
-
-    doc.fontSize(9);
-    doc.text("Au plutôt", x.d1, startY + h1 + 6, { width: col.d1, align: "center" });
-    doc.text("Au plus tard", x.d2, startY + h1 + 6, { width: col.d2, align: "center" });
   };
 
   const drawVerticalGridLines = (topY, bottomY) => {
@@ -1132,7 +1130,7 @@ const renderDemandeFourniturePdf = (doc, demande) => {
   };
 
   const calculateRowHeight = (item) => {
-    const baseRowH = 22;
+    const baseRowH = 18;
     let maxHeight = baseRowH;
     const columnsToCheck = [
       { text: item.code, width: col.code },
@@ -1142,15 +1140,13 @@ const renderDemandeFourniturePdf = (doc, demande) => {
       { text: item.observation, width: col.obs },
       { text: item.unité || item.unite, width: col.unit },
       { text: item.quantité || item.quantite, width: col.qd },
-      { text: item.auPlutot ? fmtDate(item.auPlutot) : "", width: col.d1 },
-      { text: item.auPlutart ? fmtDate(item.auPlutart) : "", width: col.d2 },
       { text: parseNumber(item.prixU), width: col.pu },
       { text: parseNumber(item.totalHt), width: col.tht },
     ];
     columnsToCheck.forEach((colData) => {
       if (colData.text) {
         const textHeight = doc.heightOfString(String(colData.text), { width: colData.width - 4 });
-        maxHeight = Math.max(maxHeight, textHeight + 10);
+        maxHeight = Math.max(maxHeight, textHeight + 8);
       }
     });
     return maxHeight;
@@ -1158,18 +1154,18 @@ const renderDemandeFourniturePdf = (doc, demande) => {
 
   const drawFixedFooter = (isLastPage) => {
     const footerStartY = pageH - margin - footerH;
-    const summaryTableHLocal = 40;
+    const summaryTableHLocal = summaryTableH;
     const tableWidth = contentW * 0.6;
     const tableX = margin + (contentW - tableWidth) / 2;
     const sumY = footerStartY;
     const colWidth = tableWidth / 3;
 
-    doc.fontSize(10);
+    doc.fontSize(9);
     doc.rect(tableX, sumY, tableWidth, summaryTableHLocal).lineWidth(thick).stroke();
     for (let i = 1; i < 3; i++) {
       doc.moveTo(tableX + colWidth * i, sumY).lineTo(tableX + colWidth * i, sumY + summaryTableHLocal).stroke();
     }
-    const labelRowH = 20;
+    const labelRowH = 17;
     doc.moveTo(tableX, sumY + labelRowH).lineTo(tableX + tableWidth, sumY + labelRowH).stroke();
 
     const tvaRate = demande.totalHt > 0 ? ((demande.Tva / demande.totalHt) * 100) : 20;
@@ -1184,17 +1180,17 @@ const renderDemandeFourniturePdf = (doc, demande) => {
     ];
 
     columns.forEach((c, i) => {
-      doc.font("Helvetica").fontSize(9);
+      doc.font("Helvetica").fontSize(8);
       doc.text(c.label, tableX + colWidth * i + 5, sumY + 5, { width: colWidth - 10, align: "center" });
     });
     columns.forEach((c, i) => {
-      doc.font(c.bold ? "Helvetica-Bold" : "Helvetica").fontSize(10);
-      doc.text(c.value, tableX + colWidth * i + 5, sumY + labelRowH + 5, { width: colWidth - 10, align: "center" });
+      doc.font(c.bold ? "Helvetica-Bold" : "Helvetica").fontSize(9);
+      doc.text(c.value, tableX + colWidth * i + 5, sumY + labelRowH + 4, { width: colWidth - 10, align: "center" });
     });
 
-    const sigY = sumY + summaryTableHLocal + 20;
-    const sigH = 90;
-    doc.fontSize(11).font("Helvetica");
+    const sigY = sumY + summaryTableHLocal + 14;
+    const sigH = signatureH;
+    doc.fontSize(10).font("Helvetica");
     doc.rect(margin, sigY, contentW, sigH).lineWidth(thick).stroke();
 
     const sigW = contentW / 4;
@@ -1236,7 +1232,7 @@ const renderDemandeFourniturePdf = (doc, demande) => {
 
     doc.moveTo(margin, currentY).lineTo(margin + contentW, currentY).lineWidth(thin).stroke();
 
-    const textY = currentY + 5;
+    const textY = currentY + 4;
     doc.text(item.code || "", x.code + 2, textY, { width: col.code, align: "center" });
     doc.text(item.designation || "", x.des + 2, textY, { width: col.des, align: "left" });
     doc.text(item.imputation || "", x.imp + 2, textY, { width: col.imp, align: "left" });
@@ -1245,8 +1241,6 @@ const renderDemandeFourniturePdf = (doc, demande) => {
     doc.text(item.quantité || item.quantite || "", x.qd, textY, { width: col.qd, align: "center" });
     doc.text(parseNumber(item.prixU), x.pu, textY, { width: col.pu, align: "center" });
     doc.text(parseNumber(item.totalHt), x.tht, textY, { width: col.tht, align: "center" });
-    doc.text(item.auPlutot ? fmtDate(item.auPlutot) : "", x.d1, textY, { width: col.d1, align: "center" });
-    doc.text(item.auPlutart ? fmtDate(item.auPlutart) : "", x.d2, textY, { width: col.d2, align: "center" });
     doc.text(item.observation || "", x.obs + 2, textY, { width: col.obs, align: "left" });
 
     currentY += rowHeight;

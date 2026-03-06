@@ -25,7 +25,7 @@ const colors = {
 export class BcPdfGenerator {
    static buildBcPdf = async(bc, options) => {
      const { res, returnBuffer, req } = options;
-     const doc = new PDFDocument({ size: "A4", margin: 40, bufferPages: true });
+     const doc = new PDFDocument({ size: "A4", margin: 32, bufferPages: true });
       let pdfBuffer;
      if (returnBuffer) {
     const chunks = [];
@@ -53,7 +53,7 @@ static async _drawPdfContent(doc, bc, req) {
     // 3. Constants & Styling
     const pageWidth = 595.28;
     const pageHeight = 841.89;
-    const margin = 40;
+    const margin = 32;
     const contentWidth = pageWidth - margin * 2;
 
     
@@ -61,12 +61,12 @@ static async _drawPdfContent(doc, bc, req) {
     const logoPath = path.join(__dirname, "../public/img/logo-4.png");
     const signaturePath = path.join(__dirname, "../public/img/signature.png");
 
-    const headerHeight = 150;
-    const companyFooterHeight = 100;
+    const headerHeight = 132;
+    const companyFooterHeight = 86;
     const footerHeight = 184 + 12 + companyFooterHeight;
-    const rowHeight = 22;
-    const colWidths = [28, 160, 55, 45, 50, 60, 45, 72];
-    const tableCellPadY = 5;
+    const rowHeight = 18;
+    const colWidths = [30, 166, 56, 46, 52, 62, 46, 73];
+    const tableCellPadY = 3;
     const tableCellPadX = 4;
     const tableLineGap = 1;
 
@@ -89,7 +89,7 @@ static async _drawPdfContent(doc, bc, req) {
 
       // Topline (logo left, centered brand block)
       const toplineY = y;
-      const toplineH = 70;
+      const toplineH = 62;
 
       if (fs.existsSync(logoPath)) {
         try {
@@ -107,23 +107,23 @@ static async _drawPdfContent(doc, bc, req) {
       const sepY = toplineY + 12;
       doc.rect(sepX, sepY, sepW, sepH).fill(colors.brand);
 
-      doc.font("Helvetica-Bold").fontSize(13).fillColor(colors.brand)
+      doc.font("Helvetica-Bold").fontSize(12).fillColor(colors.brand)
         .text("Construction et Fondation", centerX + 14, toplineY + 18, { align: "left" });
-      doc.font("Helvetica").fontSize(9).fillColor(colors.gray600)
+      doc.font("Helvetica").fontSize(8).fillColor(colors.gray600)
         .text("Pour des constructions bien fondées", centerX + 14, toplineY + 36, { align: "left" });
 
       // Header grid (3 boxes)
       const gridY = toplineY + toplineH + 12;
       const gap = 10;
       const boxW = (contentWidth - gap * 2) / 3;
-      const boxH = 68;
+      const boxH = 60;
 
       // Meta (left)
       doc.roundedRect(margin, gridY, boxW, boxH, 8).lineWidth(1).stroke(colors.border);
-      doc.font("Helvetica-Bold").fontSize(11).fillColor(colors.gray900)
+      doc.font("Helvetica-Bold").fontSize(10).fillColor(colors.gray900)
         .text(`BC N° : ${bc.numero}`, margin + 10, gridY + 14, { width: boxW - 20 });
-      doc.font("Helvetica-Bold").fontSize(11).fillColor(colors.gray900)
-        .text(`Date : ${docDateStr}`, margin + 10, gridY + 38, { width: boxW - 20 });
+      doc.font("Helvetica-Bold").fontSize(10).fillColor(colors.gray900)
+        .text(`Date : ${docDateStr}`, margin + 10, gridY + 36, { width: boxW - 20 });
 
       // QR (center)
       const qrX = margin + boxW + gap;
@@ -131,9 +131,9 @@ static async _drawPdfContent(doc, bc, req) {
       try {
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(publicBcUrl || "")}`;
         const qrResp = await axios.get(qrUrl, { responseType: "arraybuffer" });
-        const imgSize = 54;
+        const imgSize = 50;
         const imgX = qrX + (boxW - imgSize) / 2;
-        const imgY = gridY + 7;
+        const imgY = gridY + 5;
         doc.image(Buffer.from(qrResp.data), imgX, imgY, { width: imgSize, height: imgSize });
       } catch (e) {
         doc.font("Helvetica").fontSize(7.5).fillColor(colors.gray600)
@@ -144,11 +144,11 @@ static async _drawPdfContent(doc, bc, req) {
       const cliX = margin + (boxW + gap) * 2;
       doc.roundedRect(cliX, gridY, boxW, boxH, 8).lineWidth(1).stroke(colors.border);
       const lineW = boxW - 16;
-      doc.font("Helvetica-Bold").fontSize(9.5).fillColor(colors.gray900)
+      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
         .text(bc.fournisseur?.name || "-", cliX + 8, gridY + 8, { width: lineW, ellipsis: true });
-      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray600)
+      doc.font("Helvetica").fontSize(7.8).fillColor(colors.gray600)
         .text(bc.fournisseur?.email || "-", cliX + 8, gridY + 24, { width: lineW, ellipsis: true });
-      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray600)
+      doc.font("Helvetica").fontSize(7.8).fillColor(colors.gray600)
         .text(bc.fournisseur?.telFournisseur || "Non renseigné", cliX + 8, gridY + 38, { width: lineW, ellipsis: true });
     };
 
@@ -157,7 +157,7 @@ static async _drawPdfContent(doc, bc, req) {
       const startY = yPosition;
       const gap = 12;
       const cardW = (contentWidth - gap) / 2;
-      const cardH = 56;
+      const cardH = 48;
 
       const leftX = margin;
       const rightX = margin + cardW + gap;
@@ -181,27 +181,26 @@ static async _drawPdfContent(doc, bc, req) {
       })();
 
       doc.roundedRect(leftX, startY, cardW, cardH, 8).lineWidth(1).stroke(colors.borderSoft);
-      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
+      doc.font("Helvetica-Bold").fontSize(8).fillColor(colors.gray900)
         .text("MODE DE PAIEMENT", leftX + 10, startY + 10, { width: cardW - 20 });
-      doc.font("Helvetica").fontSize(9).fillColor(colors.gray800)
-        .text(modeRegLabel, leftX + 10, startY + 30, { width: cardW - 20, ellipsis: true });
+      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
+        .text(modeRegLabel, leftX + 10, startY + 28, { width: cardW - 20, ellipsis: true });
 
       doc.roundedRect(rightX, startY, cardW, cardH, 8).lineWidth(1).stroke(colors.borderSoft);
-      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
+      doc.font("Helvetica-Bold").fontSize(8).fillColor(colors.gray900)
         .text("DÉLAIS DE RÈGLEMENT", rightX + 10, startY + 10, { width: cardW - 20 });
-      doc.font("Helvetica").fontSize(9).fillColor(colors.gray800)
-        .text(delaiRegLabel, rightX + 10, startY + 30, { width: cardW - 20, ellipsis: true });
+      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
+        .text(delaiRegLabel, rightX + 10, startY + 28, { width: cardW - 20, ellipsis: true });
 
       return { startY, cardH };
     };
-
 
 
     const drawChantier = (yPosition) => {
       const startY = yPosition ?? (pageHeight - margin - footerHeight);
       const gap = 12;
       const cardW = (contentWidth - gap) / 2;
-      const cardH = 60;
+      const cardH = 52;
 
       const chantierX = margin;
       const livraisonX = margin + cardW + gap;
@@ -210,17 +209,18 @@ static async _drawPdfContent(doc, bc, req) {
       doc.roundedRect(chantierX, startY, cardW, cardH, 8).lineWidth(1).stroke(colors.borderSoft);
       doc.font("Helvetica-Bold").fontSize(7.5).fillColor(colors.gray900)
         .text("CHANTIER", chantierX + 10, startY + 6, { width: cardW - 20 });
-      doc.font("Helvetica").fontSize(8.5).fillColor(colors.gray800)
+      doc.font("Helvetica").fontSize(8).fillColor(colors.gray800)
         .text((() => {
           const names = new Set();
           if (bc.chantier?.nom) names.add(bc.chantier.nom);
           (bc.commandesItems || []).forEach(it => {
+
             (it.BondeCommandeChantierItem || []).forEach(bcci => {
               if (bcci?.chantier?.nom) names.add(bcci.chantier.nom);
             });
           });
           return Array.from(names).join(', ') || "-";
-        })(), chantierX + 10, startY + 30, { width: cardW - 20, ellipsis: true });
+        })(), chantierX + 10, startY + 20, { width: cardW - 20, ellipsis: true });
 
       // Card 2: Livraison (date + lieu in the same card)
       doc.roundedRect(livraisonX, startY, cardW, cardH, 8).lineWidth(1).stroke(colors.borderSoft);
@@ -231,7 +231,7 @@ static async _drawPdfContent(doc, bc, req) {
 
       doc.font("Helvetica-Bold").fontSize(7.5).fillColor(colors.gray900)
         .text("LIEU DE LIVRAISON", livraisonX + 10, startY + 6, { width: cardW - 20 });
-      doc.font("Helvetica").fontSize(8).fillColor(colors.gray800)
+      doc.font("Helvetica").fontSize(7.6).fillColor(colors.gray800)
         .text(bc.lieuLivraison || "-", livraisonX + 10, startY + 18, { width: cardW - 20, ellipsis: true });
 
       const dateLivStr = bc.dateLivraison
@@ -240,7 +240,7 @@ static async _drawPdfContent(doc, bc, req) {
 
       doc.font("Helvetica-Bold").fontSize(7.5).fillColor(colors.gray900)
         .text("DATE DE LIVRAISON", livraisonX + 10, dividerY + 6, { width: cardW - 20 });
-      doc.font("Helvetica").fontSize(8).fillColor(colors.gray800)
+      doc.font("Helvetica").fontSize(7.6).fillColor(colors.gray800)
         .text(dateLivStr, livraisonX + 10, dividerY + 18, { width: cardW - 20, ellipsis: true });
 
       return { startY, cardH };
@@ -258,20 +258,22 @@ static async _drawPdfContent(doc, bc, req) {
 
       // 3. Signature Block
       const sigW = (contentWidth - gap) / 2;
-      const sigH = 65;
+      const sigH = 56;
+
       const sigStartY = chantier.startY + chantier.cardH + gap;
 
       // Signature du direction (left)
       doc.roundedRect(margin, sigStartY, sigW, sigH, 8).lineWidth(1).stroke(colors.borderSoft);
-      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
+      doc.font("Helvetica-Bold").fontSize(8).fillColor(colors.gray900)
         .text("SIGNATURE DU DIRECTION", margin + 10, sigStartY + 10);
+
       doc.moveTo(margin + 10, sigStartY + sigH - 18).lineTo(margin + sigW - 10, sigStartY + sigH - 18)
         .lineWidth(1).stroke(colors.borderSoft);
 
       // Le Responsable Achats (right)
       const sig2X = margin + sigW + gap;
       doc.roundedRect(sig2X, sigStartY, sigW, sigH, 8).lineWidth(1).stroke(colors.borderSoft);
-      doc.font("Helvetica-Bold").fontSize(8.5).fillColor(colors.gray900)
+      doc.font("Helvetica-Bold").fontSize(8).fillColor(colors.gray900)
         .text("LE RESPONSABLE ACHATS", sig2X + 10, sigStartY + 10);
 
       if (fs.existsSync(signaturePath)) {
@@ -293,8 +295,8 @@ static async _drawPdfContent(doc, bc, req) {
 
       doc.rect(0, footerY, pageWidth, companyFooterHeight).fill('#AB3029').stroke();
 
-      const textMargin = 15;
-      doc.font('Helvetica').fontSize(9).fillColor('#FFFFFF');
+      const textMargin = 14;
+      doc.font('Helvetica').fontSize(8).fillColor('#FFFFFF');
       doc.text(
         '82, angle Bd abdelmoumen et rue Soumaya Imm.Shahrazad III 2ème étage Casablanca Tél : 0522-23-39-70',
         50,
@@ -304,7 +306,7 @@ static async _drawPdfContent(doc, bc, req) {
       doc.text(
         'Fax : 0522-23-42-60  Capital : 18 500 000.00 DH  CNSS : 7167788 - R.C. : 145619 – I.F. : 1602714 – Patente : 37900708- I.C.E : 001526422000063',
         50,
-        footerY + textMargin + 15,
+        footerY + textMargin + 16,
         { width: pageWidth - 100, align: 'center' }
       );
     };
@@ -314,8 +316,8 @@ static async _drawPdfContent(doc, bc, req) {
       const headers = ["N°", "Désignation", "Reference", "Quantité", "Unité", "Prix U. HT", "Remise (%)", "Total HT"];
       let x = margin;
       headers.forEach((h, i) => {
-        doc.font("Helvetica-Bold").fontSize(8).fillColor(colors.white)
-          .text(h, x + 4, y + 7, { width: colWidths[i] - 8, align: i === 2 ? "left" : "center" });
+        doc.font("Helvetica-Bold").fontSize(7.4).fillColor(colors.white)
+          .text(h, x + 4, y + 5.5, { width: colWidths[i] - 8, align: i === 2 ? "left" : "center" });
         x += colWidths[i];
       });
       return y + rowHeight;
@@ -404,7 +406,7 @@ static async _drawPdfContent(doc, bc, req) {
     };
 
     const drawCompactTotalsAndMontant = (y, isLastPage = true) => {
-      const blockHeight = 45;
+      const blockHeight = 38;
       const horizontalTableW = 220;
       const montantLettresW = contentWidth - horizontalTableW - 10;
 
@@ -412,26 +414,26 @@ static async _drawPdfContent(doc, bc, req) {
       doc.rect(margin, y, contentWidth, blockHeight).fillAndStroke(colors.blueLight, colors.border);
 
       // Left part: Montant en lettres
-      doc.font("Helvetica-Bold").fontSize(8).fillColor(colors.gray900)
+      doc.font("Helvetica-Bold").fontSize(7.5).fillColor(colors.gray900)
         .text("Arrêté le présent bon de commande à la somme de :", margin + 10, y + 8, { width: montantLettresW });
 
       const montantText = isLastPage
         ? (numberToFrenchWords(computedTtc) || "—") + " TTC"
         : "X TTC";
 
-      doc.font("Helvetica-Bold").fontSize(9).fillColor(colors.blue)
-        .text(montantText, margin + 10, y + 20, { width: montantLettresW });
+      doc.font("Helvetica-Bold").fontSize(8.2).fillColor(colors.blue)
+        .text(montantText, margin + 10, y + 19, { width: montantLettresW });
 
       // Right part: Horizontal Totals Table
       const tableX = margin + montantLettresW + 10;
       const colW = horizontalTableW / 3;
 
       // Headers
-      doc.fillColor(colors.tableHeader).rect(tableX, y, horizontalTableW, 15).fill();
+      doc.fillColor(colors.tableHeader).rect(tableX, y, horizontalTableW, 13).fill();
       const labels = ["TOTAL HT", `TVA (${fmtPct(tvaRate)}%)`, "TOTAL TTC"];
       labels.forEach((l, i) => {
-        doc.font("Helvetica-Bold").fontSize(7).fillColor(colors.white)
-          .text(l, tableX + (i * colW), y + 4, { width: colW, align: "center" });
+        doc.font("Helvetica-Bold").fontSize(6.6).fillColor(colors.white)
+          .text(l, tableX + (i * colW), y + 3.4, { width: colW, align: "center" });
       });
 
       // Values
@@ -440,9 +442,9 @@ static async _drawPdfContent(doc, bc, req) {
         : ["X", "X", "X"];
 
       values.forEach((v, i) => {
-        doc.rect(tableX + (i * colW), y + 15, colW, blockHeight - 15).lineWidth(0.5).stroke(colors.border);
-        doc.font("Helvetica-Bold").fontSize(8).fillColor(colors.gray900)
-          .text(v, tableX + (i * colW), y + 25, { width: colW, align: "center" });
+        doc.rect(tableX + (i * colW), y + 13, colW, blockHeight - 13).lineWidth(0.5).stroke(colors.border);
+        doc.font("Helvetica-Bold").fontSize(7.4).fillColor(colors.gray900)
+          .text(v, tableX + (i * colW), y + 21, { width: colW, align: "center" });
       });
 
       return y + blockHeight;

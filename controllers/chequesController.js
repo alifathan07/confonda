@@ -982,10 +982,39 @@ export const exportChequesPdf = async (req, res) => {
       c.w = Math.max(c.min, Math.min(c.max, desired));
     });
 
+    // If we have remaining page space, distribute it to the most flexible columns first
+    // (so the table fills the page and feels "responsive" to content).
+    let totalW = cols.reduce((a, c) => a + c.w, 0);
+    let remaining = pageW - totalW;
+    if (remaining > 0) {
+      const flexOrder = ['Chantier', 'Bénéficiaire', 'Banque', 'N°', 'Montant', 'Échéance', 'Date'];
+      const flexCols = flexOrder
+        .map(lbl => cols.find(c => c.label === lbl))
+        .filter(Boolean);
+
+      for (const c of flexCols) {
+        if (remaining <= 0) break;
+        const cap = Math.max(0, (c.max * 1) - c.w);
+        const add = Math.min(cap, remaining);
+        c.w += add;
+        remaining -= add;
+      }
+
+      // If still remaining (all reached max), give it proportionally so we still fill the width.
+      if (remaining > 0) {
+        const per = remaining / cols.length;
+        cols.forEach(c => { c.w += per; });
+        remaining = 0;
+      }
+
+      totalW = cols.reduce((a, c) => a + c.w, 0);
+    }
+
     // If the sum doesn't fit, scale down proportionally (keeps column ratios based on content).
-    const totalW = cols.reduce((a, c) => a + c.w, 0);
-    const scale = totalW > pageW ? (pageW / totalW) : 1;
-    cols.forEach(c => { c.w = c.w * scale; });
+    if (totalW > pageW) {
+      const scale = pageW / totalW;
+      cols.forEach(c => { c.w = c.w * scale; });
+    }
 
     const rowH = 16;
     const drawRow = (cells, isHeader) => {
