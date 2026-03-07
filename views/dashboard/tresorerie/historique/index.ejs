@@ -897,6 +897,23 @@
 
       console.log('Final data for Excel:', data.slice(0, 3)); // Log first 3 rows
 
+      // Calculate total for Montant column
+      let totalMontant = 0;
+      data.forEach(row => {
+        const montantStr = row[5]; // Montant column is index 5
+        if (montantStr) {
+          const clean = montantStr.replace(/\s/g, '').replace(',', '.');
+          const val = parseFloat(clean) || 0;
+          totalMontant += val;
+        }
+      });
+      
+      // Add total row
+      const totalRow = new Array(headers.length).fill('');
+      totalRow[4] = 'Total'; // Label in column 4 (Bénéficiaire)
+      totalRow[5] = totalMontant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
+      data.push(totalRow);
+
       // Create worksheet
       const ws = window.XLSX.utils.aoa_to_sheet([headers, ...data]);
       
@@ -968,6 +985,20 @@
           };
         }
       }
+      
+      // Style total row (last row) with bold
+      const lastRowIdx = data.length;
+      for (let c = 0; c < headers.length; c++) {
+        const cellRef = window.XLSX.utils.encode_cell({ r: lastRowIdx, c: c });
+        const cell = ws[cellRef];
+        if (cell) {
+          if (!cell.s) cell.s = {};
+          cell.s.font = { name: 'Calibri', sz: 11, bold: true };
+          if (c === 4 || c === 5) { // Total label and amount
+            cell.s.alignment = { horizontal: c === 5 ? 'right' : 'left' };
+          }
+        }
+      }
 
       const wb = window.XLSX.utils.book_new();
       window.XLSX.utils.book_append_sheet(wb, ws, 'Export');
@@ -1022,6 +1053,23 @@
         body.push(rowData);
       });
 
+      // Calculate total for Montant column
+      let totalMontant = 0;
+      body.forEach(row => {
+        const montantStr = row[5]; // Montant column is index 5
+        if (montantStr) {
+          const clean = montantStr.replace(/\s/g, '').replace(',', '.');
+          const val = parseFloat(clean) || 0;
+          totalMontant += val;
+        }
+      });
+      
+      // Add total row
+      const totalRow = new Array(headers.length).fill('');
+      totalRow[4] = 'Total';
+      totalRow[5] = totalMontant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
+      body.push(totalRow);
+
       // Column styles
       const columnStyles = {};
       if (tableId === 'chequesTable') {
@@ -1041,6 +1089,10 @@
           // Ensure line breaks are preserved in chantier columns
           if (data.section === 'body' && (data.column.index === 7 || data.column.index === 8)) {
             data.cell.styles.valign = 'top';
+          }
+          // Style total row (last row) with bold
+          if (data.section === 'body' && data.row.index === body.length - 1) {
+            data.cell.styles.fontStyle = 'bold';
           }
         }
       });
