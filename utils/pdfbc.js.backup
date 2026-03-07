@@ -25,7 +25,7 @@ const colors = {
 export class BcPdfGenerator {
    static buildBcPdf = async(bc, options) => {
      const { res, returnBuffer, req } = options;
-     const doc = new PDFDocument({ size: "A4", margin: 0, bufferPages: true });
+     const doc = new PDFDocument({ size: "A4", margin: 32, bufferPages: true });
       let pdfBuffer;
      if (returnBuffer) {
     const chunks = [];
@@ -62,8 +62,8 @@ static async _drawPdfContent(doc, bc, req) {
     const signaturePath = path.join(__dirname, "../public/img/signature.png");
 
     const headerHeight = 132;
-    const companyFooterHeight = 55;
-    const footerHeight = 38 + 12 + 52 + 12 + 56 + 6 + companyFooterHeight;
+    const companyFooterHeight = 86;
+    const footerHeight = 184 + 12 + companyFooterHeight;
     const rowHeight = 18;
     const colWidths = [30, 166, 56, 46, 52, 62, 46, 73];
     const tableCellPadY = 3;
@@ -278,10 +278,10 @@ static async _drawPdfContent(doc, bc, req) {
 
       if (fs.existsSync(signaturePath)) {
         try {
-          const fitW = sigW - 10;
-          const fitH = 65;
+          const fitW = sigW - 20;
+          const fitH = 40;
           const imgX = sig2X + (sigW - fitW) / 2;
-          const imgY = sigStartY + 3;
+          const imgY = sigStartY + 15;
           doc.image(signaturePath, imgX, imgY, { fit: [fitW, fitH], align: "center", valign: "center" });
         } catch (e) {
           console.error("Error loading signature:", e);
@@ -291,36 +291,25 @@ static async _drawPdfContent(doc, bc, req) {
       doc.moveTo(sig2X + 10, sigStartY + sigH - 18).lineTo(sig2X + sigW - 10, sigStartY + sigH - 18)
         .lineWidth(1).stroke(colors.borderSoft);
 
-      const footerY = sigStartY + sigH + 6;  // 6px gap after signature block
+      const footerY = pageHeight - companyFooterHeight;
 
-      const prevX = doc.x;
-      const prevY = doc.y;
+      // Removed red footer
+      // doc.rect(0, footerY, pageWidth, companyFooterHeight).fill('#AB3029').stroke();
 
-      // Red footer bar (medium height)
-      doc.rect(0, footerY, pageWidth, 55).fill('#AB3029').stroke();
-
-      const textMargin = 6;
-      const textY = footerY + 6;
-      const text2Y = textY + 14;
-
-      doc.font('Helvetica').fontSize(6.5).fillColor('#FFFFFF');
-
+      const textMargin = 14;
+      doc.font('Helvetica').fontSize(8).fillColor('#000000');
       doc.text(
         '82, angle Bd abdelmoumen et rue Soumaya Imm.Shahrazad III 2ème étage Casablanca Tél : 0522-23-39-70',
         50,
-        textY + textMargin,
-        { width: pageWidth - 100, align: 'center', lineBreak: false }
+        footerY + textMargin,
+        { width: pageWidth - 100, align: 'center' }
       );
-
       doc.text(
         'Fax : 0522-23-42-60  Capital : 18 500 000.00 DH  CNSS : 7167788 - R.C. : 145619 – I.F. : 1602714 – Patente : 37900708- I.C.E : 001526422000063',
         50,
-        text2Y + textMargin,
-        { width: pageWidth - 100, align: 'center', lineBreak: false }
+        footerY + textMargin + 16,
+        { width: pageWidth - 100, align: 'center' }
       );
-
-      doc.x = prevX;
-      doc.y = prevY;
     };
 
     const drawTableHeader = (y) => {
@@ -467,7 +456,7 @@ static async _drawPdfContent(doc, bc, req) {
     // Layout calculation constants
     const headerH = headerHeight + 18;
     const reglementH = 56 + 14;
-    const footerH = footerHeight - margin;
+    const footerH = 45 + 10 + 60 + 10 + 65 + 10;
     const tableHeaderH = rowHeight;
 
     // --- PAGE 1 ---
@@ -501,13 +490,4 @@ static async _drawPdfContent(doc, bc, req) {
         const pageBottomLimit = pageHeight - margin - footerH - 10;
         while (processedItems < items.length) {
           const rh = computeRowHeight(items[processedItems]);
-          if (py + rh > pageBottomLimit) break;
-          py = drawTableRow(py, items[processedItems], processedItems, rh);
-          processedItems++;
-        }
-
-        drawFooter(pageHeight - margin - footerH, processedItems === items.length);
-      }
-    }
-  }
 }

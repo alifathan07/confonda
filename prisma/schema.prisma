@@ -667,7 +667,7 @@ model Fourniture_list {
   reference    String?
   prixUnitaire  Decimal?
 
-  @@unique([designation, reference])
+  // @@unique([designation, reference])
 }
 
 model WhatsAppNotificationRecipient {
