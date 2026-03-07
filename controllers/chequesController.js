@@ -803,6 +803,10 @@ export const exportChequesExcel = async (req, res) => {
     const banqueId = req.query.banqueId ? Number(req.query.banqueId) : null;
     const where = buildChequeWhereFromQuery(req, banqueId ? { banqueId } : {});
 
+    const chantierIdQuery = (req.query.chantierId || '').toString().trim();
+    const chantierId = chantierIdQuery ? Number(chantierIdQuery) : null;
+    const hasValidChantierId = chantierIdQuery && !Number.isNaN(chantierId);
+
     const cheques = await prisma.cheque.findMany({
       where,
       orderBy: { id: 'desc' },
@@ -820,7 +824,8 @@ export const exportChequesExcel = async (req, res) => {
       { header: 'Échéance', key: 'dateEcheance', width: 12 },
       { header: 'Statut', key: 'statut', width: 16 },
       { header: 'Date règlement', key: 'dateReglement', width: 14 },
-      { header: 'Chantier', key: 'chantier', width: 22 },
+      { header: 'Chantier', key: 'chantier', width: 28 },
+      { header: 'Montant chantier', key: 'montantChantier', width: 18 },
       { header: 'Observation', key: 'obs', width: 40 },
       { header: 'Montant', key: 'montant', width: 14 },
     ];
@@ -832,22 +837,68 @@ export const exportChequesExcel = async (req, res) => {
       return dd.toISOString().slice(0, 10);
     };
 
-    const chantierLabel = (cheque) => {
+    const chantierLinesAndAmounts = (cheque) => {
       const allocs = Array.isArray(cheque?.allocations) ? cheque.allocations : [];
-      const names = allocs
-        .map(a => (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '')
+      const filteredAllocs = hasValidChantierId
+        ? allocs.filter(a => String(a?.chantierId || '') === String(chantierId))
+        : allocs;
+
+      const lines = filteredAllocs
+        .map(a => {
+          const nom = (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '';
+          const montant = Number(a && a.montant ? a.montant : 0);
+          if (!nom) return null;
+          return { nom, montant };
+        })
         .filter(Boolean);
 
-      if (names.length) {
-        return Array.from(new Set(names)).join(', ');
+      if (lines.length) {
+        return {
+          chantier: lines.map(x => x.nom).join('\n'),
+          montantChantier: lines.map(x => Number(x.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })).join('\n'),
+        };
       }
 
-      return cheque?.chantier?.nom ? String(cheque.chantier.nom) : '';
+      if (hasValidChantierId) {
+        if (String(cheque?.chantierId || '') === String(chantierId) && cheque?.chantier?.nom) {
+          return {
+            chantier: String(cheque.chantier.nom),
+            montantChantier: Number(cheque?.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+          };
+        }
+
+        return { chantier: '', montantChantier: '' };
+      }
+
+      if (cheque?.chantier?.nom) {
+        return {
+          chantier: String(cheque.chantier.nom),
+          montantChantier: Number(cheque?.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+        };
+      }
+
+      return { chantier: '', montantChantier: '' };
     };
 
     let totalMontant = 0;
+    let totalMontantChantier = 0;
     for (const c of cheques) {
       totalMontant += Number(c.montant || 0);
+
+      if (hasValidChantierId) {
+        const allocs = Array.isArray(c?.allocations) ? c.allocations : [];
+        const hasAllocs = allocs.length > 0;
+        if (hasAllocs) {
+          const chantierAmount = allocs
+            .filter(a => String(a?.chantierId || '') === String(chantierId))
+            .reduce((sum, a) => sum + Number(a?.montant || 0), 0);
+          totalMontantChantier += Number(chantierAmount || 0);
+        } else if (String(c?.chantierId || '') === String(chantierId)) {
+          totalMontantChantier += Number(c?.montant || 0);
+        }
+      }
+
+      const ca = chantierLinesAndAmounts(c);
       ws.addRow({
         dateEtablissement: fmtIso(c.dateEtablissement),
         numero: c.numero || '',
@@ -856,20 +907,53 @@ export const exportChequesExcel = async (req, res) => {
         dateEcheance: fmtIso(c.dateEcheance),
         statut: c.statut || '',
         dateReglement: fmtIso(c.dateReglement),
-        chantier: chantierLabel(c),
+        chantier: ca.chantier,
+        montantChantier: ca.montantChantier,
         obs: c.obs || '',
         montant: Number(c.montant || 0),
       });
     }
 
     const totalRow = ws.addRow({
-      obs: 'Total',
+      obs: 'Montant Total : ',
       montant: totalMontant,
     });
     totalRow.font = { bold: true };
 
+    let totalChantierRow = null;
+    if (hasValidChantierId) {
+      totalChantierRow = ws.addRow({
+        obs: 'Total chantier',
+        montantChantier: Number(totalMontantChantier || 0),
+        montant: Number(totalMontantChantier || 0),
+      });
+      totalChantierRow.font = { bold: true };
+    }
+
     ws.getRow(1).font = { bold: true };
     ws.getColumn('montant').numFmt = '#,##0.00';
+    ws.getColumn('montantChantier').numFmt = '#,##0.00';
+    ws.getColumn('chantier').alignment = { wrapText: true, vertical: 'top' };
+    ws.getColumn('montantChantier').alignment = { wrapText: true, vertical: 'top', horizontal: 'right' };
+
+    // Make multiline chantier cells readable without manual resize
+    const chantierColNo = ws.getColumn('chantier').number;
+    const montantChantierColNo = ws.getColumn('montantChantier').number;
+    ws.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) return;
+      if (row === totalRow) return;
+      if (totalChantierRow && row === totalChantierRow) return;
+
+      const chantierText = String(row.getCell(chantierColNo)?.value || '');
+      const montantChantierText = String(row.getCell(montantChantierColNo)?.value || '');
+      const lineCount = Math.max(
+        chantierText ? chantierText.split('\n').length : 1,
+        montantChantierText ? montantChantierText.split('\n').length : 1,
+      );
+
+      // Excel row height is in points; ~15 is default. Scale with number of lines.
+      row.height = Math.max(15, 15 * lineCount);
+    });
 
     const filename = `cheques_export_${new Date().toISOString().slice(0, 10)}.xlsx`;
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -887,6 +971,10 @@ export const exportChequesPdf = async (req, res) => {
   try {
     const banqueId = req.query.banqueId ? Number(req.query.banqueId) : null;
     const where = buildChequeWhereFromQuery(req, banqueId ? { banqueId } : {});
+
+    const chantierIdQuery = (req.query.chantierId || '').toString().trim();
+    const chantierId = chantierIdQuery ? Number(chantierIdQuery) : null;
+    const hasValidChantierId = chantierIdQuery && !Number.isNaN(chantierId);
 
     const cheques = await prisma.cheque.findMany({
       where,
@@ -931,6 +1019,48 @@ export const exportChequesPdf = async (req, res) => {
       return cheque?.chantier?.nom ? String(cheque.chantier.nom) : '';
     };
 
+    const chantierLinesAndAmounts = (cheque) => {
+      const allocs = Array.isArray(cheque?.allocations) ? cheque.allocations : [];
+      const filteredAllocs = hasValidChantierId
+        ? allocs.filter(a => String(a?.chantierId || '') === String(chantierId))
+        : allocs;
+
+      const lines = filteredAllocs
+        .map(a => {
+          const nom = (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '';
+          const montant = Number(a && a.montant ? a.montant : 0);
+          if (!nom) return null;
+          return { nom, montant };
+        })
+        .filter(Boolean);
+
+      if (lines.length) {
+        return {
+          chantier: lines.map(x => x.nom).join('\n'),
+          montantChantier: lines.map(x => moneyFr(x.montant || 0)).join('\n'),
+        };
+      }
+
+      if (hasValidChantierId) {
+        if (String(cheque?.chantierId || '') === String(chantierId) && cheque?.chantier?.nom) {
+          return {
+            chantier: String(cheque.chantier.nom),
+            montantChantier: moneyFr(cheque?.montant || 0),
+          };
+        }
+        return { chantier: '', montantChantier: '' };
+      }
+
+      if (cheque?.chantier?.nom) {
+        return {
+          chantier: String(cheque.chantier.nom),
+          montantChantier: moneyFr(cheque?.montant || 0),
+        };
+      }
+
+      return { chantier: '', montantChantier: '' };
+    };
+
     doc.font('Helvetica-Bold').fontSize(14).text('Export Chèques', { align: 'left' });
     doc.moveDown(0.25);
     doc.font('Helvetica').fontSize(9).fillColor('#444').text(`Généré le: ${new Date().toLocaleDateString('fr-FR')}`);
@@ -940,32 +1070,61 @@ export const exportChequesPdf = async (req, res) => {
     let y = doc.y;
     const pageW = doc.page.width - doc.page.margins.left - doc.page.margins.right;
 
-    const rowStrings = cheques.map(c => ([
-      fmtFr(c.dateEtablissement),
-      c.numero || '',
-      c.beneficiaire || '',
-      c.banque?.name || '',
-      chantierLabel(c),
-      fmtFr(c.dateEcheance),
-      moneyFr(c.montant || 0),
-    ]));
+    let totalMontant = 0;
+    let totalMontantChantier = 0;
+
+    const rowStrings = cheques.map(c => {
+      totalMontant += Number(c.montant || 0);
+
+      if (hasValidChantierId) {
+        const allocs = Array.isArray(c?.allocations) ? c.allocations : [];
+        const hasAllocs = allocs.length > 0;
+        if (hasAllocs) {
+          const chantierAmount = allocs
+            .filter(a => String(a?.chantierId || '') === String(chantierId))
+            .reduce((sum, a) => sum + Number(a?.montant || 0), 0);
+          totalMontantChantier += Number(chantierAmount || 0);
+        } else if (String(c?.chantierId || '') === String(chantierId)) {
+          totalMontantChantier += Number(c?.montant || 0);
+        }
+      }
+
+      const ca = chantierLinesAndAmounts(c);
+
+      return [
+        fmtFr(c.dateEtablissement),
+        c.numero || '',
+        c.beneficiaire || '',
+        c.banque?.name || '',
+        ca.chantier,
+        ca.montantChantier,
+        fmtFr(c.dateEcheance),
+        moneyFr(c.montant || 0),
+      ];
+    });
 
     const measure = (text, font, size) => {
       const t = (text == null) ? '' : String(text);
+      const lines = t.split('\n');
       doc.font(font).fontSize(size);
-      return doc.widthOfString(t);
+      let max = 0;
+      for (const ln of lines) {
+        max = Math.max(max, doc.widthOfString(String(ln || '')));
+      }
+      return max;
     };
 
     // Desired widths based on content (auto-fit), with reasonable caps so the table always fits.
     // Chantier is the most variable column => it will grow/shrink with content.
     const cols = [
-      { label: 'Date', min: 60, max: 80 },
-      { label: 'N°', min: 55, max: 80 },
-      { label: 'Bénéficiaire', min: 140, max: 240 },
-      { label: 'Banque', min: 80, max: 140 },
-      { label: 'Chantier', min: 90, max: 240 },
-      { label: 'Échéance', min: 60, max: 85 },
-      { label: 'Montant', min: 70, max: 95 },
+      { label: 'Date', min: 52, max: 75, align: 'left' },
+      { label: 'N°', min: 48, max: 75, align: 'left' },
+      { label: 'Bénéficiaire', min: 110, max: 200, align: 'left' },
+      { label: 'Banque', min: 70, max: 120, align: 'left' },
+      { label: 'Chantier', min: 90, max: 190, align: 'left' },
+      { label: 'Mt chantier', min: 70, max: 95, align: 'right' },
+      { label: 'Échéance', min: 55, max: 75, align: 'left' },
+      { label: 'Montant', min: 65, max: 90, align: 'right' },
     ];
 
     const cellPadding = 6; // x+3 left and x+3 right in drawRow
@@ -1016,9 +1175,29 @@ export const exportChequesPdf = async (req, res) => {
       cols.forEach(c => { c.w = c.w * scale; });
     }
 
-    const rowH = 16;
+    const fontSize = 8;
+    const padX = 3;
+    const padY = 3;
+    const minRowH = 16;
+    const lineGap = 1;
+
+    const cellHeight = (text, colW, font, size) => {
+      const t = (text == null) ? '' : String(text);
+      doc.font(font).fontSize(size);
+      return doc.heightOfString(t, { width: Math.max(1, colW - (padX * 2)), lineGap });
+    };
+
     const drawRow = (cells, isHeader) => {
-      if (y + rowH > doc.page.height - doc.page.margins.bottom) {
+      const font = isHeader ? 'Helvetica-Bold' : 'Helvetica';
+      const size = isHeader ? fontSize : fontSize;
+
+      let rh = minRowH;
+      for (let i = 0; i < cols.length; i++) {
+        const h = cellHeight(cells[i], cols[i].w, font, size) + (padY * 2);
+        rh = Math.max(rh, h);
+      }
+
+      if (y + rh > doc.page.height - doc.page.margins.bottom) {
         doc.addPage();
         y = doc.page.margins.top;
       }
@@ -1026,20 +1205,23 @@ export const exportChequesPdf = async (req, res) => {
       let x = startX;
       doc.lineWidth(0.5).strokeColor('#cccccc');
       for (let i = 0; i < cols.length; i++) {
-        doc.rect(x, y, cols[i].w, rowH).stroke();
+        doc.rect(x, y, cols[i].w, rh).stroke();
         const text = (cells[i] == null) ? '' : String(cells[i]);
-        doc.font(isHeader ? 'Helvetica-Bold' : 'Helvetica').fontSize(8).fillColor('#111');
-        doc.text(text, x + 3, y + 4, { width: cols[i].w - 6, height: rowH - 6, ellipsis: true });
+        doc.font(font).fontSize(size).fillColor('#111');
+        doc.text(text, x + padX, y + padY, {
+          width: cols[i].w - (padX * 2),
+          height: rh - (padY * 2),
+          lineGap,
+          align: cols[i].align || 'left',
+        });
         x += cols[i].w;
       }
-      y += rowH;
+      y += rh;
     };
 
     drawRow(cols.map(c => c.label), true);
-    let totalMontant = 0;
     for (let i = 0; i < cheques.length; i++) {
       const c = cheques[i];
-      totalMontant += Number(c.montant || 0);
       drawRow(rowStrings[i], false);
     }
 
@@ -1050,8 +1232,22 @@ export const exportChequesPdf = async (req, res) => {
       '',
       '',
       '',
+      '',
       moneyFr(totalMontant),
     ], true);
+
+    if (hasValidChantierId) {
+      drawRow([
+        '',
+        '',
+        'Total chantier',
+        '',
+        '',
+        moneyFr(totalMontantChantier),
+        '',
+        '',
+      ], true);
+    }
 
     doc.end();
   } catch (error) {

@@ -224,6 +224,11 @@
                       <th class="text-right" id="totalMontantCell">0,00</th>
                       <th></th>
                     </tr>
+                    <tr id="totalChantierRow" style="display:none;">
+                      <th colspan="10" class="text-right">Total chantier</th>
+                      <th class="text-right" id="totalMontantChantierCell">0,00</th>
+                      <th></th>
+                    </tr>
                   </tfoot>
                 </table>
               </div>
@@ -375,6 +380,8 @@
           const $tbody = document.getElementById('chequeTbody');
           const $paginationInfo = document.getElementById('paginationInfo');
           const $totalMontantCell = document.getElementById('totalMontantCell');
+          const $totalMontantChantierCell = document.getElementById('totalMontantChantierCell');
+          const $totalChantierRow = document.getElementById('totalChantierRow');
 
           const $paginationControls = document.getElementById('paginationControls');
 
@@ -501,11 +508,28 @@
             $totalMontantCell.textContent = n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
           }
 
-          function renderPagination(pagination, totalMontant) {
+          function setTotalMontantChantier(v) {
+            if (!$totalMontantChantierCell) return;
+            const n = Number(v || 0);
+            $totalMontantChantierCell.textContent = n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          }
+
+          function setTotalChantierVisible(isVisible) {
+            if (!$totalChantierRow) return;
+            $totalChantierRow.style.display = isVisible ? '' : 'none';
+          }
+
+          function renderPagination(pagination, totalMontant, totalMontantChantier) {
             const page = pagination.page;
             const totalPages = pagination.totalPages;
             const n = Number(totalMontant || 0);
-            $paginationInfo.textContent = `Page ${page} / ${totalPages} (${pagination.total} résultat(s)) - Total : ${n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const hasChantierFilter = Boolean(String(state.chantierId || '').trim());
+            if (hasChantierFilter) {
+              const nChantier = Number(totalMontantChantier || 0);
+              $paginationInfo.textContent = `Page ${page} / ${totalPages} (${pagination.total} résultat(s)) - Total : ${n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} - Total chantier : ${nChantier.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            } else {
+              $paginationInfo.textContent = `Page ${page} / ${totalPages} (${pagination.total} résultat(s)) - Total : ${n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            }
 
             const start = Math.max(1, page - 2);
             const end = Math.min(totalPages, page + 2);
@@ -590,8 +614,15 @@
             const json = await fetchPage(page);
             state.page = json.pagination.page;
             renderRows(json.data || []);
-            renderPagination(json.pagination, json.totalMontant);
-            setTotalMontant(json.totalMontant);
+            const totalAll = Number(json && json.totalMontant ? json.totalMontant : 0);
+            const totalChantier = Number(json && json.totalMontantChantier ? json.totalMontantChantier : 0);
+            const hasChantierFilter = Boolean(String(state.chantierId || '').trim());
+
+            setTotalMontant(totalAll);
+            setTotalChantierVisible(hasChantierFilter);
+            if (hasChantierFilter) setTotalMontantChantier(totalChantier);
+
+            renderPagination(json.pagination, totalAll, totalChantier);
           }
 
           let debounceT = null;

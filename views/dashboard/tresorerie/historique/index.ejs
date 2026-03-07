@@ -507,7 +507,7 @@
           <!-- Operations List -->
           <div class="card mb-4 fade-in">
             <div class="card-header d-flex justify-content-between align-items-center">
-              <h2>Liste des réglements effectués</h2>
+              <h2 style="color: #111827;">Liste des réglements effectués</h2>
               <div>
                 <button class="btn btn-info mr-2" onclick="downloadPDF('chequesTable')">Télécharger PDF</button>
                 <button class="btn btn-success" onclick="downloadExcel('chequesTable')">Télécharger Excel</button>
@@ -529,6 +529,7 @@
                         <th>Montant</th>
                         <th>Date Échéance</th>
                         <th>Chantier</th>
+                        <th>Montant chantier</th>
                         <th>Observation</th>
                       </tr>
                     </thead>
@@ -552,12 +553,26 @@
                                 <% c.chantierLines.forEach(l => { %>
                                   <div class="alloc-line" data-chantier="<%= l.nom %>">
                                     <div class="alloc-name"><%= l.nom %></div>
-                                    <div class="alloc-amount"><%= (l.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %></div>
                                   </div>
                                 <% }) %>
                               </div>
                             <% } else { %>
                               <%= c.chantier %>
+                            <% } %>
+                          </td>
+                          <td>
+                            <% if (c.type === 'Chèque' && c.chantierLines && c.chantierLines.length) { %>
+                              <div class="allocations">
+                                <% c.chantierLines.forEach(l => { %>
+                                  <div class="alloc-line" data-chantier="<%= l.nom %>">
+                                    <div class="alloc-amount"><%= (l.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %></div>
+                                  </div>
+                                <% }) %>
+                              </div>
+                            <% } else if (c.type === 'Chèque') { %>
+                              <%= c.montant != null 
+                                    ? c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') 
+                                    : '' %>
                             <% } %>
                           </td>
                           <td>
@@ -574,7 +589,7 @@
                         <td class="text-right" id="displayTotalOperations">
                           <%= historique.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
                         </td>
-                        <td colspan="3"></td>
+                        <td colspan="4"></td>
                       </tr>
                     </tfoot>
                   </table>
@@ -653,7 +668,7 @@
           <!-- Les Encaissements Reçus -->
           <div class="card mb-4 fade-in">
             <div class="card-header d-flex justify-content-between align-items-center">
-              <h2>Encaissements Reçus</h2>
+              <h2 style="color: #111827;">Encaissements Reçus</h2>
               <div>
                 <button class="btn btn-info mr-2" onclick="downloadPDF('encaissementsTable')">Télécharger PDF</button>
                 <button class="btn btn-success" onclick="downloadExcel('encaissementsTable')">Télécharger Excel</button>
@@ -815,7 +830,225 @@
     </div>
   </div>
   <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
   <script>
+    function downloadExcel(tableId) {
+      const table = document.getElementById(tableId);
+      if (!table) return;
+      if (!window.XLSX || !window.XLSX.utils) {
+        alert('Export Excel indisponible');
+        return;
+      }
+
+      // Get headers
+      const headers = [];
+      table.querySelectorAll('thead th').forEach(th => {
+        headers.push(th.textContent.trim());
+      });
+
+      // Build data rows with proper handling of Chantier + Montant chantier
+      const data = [];
+      table.querySelectorAll('tbody tr').forEach((row, rowIdx) => {
+        const rowData = [];
+        const cells = row.querySelectorAll('td');
+        
+        cells.forEach((cell, idx) => {
+          // Check if this is the Chantier column (index 7) or Montant chantier column (index 8)
+          if ((idx === 7 || idx === 8) && tableId === 'chequesTable') {
+            // Get all alloc-line elements in this cell
+            const allocLines = cell.querySelectorAll('.alloc-line');
+            console.log(`Row ${rowIdx}, Col ${idx} (${idx === 7 ? 'Chantier' : 'Montant'}): Found ${allocLines.length} alloc-line elements`);
+            
+            if (allocLines.length > 0) {
+              const values = [];
+              allocLines.forEach((line, lineIdx) => {
+                let text = '';
+                if (idx === 7) {
+                  // Chantier column - get from .alloc-name
+                  const nameEl = line.querySelector('.alloc-name');
+                  text = nameEl ? nameEl.textContent.trim() : '';
+                  console.log(`  Line ${lineIdx}: Chantier name = "${text}"`);
+                } else {
+                  // Montant chantier column - get from .alloc-amount
+                  const amountEl = line.querySelector('.alloc-amount');
+                  text = amountEl ? amountEl.textContent.trim() : '';
+                  console.log(`  Line ${lineIdx}: Montant = "${text}"`);
+                }
+                if (text) values.push(text);
+              });
+              const joinedValue = values.join('\n');
+              console.log(`  Final joined value: "${joinedValue}"`);
+              rowData.push(joinedValue);
+            } else {
+              // No allocations - show fallback value (just the text content)
+              const fallbackText = cell.textContent.trim();
+              console.log(`Row ${rowIdx}, Col ${idx}: No alloc-lines, fallback = "${fallbackText}"`);
+              rowData.push(fallbackText);
+            }
+          } else {
+            rowData.push(cell.textContent.trim());
+          }
+        });
+        
+        data.push(rowData);
+      });
+
+      console.log('Final data for Excel:', data.slice(0, 3)); // Log first 3 rows
+
+      // Create worksheet
+      const ws = window.XLSX.utils.aoa_to_sheet([headers, ...data]);
+      
+      // Set column widths
+      ws['!cols'] = [
+        { wch: 15 }, // Date
+        { wch: 12 }, // Type
+        { wch: 15 }, // Numéro
+        { wch: 15 }, // Banque
+        { wch: 25 }, // Bénéficiaire
+        { wch: 12 }, // Montant
+        { wch: 15 }, // Date Échéance
+        { wch: 25 }, // Chantier
+        { wch: 15 }, // Montant chantier
+        { wch: 30 }, // Observation
+      ];
+
+      // Set row heights for rows with multi-line chantier data
+      const wsRows = [];
+      wsRows.push({ hpt: 20 }); // Header row height
+      
+      data.forEach((rowData, idx) => {
+        const chantierCellValue = rowData[7]; // Chantier column
+        const montantChantierCellValue = rowData[8]; // Montant chantier column
+        
+        // Count lines in either column
+        let maxLines = 1;
+        if (chantierCellValue && chantierCellValue.includes('\n')) {
+          maxLines = Math.max(maxLines, chantierCellValue.split('\n').length);
+        }
+        if (montantChantierCellValue && montantChantierCellValue.includes('\n')) {
+          maxLines = Math.max(maxLines, montantChantierCellValue.split('\n').length);
+        }
+        
+        // Set row height based on number of lines (approx 15 points per line)
+        if (maxLines > 1) {
+          wsRows.push({ hpt: 15 * maxLines });
+        } else {
+          wsRows.push({ hpt: 18 }); // Default row height
+        }
+      });
+      
+      ws['!rows'] = wsRows;
+
+      // Apply wrapText and alignment styling to chantier columns for multi-line display
+      const chantierCol = 7; // H column (0-indexed: 7)
+      const montantChantierCol = 8; // I column (0-indexed: 8)
+      
+      for (let r = 1; r <= data.length; r++) {
+        const chantierCellRef = window.XLSX.utils.encode_cell({ r, c: chantierCol });
+        const montantChantierCellRef = window.XLSX.utils.encode_cell({ r, c: montantChantierCol });
+        
+        const chantierCell = ws[chantierCellRef];
+        const montantChantierCell = ws[montantChantierCellRef];
+        
+        // Apply wrapText and top alignment to ALL chantier column cells
+        if (chantierCell) {
+          chantierCell.s = { 
+            alignment: { wrapText: true, vertical: 'top' },
+            font: { name: 'Calibri', sz: 11 }
+          };
+        }
+        
+        // Apply wrapText, top alignment and right alignment to ALL montant chantier column cells
+        if (montantChantierCell) {
+          montantChantierCell.s = { 
+            alignment: { wrapText: true, vertical: 'top', horizontal: 'right' },
+            font: { name: 'Calibri', sz: 11 }
+          };
+        }
+      }
+
+      const wb = window.XLSX.utils.book_new();
+      window.XLSX.utils.book_append_sheet(wb, ws, 'Export');
+      const filename = `${tableId}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      window.XLSX.writeFile(wb, filename);
+    }
+
+    function downloadPDF(tableId) {
+      const table = document.getElementById(tableId);
+      if (!table) return;
+
+      const jspdf = window.jspdf;
+      if (!jspdf || !jspdf.jsPDF) {
+        alert('Export PDF indisponible');
+        return;
+      }
+
+      const doc = new jspdf.jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+      doc.setFontSize(12);
+      doc.text('Export Historique', 40, 30);
+
+      // Build data for PDF with proper chantier handling
+      const headers = [];
+      table.querySelectorAll('thead th').forEach(th => {
+        headers.push(th.textContent.trim());
+      });
+
+      const body = [];
+      table.querySelectorAll('tbody tr').forEach(row => {
+        const rowData = [];
+        const cells = row.querySelectorAll('td');
+        
+        cells.forEach((cell, idx) => {
+          // For Chantier (7) and Montant chantier (8) columns, preserve line breaks
+          if ((idx === 7 || idx === 8) && tableId === 'chequesTable') {
+            const lines = cell.querySelectorAll('.alloc-line');
+            if (lines.length > 0) {
+              const values = [];
+              lines.forEach(line => {
+                const text = line.textContent.trim();
+                if (text) values.push(text);
+              });
+              rowData.push(values.join('\n'));
+            } else {
+              rowData.push(cell.textContent.trim());
+            }
+          } else {
+            rowData.push(cell.textContent.trim());
+          }
+        });
+        
+        body.push(rowData);
+      });
+
+      // Column styles
+      const columnStyles = {};
+      if (tableId === 'chequesTable') {
+        columnStyles[7] = { cellWidth: 120, overflow: 'linebreak' }; // Chantier
+        columnStyles[8] = { cellWidth: 80, overflow: 'linebreak', halign: 'right' }; // Montant chantier
+      }
+
+      doc.autoTable({
+        head: [headers],
+        body: body,
+        startY: 50,
+        styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak', valign: 'middle' },
+        headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
+        columnStyles: columnStyles,
+        margin: { left: 30, right: 30 },
+        didParseCell: function(data) {
+          // Ensure line breaks are preserved in chantier columns
+          if (data.section === 'body' && (data.column.index === 7 || data.column.index === 8)) {
+            data.cell.styles.valign = 'top';
+          }
+        }
+      });
+
+      const filename = `${tableId}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      doc.save(filename);
+    }
+
     // Centralized DOMContentLoaded handler to initialize all functionality
     document.addEventListener('DOMContentLoaded', () => {
       // Utility functions for number formatting
@@ -1031,7 +1264,7 @@
         };
 
         // Apply filters to all tables
-        filterTableRows(rows.operations, tables.operations, 'noOperationMsg', 9, 'operations');
+        filterTableRows(rows.operations, tables.operations, 'noOperationMsg', 10, 'operations');
         filterTableRows(rows.encaissements, tables.encaissements, 'noEncaissementMsg', 7, 'encaissements');
         filterTableRows(rows.virements, tables.virements, 'noVirementMsg', 5, 'virements');
 
