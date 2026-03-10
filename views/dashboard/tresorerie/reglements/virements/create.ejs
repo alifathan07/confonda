@@ -19,8 +19,9 @@
     border: 1px solid #ccc;
     max-height: 150px;
     overflow-y: auto;
-    z-index: 1000;
+    z-index: 3002;
     width: 100%;
+    left: 0;
 }
 
 #beneficiaire-list div {
@@ -30,6 +31,58 @@
 
 #beneficiaire-list div:hover {
     background-color: #f0f0f0;
+}
+
+/* Ensure Choices.js dropdown (Répartition par Chantier) stays above other content */
+.choices {
+    position: relative;
+    z-index: 3000;
+}
+
+.choices__list--dropdown,
+.choices__list[aria-expanded] {
+    z-index: 3001;
+}
+
+.popup-notif {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 9999;
+    min-width: 280px;
+    max-width: 420px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    box-shadow: 0 12px 30px rgba(0,0,0,.18);
+    background: #fff;
+    border-left: 6px solid #dc3545;
+    color: #1f2937;
+    font-size: 0.95rem;
+}
+
+.popup-notif.success { border-left-color: #28a745; }
+.popup-notif.info { border-left-color: #17a2b8; }
+.popup-notif.warning { border-left-color: #ffc107; }
+
+.popup-notif .title {
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.popup-notif .msg {
+    line-height: 1.25rem;
+}
+
+.popup-notif .close-btn {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    background: transparent;
+    border: 0;
+    font-size: 18px;
+    line-height: 18px;
+    cursor: pointer;
+    color: #6b7280;
 }
 </style>
       <body>
@@ -63,7 +116,7 @@
                                    
                                 </div>
                                 <div class="form-row">
-                                    <div class="form-group col-12 col-md-6">
+                                    <div class="form-group col-12 col-md-6" style="position: relative;">
                                         <label for="beneficiaire">Bénéficiaire</label>
                                         <input type="text" class="form-control" id="beneficiaire" name="beneficiaire" required placeholder="Nom du bénéficiaire">
                                         <div id="beneficiaire-list"></div>
@@ -117,6 +170,23 @@
                                 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
                                 <script>
                                     let allocations = [];
+
+                                    function showPopup(message, type = 'error', title = 'Erreur') {
+                                        const existing = document.getElementById('popup-notif');
+                                        if (existing) existing.remove();
+                                        const el = document.createElement('div');
+                                        el.id = 'popup-notif';
+                                        el.className = `popup-notif ${type === 'error' ? '' : type}`.trim();
+                                        el.innerHTML = `
+                                            <button type="button" class="close-btn" aria-label="Close">&times;</button>
+                                            <div class="title">${title}</div>
+                                            <div class="msg">${message}</div>
+                                        `;
+                                        document.body.appendChild(el);
+                                        const close = () => { if (el && el.parentNode) el.remove(); };
+                                        el.querySelector('.close-btn')?.addEventListener('click', close);
+                                        window.setTimeout(close, 3500);
+                                    }
 
                                     (function initChantierChoices() {
                                         const select = document.getElementById('allocChantierSelect');
@@ -173,9 +243,25 @@
 
                                         const amount = parseFloat(amountInput.value);
                                         if (!chantierId || !amount || amount <= 0) {
-                                            alert('Veuillez sélectionner un chantier et entrer un montant valide.');
+                                            showPopup('Veuillez sélectionner un chantier et entrer un montant valide.', 'warning', 'Attention');
                                             return;
                                         }
+
+                                        const montantEl = document.getElementById('montant');
+                                        const totalVirement = parseFloat((montantEl?.value || '0').toString().replace(',', '.')) || 0;
+                                        const totalAllocated = allocations.reduce((acc, a) => acc + (parseFloat(a.amount) || 0), 0);
+                                        const remaining = totalVirement - totalAllocated;
+
+                                        if (totalVirement <= 0) {
+                                            showPopup('Veuillez saisir le montant du virement avant de faire la répartition.', 'info', 'Info');
+                                            return;
+                                        }
+
+                                        if (amount > remaining + 0.000001) {
+                                            showPopup(`Le montant saisi (${amount.toFixed(2)} DH) dépasse le reste à allouer (${Math.max(remaining, 0).toFixed(2)} DH).`, 'error', 'Montant invalide');
+                                            return;
+                                        }
+
                                         allocations.push({ chantierId, chantierName, amount });
                                         updateAllocationUI();
 
