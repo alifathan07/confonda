@@ -1387,7 +1387,7 @@
       const banques = <%- JSON.stringify(banques) %>;
 
       // Function to apply filters and update Ecart
-      function applyFilters() {
+      window.applyFilters = function() {
         const dateTo = $('#dateToFilter').val();
         const statut = $('#statutFilterCheques').val();
         const banque = $('#banqueFilterCheques').val();
@@ -1479,19 +1479,19 @@
       }
 
       // Event listeners for filter changes
-      $('#dateToFilter, #statutFilterCheques, #banqueFilterCheques').on('change', applyFilters);
-      $('#supplierList').on('change', 'input', applyFilters);
+      $('#dateToFilter, #statutFilterCheques, #banqueFilterCheques').on('change', window.applyFilters);
+      $('#supplierList').on('change', 'input', window.applyFilters);
       $('#resetDateBtn').on('click', function() {
         $('#dateToFilter').val('');
         $('#statutFilterCheques').val('');
         $('#banqueFilterCheques').val('');
         $('#supplierSelectAll').prop('checked', true);
         $('#supplierList input').prop('checked', true);
-        applyFilters();
+        window.applyFilters();
       });
 
       // Initial filter application
-      applyFilters();
+      window.applyFilters();
     });
   </script>
 
@@ -1535,24 +1535,58 @@
     }
   };
 
-  if ($sitFilterTypeMenu) {
+  if ($sitFilterTypeBtn && $sitFilterTypeMenu) {
     const filters = {
       'statut': { box: 'sitFilterBoxStatut', label: 'Statut' },
       'banque': { box: 'sitFilterBoxBanque', label: 'Banque' }
     };
 
-    $sitFilterTypeMenu.addEventListener('click', e => {
+    const sitDropdown = $sitFilterTypeBtn.closest('.dropdown');
+
+    const closeSitDropdown = () => {
+      if (sitDropdown) sitDropdown.classList.remove('show');
+      $sitFilterTypeMenu.classList.remove('show');
+      $sitFilterTypeBtn.setAttribute('aria-expanded', 'false');
+    };
+
+    $sitFilterTypeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (sitDropdown) sitDropdown.classList.toggle('show');
+      $sitFilterTypeMenu.classList.toggle('show');
+      $sitFilterTypeBtn.setAttribute('aria-expanded', $sitFilterTypeMenu.classList.contains('show') ? 'true' : 'false');
+    });
+
+    document.addEventListener('click', () => {
+      closeSitDropdown();
+    });
+
+    $sitFilterTypeMenu.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       const btn = e.target.closest('button[data-sit-filter]');
       if (!btn) return;
+
       const t = btn.getAttribute('data-sit-filter');
       activeSitFilter = t;
       $sitFilterTypeBtn.textContent = filters[t].label;
-      
+      closeSitDropdown();
+
+      // Reset filter values when switching filter types
+      if (statutFilter) statutFilter.value = '';
+      if (banqueFilter) banqueFilter.value = '';
+
       Object.entries(filters).forEach(([k, v]) => {
-        document.getElementById(v.box).style.display = k === t ? '' : 'none';
+        const el = document.getElementById(v.box);
+        if (el) el.style.display = k === t ? '' : 'none';
       });
+
       updateClearBtnVis();
       applyFilters();
+
+      if (typeof window.applyFilters === 'function') {
+        window.applyFilters();
+      }
     });
   }
 
@@ -1685,6 +1719,10 @@
     const fromDate = dateFromFilter?.value ? new Date(dateFromFilter.value) : new Date('2020-01-01');
     const toDate = dateToFilter?.value ? new Date(dateToFilter.value) : null;
 
+    // Only apply filtering if there's an active filter type (regardless of selected value)
+    const shouldFilterByStatut = activeSitFilter === 'statut';
+    const shouldFilterByBanque = activeSitFilter === 'banque';
+
     const filterRow = (row) => {
       const rowStatut = row.getAttribute('data-statut')?.toLowerCase() || '';
       const rowBanque = row.getAttribute('data-banque')?.toLowerCase() || '';
@@ -1692,8 +1730,8 @@
       const rowDate = new Date(row.getAttribute('data-date'));
       const isValidated = row.querySelector('input[name="validation"], input[name="validationEffet"], input[name="validationPayavenir"]')?.checked;
 
-      const statutMatch = !selectedStatut || rowStatut === selectedStatut;
-      const banqueMatch = !selectedBanque || rowBanque === selectedBanque;
+      const statutMatch = !shouldFilterByStatut || rowStatut === selectedStatut;
+      const banqueMatch = !shouldFilterByBanque || rowBanque === selectedBanque;
       const supplierMatch = allSuppliersSelected || selectedSuppliers.has(rowFournisseur);
       const dateMatch = rowDate >= fromDate && (!toDate || rowDate <= toDate);
 
@@ -1849,11 +1887,45 @@
   };
 
   // Add event listeners
-  statutFilter?.addEventListener('change', () => { updateClearBtnVis(); applyFilters(); });
-  banqueFilter?.addEventListener('change', () => { updateClearBtnVis(); applyFilters(); });
-  dateFromFilter?.addEventListener('change', () => { updateClearBtnVis(); applyFilters(); });
-  dateToFilter?.addEventListener('change', () => { updateClearBtnVis(); applyFilters(); });
-  clearFiltersBtn?.addEventListener('click', resetFilters);
+  statutFilter?.addEventListener('change', () => { 
+    updateClearBtnVis(); 
+    applyFilters(); 
+    // Also call jQuery version to update Ecart calculation
+    if (typeof window.applyFilters === 'function') {
+      window.applyFilters();
+    }
+  });
+  banqueFilter?.addEventListener('change', () => { 
+    updateClearBtnVis(); 
+    applyFilters(); 
+    // Also call jQuery version to update Ecart calculation
+    if (typeof window.applyFilters === 'function') {
+      window.applyFilters();
+    }
+  });
+  dateFromFilter?.addEventListener('change', () => { 
+    updateClearBtnVis(); 
+    applyFilters(); 
+    // Also call jQuery version to update Ecart calculation
+    if (typeof window.applyFilters === 'function') {
+      window.applyFilters();
+    }
+  });
+  dateToFilter?.addEventListener('change', () => { 
+    updateClearBtnVis(); 
+    applyFilters(); 
+    // Also call jQuery version to update Ecart calculation
+    if (typeof window.applyFilters === 'function') {
+      window.applyFilters();
+    }
+  });
+  clearFiltersBtn?.addEventListener('click', () => {
+    resetFilters();
+    // Also call jQuery version to update Ecart calculation
+    if (typeof window.applyFilters === 'function') {
+      window.applyFilters();
+    }
+  });
 
   // Handle validation checkboxes
   const validationCheckboxes = document.querySelectorAll('input[name="validation"], input[name="validationEffet"], input[name="validationPayavenir"]');

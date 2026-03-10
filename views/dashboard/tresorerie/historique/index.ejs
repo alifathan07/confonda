@@ -1332,6 +1332,16 @@
               const open = typeof forceOpen === 'boolean' ? forceOpen : !menuEl.classList.contains('show');
               dropdownEl.classList.toggle('show', open);
               menuEl.classList.toggle('show', open);
+              menuEl.style.display = open ? 'block' : 'none';
+              if (open) {
+                menuEl.style.position = 'absolute';
+                menuEl.style.zIndex = '2000';
+                menuEl.style.inset = 'auto auto auto 0';
+              } else {
+                menuEl.style.position = '';
+                menuEl.style.zIndex = '';
+                menuEl.style.inset = '';
+              }
               if (btnEl) btnEl.setAttribute('aria-expanded', String(open));
             };
 
