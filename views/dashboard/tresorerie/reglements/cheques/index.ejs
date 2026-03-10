@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -11,347 +12,549 @@
   <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-   <!-- Enhanced Status Styles -->
+  <!-- Enhanced Status Styles -->
   <style>
-    .cheque-table td, .cheque-table th { vertical-align: middle; }
-    .cheque-table.table-bordered td, .cheque-table.table-bordered th { border-color: #e6e8f0; }
-    .badge-statut { font-weight: 700; letter-spacing: .2px; }
-    .badge-statut.en-circulation { background: #fff3cd; color: #856404; }
-    .badge-statut.paye { background: #d4edda; color: #155724; }
-    .badge-statut.impaye { background: #f8d7da; color: #721c24; }
-    .badge-statut.annule { background: #e2e3e5; color: #383d41; }
-    .badge-statut.treso { background: #d1ecf1; color: #0c5460; }
-    .allocations { display: grid; gap: 6px; }
-    .alloc-line { display: flex; justify-content: space-between; gap: 10px; padding: 6px 10px; border: 1px solid #e9ecef; border-radius: 10px; background: #fff; }
-    .alloc-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .alloc-amount { white-space: nowrap; font-weight: 700; }
-    .table-actions { display: flex; gap: 6px; justify-content: flex-end; }
-    .cell-edit { min-width: 120px; }
-    .cell-edit[contenteditable="true"] { outline: none; }
-    .cell-edit[contenteditable="true"]:focus { box-shadow: inset 0 0 0 2px rgba(78,115,223,.25); border-radius: 6px; }
-    .obs-cell { min-width: 320px; max-width: 520px; white-space: normal; line-height: 1.25; }
-    .obs-cell[contenteditable="true"] { padding: 8px 10px; }
-    .statut-select { min-width: 170px; font-weight: 700; }
-    .statut-cell { cursor: pointer; }
+    .cheque-table td,
+    .cheque-table th {
+      vertical-align: middle;
+    }
+
+    .cheque-table.table-bordered td,
+    .cheque-table.table-bordered th {
+      border-color: #e6e8f0;
+    }
+
+    .badge-statut {
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+
+    .badge-statut.en-circulation {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .badge-statut.paye {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .badge-statut.impaye {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .badge-statut.annule {
+      background: #e2e3e5;
+      color: #383d41;
+    }
+
+    .badge-statut.treso {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+
+    .allocations {
+      display: grid;
+      gap: 6px;
+    }
+
+    .alloc-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 6px 10px;
+      border: 1px solid #e9ecef;
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .alloc-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .alloc-amount {
+      white-space: nowrap;
+      font-weight: 700;
+    }
+
+    .table-actions {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .cell-edit {
+      min-width: 120px;
+    }
+
+    .cell-edit[contenteditable="true"] {
+      outline: none;
+    }
+
+    .cell-edit[contenteditable="true"]:focus {
+      box-shadow: inset 0 0 0 2px rgba(78, 115, 223, .25);
+      border-radius: 6px;
+    }
+
+    .obs-cell {
+      min-width: 320px;
+      max-width: 520px;
+      white-space: normal;
+      line-height: 1.25;
+    }
+
+    .obs-cell[contenteditable="true"] {
+      padding: 8px 10px;
+    }
+
+    .statut-select {
+      min-width: 170px;
+      font-weight: 700;
+    }
+
+    .statut-cell {
+      cursor: pointer;
+    }
+
+    #filterTypeDropdown .dropdown-menu {
+      z-index: 2000;
+    }
+
+    body {
+      padding-bottom: 26px;
+    }
+
+    .bottom-hscroll {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 18px;
+      overflow-x: scroll;
+      overflow-y: hidden;
+      background: rgba(255, 255, 255, .95);
+      border-top: 1px solid rgba(0, 0, 0, .08);
+      z-index: 4000;
+      display: block;
+    }
+
+    .bottom-hscroll::-webkit-scrollbar {
+      height: 12px;
+    }
+
+    .bottom-hscroll::-webkit-scrollbar-thumb {
+      background: rgba(108, 117, 125, .6);
+      border-radius: 10px;
+    }
+
+    .bottom-hscroll::-webkit-scrollbar-track {
+      background: rgba(108, 117, 125, .12);
+    }
+
+    .bottom-hscroll-inner {
+      height: 1px;
+    }
   </style>
 </head>
 
 <body id="page-top">
   <div id="wrapper">
     <%- include('../../../../layouts/sidebar') %>
-    <div id="content-wrapper" class="d-flex flex-column">
-      <div id="content">
-        <%- include('../../../../layouts/topbar') %>
+      <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+          <%- include('../../../../layouts/topbar') %>
 
-        <div class="container-fluid">
-          <div class="d-flex align-items-center justify-content-between mb-3">
-            <div>
-              <% if (typeof banqueName !== 'undefined' && banqueName && banqueName.name) { %>
-                <h1 class="h3 mb-0 text-gray-800">Chèques - <%= banqueName.name %></h1>
-              <% } else { %>
-                <h1 class="h3 mb-0 text-gray-800">Chèques</h1>
-              <% } %>
-              <div class="small text-muted">
-                <% if (typeof pagination !== 'undefined' && pagination) { %>
-                  <%= pagination.total %> résultat(s)
-                <% } %>
-              </div>
-            </div>
-
-            <div class="d-flex" style="gap: 10px;">
-              <button id="btnExportPdf" type="button" class="btn btn-outline-danger">
-                <i class="fas fa-file-pdf mr-2"></i>PDF
-              </button>
-              <button id="btnExportExcel" type="button" class="btn btn-outline-success">
-                <i class="fas fa-file-excel mr-2"></i>Excel
-              </button>
-              <button id="btnAddCheque" type="button" class="btn btn-primary">
-                <i class="fas fa-plus mr-2"></i>Nouveau
-              </button>
-            </div>
-          </div>
-
-          <div class="card shadow mb-4">
-            <div class="card-body">
-              <div class="row mb-3">
-                <div class="col-md-3 mb-2">
-                  <label class="small text-muted mb-1">Fournisseur</label>
-                  <select id="filterFournisseur" class="form-control">
-                    <option value="">Tous</option>
-                    <% (fournisseurs || []).forEach(f => { %>
-                      <option value="<%= f.id %>" <%= (filters && String(filters.fournisseurId) === String(f.id)) ? 'selected' : '' %>><%= f.name %></option>
-                    <% }) %>
-                  </select>
-                </div>
-                <div class="col-md-3 mb-2">
-                  <label class="small text-muted mb-1">Banque</label>
-                  <select id="filterBanque" class="form-control" <%= (filters && filters.banqueId) ? 'disabled' : '' %>>
-                    <option value="">Toutes</option>
-                    <% (banques || []).forEach(b => { %>
-                      <option value="<%= b.id %>" <%= (filters && String(filters.banqueId) === String(b.id)) ? 'selected' : '' %>><%= b.name %></option>
-                    <% }) %>
-                  </select>
-                </div>
-                <div class="col-md-2 mb-2">
-                  <label class="small text-muted mb-1">Statut</label>
-                  <select id="filterStatut" class="form-control">
-                    <option value="">Tous</option>
-                    <option value="En Circulation" <%= (filters && filters.statut === 'En Circulation') ? 'selected' : '' %>>En Circulation</option>
-                    <option value="Payé" <%= (filters && filters.statut === 'Payé') ? 'selected' : '' %>>Payé</option>
-                    <option value="Impayé" <%= (filters && filters.statut === 'Impayé') ? 'selected' : '' %>>Impayé</option>
-                    <option value="Annulé" <%= (filters && filters.statut === 'Annulé') ? 'selected' : '' %>>Annulé</option>
-                    <option value="Treso" <%= (filters && filters.statut === 'Treso') ? 'selected' : '' %>>Treso</option>
-                  </select>
-                </div>
-                <div class="col-md-2 mb-2">
-                  <label class="small text-muted mb-1">Montant</label>
-                  <input id="filterMontant" class="form-control" value="<%= (filters && filters.montant) ? filters.montant : '' %>" placeholder="ex: 1200" />
-                </div>
-                <div class="col-md-3 mb-2">
-                  <label class="small text-muted mb-1">Chantier</label>
-                  <select id="filterChantier" class="form-control">
-                    <option value="">Tous</option>
-                    <% (chantiers || []).forEach(c => { %>
-                      <option value="<%= c.id %>" <%= (filters && String(filters.chantierId) === String(c.id)) ? 'selected' : '' %>><%= c.nom %></option>
-                    <% }) %>
-                  </select>
-                </div>
-                <div class="col-md-2 mb-2">
-                  <label class="small text-muted mb-1">Échéance du</label>
-                  <input id="filterEcheanceFrom" type="date" class="form-control" value="<%= (filters && filters.dateEcheanceFrom) ? filters.dateEcheanceFrom : '' %>" />
-                </div>
-                <div class="col-md-2 mb-2">
-                  <label class="small text-muted mb-1">Échéance au</label>
-                  <input id="filterEcheanceTo" type="date" class="form-control" value="<%= (filters && filters.dateEcheanceTo) ? filters.dateEcheanceTo : '' %>" />
-                </div>
-                <div class="col-md-2 mb-2">
-                  <label class="small text-muted mb-1">Recherche</label>
-                  <input id="filterSearch" class="form-control" value="<%= (filters && filters.search) ? filters.search : '' %>" placeholder="N°, bénéficiaire..." />
-                </div>
-              </div>
-
-              <div class="table-responsive">
-                <table class="table table-sm table-hover table-bordered cheque-table" style="min-width: 1250px;">
-                  <thead class="thead-light">
-                    <tr>
-                      <th>Date</th>
-                      <th>N° chèque</th>
-                      <th>Bénéficiaire</th>
-                      <th>Banque</th>
-                      <th>Échéance</th>
-                      <th>Statut</th>
-                      <th>Date règlement</th>
-                      <th>Chantier</th>
-                      <th>Montant chantier</th>
-                      <th>Observation</th>
-                      <th class="text-right">Montant</th>
-                      <th class="text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="chequeTbody">
-                    <% (cheques || []).forEach(c => { %>
-                      <tr data-id="<%= c.id %>" data-banque-name="<%= (c.banque && c.banque.name) ? c.banque.name : '' %>">
-                        <td class="cell-edit" contenteditable="true" data-field="dateEtablissement"><%= c.dateEtablissement ? new Date(c.dateEtablissement).toLocaleDateString('fr-FR') : '' %></td>
-                        <td class="cell-edit" contenteditable="true" data-field="numero"><%= c.numero || '' %></td>
-                        <td class="cell-edit" contenteditable="true" data-field="beneficiaire"><%= c.beneficiaire || '' %></td>
-                        <td><%= (c.banque && c.banque.name) ? c.banque.name : '' %></td>
-                        <td class="cell-edit" contenteditable="true" data-field="dateEcheance"><%= c.dateEcheance ? new Date(c.dateEcheance).toLocaleDateString('fr-FR') : '' %></td>
-                        <td data-field="statut" class="statut-cell">
-                          <span class="badge badge-statut <%= (c.statut || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-') %>" data-value="<%= c.statut || '' %>"><%= c.statut || '' %></span>
-                        </td>
-                        <td class="cell-edit" contenteditable="true" data-field="dateReglement"><%= c.dateReglement ? new Date(c.dateReglement).toLocaleDateString('fr-FR') : '' %></td>
-                        <td>
-                          <div class="allocations">
-                            <% 
-                              const _chantierFilterId = (filters && filters.chantierId) ? String(filters.chantierId) : '';
-                              const _displayAllocs = (c.allocations && c.allocations.length)
-                                ? (_chantierFilterId ? c.allocations.filter(a => String(a.chantierId) === _chantierFilterId) : c.allocations)
-                                : [];
-                              const _shouldUseAlloc = _displayAllocs.length > 0;
-                            %>
-
-                            <% if (_shouldUseAlloc) { %>
-                              <% _displayAllocs.forEach(a => { %>
-                                <div class="alloc-line">
-                                  <div class="alloc-name"><%= a.chantier ? a.chantier.nom : '' %></div>
-                                </div>
-                              <% }) %>
-                            <% } else if (!_chantierFilterId && c.chantier) { %>
-                              <div class="alloc-line">
-                                <div class="alloc-name"><%= c.chantier.nom %></div>
-                              </div>
-                            <% } %>
-                          </div>
-                        </td>
-
-                        <td>
-                          <div class="allocations">
-                            <% if (_shouldUseAlloc) { %>
-                              <% _displayAllocs.forEach(a => { %>
-                                <div class="alloc-line">
-                                  <div class="alloc-name">&nbsp;</div>
-                                  <div class="alloc-amount"><%= (a.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></div>
-                                </div>
-                              <% }) %>
-                            <% } else if (!_chantierFilterId && c.chantier) { %>
-                              <div class="alloc-line">
-                                <div class="alloc-name">&nbsp;</div>
-                                <div class="alloc-amount"><%= (c.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></div>
-                              </div>
-                            <% } %>
-                          </div>
-                        </td>
-
-                        <td class="cell-edit obs-cell" contenteditable="true" data-field="obs"><%= c.obs || '' %></td>
-
-                        <td class="text-right cell-edit" contenteditable="true" data-field="montant"><%= (c.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
-                        <td class="text-right">
-                          <div class="table-actions">
-                            <button class="btn btn-sm btn-outline-secondary btn-alloc" title="Chantiers">
-                              <i class="fas fa-project-diagram"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer">
-                              <i class="fas fa-trash"></i>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    <% }) %>
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <th colspan="10" class="text-right">Total</th>
-                      <th class="text-right" id="totalMontantCell">0,00</th>
-                      <th></th>
-                    </tr>
-                    <tr id="totalChantierRow" style="display:none;">
-                      <th colspan="10" class="text-right">Total chantier</th>
-                      <th class="text-right" id="totalMontantChantierCell">0,00</th>
-                      <th></th>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-
-              <div class="d-flex align-items-center justify-content-between mt-3">
-                <div class="small text-muted" id="paginationInfo">
-                  <% if (pagination) { %>
-                    Page <%= pagination.page %> / <%= pagination.totalPages %> (<%= pagination.total %> résultat(s))
-                  <% } %>
-                </div>
-                <nav aria-label="Pagination">
-                  <ul class="pagination pagination-sm mb-0" id="paginationControls">
-                    <% if (pagination) { %>
-                      <% const p = pagination.page; const totalPages = pagination.totalPages; %>
-                      <% const mkLink = (page) => {
-                        const params = new URLSearchParams();
-                        if (filters && filters.banqueId) params.set('banqueId', filters.banqueId);
-                        if (filters && filters.fournisseurId) params.set('fournisseurId', filters.fournisseurId);
-                        if (filters && filters.statut) params.set('statut', filters.statut);
-                        if (filters && filters.search) params.set('search', filters.search);
-                        if (filters && filters.montant) params.set('montant', filters.montant);
-                        if (filters && filters.chantierId) params.set('chantierId', filters.chantierId);
-                        if (filters && filters.dateEcheanceFrom) params.set('dateEcheanceFrom', filters.dateEcheanceFrom);
-                        if (filters && filters.dateEcheanceTo) params.set('dateEcheanceTo', filters.dateEcheanceTo);
-                        params.set('page', String(page));
-                        params.set('pageSize', String(pagination.pageSize));
-                        return '?' + params.toString();
-                      }; %>
-                      <li class="page-item <%= p <= 1 ? 'disabled' : '' %>"><a class="page-link" href="<%= mkLink(Math.max(p - 1, 1)) %>">Préc.</a></li>
-                      <% const start = Math.max(1, p - 2); const end = Math.min(totalPages, p + 2); %>
-                      <% for (let i = start; i <= end; i++) { %>
-                        <li class="page-item <%= i === p ? 'active' : '' %>"><a class="page-link" href="<%= mkLink(i) %>"><%= i %></a></li>
+            <div class="container-fluid">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <div>
+                  <% if (typeof banqueName !=='undefined' && banqueName && banqueName.name) { %>
+                    <h1 class="h3 mb-0 text-gray-800">Chèques - <%= banqueName.name %>
+                    </h1>
+                    <% } else { %>
+                      <h1 class="h3 mb-0 text-gray-800">Chèques</h1>
                       <% } %>
-                      <li class="page-item <%= p >= totalPages ? 'disabled' : '' %>"><a class="page-link" href="<%= mkLink(Math.min(p + 1, totalPages)) %>">Suiv.</a></li>
-                    <% } %>
-                  </ul>
-                </nav>
+                        <div class="small text-muted">
+                          <% if (typeof pagination !=='undefined' && pagination) { %>
+                            <%= pagination.total %> résultat(s)
+                              <% } %>
+                        </div>
+                </div>
+
+                <div class="d-flex" style="gap: 10px;">
+                  <button id="btnExportPdf" type="button" class="btn btn-outline-danger">
+                    <i class="fas fa-file-pdf mr-2"></i>PDF
+                  </button>
+                  <button id="btnExportExcel" type="button" class="btn btn-outline-success">
+                    <i class="fas fa-file-excel mr-2"></i>Excel
+                  </button>
+                  <button id="btnAddCheque" type="button" class="btn btn-primary">
+                    <i class="fas fa-plus mr-2"></i>Nouveau
+                  </button>
+                </div>
+              </div>
+
+              <div class="card shadow mb-4">
+                <div class="card-body">
+                  <div class="row mb-3">
+                    <div class="col-md-3 mb-2">
+                      <label class="small text-muted mb-1">Filtre </label>
+                      <div class="dropdown" id="filterTypeDropdown">
+                        <button class="btn btn-success dropdown-toggle w-100" type="button" id="filterTypeBtn"
+                          data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          Filtrer Par :
+                        </button>
+                        <div class="dropdown-menu w-100" id="filterTypeMenu" aria-labelledby="filterTypeBtn">
+                          <button class="dropdown-item" type="button"
+                            data-filter-type="fournisseur">Fournisseur</button>
+                          <button class="dropdown-item" type="button" data-filter-type="banque">Banque</button>
+                          <button class="dropdown-item" type="button" data-filter-type="statut">Statut</button>
+                          <button class="dropdown-item" type="button" data-filter-type="chantier">Chantier</button>
+                          <button class="dropdown-item" type="button" data-filter-type="montant">Montant</button>
+                          <button class="dropdown-item" type="button" data-filter-type="search">N° Chèque</button>
+                        </div>
+                      </div>
+
+                      <div id="filterDynamicContainer" class="mt-2">
+                        <div id="filterBoxFournisseur" style="display:none;">
+                          <select id="filterFournisseur" class="form-control">
+                            <option value="">Tous</option>
+                            <% (fournisseurs || []).forEach(f=> { %>
+                              <option value="<%= f.id %>" <%=(filters && String(filters.fournisseurId)===String(f.id))
+                                ? 'selected' : '' %>><%= f.name %>
+                              </option>
+                              <% }) %>
+                          </select>
+                        </div>
+                        <div id="filterBoxBanque" style="display:none;">
+                          <select id="filterBanque" class="form-control" <%=(filters && filters.banqueId) ? 'disabled'
+                            : '' %>>
+                            <option value="">Toutes</option>
+                            <% (banques || []).forEach(b=> { %>
+                              <option value="<%= b.id %>" <%=(filters && String(filters.banqueId)===String(b.id))
+                                ? 'selected' : '' %>><%= b.name %>
+                              </option>
+                              <% }) %>
+                          </select>
+                        </div>
+                        <div id="filterBoxStatut" style="display:none;">
+                          <select id="filterStatut" class="form-control">
+                            <option value="">Tous</option>
+                            <option value="En Circulation" <%=(filters && filters.statut==='En Circulation' )
+                              ? 'selected' : '' %>>En Circulation</option>
+                            <option value="Payé" <%=(filters && filters.statut==='Payé' ) ? 'selected' : '' %>>Payé
+                            </option>
+                            <option value="Impayé" <%=(filters && filters.statut==='Impayé' ) ? 'selected' : '' %>
+                              >Impayé</option>
+                            <option value="Treso" <%=(filters && filters.statut==='Treso' ) ? 'selected' : '' %>>Treso
+                            </option>
+                          </select>
+                        </div>
+                        <div id="filterBoxChantier" style="display:none;">
+                          <select id="filterChantier" class="form-control">
+                            <option value="">Tous</option>
+                            <% (chantiers || []).forEach(c=> { %>
+                              <option value="<%= c.id %>" <%=(filters && String(filters.chantierId)===String(c.id))
+                                ? 'selected' : '' %>><%= c.nom %>
+                              </option>
+                              <% }) %>
+                          </select>
+                        </div>
+                        <div id="filterBoxMontant" style="display:none;">
+                          <input id="filterMontant" class="form-control"
+                            value="<%= (filters && filters.montant) ? filters.montant : '' %>" placeholder="ex: 1200" />
+                        </div>
+                        <div id="filterBoxSearch" style="display:none;">
+                          <input id="filterSearch" class="form-control"
+                            value="<%= (filters && filters.search) ? filters.search : '' %>" placeholder="N° chèque" />
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-2 mb-2 d-flex align-items-end">
+                      <button id="btnClearFilters" type="button" class="btn btn-danger w-100" style="display:none;"><i
+                          class="fas fa-times mr-1"></i>Annuler filtre</button>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                      <label class="small text-muted mb-1">Échéance du</label>
+                      <input id="filterEcheanceFrom" type="date" class="form-control"
+                        value="<%= (filters && filters.dateEcheanceFrom) ? filters.dateEcheanceFrom : '' %>" />
+                    </div>
+                    <div class="col-md-2 mb-2">
+                      <label class="small text-muted mb-1">Échéance au</label>
+                      <input id="filterEcheanceTo" type="date" class="form-control"
+                        value="<%= (filters && filters.dateEcheanceTo) ? filters.dateEcheanceTo : '' %>" />
+                    </div>
+                  </div>
+
+                  <div class="table-responsive" id="chequesTableResponsive">
+                    <table class="table table-sm table-hover table-bordered cheque-table" style="min-width: 1250px;">
+                      <thead class="thead-light">
+                        <tr>
+                          <th>Date</th>
+                          <th>N° chèque</th>
+                          <th class="text-right">Montant</th>
+                          <th>Bénéficiaire</th>
+                          <th>Banque</th>
+                          <th>Échéance</th>
+                          <th>Statut</th>
+                          <th>Date règlement</th>
+                          <th>Chantier</th>
+                          <th>Montant chantier</th>
+                          <th>Observation</th>
+                          <th class="text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="chequeTbody">
+                        <% (cheques || []).forEach(c=> { %>
+                          <tr data-id="<%= c.id %>"
+                            data-banque-name="<%= (c.banque && c.banque.name) ? c.banque.name : '' %>">
+                            <td class="cell-edit" contenteditable="true" data-field="dateEtablissement">
+                              <%= c.dateEtablissement ? new Date(c.dateEtablissement).toLocaleDateString('fr-FR') : ''
+                                %>
+                            </td>
+                            <td class="cell-edit" contenteditable="true" data-field="numero">
+                              <%= c.numero || '' %>
+                            </td>
+                            <td class="text-right cell-edit" contenteditable="true" data-field="montant">
+                              <%= (c.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
+                                maximumFractionDigits: 2 }) %>
+                            </td>
+                            <td class="cell-edit" contenteditable="true" data-field="beneficiaire">
+                              <%= c.beneficiaire || '' %>
+                            </td>
+                            <td>
+                              <%= (c.banque && c.banque.name) ? c.banque.name : '' %>
+                            </td>
+                            <td class="cell-edit" contenteditable="true" data-field="dateEcheance">
+                              <%= c.dateEcheance ? new Date(c.dateEcheance).toLocaleDateString('fr-FR') : '' %>
+                            </td>
+                            <td data-field="statut" class="statut-cell">
+                              <span
+                                class="badge badge-statut <%= (c.statut || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-') %>"
+                                data-value="<%= c.statut || '' %>">
+                                <%= c.statut || '' %>
+                              </span>
+                            </td>
+                            <td class="cell-edit" contenteditable="true" data-field="dateReglement">
+                              <%= c.dateReglement ? new Date(c.dateReglement).toLocaleDateString('fr-FR') : '' %>
+                            </td>
+                            <td>
+                              <div class="allocations">
+                                <% const _chantierFilterId=(filters && filters.chantierId) ? String(filters.chantierId)
+                                  : '' ; const _displayAllocs=(c.allocations && c.allocations.length) ?
+                                  (_chantierFilterId ? c.allocations.filter(a=> String(a.chantierId) ===
+                                  _chantierFilterId) : c.allocations)
+                                  : [];
+                                  const _shouldUseAlloc = _displayAllocs.length > 0;
+                                  %>
+
+                                  <% if (_shouldUseAlloc) { %>
+                                    <% _displayAllocs.forEach(a=> { %>
+                                      <div class="alloc-line">
+                                        <div class="alloc-name">
+                                          <%= a.chantier ? a.chantier.nom : '' %>
+                                        </div>
+                                      </div>
+                                      <% }) %>
+                                        <% } else if (!_chantierFilterId && c.chantier) { %>
+                                          <div class="alloc-line">
+                                            <div class="alloc-name">
+                                              <%= c.chantier.nom %>
+                                            </div>
+                                          </div>
+                                          <% } %>
+                              </div>
+                            </td>
+
+                            <td>
+                              <div class="allocations">
+                                <% if (_shouldUseAlloc) { %>
+                                  <% _displayAllocs.forEach(a=> { %>
+                                    <div class="alloc-line">
+                                      <div class="alloc-name">&nbsp;</div>
+                                      <div class="alloc-amount">
+                                        <%= (a.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
+                                          maximumFractionDigits: 2 }) %>
+                                      </div>
+                                    </div>
+                                    <% }) %>
+                                      <% } else if (!_chantierFilterId && c.chantier) { %>
+                                        <div class="alloc-line">
+                                          <div class="alloc-name">&nbsp;</div>
+                                          <div class="alloc-amount">
+                                            <%= (c.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
+                                              maximumFractionDigits: 2 }) %>
+                                          </div>
+                                        </div>
+                                        <% } %>
+                              </div>
+                            </td>
+
+                            <td class="cell-edit obs-cell" contenteditable="true" data-field="obs">
+                              <%= c.obs || '' %>
+                            </td>
+                            <td class="text-right">
+                              <div class="table-actions">
+                                <button class="btn btn-sm btn-outline-secondary btn-alloc" title="Chantiers">
+                                  <i class="fas fa-project-diagram"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer">
+                                  <i class="fas fa-trash"></i>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                          <% }) %>
+                      </tbody>
+                      <tfoot>
+                        <tr>
+                          <th colspan="2" class="text-right">Total</th>
+                          <th class="text-right" id="totalMontantCell">0,00</th>
+                          <th colspan="9"></th>
+                        </tr>
+                        <tr id="totalChantierRow" style="display:none;">
+                          <th colspan="9" class="text-right">Total chantier</th>
+                          <th class="text-right" id="totalMontantChantierCell">0,00</th>
+                          <th colspan="2"></th>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+
+                  <div id="chequesBottomHScroll" class="bottom-hscroll" aria-hidden="true">
+                    <div id="chequesBottomHScrollInner" class="bottom-hscroll-inner"></div>
+                  </div>
+
+                  <div class="d-flex align-items-center justify-content-between mt-3">
+                    <div class="small text-muted" id="paginationInfo">
+                      <% if (pagination) { %>
+                        Page <%= pagination.page %> / <%= pagination.totalPages %> (<%= pagination.total %> résultat(s))
+                              <% } %>
+                    </div>
+                    <nav aria-label="Pagination">
+                      <ul class="pagination pagination-sm mb-0" id="paginationControls">
+                        <% if (pagination) { %>
+                          <% const p=pagination.page; const totalPages=pagination.totalPages; %>
+                            <% const mkLink=(page)=> {
+                              const params = new URLSearchParams();
+                              if (filters && filters.banqueId) params.set('banqueId', filters.banqueId);
+                              if (filters && filters.fournisseurId) params.set('fournisseurId', filters.fournisseurId);
+                              if (filters && filters.statut) params.set('statut', filters.statut);
+                              if (filters && filters.search) params.set('search', filters.search);
+                              if (filters && filters.montant) params.set('montant', filters.montant);
+                              if (filters && filters.chantierId) params.set('chantierId', filters.chantierId);
+                              if (filters && filters.dateEcheanceFrom) params.set('dateEcheanceFrom',
+                              filters.dateEcheanceFrom);
+                              if (filters && filters.dateEcheanceTo) params.set('dateEcheanceTo',
+                              filters.dateEcheanceTo);
+                              params.set('page', String(page));
+                              params.set('pageSize', String(pagination.pageSize));
+                              return '?' + params.toString();
+                              }; %>
+                              <li class="page-item <%= p <= 1 ? 'disabled' : '' %>"><a class="page-link"
+                                  href="<%= mkLink(Math.max(p - 1, 1)) %>">Préc.</a></li>
+                              <% const start=Math.max(1, p - 2); const end=Math.min(totalPages, p + 2); %>
+                                <% for (let i=start; i <=end; i++) { %>
+                                  <li class="page-item <%= i === p ? 'active' : '' %>"><a class="page-link"
+                                      href="<%= mkLink(i) %>">
+                                      <%= i %>
+                                    </a></li>
+                                  <% } %>
+                                    <li class="page-item <%= p >= totalPages ? 'disabled' : '' %>"><a class="page-link"
+                                        href="<%= mkLink(Math.min(p + 1, totalPages)) %>">Suiv.</a></li>
+                                    <% } %>
+                      </ul>
+                    </nav>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
         </div>
-      </div>
 
-      <div class="modal fade" id="createChequeModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Créer un chèque</h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-            <div class="modal-body">
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label class="small text-muted mb-1">Bénéficiaire (Fournisseur)</label>
-                  <select id="createFournisseur" class="form-control"></select>
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label class="small text-muted mb-1">Banque</label>
-                  <select id="createBanque" class="form-control"></select>
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label class="small text-muted mb-1">Date d'échéance</label>
-                  <input id="createDateEcheance" type="date" class="form-control" />
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label class="small text-muted mb-1">Montant (auto)</label>
-                  <input id="createMontant" class="form-control" readonly />
-                </div>
-                <div class="col-12 mb-2">
-                  <label class="small text-muted mb-1">Observation</label>
-                  <input id="createObs" class="form-control" />
-                </div>
-              </div>
-
-              <div class="d-flex align-items-center justify-content-between mt-2 mb-2">
-                <div class="small text-muted">Affectations chantiers</div>
-                <button id="btnCreateAddAlloc" class="btn btn-sm btn-outline-primary" type="button">
-                  <i class="fas fa-plus mr-2"></i>Ajouter chantier
+        <div class="modal fade" id="createChequeModal" tabindex="-1" role="dialog" aria-hidden="true">
+          <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Créer un chèque</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
                 </button>
               </div>
+              <div class="modal-body">
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label class="small text-muted mb-1">Bénéficiaire (Fournisseur)</label>
+                    <select id="createFournisseur" class="form-control"></select>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="small text-muted mb-1">Banque</label>
+                    <select id="createBanque" class="form-control"></select>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="small text-muted mb-1">Date d'échéance</label>
+                    <input id="createDateEcheance" type="date" class="form-control" />
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="small text-muted mb-1">Montant (auto)</label>
+                    <input id="createMontant" class="form-control" readonly />
+                  </div>
+                  <div class="col-12 mb-2">
+                    <label class="small text-muted mb-1">Observation</label>
+                    <input id="createObs" class="form-control" />
+                  </div>
+                </div>
 
-              <div id="createAllocList" class="d-grid" style="gap: 10px;"></div>
-              <div class="small text-muted mt-2" id="createAllocTotals"></div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
-              <button type="button" class="btn btn-primary" id="btnCreateChequeConfirm">Créer</button>
+                <div class="d-flex align-items-center justify-content-between mt-2 mb-2">
+                  <div class="small text-muted">Affectations chantiers</div>
+                  <button id="btnCreateAddAlloc" class="btn btn-sm btn-outline-primary" type="button">
+                    <i class="fas fa-plus mr-2"></i>Ajouter chantier
+                  </button>
+                </div>
+
+                <div id="createAllocList" class="d-grid" style="gap: 10px;"></div>
+                <div class="small text-muted mt-2" id="createAllocTotals"></div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="btnCreateChequeConfirm">Créer</button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="modal fade" id="allocModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Chantiers & montants</h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-            <div class="modal-body">
-              <div class="small text-muted" id="allocTotals"></div>
-              <div id="allocList" class="d-grid" style="gap: 10px;"></div>
-              <button id="btnAddAllocLine" class="btn btn-sm btn-outline-primary mt-3"><i class="fas fa-plus mr-2"></i>Ajouter chantier</button>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
-              <button type="button" class="btn btn-primary" id="btnSaveAlloc">Enregistrer</button>
+        <div class="modal fade" id="allocModal" tabindex="-1" role="dialog" aria-hidden="true">
+          <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Chantiers & montants</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <div class="small text-muted" id="allocTotals"></div>
+                <div id="allocList" class="d-grid" style="gap: 10px;"></div>
+                <button id="btnAddAllocLine" class="btn btn-sm btn-outline-primary mt-3"><i
+                    class="fas fa-plus mr-2"></i>Ajouter chantier</button>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-primary" id="btnSaveAlloc">Enregistrer</button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <script src="/vendor/jquery/jquery.min.js"></script>
-      <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-      <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
-      <script src="/js/sb-admin-2.min.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        <script src="/vendor/jquery/jquery.min.js"></script>
+        <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+        <script src="/js/sb-admin-2.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-      <script type="application/json" id="chequesPageData">
+        <script type="application/json" id="chequesPageData">
         <%- JSON.stringify({
           fournisseurs: (fournisseurs || []).map(f => ({ id: f.id, name: f.name })),
           chantiers: (chantiers || []).map(c => ({ id: c.id, nom: c.nom })),
@@ -374,217 +577,231 @@
         }) %>
       </script>
 
-      <script>
-        (function () {
-          const apiUrl = '/api/cheques';
-          const $tbody = document.getElementById('chequeTbody');
-          const $paginationInfo = document.getElementById('paginationInfo');
-          const $totalMontantCell = document.getElementById('totalMontantCell');
-          const $totalMontantChantierCell = document.getElementById('totalMontantChantierCell');
-          const $totalChantierRow = document.getElementById('totalChantierRow');
+        <script>
+          (function () {
+            const apiUrl = '/api/cheques';
+            const $tbody = document.getElementById('chequeTbody');
+            const $paginationInfo = document.getElementById('paginationInfo');
+            const $totalMontantCell = document.getElementById('totalMontantCell');
+            const $totalMontantChantierCell = document.getElementById('totalMontantChantierCell');
+            const $totalChantierRow = document.getElementById('totalChantierRow');
 
-          const $paginationControls = document.getElementById('paginationControls');
+            const $paginationControls = document.getElementById('paginationControls');
 
-          const $filterFournisseur = document.getElementById('filterFournisseur');
-          const $filterBanque = document.getElementById('filterBanque');
-          const $filterStatut = document.getElementById('filterStatut');
-          const $filterMontant = document.getElementById('filterMontant');
-          const $filterChantier = document.getElementById('filterChantier');
-          const $filterEcheanceFrom = document.getElementById('filterEcheanceFrom');
-          const $filterEcheanceTo = document.getElementById('filterEcheanceTo');
-          const $filterSearch = document.getElementById('filterSearch');
+            const $filterFournisseur = document.getElementById('filterFournisseur');
+            const $filterBanque = document.getElementById('filterBanque');
+            const $filterStatut = document.getElementById('filterStatut');
+            const $filterMontant = document.getElementById('filterMontant');
+            const $filterChantier = document.getElementById('filterChantier');
+            const $filterEcheanceFrom = document.getElementById('filterEcheanceFrom');
+            const $filterEcheanceTo = document.getElementById('filterEcheanceTo');
+            const $filterSearch = document.getElementById('filterSearch');
 
-          const $btnExportPdf = document.getElementById('btnExportPdf');
-          const $btnExportExcel = document.getElementById('btnExportExcel');
-          const $btnAddCheque = document.getElementById('btnAddCheque');
-          const $allocModal = $('#allocModal');
-          const $createChequeModal = $('#createChequeModal');
-          const $allocList = document.getElementById('allocList');
-          const $btnAddAllocLine = document.getElementById('btnAddAllocLine');
-          const $btnSaveAlloc = document.getElementById('btnSaveAlloc');
+            const $filterTypeBtn = document.getElementById('filterTypeBtn');
+            const $filterTypeDropdown = document.getElementById('filterTypeDropdown');
+            const $filterTypeMenu = document.getElementById('filterTypeMenu');
+            const $filterBoxFournisseur = document.getElementById('filterBoxFournisseur');
+            const $filterBoxBanque = document.getElementById('filterBoxBanque');
+            const $filterBoxStatut = document.getElementById('filterBoxStatut');
+            const $filterBoxChantier = document.getElementById('filterBoxChantier');
+            const $filterBoxMontant = document.getElementById('filterBoxMontant');
+            const $filterBoxSearch = document.getElementById('filterBoxSearch');
 
-          const $createFournisseur = document.getElementById('createFournisseur');
-          const $createBanque = document.getElementById('createBanque');
-          const $createDateEcheance = document.getElementById('createDateEcheance');
-          const $createMontant = document.getElementById('createMontant');
-          const $createObs = document.getElementById('createObs');
-          const $createAllocList = document.getElementById('createAllocList');
-          const $createAllocTotals = document.getElementById('createAllocTotals');
-          const $btnCreateAddAlloc = document.getElementById('btnCreateAddAlloc');
-          const $btnCreateChequeConfirm = document.getElementById('btnCreateChequeConfirm');
+            const $btnClearFilters = document.getElementById('btnClearFilters');
 
-          const pageData = JSON.parse(document.getElementById('chequesPageData').textContent);
-          const fournisseurs = pageData.fournisseurs || [];
-          const chantiers = pageData.chantiers || [];
-          const banques = pageData.banques || [];
-          const fixedBanqueName = pageData.banqueName || '';
+            const $btnExportPdf = document.getElementById('btnExportPdf');
+            const $btnExportExcel = document.getElementById('btnExportExcel');
+            const $btnAddCheque = document.getElementById('btnAddCheque');
+            const $allocModal = $('#allocModal');
+            const $createChequeModal = $('#createChequeModal');
+            const $allocList = document.getElementById('allocList');
+            const $btnAddAllocLine = document.getElementById('btnAddAllocLine');
+            const $btnSaveAlloc = document.getElementById('btnSaveAlloc');
 
-          let state = {
-            page: (pageData.pagination && pageData.pagination.page) ? pageData.pagination.page : 1,
-            pageSize: (pageData.pagination && pageData.pagination.pageSize) ? pageData.pagination.pageSize : 25,
-            banqueId: (pageData.filters && pageData.filters.banqueId) ? pageData.filters.banqueId : '',
-            fournisseurId: (pageData.filters && pageData.filters.fournisseurId) ? pageData.filters.fournisseurId : '',
-            statut: (pageData.filters && pageData.filters.statut) ? pageData.filters.statut : '',
-            montant: (pageData.filters && pageData.filters.montant) ? pageData.filters.montant : '',
-            chantierId: (pageData.filters && pageData.filters.chantierId) ? pageData.filters.chantierId : '',
-            dateEcheanceFrom: (pageData.filters && pageData.filters.dateEcheanceFrom) ? pageData.filters.dateEcheanceFrom : '',
-            dateEcheanceTo: (pageData.filters && pageData.filters.dateEcheanceTo) ? pageData.filters.dateEcheanceTo : '',
-            search: (pageData.filters && pageData.filters.search) ? pageData.filters.search : ''
-          };
+            const $createFournisseur = document.getElementById('createFournisseur');
+            const $createBanque = document.getElementById('createBanque');
+            const $createDateEcheance = document.getElementById('createDateEcheance');
+            const $createMontant = document.getElementById('createMontant');
+            const $createObs = document.getElementById('createObs');
+            const $createAllocList = document.getElementById('createAllocList');
+            const $createAllocTotals = document.getElementById('createAllocTotals');
+            const $btnCreateAddAlloc = document.getElementById('btnCreateAddAlloc');
+            const $btnCreateChequeConfirm = document.getElementById('btnCreateChequeConfirm');
 
-          let editingAllocChequeId = null;
-          let editingAllocations = [];
-          let editingAllocChequeMontant = null;
+            const pageData = JSON.parse(document.getElementById('chequesPageData').textContent);
+            const fournisseurs = pageData.fournisseurs || [];
+            const chantiers = pageData.chantiers || [];
+            const banques = pageData.banques || [];
+            const fixedBanqueName = pageData.banqueName || '';
 
-          let createAllocations = [];
+            let state = {
+              page: (pageData.pagination && pageData.pagination.page) ? pageData.pagination.page : 1,
+              pageSize: (pageData.pagination && pageData.pagination.pageSize) ? pageData.pagination.pageSize : 25,
+              banqueId: (pageData.filters && pageData.filters.banqueId) ? pageData.filters.banqueId : '',
+              fournisseurId: (pageData.filters && pageData.filters.fournisseurId) ? pageData.filters.fournisseurId : '',
+              statut: (pageData.filters && pageData.filters.statut) ? pageData.filters.statut : '',
+              montant: (pageData.filters && pageData.filters.montant) ? pageData.filters.montant : '',
+              chantierId: (pageData.filters && pageData.filters.chantierId) ? pageData.filters.chantierId : '',
+              dateEcheanceFrom: (pageData.filters && pageData.filters.dateEcheanceFrom) ? pageData.filters.dateEcheanceFrom : '',
+              dateEcheanceTo: (pageData.filters && pageData.filters.dateEcheanceTo) ? pageData.filters.dateEcheanceTo : '',
+              search: (pageData.filters && pageData.filters.search) ? pageData.filters.search : ''
+            };
 
-          function normalizeStatutClass(statut) {
-            return String(statut || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-');
-          }
+            let editingAllocChequeId = null;
+            let editingAllocations = [];
+            let editingAllocChequeMontant = null;
 
-          const statutOptions = ['En Circulation', 'Payé', 'Impayé', 'Annulé', 'Treso'];
+            let createAllocations = [];
+            let activeFilterType = '';
 
-          function statutBadgeHtml(statut) {
-            const cls = normalizeStatutClass(statut);
-            const label = String(statut || '').trim();
-            return `<span class="badge badge-statut ${cls}" data-value="${label}">${label}</span>`;
-          }
-
-          function moneyFr(v) {
-            const n = Number(v || 0);
-            return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-          }
-
-          function parseMoney(v) {
-            const s = String(v || '').trim();
-            if (!s) return null;
-            const cleaned = s.replace(/\s/g, '').replace(/[^0-9,.-]/g, '').replace(',', '.');
-            const n = Number(cleaned);
-            return Number.isNaN(n) ? null : n;
-          }
-
-          function buildQuery(page) {
-            const p = new URLSearchParams();
-            p.set('page', String(page || state.page || 1));
-            p.set('pageSize', String(state.pageSize || 25));
-            if (state.banqueId) p.set('banqueId', state.banqueId);
-
-            if (state.fournisseurId) p.set('fournisseurId', state.fournisseurId);
-            if (state.statut) p.set('statut', state.statut);
-            if (state.search) p.set('search', state.search);
-            if (state.montant) p.set('montant', state.montant);
-            if (state.chantierId) p.set('chantierId', state.chantierId);
-            if (state.dateEcheanceFrom) p.set('dateEcheanceFrom', state.dateEcheanceFrom);
-            if (state.dateEcheanceTo) p.set('dateEcheanceTo', state.dateEcheanceTo);
-            return p;
-          }
-
-          function buildExportParams() {
-            const p = new URLSearchParams();
-            if (state.banqueId) p.set('banqueId', state.banqueId);
-            if (state.fournisseurId) p.set('fournisseurId', state.fournisseurId);
-            if (state.statut) p.set('statut', state.statut);
-            if (state.search) p.set('search', state.search);
-            if (state.montant) p.set('montant', state.montant);
-            if (state.chantierId) p.set('chantierId', state.chantierId);
-            if (state.dateEcheanceFrom) p.set('dateEcheanceFrom', state.dateEcheanceFrom);
-            if (state.dateEcheanceTo) p.set('dateEcheanceTo', state.dateEcheanceTo);
-            return p;
-          }
-
-          async function fetchPage(page) {
-            const params = buildQuery(page);
-            const res = await fetch(apiUrl + '?' + params.toString(), { headers: { 'Accept': 'application/json' } });
-            const json = await res.json().catch(() => ({}));
-            if (!res.ok || !json || json.success === false) {
-              throw new Error(json && json.error ? json.error : 'Erreur chargement');
-            }
-            return json;
-          }
-
-          function setTotalMontant(v) {
-            if (!$totalMontantCell) return;
-            const n = Number(v || 0);
-            $totalMontantCell.textContent = n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-          }
-
-          function setTotalMontantChantier(v) {
-            if (!$totalMontantChantierCell) return;
-            const n = Number(v || 0);
-            $totalMontantChantierCell.textContent = n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-          }
-
-          function setTotalChantierVisible(isVisible) {
-            if (!$totalChantierRow) return;
-            $totalChantierRow.style.display = isVisible ? '' : 'none';
-          }
-
-          function renderPagination(pagination, totalMontant, totalMontantChantier) {
-            const page = pagination.page;
-            const totalPages = pagination.totalPages;
-            const n = Number(totalMontant || 0);
-            const hasChantierFilter = Boolean(String(state.chantierId || '').trim());
-            if (hasChantierFilter) {
-              const nChantier = Number(totalMontantChantier || 0);
-              $paginationInfo.textContent = `Page ${page} / ${totalPages} (${pagination.total} résultat(s)) - Total : ${n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} - Total chantier : ${nChantier.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-            } else {
-              $paginationInfo.textContent = `Page ${page} / ${totalPages} (${pagination.total} résultat(s)) - Total : ${n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            function normalizeStatutClass(statut) {
+              return String(statut || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
             }
 
-            const start = Math.max(1, page - 2);
-            const end = Math.min(totalPages, page + 2);
+            const statutOptions = ['En Circulation', 'Payé', 'Impayé', 'Treso'];
 
-            $paginationControls.innerHTML = '';
-
-            function addItem(label, targetPage, disabled, active) {
-              const li = document.createElement('li');
-              li.className = `page-item${disabled ? ' disabled' : ''}${active ? ' active' : ''}`;
-              const a = document.createElement('a');
-              a.className = 'page-link';
-              a.href = '#';
-              a.textContent = label;
-              a.addEventListener('click', async (e) => {
-                e.preventDefault();
-                if (disabled) return;
-                await refresh(targetPage);
-              });
-              li.appendChild(a);
-              $paginationControls.appendChild(li);
+            function statutBadgeHtml(statut) {
+              const cls = normalizeStatutClass(statut);
+              const label = String(statut || '').trim();
+              return `<span class="badge badge-statut ${cls}" data-value="${label}">${label}</span>`;
             }
 
-            addItem('Préc.', Math.max(1, page - 1), page <= 1, false);
-            for (let i = start; i <= end; i++) addItem(String(i), i, false, i === page);
-            addItem('Suiv.', Math.min(totalPages, page + 1), page >= totalPages, false);
-          }
+            function moneyFr(v) {
+              const n = Number(v || 0);
+              return n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
 
-          function renderRows(cheques) {
-            $tbody.innerHTML = '';
-            for (const c of cheques) {
-              const tr = document.createElement('tr');
-              tr.dataset.id = String(c.id);
-              tr.dataset.banqueName = (c.banque && c.banque.name) ? String(c.banque.name) : '';
+            function parseMoney(v) {
+              const s = String(v || '').trim();
+              if (!s) return null;
+              const cleaned = s.replace(/\s/g, '').replace(/[^0-9,.-]/g, '').replace(',', '.');
+              const n = Number(cleaned);
+              return Number.isNaN(n) ? null : n;
+            }
 
-              const allocs = Array.isArray(c.allocations) ? c.allocations : [];
-              const chantierFallback = c.chantier ? [{ chantier: c.chantier, montant: c.montant || 0 }] : [];
-              const chantierFilterId = state.chantierId ? String(state.chantierId) : '';
-              const filteredAllocs = chantierFilterId ? allocs.filter(a => String(a.chantierId) === chantierFilterId) : allocs;
-              const displayAllocs = filteredAllocs.length ? filteredAllocs : (chantierFilterId ? [] : chantierFallback);
+            function buildQuery(page) {
+              const p = new URLSearchParams();
+              p.set('page', String(page || state.page || 1));
+              p.set('pageSize', String(state.pageSize || 25));
+              if (state.banqueId) p.set('banqueId', state.banqueId);
 
-              const chantierHtml = displayAllocs.map(a => {
-                const nom = a && a.chantier ? a.chantier.nom : '';
-                return `<div class="alloc-line"><div class="alloc-name">${nom}</div></div>`;
-              }).join('');
+              if (state.fournisseurId) p.set('fournisseurId', state.fournisseurId);
+              if (state.statut) p.set('statut', state.statut);
+              if (state.search) p.set('search', state.search);
+              if (state.montant) p.set('montant', state.montant);
+              if (state.chantierId) p.set('chantierId', state.chantierId);
+              if (state.dateEcheanceFrom) p.set('dateEcheanceFrom', state.dateEcheanceFrom);
+              if (state.dateEcheanceTo) p.set('dateEcheanceTo', state.dateEcheanceTo);
+              return p;
+            }
 
-              const chantierAmountHtml = displayAllocs.map(a => {
-                const amt = a ? a.montant : 0;
-                return `<div class="alloc-line"><div class="alloc-name">&nbsp;</div><div class="alloc-amount">${moneyFr(amt)}</div></div>`;
-              }).join('');
+            function buildExportParams() {
+              const p = new URLSearchParams();
+              if (state.banqueId) p.set('banqueId', state.banqueId);
+              if (state.fournisseurId) p.set('fournisseurId', state.fournisseurId);
+              if (state.statut) p.set('statut', state.statut);
+              if (state.search) p.set('search', state.search);
+              if (state.montant) p.set('montant', state.montant);
+              if (state.chantierId) p.set('chantierId', state.chantierId);
+              if (state.dateEcheanceFrom) p.set('dateEcheanceFrom', state.dateEcheanceFrom);
+              if (state.dateEcheanceTo) p.set('dateEcheanceTo', state.dateEcheanceTo);
+              return p;
+            }
 
-              const statutBadge = statutBadgeHtml(c.statut);
+            async function fetchPage(page) {
+              const params = buildQuery(page);
+              const res = await fetch(apiUrl + '?' + params.toString(), { headers: { 'Accept': 'application/json' } });
+              const json = await res.json().catch(() => ({}));
+              if (!res.ok || !json || json.success === false) {
+                throw new Error(json && json.error ? json.error : 'Erreur chargement');
+              }
+              return json;
+            }
 
-              tr.innerHTML = `
+            function setTotalMontant(v) {
+              if (!$totalMontantCell) return;
+              const n = Number(v || 0);
+              $totalMontantCell.textContent = n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            function setTotalMontantChantier(v) {
+              if (!$totalMontantChantierCell) return;
+              const n = Number(v || 0);
+              $totalMontantChantierCell.textContent = n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            function setTotalChantierVisible(isVisible) {
+              if (!$totalChantierRow) return;
+              $totalChantierRow.style.display = isVisible ? '' : 'none';
+            }
+
+            function renderPagination(pagination, totalMontant, totalMontantChantier) {
+              const page = pagination.page;
+              const totalPages = pagination.totalPages;
+              const n = Number(totalMontant || 0);
+              const hasChantierFilter = Boolean(String(state.chantierId || '').trim());
+              if (hasChantierFilter) {
+                const nChantier = Number(totalMontantChantier || 0);
+                $paginationInfo.textContent = `Page ${page} / ${totalPages} (${pagination.total} résultat(s)) - Total : ${n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} - Total chantier : ${nChantier.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+              } else {
+                $paginationInfo.textContent = `Page ${page} / ${totalPages} (${pagination.total} résultat(s)) - Total : ${n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+              }
+
+              const start = Math.max(1, page - 2);
+              const end = Math.min(totalPages, page + 2);
+
+              $paginationControls.innerHTML = '';
+
+              function addItem(label, targetPage, disabled, active) {
+                const li = document.createElement('li');
+                li.className = `page-item${disabled ? ' disabled' : ''}${active ? ' active' : ''}`;
+                const a = document.createElement('a');
+                a.className = 'page-link';
+                a.href = '#';
+                a.textContent = label;
+                a.addEventListener('click', async (e) => {
+                  e.preventDefault();
+                  if (disabled) return;
+                  await refresh(targetPage);
+                });
+                li.appendChild(a);
+                $paginationControls.appendChild(li);
+              }
+
+              addItem('Préc.', Math.max(1, page - 1), page <= 1, false);
+              for (let i = start; i <= end; i++) addItem(String(i), i, false, i === page);
+              addItem('Suiv.', Math.min(totalPages, page + 1), page >= totalPages, false);
+            }
+
+            function renderRows(cheques) {
+              $tbody.innerHTML = '';
+              for (const c of cheques) {
+                const tr = document.createElement('tr');
+                tr.dataset.id = String(c.id);
+                tr.dataset.banqueName = (c.banque && c.banque.name) ? String(c.banque.name) : '';
+
+                const allocs = Array.isArray(c.allocations) ? c.allocations : [];
+                const chantierFallback = c.chantier ? [{ chantier: c.chantier, montant: c.montant || 0 }] : [];
+                const chantierFilterId = state.chantierId ? String(state.chantierId) : '';
+                const filteredAllocs = chantierFilterId ? allocs.filter(a => String(a.chantierId) === chantierFilterId) : allocs;
+                const displayAllocs = filteredAllocs.length ? filteredAllocs : (chantierFilterId ? [] : chantierFallback);
+
+                const chantierHtml = displayAllocs.map(a => {
+                  const nom = a && a.chantier ? a.chantier.nom : '';
+                  return `<div class="alloc-line"><div class="alloc-name">${nom}</div></div>`;
+                }).join('');
+
+                const chantierAmountHtml = displayAllocs.map(a => {
+                  const amt = a ? a.montant : 0;
+                  return `<div class="alloc-line"><div class="alloc-name">&nbsp;</div><div class="alloc-amount">${moneyFr(amt)}</div></div>`;
+                }).join('');
+
+                const statutBadge = statutBadgeHtml(c.statut);
+
+                tr.innerHTML = `
                 <td class="cell-edit" contenteditable="true" data-field="dateEtablissement">${formatFrDateFromAny(c.dateEtablissement)}</td>
                 <td class="cell-edit" contenteditable="true" data-field="numero">${c.numero || ''}</td>
+                <td class="text-right cell-edit" contenteditable="true" data-field="montant">${moneyFr(c.montant || 0)}</td>
                 <td class="cell-edit" contenteditable="true" data-field="beneficiaire">${c.beneficiaire || ''}</td>
                 <td>${(c.banque && c.banque.name) ? c.banque.name : ''}</td>
                 <td class="cell-edit" contenteditable="true" data-field="dateEcheance">${formatFrDateFromAny(c.dateEcheance)}</td>
@@ -593,7 +810,6 @@
                 <td><div class="allocations">${chantierHtml}</div></td>
                 <td><div class="allocations">${chantierAmountHtml}</div></td>
                 <td class="cell-edit obs-cell" contenteditable="true" data-field="obs">${c.obs || ''}</td>
-                <td class="text-right cell-edit" contenteditable="true" data-field="montant">${moneyFr(c.montant || 0)}</td>
                 <td class="text-right">
                   <div class="table-actions">
                     <button class="btn btn-sm btn-outline-secondary btn-alloc" title="Chantiers">
@@ -606,626 +822,832 @@
                 </td>
               `;
 
-              $tbody.appendChild(tr);
+                $tbody.appendChild(tr);
+              }
             }
-          }
 
-          async function refresh(page) {
-            const json = await fetchPage(page);
-            state.page = json.pagination.page;
-            renderRows(json.data || []);
-            const totalAll = Number(json && json.totalMontant ? json.totalMontant : 0);
-            const totalChantier = Number(json && json.totalMontantChantier ? json.totalMontantChantier : 0);
-            const hasChantierFilter = Boolean(String(state.chantierId || '').trim());
+            async function refresh(page) {
+              const json = await fetchPage(page);
+              state.page = json.pagination.page;
+              renderRows(json.data || []);
+              const totalAll = Number(json && json.totalMontant ? json.totalMontant : 0);
+              const totalChantier = Number(json && json.totalMontantChantier ? json.totalMontantChantier : 0);
+              const hasChantierFilter = Boolean(String(state.chantierId || '').trim());
 
-            setTotalMontant(totalAll);
-            setTotalChantierVisible(hasChantierFilter);
-            if (hasChantierFilter) setTotalMontantChantier(totalChantier);
+              setTotalMontant(totalAll);
+              setTotalChantierVisible(hasChantierFilter);
+              if (hasChantierFilter) setTotalMontantChantier(totalChantier);
 
-            renderPagination(json.pagination, totalAll, totalChantier);
-          }
-
-          let debounceT = null;
-          function debounceRefresh() {
-            if (debounceT) clearTimeout(debounceT);
-            debounceT = setTimeout(() => refresh(1).catch(() => {}), 250);
-          }
-
-          function currentBanqueName() {
-            if (fixedBanqueName) return fixedBanqueName;
-            if (state.banqueId) {
-              const b = banques.find(x => String(x.id) === String(state.banqueId));
-              if (b && b.name) return b.name;
+              renderPagination(json.pagination, totalAll, totalChantier);
+              updateBottomHScroll();
             }
-            const selected = document.querySelector('#filterBanque option:checked');
-            if (selected && selected.textContent) return selected.textContent.trim();
-            return '';
-          }
 
-          const patchQueues = new Map();
-          function enqueuePatchCheque(id, data) {
-            const key = String(id);
-            const prev = patchQueues.get(key) || Promise.resolve();
-            const next = prev
-              .catch(() => {})
-              .then(() => patchCheque(id, data));
-            patchQueues.set(key, next);
-            next.finally(() => {
-              if (patchQueues.get(key) === next) patchQueues.delete(key);
+            let debounceT = null;
+            function debounceRefresh() {
+              if (debounceT) clearTimeout(debounceT);
+              debounceT = setTimeout(() => refresh(1).catch(() => { }), 250);
+            }
+
+            function currentBanqueName() {
+              if (fixedBanqueName) return fixedBanqueName;
+              if (state.banqueId) {
+                const b = banques.find(x => String(x.id) === String(state.banqueId));
+                if (b && b.name) return b.name;
+              }
+              const selected = document.querySelector('#filterBanque option:checked');
+              if (selected && selected.textContent) return selected.textContent.trim();
+              return '';
+            }
+
+            function updateBottomHScroll() {
+              const sc = document.getElementById('chequesTableResponsive');
+              const bar = document.getElementById('chequesBottomHScroll');
+              const inner = document.getElementById('chequesBottomHScrollInner');
+              if (!sc || !bar || !inner) return;
+
+              inner.style.width = sc.scrollWidth + 'px';
+              bar.scrollLeft = sc.scrollLeft;
+            }
+
+            function updateClearFilterVisibility() {
+              if (!$btnClearFilters) return;
+              const active = !!(activeFilterType || state.fournisseurId || state.statut || state.chantierId ||
+                state.montant || state.search || state.dateEcheanceFrom || state.dateEcheanceTo ||
+                (!($filterBanque && $filterBanque.disabled) && state.banqueId));
+              $btnClearFilters.style.display = active ? '' : 'none';
+            }
+
+            (function initBottomHScrollSync() {
+              const sc = document.getElementById('chequesTableResponsive');
+              const bar = document.getElementById('chequesBottomHScroll');
+              if (!sc || !bar) return;
+
+              let lock = false;
+              sc.addEventListener('scroll', () => {
+                if (lock) return;
+                lock = true;
+                bar.scrollLeft = sc.scrollLeft;
+                lock = false;
+              }, { passive: true });
+
+              bar.addEventListener('scroll', () => {
+                if (lock) return;
+                lock = true;
+                sc.scrollLeft = bar.scrollLeft;
+                lock = false;
+              }, { passive: true });
+
+              window.addEventListener('resize', () => {
+                updateBottomHScroll();
+              });
+
+              setTimeout(updateBottomHScroll, 0);
+              window.addEventListener('load', () => {
+                updateBottomHScroll();
+                setTimeout(updateBottomHScroll, 200);
+              });
+            })();
+
+            const patchQueues = new Map();
+            function enqueuePatchCheque(id, data) {
+              const key = String(id);
+              const prev = patchQueues.get(key) || Promise.resolve();
+              const next = prev
+                .catch(() => { })
+                .then(() => patchCheque(id, data));
+              patchQueues.set(key, next);
+              next.finally(() => {
+                if (patchQueues.get(key) === next) patchQueues.delete(key);
+              });
+              return next;
+            }
+
+            async function patchCheque(id, data) {
+              const res = await fetch(`/tresorerie/cheques/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+              });
+              const json = await res.json().catch(() => ({}));
+              if (!res.ok) throw new Error(json && json.error ? json.error : 'Erreur mise à jour');
+              return json;
+            }
+
+            function parseInputDateToIso(value) {
+              const s = String(value || '').trim();
+              if (!s) return null;
+
+              if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+                if (!isValidIsoDate(s)) return null;
+                return s;
+              }
+
+              const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+              if (!m) return null;
+
+              const dd = Number(m[1]);
+              const mm = Number(m[2]);
+              const yyyy = Number(m[3]);
+              if (Number.isNaN(dd) || Number.isNaN(mm) || Number.isNaN(yyyy)) return null;
+              if (mm < 1 || mm > 12) return null;
+              if (dd < 1 || dd > 31) return null;
+
+              const iso = String(yyyy).padStart(4, '0') + '-' + String(mm).padStart(2, '0') + '-' + String(dd).padStart(2, '0');
+              if (!isValidIsoDate(iso)) return null;
+              return iso;
+            }
+
+            function formatFrDateFromAny(d) {
+              if (!d) return '';
+              const s = String(d).trim();
+              if (!s) return '';
+
+              // If backend sends ISO date (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss...)
+              const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+              if (iso) {
+                return `${iso[3]}/${iso[2]}/${iso[1]}`;
+              }
+
+              // If already in FR format
+              if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
+                return s;
+              }
+
+              const dd = new Date(s);
+              if (Number.isNaN(dd.getTime())) return '';
+              return dd.toLocaleDateString('fr-FR');
+            }
+
+            function isValidIsoDate(yyyyMMdd) {
+              const s = String(yyyyMMdd || '').trim();
+              if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+
+              const d = new Date(s + 'T00:00:00.000Z');
+              return !Number.isNaN(d.getTime());
+            }
+
+            function toggleFilterTypeMenu(forceOpen) {
+              if (!$filterTypeDropdown || !$filterTypeMenu) return;
+              const shouldOpen = (typeof forceOpen === 'boolean') ? forceOpen : !$filterTypeMenu.classList.contains('show');
+              if (shouldOpen) {
+                $filterTypeDropdown.classList.add('show');
+                $filterTypeMenu.classList.add('show');
+                if ($filterTypeBtn) $filterTypeBtn.setAttribute('aria-expanded', 'true');
+              } else {
+                $filterTypeDropdown.classList.remove('show');
+                $filterTypeMenu.classList.remove('show');
+                if ($filterTypeBtn) $filterTypeBtn.setAttribute('aria-expanded', 'false');
+              }
+            }
+
+            if ($filterTypeBtn) {
+              $filterTypeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                toggleFilterTypeMenu();
+              });
+            }
+
+            document.addEventListener('click', (e) => {
+              if (!$filterTypeDropdown || !$filterTypeMenu) return;
+              if ($filterTypeDropdown.contains(e.target)) return;
+              toggleFilterTypeMenu(false);
             });
-            return next;
-          }
 
-          async function patchCheque(id, data) {
-            const res = await fetch(`/tresorerie/cheques/${id}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(data)
-            });
-            const json = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(json && json.error ? json.error : 'Erreur mise à jour');
-            return json;
-          }
-
-          function parseInputDateToIso(value) {
-            const s = String(value || '').trim();
-            if (!s) return null;
-
-            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
-              if (!isValidIsoDate(s)) return null;
-              return s;
-            }
-
-            const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-            if (!m) return null;
-
-            const dd = Number(m[1]);
-            const mm = Number(m[2]);
-            const yyyy = Number(m[3]);
-            if (Number.isNaN(dd) || Number.isNaN(mm) || Number.isNaN(yyyy)) return null;
-            if (mm < 1 || mm > 12) return null;
-            if (dd < 1 || dd > 31) return null;
-
-            const iso = String(yyyy).padStart(4, '0') + '-' + String(mm).padStart(2, '0') + '-' + String(dd).padStart(2, '0');
-            if (!isValidIsoDate(iso)) return null;
-            return iso;
-          }
-
-          function formatFrDateFromAny(d) {
-            if (!d) return '';
-            const s = String(d).trim();
-            if (!s) return '';
-
-            // If backend sends ISO date (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss...)
-            const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-            if (iso) {
-              return `${iso[3]}/${iso[2]}/${iso[1]}`;
-            }
-
-            // If already in FR format
-            if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
-              return s;
-            }
-
-            const dd = new Date(s);
-            if (Number.isNaN(dd.getTime())) return '';
-            return dd.toLocaleDateString('fr-FR');
-          }
-
-          function isValidIsoDate(yyyyMMdd) {
-            const s = String(yyyyMMdd || '').trim();
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
-
-            const d = new Date(s + 'T00:00:00.000Z');
-            return !Number.isNaN(d.getTime());
-          }
-
-          $filterFournisseur.addEventListener('change', () => {
-            state.fournisseurId = $filterFournisseur.value;
-            debounceRefresh();
-          });
-          if ($filterBanque && !$filterBanque.disabled) {
-            $filterBanque.addEventListener('change', () => {
-              state.banqueId = $filterBanque.value;
+            $filterTypeDropdown.addEventListener('click', (e) => {
+              const btn = e.target && e.target.closest ? e.target.closest('[data-filter-type]') : null;
+              if (!btn) return;
+              const t = btn.getAttribute('data-filter-type');
+              setFilterType(t);
+              clearOtherDynamicFilters(t);
+              toggleFilterTypeMenu(false);
               debounceRefresh();
             });
-          }
-          $filterStatut.addEventListener('change', () => {
-            state.statut = $filterStatut.value;
-            debounceRefresh();
-          });
-          $filterMontant.addEventListener('input', () => {
-            state.montant = $filterMontant.value;
-            debounceRefresh();
-          });
-          $filterChantier.addEventListener('change', () => {
-            state.chantierId = $filterChantier.value;
-            debounceRefresh();
-          });
-          $filterEcheanceFrom.addEventListener('change', () => {
-            state.dateEcheanceFrom = $filterEcheanceFrom.value;
-            debounceRefresh();
-          });
-          $filterEcheanceTo.addEventListener('change', () => {
-            state.dateEcheanceTo = $filterEcheanceTo.value;
-            debounceRefresh();
-          });
-          $filterSearch.addEventListener('input', () => {
-            state.search = $filterSearch.value;
-            debounceRefresh();
-          });
 
-          if (window.jQuery && window.jQuery.fn && typeof window.jQuery.fn.select2 === 'function') {
-            window.jQuery(function () {
-              const $ff = window.jQuery('#filterFournisseur');
-              $ff.select2({
-                placeholder: 'Tous',
-                allowClear: true,
-                width: '100%'
-              });
+            function setFilterType(type) {
+              const t = String(type || '').trim();
+              activeFilterType = t;
+              if ($filterBoxFournisseur) $filterBoxFournisseur.style.display = (t === 'fournisseur') ? '' : 'none';
+              if ($filterBoxBanque) $filterBoxBanque.style.display = (t === 'banque') ? '' : 'none';
+              if ($filterBoxStatut) $filterBoxStatut.style.display = (t === 'statut') ? '' : 'none';
+              if ($filterBoxChantier) $filterBoxChantier.style.display = (t === 'chantier') ? '' : 'none';
+              if ($filterBoxMontant) $filterBoxMontant.style.display = (t === 'montant') ? '' : 'none';
+              if ($filterBoxSearch) $filterBoxSearch.style.display = (t === 'search') ? '' : 'none';
 
-              $ff.on('change select2:select select2:clear', function () {
-                state.fournisseurId = String(this.value || '');
-                debounceRefresh();
-              });
-            });
-          }
-
-          $tbody.addEventListener('blur', async (e) => {
-            const td = e.target.closest('td[data-field]');
-            if (!td || td.getAttribute('contenteditable') !== 'true') return;
-            const tr = td.closest('tr');
-            const id = tr && tr.dataset.id;
-            if (!id) return;
-
-            const field = td.dataset.field;
-            let value = td.textContent.trim();
-
-            if (field === 'montant') {
-              const n = parseMoney(value);
-              if (n === null) return;
-              value = String(n);
+              if ($filterTypeBtn) {
+                const label = t === 'fournisseur' ? 'Fournisseur'
+                  : t === 'banque' ? 'Banque'
+                    : t === 'statut' ? 'Statut'
+                      : t === 'chantier' ? 'Chantier'
+                        : t === 'montant' ? 'Montant'
+                          : t === 'search' ? 'N° Chèque'
+                            : ' Filtrer Par';
+                $filterTypeBtn.textContent = label;
+              }
+              updateClearFilterVisibility();
             }
 
-            try {
-              const payload = {};
-              if (field === 'dateReglement') {
-                if (value === '') {
-                  payload[field] = '';
-                } else {
-                  const iso = parseInputDateToIso(value);
-                  if (!iso) {
-                    alert('Format date règlement invalide. Utilisez JJ/MM/AAAA.');
-                    return;
-                  }
-                  payload[field] = iso;
+            function clearOtherDynamicFilters(keepType) {
+              const k = String(keepType || '').trim();
+
+              if (k !== 'fournisseur') {
+                state.fournisseurId = '';
+                if ($filterFournisseur) $filterFournisseur.value = '';
+              }
+              if (k !== 'banque') {
+                if ($filterBanque && !$filterBanque.disabled) {
+                  state.banqueId = '';
+                  $filterBanque.value = '';
                 }
-              } else if (field === 'dateEcheance' || field === 'dateEtablissement') {
-                if (value) {
-                  const iso = parseInputDateToIso(value);
-                  if (!iso) {
-                    alert('Format date invalide. Utilisez JJ/MM/AAAA.');
-                    return;
+              }
+              if (k !== 'statut') {
+                state.statut = '';
+                if ($filterStatut) $filterStatut.value = '';
+              }
+              if (k !== 'chantier') {
+                state.chantierId = '';
+                if ($filterChantier) $filterChantier.value = '';
+              }
+
+              if (k !== 'montant') {
+                state.montant = '';
+                if ($filterMontant) $filterMontant.value = '';
+              }
+
+              if (k !== 'search') {
+                state.search = '';
+                if ($filterSearch) $filterSearch.value = '';
+              }
+            }
+
+            function inferInitialFilterType() {
+              if (state.fournisseurId) return 'fournisseur';
+              if (state.banqueId) return 'banque';
+              if (state.statut) return 'statut';
+              if (state.chantierId) return 'chantier';
+              if (state.montant) return 'montant';
+              if (state.search) return 'search';
+              return '';
+            }
+
+            setFilterType(inferInitialFilterType());
+            updateClearFilterVisibility();
+
+            if ($btnClearFilters) {
+              $btnClearFilters.addEventListener('click', () => {
+                clearAllFiltersToDefault();
+              });
+            }
+
+            function clearAllFiltersToDefault() {
+              const keepBanque = Boolean($filterBanque && $filterBanque.disabled);
+
+              state.page = 1;
+              state.fournisseurId = '';
+              state.statut = '';
+              state.chantierId = '';
+              state.montant = '';
+              state.search = '';
+              state.dateEcheanceFrom = '';
+              state.dateEcheanceTo = '';
+
+              if (!keepBanque) {
+                state.banqueId = '';
+              }
+
+              if ($filterFournisseur) {
+                $filterFournisseur.value = '';
+                if (window.jQuery) {
+                  try { window.jQuery($filterFournisseur).val('').trigger('change'); } catch (e) { }
+                }
+              }
+              if ($filterStatut) $filterStatut.value = '';
+              if ($filterChantier) $filterChantier.value = '';
+              if ($filterMontant) $filterMontant.value = '';
+              if ($filterSearch) $filterSearch.value = '';
+              if ($filterEcheanceFrom) $filterEcheanceFrom.value = '';
+              if ($filterEcheanceTo) $filterEcheanceTo.value = '';
+
+              if ($filterBanque && !$filterBanque.disabled) $filterBanque.value = '';
+
+              setFilterType('');
+              updateClearFilterVisibility();
+              debounceRefresh();
+            }
+
+            $filterFournisseur.addEventListener('change', () => {
+              state.fournisseurId = $filterFournisseur.value;
+              updateClearFilterVisibility();
+              debounceRefresh();
+            });
+            if ($filterBanque && !$filterBanque.disabled) {
+              $filterBanque.addEventListener('change', () => {
+                state.banqueId = $filterBanque.value;
+                debounceRefresh();
+              });
+            }
+            $filterStatut.addEventListener('change', () => {
+              state.statut = $filterStatut.value;
+              updateClearFilterVisibility();
+              debounceRefresh();
+            });
+            $filterMontant.addEventListener('input', () => {
+              state.montant = $filterMontant.value;
+              updateClearFilterVisibility();
+              debounceRefresh();
+            });
+            $filterChantier.addEventListener('change', () => {
+              state.chantierId = $filterChantier.value;
+              updateClearFilterVisibility();
+              debounceRefresh();
+            });
+            $filterEcheanceFrom.addEventListener('change', () => {
+              state.dateEcheanceFrom = $filterEcheanceFrom.value;
+              updateClearFilterVisibility();
+              debounceRefresh();
+            });
+            $filterEcheanceTo.addEventListener('change', () => {
+              state.dateEcheanceTo = $filterEcheanceTo.value;
+              updateClearFilterVisibility();
+              debounceRefresh();
+            });
+            $filterSearch.addEventListener('input', () => {
+              state.search = $filterSearch.value;
+              updateClearFilterVisibility();
+              debounceRefresh();
+            });
+
+            if (window.jQuery && window.jQuery.fn && typeof window.jQuery.fn.select2 === 'function') {
+              window.jQuery(function () {
+                const $ff = window.jQuery('#filterFournisseur');
+                $ff.select2({
+                  placeholder: 'Tous',
+                  allowClear: true,
+                  width: '100%'
+                });
+
+                $ff.on('change select2:select select2:clear', function () {
+                  state.fournisseurId = String(this.value || '');
+                  debounceRefresh();
+                });
+              });
+            }
+
+            $tbody.addEventListener('blur', async (e) => {
+              const td = e.target.closest('td[data-field]');
+              if (!td || td.getAttribute('contenteditable') !== 'true') return;
+              const tr = td.closest('tr');
+              const id = tr && tr.dataset.id;
+              if (!id) return;
+
+              const field = td.dataset.field;
+              let value = td.textContent.trim();
+
+              if (field === 'montant') {
+                const n = parseMoney(value);
+                if (n === null) return;
+                value = String(n);
+              }
+
+              try {
+                const payload = {};
+                if (field === 'dateReglement') {
+                  if (value === '') {
+                    payload[field] = '';
+                  } else {
+                    const iso = parseInputDateToIso(value);
+                    if (!iso) {
+                      alert('Format date règlement invalide. Utilisez JJ/MM/AAAA.');
+                      return;
+                    }
+                    payload[field] = iso;
                   }
-                  payload[field] = iso;
+                } else if (field === 'dateEcheance' || field === 'dateEtablissement') {
+                  if (value) {
+                    const iso = parseInputDateToIso(value);
+                    if (!iso) {
+                      alert('Format date invalide. Utilisez JJ/MM/AAAA.');
+                      return;
+                    }
+                    payload[field] = iso;
+                  } else {
+                    payload[field] = value;
+                  }
                 } else {
                   payload[field] = value;
                 }
-              } else {
-                payload[field] = value;
+
+                if (!payload.beneficiaire) {
+                  const cell = tr.querySelector('td[data-field="beneficiaire"]');
+                  payload.beneficiaire = cell ? cell.textContent.trim() : '';
+                }
+                // Use the cheque's actual bank from the row (never the filter placeholder like "Toutes")
+                payload.banque = (tr && tr.dataset && tr.dataset.banqueName) ? tr.dataset.banqueName : currentBanqueName();
+
+                if (!payload.banque || !payload.beneficiaire) {
+                  return;
+                }
+
+                await enqueuePatchCheque(id, payload);
+              } catch (err) {
+                alert(err.message || 'Erreur');
+              }
+            }, true);
+
+            $tbody.addEventListener('click', (e) => {
+              const td = e.target.closest('td[data-field="statut"]');
+              if (!td) return;
+              const tr = td.closest('tr');
+              const id = tr && tr.dataset.id;
+              if (!id) return;
+
+              const existingSelect = td.querySelector('select[data-field="statut"]');
+              if (existingSelect) return;
+
+              const current = (td.querySelector('span.badge-statut')?.getAttribute('data-value') || '').trim();
+              const select = document.createElement('select');
+              select.className = 'form-control form-control-sm statut-select';
+              select.dataset.field = 'statut';
+              for (const s of statutOptions) {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s;
+                if (s === current) opt.selected = true;
+                select.appendChild(opt);
               }
 
-              if (!payload.beneficiaire) {
+              td.innerHTML = '';
+              td.appendChild(select);
+              select.focus();
+            });
+
+            $tbody.addEventListener('change', async (e) => {
+              const select = e.target.closest('select[data-field="statut"]');
+              if (!select) return;
+              const tr = select.closest('tr');
+              const id = tr && tr.dataset.id;
+              if (!id) return;
+
+              const value = String(select.value || '').trim();
+              try {
+                const payload = { statut: value };
+
                 const cell = tr.querySelector('td[data-field="beneficiaire"]');
                 payload.beneficiaire = cell ? cell.textContent.trim() : '';
-              }
-              // Use the cheque's actual bank from the row (never the filter placeholder like "Toutes")
-              payload.banque = (tr && tr.dataset && tr.dataset.banqueName) ? tr.dataset.banqueName : currentBanqueName();
+                // Use the cheque's actual bank from the row (never the filter placeholder like "Toutes")
+                payload.banque = (tr && tr.dataset && tr.dataset.banqueName) ? tr.dataset.banqueName : currentBanqueName();
+                if (!payload.banque || !payload.beneficiaire) return;
 
-              if (!payload.banque || !payload.beneficiaire) {
+                await enqueuePatchCheque(id, payload);
+
+                const td = select.closest('td[data-field="statut"]');
+                if (td) td.innerHTML = statutBadgeHtml(value);
+              } catch (err) {
+                alert(err.message || 'Erreur');
+              }
+            });
+
+            $tbody.addEventListener('focusout', (e) => {
+              const select = e.target.closest('select[data-field="statut"]');
+              if (!select) return;
+              const td = select.closest('td[data-field="statut"]');
+              if (!td) return;
+
+              setTimeout(() => {
+                if (!td.contains(document.activeElement) && td.querySelector('select[data-field="statut"]')) {
+                  const v = String(select.value || '').trim();
+                  td.innerHTML = statutBadgeHtml(v);
+                }
+              }, 0);
+            });
+
+            $tbody.addEventListener('click', async (e) => {
+              const btnDelete = e.target.closest('.btn-delete');
+              const btnAlloc = e.target.closest('.btn-alloc');
+              const tr = e.target.closest('tr');
+              const id = tr && tr.dataset.id;
+
+              if (btnDelete && id) {
+                if (!confirm('Supprimer ce chèque ?')) return;
+                const res = await fetch(`/tresorerie/cheques/${id}`, { method: 'DELETE' });
+                const json = await res.json().catch(() => ({}));
+                if (!res.ok) return alert(json.error || 'Erreur suppression');
+                await refresh(state.page);
                 return;
               }
 
-              await enqueuePatchCheque(id, payload);
-            } catch (err) {
-              alert(err.message || 'Erreur');
-            }
-          }, true);
+              if (btnAlloc && id) {
+                editingAllocChequeId = id;
+                try {
+                  const rowData = await (async () => {
+                    const json = await fetchPage(state.page);
+                    const found = (json.data || []).find(x => String(x.id) === String(id));
+                    return found || null;
+                  })();
 
-          $tbody.addEventListener('click', (e) => {
-            const td = e.target.closest('td[data-field="statut"]');
-            if (!td) return;
-            const tr = td.closest('tr');
-            const id = tr && tr.dataset.id;
-            if (!id) return;
+                  editingAllocChequeMontant = rowData ? Number(rowData.montant || 0) : 0;
 
-            const existingSelect = td.querySelector('select[data-field="statut"]');
-            if (existingSelect) return;
-
-            const current = (td.querySelector('span.badge-statut')?.getAttribute('data-value') || '').trim();
-            const select = document.createElement('select');
-            select.className = 'form-control form-control-sm statut-select';
-            select.dataset.field = 'statut';
-            for (const s of statutOptions) {
-              const opt = document.createElement('option');
-              opt.value = s;
-              opt.textContent = s;
-              if (s === current) opt.selected = true;
-              select.appendChild(opt);
-            }
-
-            td.innerHTML = '';
-            td.appendChild(select);
-            select.focus();
-          });
-
-          $tbody.addEventListener('change', async (e) => {
-            const select = e.target.closest('select[data-field="statut"]');
-            if (!select) return;
-            const tr = select.closest('tr');
-            const id = tr && tr.dataset.id;
-            if (!id) return;
-
-            const value = String(select.value || '').trim();
-            try {
-              const payload = { statut: value };
-
-              const cell = tr.querySelector('td[data-field="beneficiaire"]');
-              payload.beneficiaire = cell ? cell.textContent.trim() : '';
-              // Use the cheque's actual bank from the row (never the filter placeholder like "Toutes")
-              payload.banque = (tr && tr.dataset && tr.dataset.banqueName) ? tr.dataset.banqueName : currentBanqueName();
-              if (!payload.banque || !payload.beneficiaire) return;
-
-              await enqueuePatchCheque(id, payload);
-
-              const td = select.closest('td[data-field="statut"]');
-              if (td) td.innerHTML = statutBadgeHtml(value);
-            } catch (err) {
-              alert(err.message || 'Erreur');
-            }
-          });
-
-          $tbody.addEventListener('focusout', (e) => {
-            const select = e.target.closest('select[data-field="statut"]');
-            if (!select) return;
-            const td = select.closest('td[data-field="statut"]');
-            if (!td) return;
-
-            setTimeout(() => {
-              if (!td.contains(document.activeElement) && td.querySelector('select[data-field="statut"]')) {
-                const v = String(select.value || '').trim();
-                td.innerHTML = statutBadgeHtml(v);
+                  const allocs = rowData && Array.isArray(rowData.allocations) ? rowData.allocations : [];
+                  editingAllocations = allocs.map(a => ({ chantierId: a.chantierId, montant: a.montant }));
+                  if (!editingAllocations.length) editingAllocations = [{ chantierId: '', montant: '' }];
+                  renderAllocEditor();
+                  $allocModal.modal('show');
+                } catch (err) {
+                  alert(err.message || 'Erreur');
+                }
               }
-            }, 0);
-          });
-
-          $tbody.addEventListener('click', async (e) => {
-            const btnDelete = e.target.closest('.btn-delete');
-            const btnAlloc = e.target.closest('.btn-alloc');
-            const tr = e.target.closest('tr');
-            const id = tr && tr.dataset.id;
-
-            if (btnDelete && id) {
-              if (!confirm('Supprimer ce chèque ?')) return;
-              const res = await fetch(`/tresorerie/cheques/${id}`, { method: 'DELETE' });
-              const json = await res.json().catch(() => ({}));
-              if (!res.ok) return alert(json.error || 'Erreur suppression');
-              await refresh(state.page);
-              return;
-            }
-
-            if (btnAlloc && id) {
-              editingAllocChequeId = id;
-              try {
-                const rowData = await (async () => {
-                  const json = await fetchPage(state.page);
-                  const found = (json.data || []).find(x => String(x.id) === String(id));
-                  return found || null;
-                })();
-
-                editingAllocChequeMontant = rowData ? Number(rowData.montant || 0) : 0;
-
-                const allocs = rowData && Array.isArray(rowData.allocations) ? rowData.allocations : [];
-                editingAllocations = allocs.map(a => ({ chantierId: a.chantierId, montant: a.montant }));
-                if (!editingAllocations.length) editingAllocations = [{ chantierId: '', montant: '' }];
-                renderAllocEditor();
-                $allocModal.modal('show');
-              } catch (err) {
-                alert(err.message || 'Erreur');
-              }
-            }
-          });
-
-          function updateAllocTotals() {
-            const el = document.getElementById('allocTotals');
-            if (!el) return;
-
-            const amounts = editingAllocations
-              .map(a => parseMoney(a.montant))
-              .filter(v => v !== null);
-
-            const sum = amounts.reduce((acc, v) => acc + Number(v || 0), 0);
-            const chequeM = Number(editingAllocChequeMontant || 0);
-            const eps = 0.01;
-            if (!chequeM) {
-              el.textContent = `Total allocations: ${moneyFr(sum)}`;
-              el.className = 'small text-muted';
-              return;
-            }
-
-            const diff = sum - chequeM;
-            const isOver = diff > eps;
-            const isEqual = Math.abs(diff) <= eps;
-
-            el.textContent = `Total allocations: ${moneyFr(sum)} / Montant chèque: ${moneyFr(chequeM)}`;
-            el.className = `small ${isEqual ? 'text-success' : (isOver ? 'text-danger' : 'text-warning')}`;
-          }
-
-          function renderAllocEditor() {
-            $allocList.innerHTML = '';
-            for (let i = 0; i < editingAllocations.length; i++) {
-              const line = editingAllocations[i];
-
-              const wrap = document.createElement('div');
-              wrap.className = 'd-flex align-items-center';
-              wrap.style.gap = '10px';
-
-              const sel = document.createElement('select');
-              sel.className = 'form-control';
-              sel.style.flex = '1';
-              const optEmpty = document.createElement('option');
-              optEmpty.value = '';
-              optEmpty.textContent = '-- Chantier --';
-              sel.appendChild(optEmpty);
-              for (const c of chantiers) {
-                const o = document.createElement('option');
-                o.value = String(c.id);
-                o.textContent = c.nom;
-                if (String(line.chantierId || '') === String(c.id)) o.selected = true;
-                sel.appendChild(o);
-              }
-
-              const input = document.createElement('input');
-              input.className = 'form-control';
-              input.placeholder = 'Montant';
-              input.style.width = '200px';
-              input.value = line.montant !== undefined && line.montant !== null ? String(line.montant) : '';
-
-              const btnRemove = document.createElement('button');
-              btnRemove.className = 'btn btn-outline-danger';
-              btnRemove.innerHTML = '<i class="fas fa-times"></i>';
-
-              sel.addEventListener('change', () => { editingAllocations[i].chantierId = sel.value; });
-              input.addEventListener('input', () => { editingAllocations[i].montant = input.value; updateAllocTotals(); });
-              btnRemove.addEventListener('click', () => {
-                editingAllocations.splice(i, 1);
-                if (!editingAllocations.length) editingAllocations.push({ chantierId: '', montant: '' });
-                renderAllocEditor();
-              });
-
-              wrap.appendChild(sel);
-              wrap.appendChild(input);
-              wrap.appendChild(btnRemove);
-              $allocList.appendChild(wrap);
-            }
-
-            updateAllocTotals();
-          }
-
-          $btnAddAllocLine.addEventListener('click', () => {
-            editingAllocations.push({ chantierId: '', montant: '' });
-            renderAllocEditor();
-          });
-
-          $btnSaveAlloc.addEventListener('click', async () => {
-            if (!editingAllocChequeId) return;
-
-            const payload = editingAllocations
-              .map(a => ({ chantierId: a.chantierId, montant: parseMoney(a.montant) }))
-              .filter(a => a.chantierId && a.montant !== null);
-
-            const sum = payload.reduce((acc, a) => acc + Number(a.montant || 0), 0);
-            const chequeM = Number(editingAllocChequeMontant || 0);
-            const eps = 0.01;
-            if (chequeM && (sum - chequeM) > eps) {
-              return alert(`Tu as dépassé le montant du chèque. Total allocations: ${moneyFr(sum)} / Montant chèque: ${moneyFr(chequeM)}`);
-            }
-            if (chequeM && Math.abs(sum - chequeM) > eps) {
-              return alert(`Le total des montants chantier doit être égal au montant du chèque. Total allocations: ${moneyFr(sum)} / Montant chèque: ${moneyFr(chequeM)}`);
-            }
-
-            const res = await fetch(`/tresorerie/cheques/${editingAllocChequeId}/allocations`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ allocations: payload })
             });
-            const json = await res.json().catch(() => ({}));
-            if (!res.ok || json.success === false) return alert(json.error || 'Erreur');
-            $allocModal.modal('hide');
-            await refresh(state.page);
-          });
 
-          $btnExportPdf.addEventListener('click', (e) => {
-            e.preventDefault();
-            const params = buildExportParams();
-            window.location.href = '/tresorerie/cheques/export/pdf?' + params.toString();
-          });
+            function updateAllocTotals() {
+              const el = document.getElementById('allocTotals');
+              if (!el) return;
 
-          $btnExportExcel.addEventListener('click', (e) => {
-            e.preventDefault();
-            const params = buildExportParams();
-            window.location.href = '/tresorerie/cheques/export/excel?' + params.toString();
-          });
+              const amounts = editingAllocations
+                .map(a => parseMoney(a.montant))
+                .filter(v => v !== null);
 
-          $btnAddCheque.addEventListener('click', async () => {
-            openCreateModal();
-          });
+              const sum = amounts.reduce((acc, v) => acc + Number(v || 0), 0);
+              const chequeM = Number(editingAllocChequeMontant || 0);
+              const eps = 0.01;
+              if (!chequeM) {
+                el.textContent = `Total allocations: ${moneyFr(sum)}`;
+                el.className = 'small text-muted';
+                return;
+              }
 
-          if ($btnCreateAddAlloc) {
-            $btnCreateAddAlloc.addEventListener('click', () => {
-              createAllocations.push({ chantierId: '', montant: '' });
-              renderCreateAllocEditor();
-            });
-          }
+              const diff = sum - chequeM;
+              const isOver = diff > eps;
+              const isEqual = Math.abs(diff) <= eps;
 
-          if ($btnCreateChequeConfirm) {
-            $btnCreateChequeConfirm.addEventListener('click', async () => {
-              try {
-                const bId = $createBanque ? String($createBanque.value || '').trim() : '';
-                const fId = $createFournisseur ? String($createFournisseur.value || '').trim() : '';
-                const echeance = $createDateEcheance ? String($createDateEcheance.value || '').trim() : '';
-                const obs = $createObs ? String($createObs.value || '').trim() : '';
+              el.textContent = `Total allocations: ${moneyFr(sum)} / Montant chèque: ${moneyFr(chequeM)}`;
+              el.className = `small ${isEqual ? 'text-success' : (isOver ? 'text-danger' : 'text-warning')}`;
+            }
 
+            function renderAllocEditor() {
+              $allocList.innerHTML = '';
+              for (let i = 0; i < editingAllocations.length; i++) {
+                const line = editingAllocations[i];
 
-                if (!bId) return alert('Banque requise');
-                if (!fId) return alert('Fournisseur requis');
-                if (!echeance) return alert("Date d'échéance requise");
+                const wrap = document.createElement('div');
+                wrap.className = 'd-flex align-items-center';
+                wrap.style.gap = '10px';
 
-                const payloadAllocs = (Array.isArray(createAllocations) ? createAllocations : [])
-                  .map(a => ({
-                    chantierId: String(a.chantierId || '').trim(),
-                    montant: parseMoney(a.montant),
-                  }))
-                  .filter(a => a.chantierId && a.montant !== null && a.montant > 0)
-                  .map(a => ({ chantierId: Number(a.chantierId), montant: Number(a.montant) }));
-
-                if (!payloadAllocs.length) {
-                  return alert('Ajoute au moins un chantier avec un montant > 0');
+                const sel = document.createElement('select');
+                sel.className = 'form-control';
+                sel.style.flex = '1';
+                const optEmpty = document.createElement('option');
+                optEmpty.value = '';
+                optEmpty.textContent = '-- Chantier --';
+                sel.appendChild(optEmpty);
+                for (const c of chantiers) {
+                  const o = document.createElement('option');
+                  o.value = String(c.id);
+                  o.textContent = c.nom;
+                  if (String(line.chantierId || '') === String(c.id)) o.selected = true;
+                  sel.appendChild(o);
                 }
 
-                const res = await fetch('/tresorerie/cheques/create', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    banqueId: Number(bId),
-                    fournisseurId: Number(fId),
-                    dateEcheance: echeance,
-                    obs,
-                    allocations: payloadAllocs,
-                  })
+                const input = document.createElement('input');
+                input.className = 'form-control';
+                input.placeholder = 'Montant';
+                input.style.width = '200px';
+                input.value = line.montant !== undefined && line.montant !== null ? String(line.montant) : '';
+
+                const btnRemove = document.createElement('button');
+                btnRemove.className = 'btn btn-outline-danger';
+                btnRemove.innerHTML = '<i class="fas fa-times"></i>';
+
+                sel.addEventListener('change', () => { editingAllocations[i].chantierId = sel.value; });
+                input.addEventListener('input', () => { editingAllocations[i].montant = input.value; updateAllocTotals(); });
+                btnRemove.addEventListener('click', () => {
+                  editingAllocations.splice(i, 1);
+                  if (!editingAllocations.length) editingAllocations.push({ chantierId: '', montant: '' });
+                  renderAllocEditor();
                 });
-                const json = await res.json().catch(() => ({}));
-                if (!res.ok) {
-                  return alert(json && json.error ? json.error : 'Erreur création');
-                }
 
-                $createChequeModal.modal('hide');
-                await refresh(1);
-              } catch (err) {
-                alert(err.message || 'Erreur');
+                wrap.appendChild(sel);
+                wrap.appendChild(input);
+                wrap.appendChild(btnRemove);
+                $allocList.appendChild(wrap);
               }
+
+              updateAllocTotals();
+            }
+
+            $btnAddAllocLine.addEventListener('click', () => {
+              editingAllocations.push({ chantierId: '', montant: '' });
+              renderAllocEditor();
             });
-          }
 
-          function openCreateModal() {
-            if (!$createFournisseur || !$createBanque) return;
+            $btnSaveAlloc.addEventListener('click', async () => {
+              if (!editingAllocChequeId) return;
 
-            $createFournisseur.innerHTML = '';
-            const optF0 = document.createElement('option');
-            optF0.value = '';
-            optF0.textContent = '-- Fournisseur --';
-            $createFournisseur.appendChild(optF0);
-            for (const f of fournisseurs) {
-              const o = document.createElement('option');
-              o.value = String(f.id);
-              o.textContent = f.name;
-              $createFournisseur.appendChild(o);
-            }
+              const payload = editingAllocations
+                .map(a => ({ chantierId: a.chantierId, montant: parseMoney(a.montant) }))
+                .filter(a => a.chantierId && a.montant !== null);
 
-            $createBanque.innerHTML = '';
-            const optB0 = document.createElement('option');
-            optB0.value = '';
-            optB0.textContent = '-- Banque --';
-            $createBanque.appendChild(optB0);
-            for (const b of banques) {
-              const o = document.createElement('option');
-              o.value = String(b.id);
-              o.textContent = b.name;
-              if (state.banqueId && String(state.banqueId) === String(b.id)) o.selected = true;
-              $createBanque.appendChild(o);
-            }
-
-            if ($createDateEcheance) $createDateEcheance.value = new Date().toISOString().slice(0, 10);
-            if ($createObs) $createObs.value = '';
-
-
-            createAllocations = [{ chantierId: '', montant: '' }];
-            renderCreateAllocEditor();
-            $createChequeModal.modal('show');
-          }
-
-          function setCreateMontantFromAllocs() {
-            const amounts = (Array.isArray(createAllocations) ? createAllocations : [])
-              .map(a => parseMoney(a.montant))
-              .filter(v => v !== null);
-            const sum = amounts.reduce((acc, v) => acc + Number(v || 0), 0);
-            if ($createMontant) $createMontant.value = moneyFr(sum);
-            if ($createAllocTotals) $createAllocTotals.textContent = `Total affectations: ${moneyFr(sum)}`;
-          }
-
-          function renderCreateAllocEditor() {
-            if (!$createAllocList) return;
-            $createAllocList.innerHTML = '';
-
-
-            for (let i = 0; i < createAllocations.length; i++) {
-              const line = createAllocations[i];
-
-              const wrap = document.createElement('div');
-              wrap.className = 'd-flex align-items-center';
-              wrap.style.gap = '10px';
-
-              const sel = document.createElement('select');
-              sel.className = 'form-control';
-              sel.style.flex = '1';
-              const optEmpty = document.createElement('option');
-              optEmpty.value = '';
-              optEmpty.textContent = '-- Chantier --';
-              sel.appendChild(optEmpty);
-              for (const c of chantiers) {
-                const o = document.createElement('option');
-                o.value = String(c.id);
-                o.textContent = c.nom;
-                if (String(line.chantierId || '') === String(c.id)) o.selected = true;
-                sel.appendChild(o);
+              const sum = payload.reduce((acc, a) => acc + Number(a.montant || 0), 0);
+              const chequeM = Number(editingAllocChequeMontant || 0);
+              const eps = 0.01;
+              if (chequeM && (sum - chequeM) > eps) {
+                return alert(`Tu as dépassé le montant du chèque. Total allocations: ${moneyFr(sum)} / Montant chèque: ${moneyFr(chequeM)}`);
+              }
+              if (chequeM && Math.abs(sum - chequeM) > eps) {
+                return alert(`Le total des montants chantier doit être égal au montant du chèque. Total allocations: ${moneyFr(sum)} / Montant chèque: ${moneyFr(chequeM)}`);
               }
 
-              const input = document.createElement('input');
-              input.className = 'form-control';
-              input.placeholder = 'Montant';
-              input.style.width = '200px';
-              input.value = line.montant !== undefined && line.montant !== null ? String(line.montant) : '';
+              const res = await fetch(`/tresorerie/cheques/${editingAllocChequeId}/allocations`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ allocations: payload })
+              });
+              const json = await res.json().catch(() => ({}));
+              if (!res.ok || json.success === false) return alert(json.error || 'Erreur');
+              $allocModal.modal('hide');
+              await refresh(state.page);
+            });
 
+            $btnExportPdf.addEventListener('click', (e) => {
+              e.preventDefault();
+              const params = buildExportParams();
+              window.location.href = '/tresorerie/cheques/export/pdf?' + params.toString();
+            });
 
-              const btnRemove = document.createElement('button');
-              btnRemove.type = 'button';
-              btnRemove.className = 'btn btn-outline-danger';
-              btnRemove.innerHTML = '<i class="fas fa-times"></i>';
+            $btnExportExcel.addEventListener('click', (e) => {
+              e.preventDefault();
+              const params = buildExportParams();
+              window.location.href = '/tresorerie/cheques/export/excel?' + params.toString();
+            });
 
+            $btnAddCheque.addEventListener('click', async () => {
+              openCreateModal();
+            });
 
-              sel.addEventListener('change', () => { createAllocations[i].chantierId = sel.value; });
-              input.addEventListener('input', () => { createAllocations[i].montant = input.value; setCreateMontantFromAllocs(); });
-              btnRemove.addEventListener('click', () => {
-                createAllocations.splice(i, 1);
-                if (!createAllocations.length) createAllocations.push({ chantierId: '', montant: '' });
+            if ($btnCreateAddAlloc) {
+              $btnCreateAddAlloc.addEventListener('click', () => {
+                createAllocations.push({ chantierId: '', montant: '' });
                 renderCreateAllocEditor();
               });
-
-              wrap.appendChild(sel);
-              wrap.appendChild(input);
-              wrap.appendChild(btnRemove);
-              $createAllocList.appendChild(wrap);
             }
 
-            setCreateMontantFromAllocs();
-          }
+            if ($btnCreateChequeConfirm) {
+              $btnCreateChequeConfirm.addEventListener('click', async () => {
+                try {
+                  const bId = $createBanque ? String($createBanque.value || '').trim() : '';
+                  const fId = $createFournisseur ? String($createFournisseur.value || '').trim() : '';
+                  const echeance = $createDateEcheance ? String($createDateEcheance.value || '').trim() : '';
+                  const obs = $createObs ? String($createObs.value || '').trim() : '';
 
-          // Initial load: ensure totals are not stuck at 0 and data is in sync with API
-          refresh(state.page).catch(() => {});
 
-        })();
-      </script>
-    </div>
+                  if (!bId) return alert('Banque requise');
+                  if (!fId) return alert('Fournisseur requis');
+                  if (!echeance) return alert("Date d'échéance requise");
+
+                  const payloadAllocs = (Array.isArray(createAllocations) ? createAllocations : [])
+                    .map(a => ({
+                      chantierId: String(a.chantierId || '').trim(),
+                      montant: parseMoney(a.montant),
+                    }))
+                    .filter(a => a.chantierId && a.montant !== null && a.montant > 0)
+                    .map(a => ({ chantierId: Number(a.chantierId), montant: Number(a.montant) }));
+
+                  if (!payloadAllocs.length) {
+                    return alert('Ajoute au moins un chantier avec un montant > 0');
+                  }
+
+                  const res = await fetch('/tresorerie/cheques/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      banqueId: Number(bId),
+                      fournisseurId: Number(fId),
+                      dateEcheance: echeance,
+                      obs,
+                      allocations: payloadAllocs,
+                    })
+                  });
+                  const json = await res.json().catch(() => ({}));
+                  if (!res.ok) {
+                    return alert(json && json.error ? json.error : 'Erreur création');
+                  }
+
+                  $createChequeModal.modal('hide');
+                  await refresh(1);
+                } catch (err) {
+                  alert(err.message || 'Erreur');
+                }
+              });
+            }
+
+            function openCreateModal() {
+              if (!$createFournisseur || !$createBanque) return;
+
+              $createFournisseur.innerHTML = '';
+              const optF0 = document.createElement('option');
+              optF0.value = '';
+              optF0.textContent = '-- Fournisseur --';
+              $createFournisseur.appendChild(optF0);
+              for (const f of fournisseurs) {
+                const o = document.createElement('option');
+                o.value = String(f.id);
+                o.textContent = f.name;
+                $createFournisseur.appendChild(o);
+              }
+
+              $createBanque.innerHTML = '';
+              const optB0 = document.createElement('option');
+              optB0.value = '';
+              optB0.textContent = '-- Banque --';
+              $createBanque.appendChild(optB0);
+              for (const b of banques) {
+                const o = document.createElement('option');
+                o.value = String(b.id);
+                o.textContent = b.name;
+                if (state.banqueId && String(state.banqueId) === String(b.id)) o.selected = true;
+                $createBanque.appendChild(o);
+              }
+
+              if ($createDateEcheance) $createDateEcheance.value = new Date().toISOString().slice(0, 10);
+              if ($createObs) $createObs.value = '';
+
+
+              createAllocations = [{ chantierId: '', montant: '' }];
+              renderCreateAllocEditor();
+              $createChequeModal.modal('show');
+            }
+
+            function setCreateMontantFromAllocs() {
+              const amounts = (Array.isArray(createAllocations) ? createAllocations : [])
+                .map(a => parseMoney(a.montant))
+                .filter(v => v !== null);
+              const sum = amounts.reduce((acc, v) => acc + Number(v || 0), 0);
+              if ($createMontant) $createMontant.value = moneyFr(sum);
+              if ($createAllocTotals) $createAllocTotals.textContent = `Total affectations: ${moneyFr(sum)}`;
+            }
+
+            function renderCreateAllocEditor() {
+              if (!$createAllocList) return;
+              $createAllocList.innerHTML = '';
+
+
+              for (let i = 0; i < createAllocations.length; i++) {
+                const line = createAllocations[i];
+
+                const wrap = document.createElement('div');
+                wrap.className = 'd-flex align-items-center';
+                wrap.style.gap = '10px';
+
+                const sel = document.createElement('select');
+                sel.className = 'form-control';
+                sel.style.flex = '1';
+                const optEmpty = document.createElement('option');
+                optEmpty.value = '';
+                optEmpty.textContent = '-- Chantier --';
+                sel.appendChild(optEmpty);
+                for (const c of chantiers) {
+                  const o = document.createElement('option');
+                  o.value = String(c.id);
+                  o.textContent = c.nom;
+                  if (String(line.chantierId || '') === String(c.id)) o.selected = true;
+                  sel.appendChild(o);
+                }
+
+                const input = document.createElement('input');
+                input.className = 'form-control';
+                input.placeholder = 'Montant';
+                input.style.width = '200px';
+                input.value = line.montant !== undefined && line.montant !== null ? String(line.montant) : '';
+
+
+                const btnRemove = document.createElement('button');
+                btnRemove.type = 'button';
+                btnRemove.className = 'btn btn-outline-danger';
+                btnRemove.innerHTML = '<i class="fas fa-times"></i>';
+
+
+                sel.addEventListener('change', () => { createAllocations[i].chantierId = sel.value; });
+                input.addEventListener('input', () => { createAllocations[i].montant = input.value; setCreateMontantFromAllocs(); });
+                btnRemove.addEventListener('click', () => {
+                  createAllocations.splice(i, 1);
+                  if (!createAllocations.length) createAllocations.push({ chantierId: '', montant: '' });
+                  renderCreateAllocEditor();
+                });
+
+                wrap.appendChild(sel);
+                wrap.appendChild(input);
+                wrap.appendChild(btnRemove);
+                $createAllocList.appendChild(wrap);
+              }
+
+              setCreateMontantFromAllocs();
+            }
+
+            // Initial load: ensure totals are not stuck at 0 and data is in sync with API
+            refresh(state.page).catch(() => { });
+
+          })();
+        </script>
+      </div>
   </div>
 </body>
+
 </html>

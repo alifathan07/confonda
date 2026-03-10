@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 
 export const index = async (req, res) => {
     const virements = await prisma.virement.findMany({
-        include: { fournisseur: true, banque: true, chantier: true },
+        include: { fournisseur: true, banque: true, chantier: true, allocations: { include: { chantier: true } } },
         orderBy: {
             id: 'desc'
         }
@@ -30,7 +30,7 @@ export const createVirement = async (req, res) => {
 }
 export const postVirement = async (req, res) => {
     try {
-        const { beneficiaire, date, dateReglement, montant, obs, rib, montantLettre, objet, cause, agence, banque, chantier } = req.body;
+        const { beneficiaire, date, dateReglement, montant, obs, rib, montantLettre, objet, cause, agence, banque, chantier, allocations } = req.body;
         const banqueId = parseInt(req.params.id);
 
         if (isNaN(banqueId)) {
@@ -44,32 +44,17 @@ export const postVirement = async (req, res) => {
             return res.status(404).json({ error: "Banque non trouvée." });
         }
 
-        // Normalize rtgs value
-        let rtgsValue = req.body.rtgs;
-        let rtgs = false;
-        if (Array.isArray(rtgsValue)) {
-            rtgs = rtgsValue.includes("1");
-        } else {
-            rtgs = rtgsValue === "1";
+        let parsedAllocations = [];
+        try {
+            parsedAllocations = allocations ? JSON.parse(allocations) : [];
+        } catch (e) {
+            return res.status(400).json({ error: "Format allocations invalide" });
         }
 
-        // Normalize srbm value
-        let srbmValue = req.body.srbm;
-        let srbm = false;
-        if (Array.isArray(srbmValue)) {
-            srbm = srbmValue.includes("1");
-        } else {
-            srbm = srbmValue === "1";
-        }
-
-        // Normalize instantane value
-        let instantaneValue = req.body.instantane;
-        let instantane = false;
-        if (Array.isArray(instantaneValue)) {
-            instantane = instantaneValue.includes("1");
-        } else {
-            instantane = instantaneValue === "1";
-        }
+        // Normalize boolean values
+        const rtgs = Array.isArray(req.body.rtgs) ? req.body.rtgs.includes("1") : req.body.rtgs === "1";
+        const srbm = Array.isArray(req.body.srbm) ? req.body.srbm.includes("1") : req.body.srbm === "1";
+        const instantane = Array.isArray(req.body.instantane) ? req.body.instantane.includes("1") : req.body.instantane === "1";
 
         // Fournisseur logic
         const fournisseurName = beneficiaire;
@@ -77,14 +62,12 @@ export const postVirement = async (req, res) => {
             where: { name: fournisseurName }
         });
 
-        // Prepare update data for fournisseur
         const updateData = {};
         if (rib !== undefined && rib !== null && rib !== '') updateData.rib = rib;
         if (agence !== undefined && agence !== null && agence !== '') updateData.agence = agence;
         if (banque !== undefined && banque !== null && banque !== '') updateData.banque = banque;
 
         if (fournisseur) {
-            // Update fournisseur if any of rib, agence, or banque are provided
             if (Object.keys(updateData).length > 0) {
                 fournisseur = await prisma.fournisseur.update({
                     where: { id: fournisseur.id },
@@ -92,7 +75,6 @@ export const postVirement = async (req, res) => {
                 });
             }
         } else {
-            // Create new fournisseur if it doesn't exist
             fournisseur = await prisma.fournisseur.create({
                 data: {
                     name: beneficiaire,
@@ -106,6 +88,12 @@ export const postVirement = async (req, res) => {
                     banque: banque || null
                 }
             });
+        }
+
+        const chantierIdParam = chantier ? parseInt(chantier) : null;
+        let chantierData = {};
+        if (!isNaN(chantierIdParam) && chantierIdParam !== null) {
+            chantierData = { connect: { id: chantierIdParam } };
         }
 
         // Create virement
@@ -124,9 +112,24 @@ export const postVirement = async (req, res) => {
                 cause,
                 fournisseur: { connect: { id: fournisseur.id } },
                 banque: { connect: { id: banqueId } },
-                chantier: { connect: { id: parseInt(chantier) } },
+                ...(chantierData.connect ? { chantier: chantierData } : {})
             }
         });
+
+        // Create allocations
+        if (Array.isArray(parsedAllocations) && parsedAllocations.length > 0) {
+            for (const alloc of parsedAllocations) {
+                if (alloc.chantierId && alloc.amount) {
+                    await prisma.virementAllocation.create({
+                        data: {
+                            virementId: virement.id,
+                            chantierId: parseInt(alloc.chantierId),
+                            montant: parseFloat(alloc.amount),
+                        },
+                    });
+                }
+            }
+        }
 
         res.redirect('/tresorerie/virements');
 
@@ -295,7 +298,7 @@ export const showVirement = async (req, res) => {
     const banqueId = Number(req.params.id)
     const virements = await prisma.virement.findMany({
         where: { banqueId },
-        include: { fournisseur: true, banque: true, chantier: true }
+        include: { fournisseur: true, banque: true, chantier: true, allocations: { include: { chantier: true } } }
     })
     const chantiers = await prisma.chantier.findMany();
     res.render('dashboard/tresorerie/reglements/virements/index', { virements, banqueId, chantiers })
@@ -311,7 +314,7 @@ export const generateVirementPDF = async (req, res) => {
     try {
         const virement = await prisma.virement.findUnique({
             where: { id: virementId },
-            include: { fournisseur: true, banque: true }
+            include: { fournisseur: true, banque: true, allocations: { include: { chantier: true } } }
         });
 
         if (!virement) return res.status(404).send("Virement non trouvé");
@@ -452,3 +455,38 @@ export const listBanquesVirements = async (req, res) => {
 
     res.render('dashboard/tresorerie/reglements/virements/banques', { banques });
 }
+
+export const updateVirementAllocations = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const virementId = Number(id);
+    const allocations = Array.isArray(req.body.allocations) ? req.body.allocations : [];
+
+    await prisma.$transaction(async (tx) => {
+      await tx.virementAllocation.deleteMany({ where: { virementId } });
+
+      const data = allocations
+        .filter(a => a && a.chantierId && a.montant !== undefined && a.montant !== null)
+        .map(a => ({
+          virementId,
+          chantierId: Number(a.chantierId),
+          montant: Number(a.montant),
+        }))
+        .filter(a => !Number.isNaN(a.chantierId) && !Number.isNaN(a.montant));
+
+      if (data.length) {
+        await tx.virementAllocation.createMany({ data });
+      }
+    }, { timeout: 20000 });
+
+    const updated = await prisma.virement.findUnique({
+      where: { id: virementId },
+      include: { fournisseur: true, banque: true, chantier: true, allocations: { include: { chantier: true } } },
+    });
+
+    res.json({ success: true, virement: updated });
+  } catch (error) {
+    console.error('❌ Error updateVirementAllocations:', error);
+    res.status(500).json({ success: false, error: 'Erreur serveur.' });
+  }
+};

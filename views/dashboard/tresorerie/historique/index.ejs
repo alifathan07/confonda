@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -7,7 +8,8 @@
   <meta name="description" content="Situation Bancaire" />
   <meta name="author" content="Confonda" />
   <title>Historique</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" type="text/css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet"
+    type="text/css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
   <style>
@@ -35,11 +37,12 @@
       min-height: 100vh;
       margin: 0;
     }
+
     .custom-card {
       border: 1px solid #dee2e6;
       border-radius: 6px;
       background: white;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
       margin-bottom: 1rem;
     }
 
@@ -82,11 +85,21 @@
       font-size: 1rem;
     }
 
-    .btn-primary { background: #3829ab; }
-    .btn-info    { background: #6a5ae7; }
+    .btn-primary {
+      background: #3829ab;
+    }
 
-    .btn-primary:hover { background: #2d218a; }
-    .btn-info:hover    { background: #5746d6; }
+    .btn-info {
+      background: #6a5ae7;
+    }
+
+    .btn-primary:hover {
+      background: #2d218a;
+    }
+
+    .btn-info:hover {
+      background: #5746d6;
+    }
 
     .container-fluid {
       padding: 1rem;
@@ -157,10 +170,32 @@
       background: white;
     }
 
-    .allocations { display: grid; gap: 6px; }
-    .alloc-line { display: flex; justify-content: space-between; gap: 10px; padding: 6px 10px; border: 1px solid #e9ecef; border-radius: 10px; background: #fff; }
-    .alloc-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .alloc-amount { white-space: nowrap; font-weight: 700; }
+    .allocations {
+      display: grid;
+      gap: 6px;
+    }
+
+    .alloc-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 6px 10px;
+      border: 1px solid #e9ecef;
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .alloc-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .alloc-amount {
+      white-space: nowrap;
+      font-weight: 700;
+    }
 
     .excel-table tfoot td {
       background: var(--light-color);
@@ -323,13 +358,28 @@
       font-weight: 400;
       border-radius: 999px;
       letter-spacing: 0.2px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
     }
 
-    .badge-success { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; }
-    .badge-warning { background: linear-gradient(135deg, #fde047, #facc15); color: #111827; }
-    .badge-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
-    .badge-info { background: linear-gradient(135deg, #60a5fa, #3b82f6); color: #fff; }
+    .badge-success {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff;
+    }
+
+    .badge-warning {
+      background: linear-gradient(135deg, #fde047, #facc15);
+      color: #111827;
+    }
+
+    .badge-danger {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #fff;
+    }
+
+    .badge-info {
+      background: linear-gradient(135deg, #60a5fa, #3b82f6);
+      color: #fff;
+    }
 
     @media (max-width: 768px) {
       .container-fluid {
@@ -364,10 +414,11 @@
         text-align: center;
       }
 
-      .row > [class*="col-"] {
+      .row>[class*="col-"] {
         flex: 0 0 100%;
         max-width: 100%;
       }
+
       .montant {
         min-width: 130px;
         width: 130px;
@@ -375,6 +426,7 @@
     }
 
     @media (max-width: 576px) {
+
       .excel-table th,
       .excel-table td {
         font-size: 0.7rem;
@@ -388,6 +440,7 @@
       .card-header h2 {
         font-size: 1rem;
       }
+
       .montant {
         min-width: 130px;
         width: 130px;
@@ -395,10 +448,11 @@
     }
 
     @media (min-width: 768px) {
-      .row > [class*="col-md-3"] {
+      .row>[class*="col-md-3"] {
         flex: 0 0 25%;
         max-width: 25%;
       }
+
       .montant {
         min-width: 130px;
         width: 130px;
@@ -411,14 +465,14 @@
       margin: -0.5rem;
     }
 
-    .row > [class*="col-"] {
+    .row>[class*="col-"] {
       padding: 0.5rem;
     }
 
     .table-responsive {
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
       border-radius: 10px;
     }
 
@@ -427,14 +481,23 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
     }
 
     @media print {
-      .btn, .modal, .filter-section {
+
+      .btn,
+      .modal,
+      .filter-section {
         display: none;
       }
+
       .card {
         border: 1px solid #dee2e6;
         box-shadow: none;
@@ -442,1001 +505,1236 @@
     }
   </style>
 </head>
+
 <body id="page-top">
   <div id="wrapper" class="d-flex">
     <%- include('../../../layouts/sidebar') %>
-    <div id="content-wrapper" class="d-flex flex-column">
-      <div id="content">
-        <%- include('../../../layouts/topbar') %>
-        <div class="container-fluid">
-          <h1 class="page-title fade-in">Historique Des Opérations</h1>
-          <!-- Filter Section for Operations -->
-          <div class="filter-section mb-4">
-            <h3 class="mb-2">Filtrer Par : </h3>
-            <form class="form-inline" method="GET">
-              <div class="form-group mr-2">
-                <label for="dateFromFilter" class="mr-2">Date de :</label>
-                <input type="date" id="dateFromFilter" class="form-control" >
-              </div>
-              <div class="form-group mr-2">
-                <label for="dateToFilter" class="mr-2">à :</label>
-                <input type="date" id="dateToFilter" class="form-control">
-              </div>
-              <div class="form-group mr-2">
-                <label for="typeFilter" class="mr-2">Type :</label>
-                <select id="typeFilter" class="form-control">
-                  <option value="">Tous</option>
-                  <option value="Chèque">Chèque</option>
-                  <option value="Effet">Effet</option>
-                  <option value="Virement">Virement</option>
-                  <option value="Mise à disposition">Mise à disposition</option>
-                  <option value="prélèvement">prélèvement</option>
-                  <option value="télépaiment">télépaiment</option>
-                </select>
-              </div>
-              <div class="form-group mr-2">
-                <label for="fournisseurFilterCheques" class="mr-2">Fournisseur :</label>
-                <select id="fournisseurFilterCheques" class="form-control">
-                  <option value="">Tous</option>
-                  <% fournisseurs.forEach(f => { %>
-                    <option value="<%= f.name %>"><%= f.name %></option>
-                  <% }) %>
-                </select>
-              </div>
-              <div class="form-group mr-2">
-                <label for="banqueFilterCheques" class="mr-2">Banque :</label>
-                <select id="banqueFilterCheques" class="form-control">
-                  <option value="">Tous</option>
-                  <% banques.forEach(b => { %>
-                    <option value="<%= b.name %>"><%= b.name %></option>
-                  <% }) %>
-                </select>
-              </div>
-              <div class="form-group mr-2">
-                <label for="chantierFilterOperations" class="mr-2">Chantier :</label>
-                <select id="chantierFilterOperations" class="form-control">
-                  <option value="">Tous</option>
-                  <% chantiers.forEach(c => { %>
-                    <option value="<%= c.nom %>"><%= c.nom %></option>
-                  <% }) %>
-                </select>
-              </div>
-              <button type="button" class="btn btn-secondary" id="resetDateBtn" aria-label="Annuler filtre" style="background-color: #6a5ae7;">Annuler filtre</button>
-            </form>
-          </div>
-          <!-- Operations List -->
-          <div class="card mb-4 fade-in">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <h2 style="color: #111827;">Liste des réglements effectués</h2>
-              <div>
-                <button class="btn btn-info mr-2" onclick="downloadPDF('chequesTable')">Télécharger PDF</button>
-                <button class="btn btn-success" onclick="downloadExcel('chequesTable')">Télécharger Excel</button>
-              </div>
-            </div>
-            <div class="card-body">
-              <% if (!historique.length) { %>
-                <p class="text-center text-muted">Aucun chèque trouvé.</p>
-              <% } else { %>
-                <div class="table-responsive">
-                  <table id="chequesTable" class="excel-table table table-bordered">
-                    <thead>
-                      <tr>
-                        <th>Date Etablissement</th>
-                        <th>Type</th>
-                        <th>Numéro</th>
-                        <th>Banque</th>
-                        <th>Bénéficiaire</th>
-                        <th>Montant</th>
-                        <th>Date Échéance</th>
-                        <th>Chantier</th>
-                        <th>Montant chantier</th>
-                        <th>Observation</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <% historique.forEach(c => { %>
-                        <tr class="operation-row" data-type="<%= c.type %>" data-fournisseur="<%= c.beneficiaire %>" data-banque="<%= c.banque %>" data-chantier="<%= (c.chantierNames && c.chantierNames.length) ? c.chantierNames.join('|') : (c.chantier || '') %>" data-statut="<%= c.statut %>" data-date="<%= new Date(c.dateEtablissement).toISOString().split('T')[0] %>">
-                          <td><%= new Date(c.dateEtablissement).toLocaleDateString('fr-FR') %></td>
-                          <td><%= c.type %></td>
-                          <td><%= c.numero %></td>
-                          <td><%= c.banque %></td>
-                          <td><%= c.beneficiaire %></td>
-                          <td class="text-right montant" style="width: 150px;">
-                            <%= c.montant != null 
-                                  ? c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') 
-                                  : '' %>
-                          </td>
-                          <td><%= new Date(c.dateEcheance).toLocaleDateString('fr-FR') %></td>
-                          <td>
-                            <% if (c.type === 'Chèque' && c.chantierLines && c.chantierLines.length) { %>
-                              <div class="allocations">
-                                <% c.chantierLines.forEach(l => { %>
-                                  <div class="alloc-line" data-chantier="<%= l.nom %>">
-                                    <div class="alloc-name"><%= l.nom %></div>
-                                  </div>
-                                <% }) %>
-                              </div>
-                            <% } else { %>
-                              <%= c.chantier %>
-                            <% } %>
-                          </td>
-                          <td>
-                            <% if (c.type === 'Chèque' && c.chantierLines && c.chantierLines.length) { %>
-                              <div class="allocations">
-                                <% c.chantierLines.forEach(l => { %>
-                                  <div class="alloc-line" data-chantier="<%= l.nom %>">
-                                    <div class="alloc-amount"><%= (l.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %></div>
-                                  </div>
-                                <% }) %>
-                              </div>
-                            <% } else if (c.type === 'Chèque') { %>
-                              <%= c.montant != null 
-                                    ? c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') 
-                                    : '' %>
-                            <% } %>
-                          </td>
-                          <td>
-                            <form action="/tresorerie/cheques/situation/<%= c.id %>?_method=PATCH" method="POST">
-                              <input id="obs" type="text" value="<%= c.obs %>" class="form-control" name="obs">
-                            </form>
-                          </td>
-                        </tr>
-                      <% }) %>
-                    </tbody>
-                    <tfoot>
-                      <tr>
-                        <td colspan="5">Total</td>
-                        <td class="text-right" id="displayTotalOperations">
-                          <%= historique.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
-                        </td>
-                        <td colspan="4"></td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
+      <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+          <%- include('../../../layouts/topbar') %>
+            <div class="container-fluid">
+              <h1 class="page-title fade-in">Historique Des Opérations</h1>
+              <!-- Filter Section for Operations -->
+              <div class="filter-section mb-4">
+                <div class="row" style="gap:0; align-items:flex-end;">
+                  <!-- Filtrer Par dropdown -->
+                  <div class="col-auto mb-2">
+                    <label class="small text-muted mb-1 d-block">Filtre Opérations</label>
+                    <div class="dropdown" id="opsFilterTypeDropdown">
+                      <button class="btn btn-success dropdown-toggle" type="button" id="opsFilterTypeBtn"
+                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="min-width:150px;">
+                        Filtrer Par
+                      </button>
+                      <div class="dropdown-menu" id="opsFilterTypeMenu" aria-labelledby="opsFilterTypeBtn">
+                        <button class="dropdown-item" type="button" data-ops-filter="type">Type</button>
+                        <button class="dropdown-item" type="button" data-ops-filter="fournisseur">Fournisseur</button>
+                        <button class="dropdown-item" type="button" data-ops-filter="banque">Banque</button>
+                        <button class="dropdown-item" type="button" data-ops-filter="chantier">Chantier</button>
+                      </div>
+                    </div>
+                    <div id="opsFilterDynamic" class="mt-1">
+                      <div id="opsFilterBoxType" style="display:none;">
+                        <select id="typeFilter" class="form-control">
+                          <option value="">Tous</option>
+                          <option value="Chèque">Chèque</option>
+                          <option value="Effet">Effet</option>
+                          <option value="Virement">Virement</option>
+                          <option value="Mise à disposition">Mise à disposition</option>
+                          <option value="prélèvement">prélèvement</option>
+                          <option value="télépaiment">télépaiment</option>
+                        </select>
+                      </div>
+                      <div id="opsFilterBoxFournisseur" style="display:none;">
+                        <select id="fournisseurFilterCheques" class="form-control">
+                          <option value="">Tous</option>
+                          <% fournisseurs.forEach(f=> { %>
+                            <option value="<%= f.name %>">
+                              <%= f.name %>
+                            </option>
+                            <% }) %>
+                        </select>
+                      </div>
+                      <div id="opsFilterBoxBanque" style="display:none;">
+                        <select id="banqueFilterCheques" class="form-control">
+                          <option value="">Tous</option>
+                          <% banques.forEach(b=> { %>
+                            <option value="<%= b.name %>">
+                              <%= b.name %>
+                            </option>
+                            <% }) %>
+                        </select>
+                      </div>
+                      <div id="opsFilterBoxChantier" style="display:none;">
+                        <select id="chantierFilterOperations" class="form-control">
+                          <option value="">Tous</option>
+                          <% chantiers.forEach(c=> { %>
+                            <option value="<%= c.nom %>">
+                              <%= c.nom %>
+                            </option>
+                            <% }) %>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
 
-                <div class="d-flex align-items-center justify-content-between mt-2" id="operationsPagination" style="gap: 10px;">
-                  <div class="small text-muted" id="operationsPageInfo"></div>
-                  <div class="d-flex align-items-center" style="gap: 8px;">
-                    <select id="operationsPageSize" class="form-control" style="width: 110px;">
-                      <option value="10">10</option>
-                      <option value="20" selected>20</option>
-                      <option value="50">50</option>
-                      <option value="100">100</option>
-                    </select>
-                    <button type="button" class="btn btn-secondary" id="operationsPrev" style="background-color: #6a5ae7;">Préc.</button>
-                    <button type="button" class="btn btn-secondary" id="operationsNext" style="background-color: #6a5ae7;">Suiv.</button>
+                  <!-- Annuler filtre -->
+                  <div class="col-auto mb-2 d-flex align-items-end">
+                    <button id="opsClearFilters" type="button" class="btn btn-danger" style="display:none;">
+                      <i class="fas fa-times mr-1"></i>Annuler filtre
+                    </button>
+                  </div>
+
+                  <!-- Dates -->
+                  <div class="col-auto mb-2">
+                    <label class="small text-muted mb-1 d-block">Date de</label>
+                    <input type="date" id="dateFromFilter" class="form-control">
+                  </div>
+                  <div class="col-auto mb-2">
+                    <label class="small text-muted mb-1 d-block">à</label>
+                    <input type="date" id="dateToFilter" class="form-control">
                   </div>
                 </div>
-              <% } %>
-            </div>
-          </div>
-          <!-- Filter Section for Encaissements -->
-          <div class="filter-section mb-4">
-            <h3 class="mb-2">Filtrer Par : </h3>
-            <form class="form-inline" method="GET">
-              <div class="form-group mr-2">
-                <label for="dateFromFilterEncaissements" class="mr-2">Date de :</label>
-                <input type="date" id="dateFromFilterEncaissements" class="form-control" >
               </div>
-              <div class="form-group mr-2">
-                <label for="dateToFilterEncaissements" class="mr-2">à :</label>
-                <input type="date" id="dateToFilterEncaissements" class="form-control">
-              </div>
-              <div class="form-group mr-2">
-                <label for="typeFilterEncaissements" class="mr-2">Méthode Paiement :</label>
-                <select id="typeFilterEncaissements" class="form-control">
-                  <option value="">Tous</option>
-                  <option value="Chèque">Chèque</option>
-                  <option value="Effet">Effet</option>
-                  <option value="Virement">Virement</option>
-                  <option value="Mise à disposition">Mise à disposition</option>
-                  <option value="prélèvement">prélèvement</option>
-                  <option value="télépaiment">télépaiment</option>
-                </select>
-              </div>
-              <div class="form-group mr-2">
-                <label for="clientFilterEncaissements" class="mr-2">Client :</label>
-                <select id="clientFilterEncaissements" class="form-control">
-                  <option value="">Tous</option>
-                  <% clients.forEach(c => { %>
-                    <option value="<%= c.name %>"><%= c.name %></option>
-                  <% }) %>
-                </select>
-              </div>
-              <div class="form-group mr-2">
-                <label for="banqueFilterEncaissements" class="mr-2">Banque :</label>
-                <select id="banqueFilterEncaissements" class="form-control">
-                  <option value="">Tous</option>
-                  <% banques.forEach(b => { %>
-                    <option value="<%= b.name %>"><%= b.name %></option>
-                  <% }) %>
-                </select>
-              </div>
-              <div class="form-group mr-2">
-                <label for="chantierFilterEncaissements" class="mr-2">Chantier :</label>
-                <select id="chantierFilterEncaissements" class="form-control">
-                  <option value="">Tous</option>
-                  <% chantiers.forEach(c => { %>
-                    <option value="<%= c.nom %>"><%= c.nom %></option>
-                  <% }) %>
-                </select>
-              </div>
-              <button type="button" class="btn btn-secondary" id="resetDateBtnEncaissements" aria-label="Annuler filtre" style="background-color: #6a5ae7;">Annuler filtre</button>
-            </form>
-          </div>
-          <!-- Les Encaissements Reçus -->
-          <div class="card mb-4 fade-in">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <h2 style="color: #111827;">Encaissements Reçus</h2>
-              <div>
-                <button class="btn btn-info mr-2" onclick="downloadPDF('encaissementsTable')">Télécharger PDF</button>
-                <button class="btn btn-success" onclick="downloadExcel('encaissementsTable')">Télécharger Excel</button>
-              </div>
-            </div>
-            <div class="card-body">
-              <% if (!encaissements.length) { %>
-                <p class="text-center text-muted">Aucun encaissement trouvé.</p>
-              <% } else { %>
-                <div class="table-responsive">
-                  <table id="encaissementsTable" class="excel-table table table-bordered">
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>Méthode Paiement</th>
-                        <th>Banque</th>
-                        <th>Client</th>
-                        <th>Montant</th>
-                        <th>Chantier</th>
-                        <th>Observation</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <% encaissements.forEach(c => { %>
-                        <tr class="operation-row" data-type="<%= c.type %>" data-fournisseur="<%= c.client.name %>" data-banque="<%= c.banque.name %>" data-chantier="<%= c.chantier ? c.chantier.nom : '' %>" data-statut="<%= c.statut %>" data-date="<%= new Date(c.dateEtablissement).toISOString().split('T')[0] %>">
-                          <td><%= new Date(c.dateEtablissement).toLocaleDateString('fr-FR') %></td>
-                          <td><%= c.type %></td>
-                          <td><%= c.banque.name %></td>
-                          <td><%= c.client.name %></td>
-                          <td class="text-right montant" style="width: 150px;">
-                            <%= c.montant != null 
-                                  ? c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') 
-                                  : '' %>
-                          </td>
-                          <td><%= c.chantier ? c.chantier.nom : "Aucun" %></td>
-                          <td><%= c.observation %></td>
-                        </tr>
-                      <% }) %>
-                    </tbody>
-                    <tfoot>
-                      <tr>
-                        <td colspan="4">Total</td>
-                        <td class="text-right" id="displayTotalEncaissements">
-                          <%= encaissements.reduce((acc, c) => acc + c.montant, 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
-                        </td>
-                        <td colspan="2"></td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-
-                <div class="d-flex align-items-center justify-content-between mt-2" id="encaissementsPagination" style="gap: 10px;">
-                  <div class="small text-muted" id="encaissementsPageInfo"></div>
-                  <div class="d-flex align-items-center" style="gap: 8px;">
-                    <select id="encaissementsPageSize" class="form-control" style="width: 110px;">
-                      <option value="10">10</option>
-                      <option value="20" selected>20</option>
-                      <option value="50">50</option>
-                      <option value="100">100</option>
-                    </select>
-                    <button type="button" class="btn btn-secondary" id="encaissementsPrev" style="background-color: #6a5ae7;">Préc.</button>
-                    <button type="button" class="btn btn-secondary" id="encaissementsNext" style="background-color: #6a5ae7;">Suiv.</button>
+              <!-- Operations List -->
+              <div class="card mb-4 fade-in">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <h2 style="color: #111827;">Liste des réglements effectués</h2>
+                  <div>
+                    <button class="btn btn-info mr-2" onclick="downloadPDF('chequesTable')">Télécharger PDF</button>
+                    <button class="btn btn-success" onclick="downloadExcel('chequesTable')">Télécharger Excel</button>
                   </div>
                 </div>
-              <% } %>
-            </div>
-          </div>
-          <!-- Soldes Bancaires -->
-          <form id="soldeForm" action="/tresorerie/historique/banque" method="POST">
-            <div class="card mb-4 fade-in">
-              <div class="card-header">
-                <h2>Soldes Bancaires</h2>
-              </div>
-              <div class="card-body">
-                <div class="table-responsive">
-                  <table id="soldeTable" class="excel-table table table-bordered">
-                    <thead>
-                      <tr>
-                        <th>Banque</th>
-                        <th>Solde Positif</th>
-                        <th>Solde Négatif</th>
-                        <th>Dette MLT</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <% banques.forEach((b, index) => { %>
-                        <tr>
-                          <td><strong><%= b.name %></strong></td>
-                          <td>
-                            <input 
-                              type="text" 
-                              name="positive[]" 
-                              value="<%= b.positive != null ? b.positive.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') : '' %>"
-                              class="form-control text-right"
-                            />
-                          </td>
-                          <td>
-                            <input 
-                              type="text" 
-                              name="negative[]" 
-                              value="<%= b.negative != null ? b.negative.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') : '' %>"
-                              class="form-control text-right"
-                            />
-                          </td>
-                          <td>
-                            <input 
-                              type="text" 
-                              name="dmlt[]" 
-                              value="<%= b.dmlt != null ? b.dmlt.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') : '' %>"
-                              class="form-control text-right"
-                            />
-                          </td>
-                          <input type="hidden" name="banqueId[]" value="<%= b.id %>">
-                        </tr>
-                      <% }) %>
-                    </tbody>
-                    <tfoot>
-                      <tr>
-                        <td>Total</td>
-                        <td>
-                          <input 
-                            type="text" 
-                            name="totalPositive" 
-                            class="form-control text-right"
-                            value="<%= banques.reduce((acc, b) => acc + (b.positive || 0), 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>"
-                            readonly
-                          />
-                        </td>
-                        <td>
-                          <input 
-                            type="text" 
-                            name="totalNegative" 
-                            class="form-control text-right"
-                            value="<%= banques.reduce((acc, b) => acc + (b.negative || 0), 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>"
-                            readonly
-                          />
-                        </td>
-                        <td>
-                          <input 
-                            type="text" 
-                            name="totalDmlt" 
-                            class="form-control text-right"
-                            value="<%= banques.reduce((acc, b) => acc + (b.dmlt || 0), 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>"
-                            readonly
-                          />
-                        </td>
-                      </tr>
-                    </tfoot>
-                  </table>
+                <div class="card-body">
+                  <% if (!historique.length) { %>
+                    <p class="text-center text-muted">Aucun chèque trouvé.</p>
+                    <% } else { %>
+                      <div class="table-responsive">
+                        <table id="chequesTable" class="excel-table table table-bordered">
+                          <thead>
+                            <tr>
+                              <th>Date Etablissement</th>
+                              <th>Type</th>
+                              <th>Numéro</th>
+                              <th>Banque</th>
+                              <th>Bénéficiaire</th>
+                              <th>Montant</th>
+                              <th>Date Échéance</th>
+                              <th>Chantier</th>
+                              <th>Montant chantier</th>
+                              <th>Observation</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <% historique.forEach(c=> { %>
+                              <tr class="operation-row" data-type="<%= c.type %>"
+                                data-fournisseur="<%= c.beneficiaire %>" data-banque="<%= c.banque %>"
+                                data-chantier="<%= (c.chantierNames && c.chantierNames.length) ? c.chantierNames.join('|') : (c.chantier || '') %>"
+                                data-statut="<%= c.statut %>"
+                                data-date="<%= new Date(c.dateEtablissement).toISOString().split('T')[0] %>">
+                                <td>
+                                  <%= new Date(c.dateEtablissement).toLocaleDateString('fr-FR') %>
+                                </td>
+                                <td>
+                                  <%= c.type %>
+                                </td>
+                                <td>
+                                  <%= c.numero %>
+                                </td>
+                                <td>
+                                  <%= c.banque %>
+                                </td>
+                                <td>
+                                  <%= c.beneficiaire %>
+                                </td>
+                                <td class="text-right montant" style="width: 150px;">
+                                  <%= c.montant !=null ? c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2 }).replace(/\u202F/g, ' ' ) : '' %>
+                                </td>
+                                <td>
+                                  <%= new Date(c.dateEcheance).toLocaleDateString('fr-FR') %>
+                                </td>
+                                <td>
+                                  <% if (c.type==='Chèque' && c.chantierLines && c.chantierLines.length) { %>
+                                    <div class="allocations">
+                                      <% c.chantierLines.forEach(l=> { %>
+                                        <div class="alloc-line" data-chantier="<%= l.nom %>">
+                                          <div class="alloc-name">
+                                            <%= l.nom %>
+                                          </div>
+                                        </div>
+                                        <% }) %>
+                                    </div>
+                                    <% } else { %>
+                                      <%= c.chantier %>
+                                        <% } %>
+                                </td>
+                                <td>
+                                  <% if (c.type==='Chèque' && c.chantierLines && c.chantierLines.length) { %>
+                                    <div class="allocations">
+                                      <% c.chantierLines.forEach(l=> { %>
+                                        <div class="alloc-line" data-chantier="<%= l.nom %>">
+                                          <div class="alloc-amount">
+                                            <%= (l.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
+                                              maximumFractionDigits: 2 }).replace(/\u202F/g, ' ' ) %>
+                                          </div>
+                                        </div>
+                                        <% }) %>
+                                    </div>
+                                    <% } else if (c.type==='Chèque' ) { %>
+                                      <%= c.montant !=null ? c.montant.toLocaleString('fr-FR', { minimumFractionDigits:
+                                        2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ' ) : '' %>
+                                        <% } %>
+                                </td>
+                                <td>
+                                  <form action="/tresorerie/cheques/situation/<%= c.id %>?_method=PATCH" method="POST">
+                                    <input id="obs" type="text" value="<%= c.obs %>" class="form-control" name="obs">
+                                  </form>
+                                </td>
+                              </tr>
+                              <% }) %>
+                          </tbody>
+                          <tfoot>
+                            <tr>
+                              <td colspan="5">Total</td>
+                              <td class="text-right" id="displayTotalOperations">
+                                <%= historique.reduce((acc, c)=> acc + c.montant, 0).toLocaleString('fr-FR', {
+                                  minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
+                              </td>
+                              <td colspan="4"></td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+
+                      <div class="d-flex align-items-center justify-content-between mt-2" id="operationsPagination"
+                        style="gap: 10px;">
+                        <div class="small text-muted" id="operationsPageInfo"></div>
+                        <div class="d-flex align-items-center" style="gap: 8px;">
+                          <select id="operationsPageSize" class="form-control" style="width: 110px;">
+                            <option value="10">10</option>
+                            <option value="20" selected>20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                          </select>
+                          <button type="button" class="btn btn-secondary" id="operationsPrev"
+                            style="background-color: #6a5ae7;">Préc.</button>
+                          <button type="button" class="btn btn-secondary" id="operationsNext"
+                            style="background-color: #6a5ae7;">Suiv.</button>
+                        </div>
+                      </div>
+                      <% } %>
+                        <!-- Filter Section for Encaissements -->
+                        <div class="filter-section mb-4">
+                          <div class="row" style="gap:0; align-items:flex-end;">
+                            <!-- Filtrer Par dropdown -->
+                            <div class="col-auto mb-2">
+                              <label class="small text-muted mb-1 d-block">Filtre Encaissements</label>
+                              <div class="dropdown" id="encFilterTypeDropdown">
+                                <button class="btn btn-success dropdown-toggle" type="button" id="encFilterTypeBtn"
+                                  data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                                  style="min-width:150px;">
+                                  Filtrer Par
+                                </button>
+                                <div class="dropdown-menu" id="encFilterTypeMenu" aria-labelledby="encFilterTypeBtn">
+                                  <button class="dropdown-item" type="button" data-enc-filter="type">Type</button>
+                                  <button class="dropdown-item" type="button" data-enc-filter="client">Client</button>
+                                  <button class="dropdown-item" type="button" data-enc-filter="banque">Banque</button>
+                                  <button class="dropdown-item" type="button"
+                                    data-enc-filter="chantier">Chantier</button>
+                                </div>
+                              </div>
+                              <div id="encFilterDynamic" class="mt-1">
+                                <div id="encFilterBoxType" style="display:none;">
+                                  <select id="typeFilterEncaissements" class="form-control">
+                                    <option value="">Tous</option>
+                                    <option value="Chèque">Chèque</option>
+                                    <option value="Effet">Effet</option>
+                                    <option value="Virement">Virement</option>
+                                  </select>
+                                </div>
+                                <div id="encFilterBoxClient" style="display:none;">
+                                  <select id="clientFilterEncaissements" class="form-control">
+                                    <option value="">Tous</option>
+                                    <% clients.forEach(c=> { %>
+                                      <option value="<%= c.name %>">
+                                        <%= c.name %>
+                                      </option>
+                                      <% }) %>
+                                  </select>
+                                </div>
+                                <div id="encFilterBoxBanque" style="display:none;">
+                                  <select id="banqueFilterEncaissements" class="form-control">
+                                    <option value="">Tous</option>
+                                    <% banques.forEach(b=> { %>
+                                      <option value="<%= b.name %>">
+                                        <%= b.name %>
+                                      </option>
+                                      <% }) %>
+                                  </select>
+                                </div>
+                                <div id="encFilterBoxChantier" style="display:none;">
+                                  <select id="chantierFilterEncaissements" class="form-control">
+                                    <option value="">Tous</option>
+                                    <% chantiers.forEach(c=> { %>
+                                      <option value="<%= c.nom %>">
+                                        <%= c.nom %>
+                                      </option>
+                                      <% }) %>
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- Annuler filtre -->
+                            <div class="col-auto mb-2 d-flex align-items-end">
+                              <button id="encClearFilters" type="button" class="btn btn-danger" style="display:none;">
+                                <i class="fas fa-times mr-1"></i>Annuler filtre
+                              </button>
+                            </div>
+
+                            <!-- Dates -->
+                            <div class="col-auto mb-2">
+                              <label class="small text-muted mb-1 d-block">Date de</label>
+                              <input type="date" id="dateFromFilterEncaissements" class="form-control">
+                            </div>
+                            <div class="col-auto mb-2">
+                              <label class="small text-muted mb-1 d-block">à</label>
+                              <input type="date" id="dateToFilterEncaissements" class="form-control">
+                            </div>
+                          </div>
+                        </div>
+                        <!-- Les Encaissements Reçus -->
+                        <div class="card mb-4 fade-in">
+                          <div class="card-header d-flex justify-content-between align-items-center">
+                            <h2 style="color: #111827;">Encaissements Reçus</h2>
+                            <div>
+                              <button class="btn btn-info mr-2" onclick="downloadPDF('encaissementsTable')">Télécharger
+                                PDF</button>
+                              <button class="btn btn-success" onclick="downloadExcel('encaissementsTable')">Télécharger
+                                Excel</button>
+                            </div>
+                          </div>
+                          <div class="card-body">
+                            <% if (!encaissements.length) { %>
+                              <p class="text-center text-muted">Aucun encaissement trouvé.</p>
+                              <% } else { %>
+                                <div class="table-responsive">
+                                  <table id="encaissementsTable" class="excel-table table table-bordered">
+                                    <thead>
+                                      <tr>
+                                        <th>Date</th>
+                                        <th>Méthode Paiement</th>
+                                        <th>Banque</th>
+                                        <th>Client</th>
+                                        <th>Montant</th>
+                                        <th>Chantier</th>
+                                        <th>Observation</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      <% encaissements.forEach(c=> { %>
+                                        <tr class="operation-row" data-type="<%= c.type %>"
+                                          data-fournisseur="<%= c.client.name %>" data-banque="<%= c.banque.name %>"
+                                          data-chantier="<%= c.chantier ? c.chantier.nom : '' %>"
+                                          data-statut="<%= c.statut %>"
+                                          data-date="<%= new Date(c.dateEtablissement).toISOString().split('T')[0] %>">
+                                          <td>
+                                            <%= new Date(c.dateEtablissement).toLocaleDateString('fr-FR') %>
+                                          </td>
+                                          <td>
+                                            <%= c.type %>
+                                          </td>
+                                          <td>
+                                            <%= c.banque.name %>
+                                          </td>
+                                          <td>
+                                            <%= c.client.name %>
+                                          </td>
+                                          <td class="text-right montant" style="width: 150px;">
+                                            <%= c.montant !=null ? c.montant.toLocaleString('fr-FR', {
+                                              minimumFractionDigits: 2, maximumFractionDigits: 2
+                                              }).replace(/\u202F/g, ' ' ) : '' %>
+                                          </td>
+                                          <td>
+                                            <%= c.chantier ? c.chantier.nom : "Aucun" %>
+                                          </td>
+                                          <td>
+                                            <%= c.observation %>
+                                          </td>
+                                        </tr>
+                                        <% }) %>
+                                    </tbody>
+                                    <tfoot>
+                                      <tr>
+                                        <td colspan="4">Total</td>
+                                        <td class="text-right" id="displayTotalEncaissements">
+                                          <%= encaissements.reduce((acc, c)=> acc + c.montant,
+                                            0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
+                                        </td>
+                                        <td colspan="2"></td>
+                                      </tr>
+                                    </tfoot>
+                                  </table>
+                                </div>
+
+                                <div class="d-flex align-items-center justify-content-between mt-2"
+                                  id="encaissementsPagination" style="gap: 10px;">
+                                  <div class="small text-muted" id="encaissementsPageInfo"></div>
+                                  <div class="d-flex align-items-center" style="gap: 8px;">
+                                    <select id="encaissementsPageSize" class="form-control" style="width: 110px;">
+                                      <option value="10">10</option>
+                                      <option value="20" selected>20</option>
+                                      <option value="50">50</option>
+                                      <option value="100">100</option>
+                                    </select>
+                                    <button type="button" class="btn btn-secondary" id="encaissementsPrev"
+                                      style="background-color: #6a5ae7;">Préc.</button>
+                                    <button type="button" class="btn btn-secondary" id="encaissementsNext"
+                                      style="background-color: #6a5ae7;">Suiv.</button>
+                                  </div>
+                                </div>
+                                <% } %>
+                          </div>
+                        </div>
+                        <!-- Soldes Bancaires -->
+                        <form id="soldeForm" action="/tresorerie/historique/banque" method="POST">
+                          <div class="card mb-4 fade-in">
+                            <div class="card-header">
+                              <h2>Soldes Bancaires</h2>
+                            </div>
+                            <div class="card-body">
+                              <div class="table-responsive">
+                                <table id="soldeTable" class="excel-table table table-bordered">
+                                  <thead>
+                                    <tr>
+                                      <th>Banque</th>
+                                      <th>Solde Positif</th>
+                                      <th>Solde Négatif</th>
+                                      <th>Dette MLT</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <% banques.forEach((b, index)=> { %>
+                                      <tr>
+                                        <td><strong>
+                                            <%= b.name %>
+                                          </strong></td>
+                                        <td>
+                                          <input type="text" name="positive[]"
+                                            value="<%= b.positive != null ? b.positive.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') : '' %>"
+                                            class="form-control text-right" />
+                                        </td>
+                                        <td>
+                                          <input type="text" name="negative[]"
+                                            value="<%= b.negative != null ? b.negative.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') : '' %>"
+                                            class="form-control text-right" />
+                                        </td>
+                                        <td>
+                                          <input type="text" name="dmlt[]"
+                                            value="<%= b.dmlt != null ? b.dmlt.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') : '' %>"
+                                            class="form-control text-right" />
+                                        </td>
+                                        <input type="hidden" name="banqueId[]" value="<%= b.id %>">
+                                      </tr>
+                                      <% }) %>
+                                  </tbody>
+                                  <tfoot>
+                                    <tr>
+                                      <td>Total</td>
+                                      <td>
+                                        <input type="text" name="totalPositive" class="form-control text-right"
+                                          value="<%= banques.reduce((acc, b) => acc + (b.positive || 0), 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>"
+                                          readonly />
+                                      </td>
+                                      <td>
+                                        <input type="text" name="totalNegative" class="form-control text-right"
+                                          value="<%= banques.reduce((acc, b) => acc + (b.negative || 0), 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>"
+                                          readonly />
+                                      </td>
+                                      <td>
+                                        <input type="text" name="totalDmlt" class="form-control text-right"
+                                          value="<%= banques.reduce((acc, b) => acc + (b.dmlt || 0), 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>"
+                                          readonly />
+                                      </td>
+                                    </tr>
+                                  </tfoot>
+                                </table>
+                              </div>
+                            </div>
+                            <div class="card-footer d-flex justify-content-end">
+                              <button type="submit" class="btn btn-primary" hidden>Mettre à jour</button>
+                            </div>
+                          </div>
+                        </form>
                 </div>
               </div>
-              <div class="card-footer d-flex justify-content-end">
-                <button type="submit" class="btn btn-primary" hidden>Mettre à jour</button>
-              </div>
             </div>
-          </form>
         </div>
-      </div>
-    </div>
-  </div>
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
-  <script>
-    function downloadExcel(tableId) {
-      const table = document.getElementById(tableId);
-      if (!table) return;
-      if (!window.XLSX || !window.XLSX.utils) {
-        alert('Export Excel indisponible');
-        return;
-      }
-
-      // Get headers
-      const headers = [];
-      table.querySelectorAll('thead th').forEach(th => {
-        headers.push(th.textContent.trim());
-      });
-
-      // Build data rows with proper handling of Chantier + Montant chantier
-      const data = [];
-      table.querySelectorAll('tbody tr').forEach((row, rowIdx) => {
-        const rowData = [];
-        const cells = row.querySelectorAll('td');
-        
-        cells.forEach((cell, idx) => {
-          // Check if this is the Chantier column (index 7) or Montant chantier column (index 8)
-          if ((idx === 7 || idx === 8) && tableId === 'chequesTable') {
-            // Get all alloc-line elements in this cell
-            const allocLines = cell.querySelectorAll('.alloc-line');
-            console.log(`Row ${rowIdx}, Col ${idx} (${idx === 7 ? 'Chantier' : 'Montant'}): Found ${allocLines.length} alloc-line elements`);
-            
-            if (allocLines.length > 0) {
-              const values = [];
-              allocLines.forEach((line, lineIdx) => {
-                let text = '';
-                if (idx === 7) {
-                  // Chantier column - get from .alloc-name
-                  const nameEl = line.querySelector('.alloc-name');
-                  text = nameEl ? nameEl.textContent.trim() : '';
-                  console.log(`  Line ${lineIdx}: Chantier name = "${text}"`);
-                } else {
-                  // Montant chantier column - get from .alloc-amount
-                  const amountEl = line.querySelector('.alloc-amount');
-                  text = amountEl ? amountEl.textContent.trim() : '';
-                  console.log(`  Line ${lineIdx}: Montant = "${text}"`);
-                }
-                if (text) values.push(text);
-              });
-              const joinedValue = values.join('\n');
-              console.log(`  Final joined value: "${joinedValue}"`);
-              rowData.push(joinedValue);
-            } else {
-              // No allocations - show fallback value (just the text content)
-              const fallbackText = cell.textContent.trim();
-              console.log(`Row ${rowIdx}, Col ${idx}: No alloc-lines, fallback = "${fallbackText}"`);
-              rowData.push(fallbackText);
-            }
-          } else {
-            rowData.push(cell.textContent.trim());
-          }
-        });
-        
-        data.push(rowData);
-      });
-
-      console.log('Final data for Excel:', data.slice(0, 3)); // Log first 3 rows
-
-      // Calculate total for Montant column
-      let totalMontant = 0;
-      data.forEach(row => {
-        const montantStr = row[5]; // Montant column is index 5
-        if (montantStr) {
-          const clean = montantStr.replace(/\s/g, '').replace(',', '.');
-          const val = parseFloat(clean) || 0;
-          totalMontant += val;
-        }
-      });
-      
-      // Add total row
-      const totalRow = new Array(headers.length).fill('');
-      totalRow[4] = 'Total'; // Label in column 4 (Bénéficiaire)
-      totalRow[5] = totalMontant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
-      data.push(totalRow);
-
-      // Create worksheet
-      const ws = window.XLSX.utils.aoa_to_sheet([headers, ...data]);
-      
-      // Set column widths
-      ws['!cols'] = [
-        { wch: 15 }, // Date
-        { wch: 12 }, // Type
-        { wch: 15 }, // Numéro
-        { wch: 15 }, // Banque
-        { wch: 25 }, // Bénéficiaire
-        { wch: 12 }, // Montant
-        { wch: 15 }, // Date Échéance
-        { wch: 25 }, // Chantier
-        { wch: 15 }, // Montant chantier
-        { wch: 30 }, // Observation
-      ];
-
-      // Set row heights for rows with multi-line chantier data
-      const wsRows = [];
-      wsRows.push({ hpt: 20 }); // Header row height
-      
-      data.forEach((rowData, idx) => {
-        const chantierCellValue = rowData[7]; // Chantier column
-        const montantChantierCellValue = rowData[8]; // Montant chantier column
-        
-        // Count lines in either column
-        let maxLines = 1;
-        if (chantierCellValue && chantierCellValue.includes('\n')) {
-          maxLines = Math.max(maxLines, chantierCellValue.split('\n').length);
-        }
-        if (montantChantierCellValue && montantChantierCellValue.includes('\n')) {
-          maxLines = Math.max(maxLines, montantChantierCellValue.split('\n').length);
-        }
-        
-        // Set row height based on number of lines (approx 15 points per line)
-        if (maxLines > 1) {
-          wsRows.push({ hpt: 15 * maxLines });
-        } else {
-          wsRows.push({ hpt: 18 }); // Default row height
-        }
-      });
-      
-      ws['!rows'] = wsRows;
-
-      // Apply wrapText and alignment styling to chantier columns for multi-line display
-      const chantierCol = 7; // H column (0-indexed: 7)
-      const montantChantierCol = 8; // I column (0-indexed: 8)
-      
-      for (let r = 1; r <= data.length; r++) {
-        const chantierCellRef = window.XLSX.utils.encode_cell({ r, c: chantierCol });
-        const montantChantierCellRef = window.XLSX.utils.encode_cell({ r, c: montantChantierCol });
-        
-        const chantierCell = ws[chantierCellRef];
-        const montantChantierCell = ws[montantChantierCellRef];
-        
-        // Apply wrapText and top alignment to ALL chantier column cells
-        if (chantierCell) {
-          chantierCell.s = { 
-            alignment: { wrapText: true, vertical: 'top' },
-            font: { name: 'Calibri', sz: 11 }
-          };
-        }
-        
-        // Apply wrapText, top alignment and right alignment to ALL montant chantier column cells
-        if (montantChantierCell) {
-          montantChantierCell.s = { 
-            alignment: { wrapText: true, vertical: 'top', horizontal: 'right' },
-            font: { name: 'Calibri', sz: 11 }
-          };
-        }
-      }
-      
-      // Style total row (last row) with bold
-      const lastRowIdx = data.length;
-      for (let c = 0; c < headers.length; c++) {
-        const cellRef = window.XLSX.utils.encode_cell({ r: lastRowIdx, c: c });
-        const cell = ws[cellRef];
-        if (cell) {
-          if (!cell.s) cell.s = {};
-          cell.s.font = { name: 'Calibri', sz: 11, bold: true };
-          if (c === 4 || c === 5) { // Total label and amount
-            cell.s.alignment = { horizontal: c === 5 ? 'right' : 'left' };
-          }
-        }
-      }
-
-      const wb = window.XLSX.utils.book_new();
-      window.XLSX.utils.book_append_sheet(wb, ws, 'Export');
-      const filename = `${tableId}_${new Date().toISOString().slice(0, 10)}.xlsx`;
-      window.XLSX.writeFile(wb, filename);
-    }
-
-    function downloadPDF(tableId) {
-      const table = document.getElementById(tableId);
-      if (!table) return;
-
-      const jspdf = window.jspdf;
-      if (!jspdf || !jspdf.jsPDF) {
-        alert('Export PDF indisponible');
-        return;
-      }
-
-      const doc = new jspdf.jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
-      doc.setFontSize(12);
-      doc.text('Export Historique', 40, 30);
-
-      // Build data for PDF with proper chantier handling
-      const headers = [];
-      table.querySelectorAll('thead th').forEach(th => {
-        headers.push(th.textContent.trim());
-      });
-
-      const body = [];
-      table.querySelectorAll('tbody tr').forEach(row => {
-        const rowData = [];
-        const cells = row.querySelectorAll('td');
-        
-        cells.forEach((cell, idx) => {
-          // For Chantier (7) and Montant chantier (8) columns, preserve line breaks
-          if ((idx === 7 || idx === 8) && tableId === 'chequesTable') {
-            const lines = cell.querySelectorAll('.alloc-line');
-            if (lines.length > 0) {
-              const values = [];
-              lines.forEach(line => {
-                const text = line.textContent.trim();
-                if (text) values.push(text);
-              });
-              rowData.push(values.join('\n'));
-            } else {
-              rowData.push(cell.textContent.trim());
-            }
-          } else {
-            rowData.push(cell.textContent.trim());
-          }
-        });
-        
-        body.push(rowData);
-      });
-
-      // Calculate total for Montant column
-      let totalMontant = 0;
-      body.forEach(row => {
-        const montantStr = row[5]; // Montant column is index 5
-        if (montantStr) {
-          const clean = montantStr.replace(/\s/g, '').replace(',', '.');
-          const val = parseFloat(clean) || 0;
-          totalMontant += val;
-        }
-      });
-      
-      // Add total row
-      const totalRow = new Array(headers.length).fill('');
-      totalRow[4] = 'Total';
-      totalRow[5] = totalMontant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
-      body.push(totalRow);
-
-      // Column styles
-      const columnStyles = {};
-      if (tableId === 'chequesTable') {
-        columnStyles[7] = { cellWidth: 120, overflow: 'linebreak' }; // Chantier
-        columnStyles[8] = { cellWidth: 80, overflow: 'linebreak', halign: 'right' }; // Montant chantier
-      }
-
-      doc.autoTable({
-        head: [headers],
-        body: body,
-        startY: 50,
-        styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak', valign: 'middle' },
-        headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
-        columnStyles: columnStyles,
-        margin: { left: 30, right: 30 },
-        didParseCell: function(data) {
-          // Ensure line breaks are preserved in chantier columns
-          if (data.section === 'body' && (data.column.index === 7 || data.column.index === 8)) {
-            data.cell.styles.valign = 'top';
-          }
-          // Style total row (last row) with bold
-          if (data.section === 'body' && data.row.index === body.length - 1) {
-            data.cell.styles.fontStyle = 'bold';
-          }
-        }
-      });
-
-      const filename = `${tableId}_${new Date().toISOString().slice(0, 10)}.pdf`;
-      doc.save(filename);
-    }
-
-    // Centralized DOMContentLoaded handler to initialize all functionality
-    document.addEventListener('DOMContentLoaded', () => {
-      // Utility functions for number formatting
-      const parseFrenchNumber = (value) => {
-        if (!value) return 0;
-        const clean = value.toString().replace(/\s/g, '').replace(',', '.');
-        return parseFloat(clean) || 0;
-      };
-
-      const formatFrenchNumber = (value) => {
-        return value.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
-      };
-
-      // Get DOM elements for filters
-      const filters = {
-        operations: {
-          type: document.getElementById('typeFilter'),
-          fournisseur: document.getElementById('fournisseurFilterCheques'),
-          banque: document.getElementById('banqueFilterCheques'),
-          chantier: document.getElementById('chantierFilterOperations'),
-          dateFrom: document.getElementById('dateFromFilter'),
-          dateTo: document.getElementById('dateToFilter'),
-          resetButton: document.getElementById('resetDateBtn')
-        },
-        encaissements: {
-          type: document.getElementById('typeFilterEncaissements'),
-          client: document.getElementById('clientFilterEncaissements'),
-          banque: document.getElementById('banqueFilterEncaissements'),
-          chantier: document.getElementById('chantierFilterEncaissements'),
-          dateFrom: document.getElementById('dateFromFilterEncaissements'),
-          dateTo: document.getElementById('dateToFilterEncaissements'),
-          resetButton: document.getElementById('resetDateBtnEncaissements')
-        },
-        virements: {
-          banque: document.getElementById('banqueFilterVirement'),
-          dateFrom: document.getElementById('dateFromFilterVirement'),
-          dateTo: document.getElementById('dateToFilterVirement'),
-          resetButton: document.getElementById('resetDateBtnVirement')
-        }
-      };
-
-      // Get table elements
-      const tables = {
-        operations: document.getElementById('chequesTable'),
-        encaissements: document.getElementById('encaissementsTable'),
-        virements: document.getElementById('virementDeFondsTable')
-      };
-
-      // Get table rows
-      const rows = {
-        operations: tables.operations?.querySelectorAll('tbody tr.operation-row') || [],
-        encaissements: tables.encaissements?.querySelectorAll('tbody tr.operation-row') || [],
-        virements: tables.virements?.querySelectorAll('tbody tr.virement-row') || []
-      };
-
-      // Get total display elements
-      const totals = {
-        operations: document.getElementById('displayTotalOperations'),
-        encaissements: document.getElementById('displayTotalEncaissements'),
-        virements: document.getElementById('displayTotalVirements')
-      };
-
-      const pagination = {
-        operations: {
-          page: 1,
-          pageSizeEl: document.getElementById('operationsPageSize'),
-          infoEl: document.getElementById('operationsPageInfo'),
-          prevBtn: document.getElementById('operationsPrev'),
-          nextBtn: document.getElementById('operationsNext')
-        },
-        encaissements: {
-          page: 1,
-          pageSizeEl: document.getElementById('encaissementsPageSize'),
-          infoEl: document.getElementById('encaissementsPageInfo'),
-          prevBtn: document.getElementById('encaissementsPrev'),
-          nextBtn: document.getElementById('encaissementsNext')
-        }
-      };
-
-      const setRowVisibility = (row) => {
-        const filterVisible = row.dataset.filterVisible === '1';
-        const pageVisible = row.dataset.pageVisible === '1';
-        row.style.display = (filterVisible && pageVisible) ? '' : 'none';
-      };
-
-      const getFilteredRows = (tableKey) => {
-        const list = Array.from(rows[tableKey] || []);
-        return list.filter(r => r.dataset.filterVisible === '1');
-      };
-
-      const applyPagination = (tableKey) => {
-        const p = pagination[tableKey];
-        if (!p) return;
-        const pageSize = p.pageSizeEl ? Number(p.pageSizeEl.value || 20) : 20;
-        const filtered = getFilteredRows(tableKey);
-        const total = filtered.length;
-        const totalPages = Math.max(1, Math.ceil(total / pageSize));
-        if (p.page > totalPages) p.page = totalPages;
-        if (p.page < 1) p.page = 1;
-
-        const start = (p.page - 1) * pageSize;
-        const end = start + pageSize;
-
-        filtered.forEach((row, idx) => {
-          row.dataset.pageVisible = (idx >= start && idx < end) ? '1' : '0';
-          setRowVisibility(row);
-        });
-
-        // ensure filtered-out rows remain hidden
-        (rows[tableKey] || []).forEach(row => {
-          if (row.dataset.filterVisible !== '1') {
-            row.dataset.pageVisible = '0';
-            setRowVisibility(row);
-          }
-        });
-
-        if (p.infoEl) {
-          const shownFrom = total === 0 ? 0 : (start + 1);
-          const shownTo = Math.min(end, total);
-          p.infoEl.textContent = `Affichage ${shownFrom}-${shownTo} / ${total}`;
-        }
-        if (p.prevBtn) p.prevBtn.disabled = p.page <= 1;
-        if (p.nextBtn) p.nextBtn.disabled = p.page >= totalPages;
-      };
-
-      // Filter rows based on selected criteria
-      const filterRows = () => {
-        const selected = {
-          operations: {
-            type: filters.operations.type?.value.toLowerCase() || '',
-            fournisseur: filters.operations.fournisseur?.value.toLowerCase() || '',
-            banque: filters.operations.banque?.value.toLowerCase() || '',
-            chantier: filters.operations.chantier?.value.toLowerCase() || '',
-            fromDate: filters.operations.dateFrom?.value ? new Date(filters.operations.dateFrom.value) : null,
-            toDate: filters.operations.dateTo?.value ? new Date(filters.operations.dateTo.value) : null
-          },
-          encaissements: {
-            type: filters.encaissements.type?.value.toLowerCase() || '',
-            client: filters.encaissements.client?.value.toLowerCase() || '',
-            banque: filters.encaissements.banque?.value.toLowerCase() || '',
-            chantier: filters.encaissements.chantier?.value.toLowerCase() || '',
-            fromDate: filters.encaissements.dateFrom?.value ? new Date(filters.encaissements.dateFrom.value) : null,
-            toDate: filters.encaissements.dateTo?.value ? new Date(filters.encaissements.dateTo.value) : null
-          },
-          virements: {
-            banque: filters.virements.banque?.value.toLowerCase() || '',
-            fromDate: filters.virements.dateFrom?.value ? new Date(filters.virements.dateFrom.value) : null,
-            toDate: filters.virements.dateTo?.value ? new Date(filters.virements.dateTo.value) : null
-          }
-        };
-
-        // Filter function for table rows
-        const filterTableRows = (rows, table, noResultId, colspan, filterType) => {
-          let visibleRows = 0;
-          rows.forEach(row => {
-            if (filterType === 'operations') {
-              const rowType = row.getAttribute('data-type')?.toLowerCase() || '';
-              const rowFournisseur = row.getAttribute('data-fournisseur')?.toLowerCase() || '';
-              const rowBanque = row.getAttribute('data-banque')?.toLowerCase() || '';
-              const rowChantier = row.getAttribute('data-chantier')?.toLowerCase() || '';
-              const rowDate = new Date(row.getAttribute('data-date'));
-
-              const showType = !selected.operations.type || rowType === selected.operations.type;
-              const showFournisseur = !selected.operations.fournisseur || rowFournisseur === selected.operations.fournisseur;
-              const showBanque = !selected.operations.banque || rowBanque === selected.operations.banque;
-              const showChantier = !selected.operations.chantier || rowChantier.split('|').includes(selected.operations.chantier);
-              const showDate = (!selected.operations.fromDate || rowDate >= selected.operations.fromDate) && (!selected.operations.toDate || rowDate <= selected.operations.toDate);
-
-              const ok = showType && showFournisseur && showBanque && showChantier && showDate;
-              row.dataset.filterVisible = ok ? '1' : '0';
-              if (ok) visibleRows++;
-            } else if (filterType === 'encaissements') {
-              const rowType = row.getAttribute('data-type')?.toLowerCase() || '';
-              const rowClient = row.getAttribute('data-fournisseur')?.toLowerCase() || '';
-              const rowBanque = row.getAttribute('data-banque')?.toLowerCase() || '';
-              const rowChantier = row.getAttribute('data-chantier')?.toLowerCase() || '';
-              const rowDate = new Date(row.getAttribute('data-date'));
-
-              const showType = !selected.encaissements.type || rowType === selected.encaissements.type;
-              const showClient = !selected.encaissements.client || rowClient === selected.encaissements.client;
-              const showBanque = !selected.encaissements.banque || rowBanque === selected.encaissements.banque;
-              const showChantier = !selected.encaissements.chantier || rowChantier === selected.encaissements.chantier;
-              const showDate = (!selected.encaissements.fromDate || rowDate >= selected.encaissements.fromDate) && (!selected.encaissements.toDate || rowDate <= selected.encaissements.toDate);
-
-              const ok = showType && showClient && showBanque && showChantier && showDate;
-              row.dataset.filterVisible = ok ? '1' : '0';
-              if (ok) visibleRows++;
-            } else if (filterType === 'virements') {
-              const rowBanque = row.getAttribute('data-banque')?.toLowerCase() || '';
-              const rowDate = new Date(row.getAttribute('data-date'));
-
-              const showBanque = !selected.virements.banque || rowBanque === selected.virements.banque;
-              const showDate = (!selected.virements.fromDate || rowDate >= selected.virements.fromDate) && (!selected.virements.toDate || rowDate <= selected.virements.toDate);
-
-              const ok = showBanque && showDate;
-              row.dataset.filterVisible = ok ? '1' : '0';
-              if (ok) visibleRows++;
-            }
-          });
-
-          // Handle "no results" message
-          let noResultMsg = document.getElementById(noResultId);
-          if (visibleRows === 0) {
-            if (!noResultMsg && table) {
-              noResultMsg = document.createElement('tr');
-              noResultMsg.id = noResultId;
-              noResultMsg.innerHTML = `<td colspan="${colspan}" class="text-muted text-center">Aucune opération trouvée pour ce filtre.</td>`;
-              table.querySelector('tbody').appendChild(noResultMsg);
-            }
-          } else if (noResultMsg) {
-            noResultMsg.remove();
-          }
-        };
-
-        // Apply filters to all tables
-        filterTableRows(rows.operations, tables.operations, 'noOperationMsg', 10, 'operations');
-        filterTableRows(rows.encaissements, tables.encaissements, 'noEncaissementMsg', 7, 'encaissements');
-        filterTableRows(rows.virements, tables.virements, 'noVirementMsg', 5, 'virements');
-
-        // reset pagination to first page when filters change
-        if (pagination.operations) pagination.operations.page = 1;
-        if (pagination.encaissements) pagination.encaissements.page = 1;
-
-        // Apply pagination display (no pagination for virements in this page as table may not exist)
-        applyPagination('operations');
-        applyPagination('encaissements');
-
-        // For cheque rows: if chantier filter is selected, show only that chantier line
-        const selectedChantier = selected.operations.chantier;
-        rows.operations.forEach(row => {
-          const rowType = row.getAttribute('data-type')?.toLowerCase() || '';
-          if (rowType !== 'chèque') return;
-          const lines = row.querySelectorAll('.alloc-line');
-          if (!lines || !lines.length) return;
-
-          lines.forEach(l => {
-            if (!selectedChantier) {
-              l.style.display = '';
+        <!-- Scripts -->
+        <script src="/vendor/jquery/jquery.min.js"></script>
+        <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+        <script src="/js/sb-admin-2.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+        <script>
+          function downloadExcel(tableId) {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+            if (!window.XLSX || !window.XLSX.utils) {
+              alert('Export Excel indisponible');
               return;
             }
-            const n = (l.getAttribute('data-chantier') || '').toLowerCase();
-            l.style.display = (n === selectedChantier) ? '' : 'none';
+
+            // Get headers
+            const headers = [];
+            table.querySelectorAll('thead th').forEach(th => {
+              headers.push(th.textContent.trim());
+            });
+
+            // Build data rows with proper handling of Chantier + Montant chantier
+            const data = [];
+            table.querySelectorAll('tbody tr').forEach((row, rowIdx) => {
+              const rowData = [];
+              const cells = row.querySelectorAll('td');
+
+              cells.forEach((cell, idx) => {
+                // Check if this is the Chantier column (index 7) or Montant chantier column (index 8)
+                if ((idx === 7 || idx === 8) && tableId === 'chequesTable') {
+                  // Get all alloc-line elements in this cell
+                  const allocLines = cell.querySelectorAll('.alloc-line');
+                  console.log(`Row ${rowIdx}, Col ${idx} (${idx === 7 ? 'Chantier' : 'Montant'}): Found ${allocLines.length} alloc-line elements`);
+
+                  if (allocLines.length > 0) {
+                    const values = [];
+                    allocLines.forEach((line, lineIdx) => {
+                      let text = '';
+                      if (idx === 7) {
+                        // Chantier column - get from .alloc-name
+                        const nameEl = line.querySelector('.alloc-name');
+                        text = nameEl ? nameEl.textContent.trim() : '';
+                        console.log(`  Line ${lineIdx}: Chantier name = "${text}"`);
+                      } else {
+                        // Montant chantier column - get from .alloc-amount
+                        const amountEl = line.querySelector('.alloc-amount');
+                        text = amountEl ? amountEl.textContent.trim() : '';
+                        console.log(`  Line ${lineIdx}: Montant = "${text}"`);
+                      }
+                      if (text) values.push(text);
+                    });
+                    const joinedValue = values.join('\n');
+                    console.log(`  Final joined value: "${joinedValue}"`);
+                    rowData.push(joinedValue);
+                  } else {
+                    // No allocations - show fallback value (just the text content)
+                    const fallbackText = cell.textContent.trim();
+                    console.log(`Row ${rowIdx}, Col ${idx}: No alloc-lines, fallback = "${fallbackText}"`);
+                    rowData.push(fallbackText);
+                  }
+                } else {
+                  rowData.push(cell.textContent.trim());
+                }
+              });
+
+              data.push(rowData);
+            });
+
+            console.log('Final data for Excel:', data.slice(0, 3)); // Log first 3 rows
+
+            // Calculate total for Montant column
+            let totalMontant = 0;
+            data.forEach(row => {
+              const montantStr = row[5]; // Montant column is index 5
+              if (montantStr) {
+                const clean = montantStr.replace(/\s/g, '').replace(',', '.');
+                const val = parseFloat(clean) || 0;
+                totalMontant += val;
+              }
+            });
+
+            // Add total row
+            const totalRow = new Array(headers.length).fill('');
+            totalRow[4] = 'Total'; // Label in column 4 (Bénéficiaire)
+            totalRow[5] = totalMontant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
+            data.push(totalRow);
+
+            // Create worksheet
+            const ws = window.XLSX.utils.aoa_to_sheet([headers, ...data]);
+
+            // Set column widths
+            ws['!cols'] = [
+              { wch: 15 }, // Date
+              { wch: 12 }, // Type
+              { wch: 15 }, // Numéro
+              { wch: 15 }, // Banque
+              { wch: 25 }, // Bénéficiaire
+              { wch: 12 }, // Montant
+              { wch: 15 }, // Date Échéance
+              { wch: 25 }, // Chantier
+              { wch: 15 }, // Montant chantier
+              { wch: 30 }, // Observation
+            ];
+
+            // Set row heights for rows with multi-line chantier data
+            const wsRows = [];
+            wsRows.push({ hpt: 20 }); // Header row height
+
+            data.forEach((rowData, idx) => {
+              const chantierCellValue = rowData[7]; // Chantier column
+              const montantChantierCellValue = rowData[8]; // Montant chantier column
+
+              // Count lines in either column
+              let maxLines = 1;
+              if (chantierCellValue && chantierCellValue.includes('\n')) {
+                maxLines = Math.max(maxLines, chantierCellValue.split('\n').length);
+              }
+              if (montantChantierCellValue && montantChantierCellValue.includes('\n')) {
+                maxLines = Math.max(maxLines, montantChantierCellValue.split('\n').length);
+              }
+
+              // Set row height based on number of lines (approx 15 points per line)
+              if (maxLines > 1) {
+                wsRows.push({ hpt: 15 * maxLines });
+              } else {
+                wsRows.push({ hpt: 18 }); // Default row height
+              }
+            });
+
+            ws['!rows'] = wsRows;
+
+            // Apply wrapText and alignment styling to chantier columns for multi-line display
+            const chantierCol = 7; // H column (0-indexed: 7)
+            const montantChantierCol = 8; // I column (0-indexed: 8)
+
+            for (let r = 1; r <= data.length; r++) {
+              const chantierCellRef = window.XLSX.utils.encode_cell({ r, c: chantierCol });
+              const montantChantierCellRef = window.XLSX.utils.encode_cell({ r, c: montantChantierCol });
+
+              const chantierCell = ws[chantierCellRef];
+              const montantChantierCell = ws[montantChantierCellRef];
+
+              // Apply wrapText and top alignment to ALL chantier column cells
+              if (chantierCell) {
+                chantierCell.s = {
+                  alignment: { wrapText: true, vertical: 'top' },
+                  font: { name: 'Calibri', sz: 11 }
+                };
+              }
+
+              // Apply wrapText, top alignment and right alignment to ALL montant chantier column cells
+              if (montantChantierCell) {
+                montantChantierCell.s = {
+                  alignment: { wrapText: true, vertical: 'top', horizontal: 'right' },
+                  font: { name: 'Calibri', sz: 11 }
+                };
+              }
+            }
+
+            // Style total row (last row) with bold
+            const lastRowIdx = data.length;
+            for (let c = 0; c < headers.length; c++) {
+              const cellRef = window.XLSX.utils.encode_cell({ r: lastRowIdx, c: c });
+              const cell = ws[cellRef];
+              if (cell) {
+                if (!cell.s) cell.s = {};
+                cell.s.font = { name: 'Calibri', sz: 11, bold: true };
+                if (c === 4 || c === 5) { // Total label and amount
+                  cell.s.alignment = { horizontal: c === 5 ? 'right' : 'left' };
+                }
+              }
+            }
+
+            const wb = window.XLSX.utils.book_new();
+            window.XLSX.utils.book_append_sheet(wb, ws, 'Export');
+            const filename = `${tableId}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            window.XLSX.writeFile(wb, filename);
+          }
+
+          function downloadPDF(tableId) {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+
+            const jspdf = window.jspdf;
+            if (!jspdf || !jspdf.jsPDF) {
+              alert('Export PDF indisponible');
+              return;
+            }
+
+            const doc = new jspdf.jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+            doc.setFontSize(12);
+            doc.text('Export Historique', 40, 30);
+
+            // Build data for PDF with proper chantier handling
+            const headers = [];
+            table.querySelectorAll('thead th').forEach(th => {
+              headers.push(th.textContent.trim());
+            });
+
+            const body = [];
+            table.querySelectorAll('tbody tr').forEach(row => {
+              const rowData = [];
+              const cells = row.querySelectorAll('td');
+
+              cells.forEach((cell, idx) => {
+                // For Chantier (7) and Montant chantier (8) columns, preserve line breaks
+                if ((idx === 7 || idx === 8) && tableId === 'chequesTable') {
+                  const lines = cell.querySelectorAll('.alloc-line');
+                  if (lines.length > 0) {
+                    const values = [];
+                    lines.forEach(line => {
+                      const text = line.textContent.trim();
+                      if (text) values.push(text);
+                    });
+                    rowData.push(values.join('\n'));
+                  } else {
+                    rowData.push(cell.textContent.trim());
+                  }
+                } else {
+                  rowData.push(cell.textContent.trim());
+                }
+              });
+
+              body.push(rowData);
+            });
+
+            // Calculate total for Montant column
+            let totalMontant = 0;
+            body.forEach(row => {
+              const montantStr = row[5]; // Montant column is index 5
+              if (montantStr) {
+                const clean = montantStr.replace(/\s/g, '').replace(',', '.');
+                const val = parseFloat(clean) || 0;
+                totalMontant += val;
+              }
+            });
+
+            // Add total row
+            const totalRow = new Array(headers.length).fill('');
+            totalRow[4] = 'Total';
+            totalRow[5] = totalMontant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
+            body.push(totalRow);
+
+            // Column styles
+            const columnStyles = {};
+            if (tableId === 'chequesTable') {
+              columnStyles[7] = { cellWidth: 120, overflow: 'linebreak' }; // Chantier
+              columnStyles[8] = { cellWidth: 80, overflow: 'linebreak', halign: 'right' }; // Montant chantier
+            }
+
+            doc.autoTable({
+              head: [headers],
+              body: body,
+              startY: 50,
+              styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak', valign: 'middle' },
+              headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
+              columnStyles: columnStyles,
+              margin: { left: 30, right: 30 },
+              didParseCell: function (data) {
+                // Ensure line breaks are preserved in chantier columns
+                if (data.section === 'body' && (data.column.index === 7 || data.column.index === 8)) {
+                  data.cell.styles.valign = 'top';
+                }
+                // Style total row (last row) with bold
+                if (data.section === 'body' && data.row.index === body.length - 1) {
+                  data.cell.styles.fontStyle = 'bold';
+                }
+              }
+            });
+
+            const filename = `${tableId}_${new Date().toISOString().slice(0, 10)}.pdf`;
+            doc.save(filename);
+          }
+
+          // Centralized DOMContentLoaded handler to initialize all functionality
+          document.addEventListener('DOMContentLoaded', () => {
+            // Utility functions for number formatting
+            const parseFrenchNumber = (value) => {
+              if (!value) return 0;
+              const clean = value.toString().replace(/\s/g, '').replace(',', '.');
+              return parseFloat(clean) || 0;
+            };
+
+            const formatFrenchNumber = (value) => {
+              return value.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
+            };
+
+            // Get DOM elements for filters
+            const filters = {
+              operations: {
+                type: document.getElementById('typeFilter'),
+                fournisseur: document.getElementById('fournisseurFilterCheques'),
+                banque: document.getElementById('banqueFilterCheques'),
+                chantier: document.getElementById('chantierFilterOperations'),
+                dateFrom: document.getElementById('dateFromFilter'),
+                dateTo: document.getElementById('dateToFilter'),
+                clearFiltersBtn: document.getElementById('opsClearFilters')
+              },
+              encaissements: {
+                type: document.getElementById('typeFilterEncaissements'),
+                client: document.getElementById('clientFilterEncaissements'),
+                banque: document.getElementById('banqueFilterEncaissements'),
+                chantier: document.getElementById('chantierFilterEncaissements'),
+                dateFrom: document.getElementById('dateFromFilterEncaissements'),
+                dateTo: document.getElementById('dateToFilterEncaissements'),
+                clearFiltersBtn: document.getElementById('encClearFilters')
+              },
+              virements: {
+                banque: document.getElementById('banqueFilterVirement'),
+                dateFrom: document.getElementById('dateFromFilterVirement'),
+                dateTo: document.getElementById('dateToFilterVirement'),
+                resetButton: document.getElementById('resetDateBtnVirement')
+              }
+            };
+
+            // Filter state logic
+            let activeOpsFilter = '';
+            let activeEncFilter = '';
+
+            const updateOpsClearBtnVis = () => {
+              let show = false;
+              if (activeOpsFilter) show = true;
+              if (filters.operations.type?.value) show = true;
+              if (filters.operations.fournisseur?.value) show = true;
+              if (filters.operations.banque?.value) show = true;
+              if (filters.operations.chantier?.value) show = true;
+              if (filters.operations.dateFrom?.value) show = true;
+              if (filters.operations.dateTo?.value) show = true;
+              if (filters.operations.clearFiltersBtn) filters.operations.clearFiltersBtn.style.display = show ? '' : 'none';
+            };
+
+            const updateEncClearBtnVis = () => {
+              let show = false;
+              if (activeEncFilter) show = true;
+              if (filters.encaissements.type?.value) show = true;
+              if (filters.encaissements.client?.value) show = true;
+              if (filters.encaissements.banque?.value) show = true;
+              if (filters.encaissements.chantier?.value) show = true;
+              if (filters.encaissements.dateFrom?.value) show = true;
+              if (filters.encaissements.dateTo?.value) show = true;
+              if (filters.encaissements.clearFiltersBtn) filters.encaissements.clearFiltersBtn.style.display = show ? '' : 'none';
+            };
+
+            // Ops Dropdown logic
+            const $opsFilterTypeBtn = document.getElementById('opsFilterTypeBtn');
+            const $opsFilterTypeMenu = document.getElementById('opsFilterTypeMenu');
+            const $opsFilterTypeDropdown = document.getElementById('opsFilterTypeDropdown');
+
+            // Enc Dropdown logic (declared early for dropdown toggling)
+            const $encFilterTypeBtn = document.getElementById('encFilterTypeBtn');
+            const $encFilterTypeMenu = document.getElementById('encFilterTypeMenu');
+            const $encFilterTypeDropdown = document.getElementById('encFilterTypeDropdown');
+
+            // Manual dropdown toggle (fallback if bootstrap dropdown isn't active)
+            const toggleDropdown = (dropdownEl, menuEl, btnEl, forceOpen) => {
+              if (!dropdownEl || !menuEl) return;
+              const open = typeof forceOpen === 'boolean' ? forceOpen : !menuEl.classList.contains('show');
+              dropdownEl.classList.toggle('show', open);
+              menuEl.classList.toggle('show', open);
+              if (btnEl) btnEl.setAttribute('aria-expanded', String(open));
+            };
+
+            if ($opsFilterTypeBtn && $opsFilterTypeDropdown && $opsFilterTypeMenu) {
+              $opsFilterTypeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleDropdown($opsFilterTypeDropdown, $opsFilterTypeMenu, $opsFilterTypeBtn);
+              });
+            }
+
+            if ($encFilterTypeBtn && $encFilterTypeDropdown && $encFilterTypeMenu) {
+              $encFilterTypeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleDropdown($encFilterTypeDropdown, $encFilterTypeMenu, $encFilterTypeBtn);
+              });
+            }
+
+            document.addEventListener('click', (e) => {
+              if ($opsFilterTypeDropdown && $opsFilterTypeMenu && !$opsFilterTypeDropdown.contains(e.target)) {
+                toggleDropdown($opsFilterTypeDropdown, $opsFilterTypeMenu, $opsFilterTypeBtn, false);
+              }
+              if ($encFilterTypeDropdown && $encFilterTypeMenu && !$encFilterTypeDropdown.contains(e.target)) {
+                toggleDropdown($encFilterTypeDropdown, $encFilterTypeMenu, $encFilterTypeBtn, false);
+              }
+            });
+            if ($opsFilterTypeMenu) {
+              const opsFilterMap = {
+                'type': { box: 'opsFilterBoxType', label: 'Type' },
+                'fournisseur': { box: 'opsFilterBoxFournisseur', label: 'Fournisseur' },
+                'banque': { box: 'opsFilterBoxBanque', label: 'Banque' },
+                'chantier': { box: 'opsFilterBoxChantier', label: 'Chantier' }
+              };
+
+              $opsFilterTypeMenu.addEventListener('click', e => {
+                const btn = e.target.closest('button[data-ops-filter]');
+                if (!btn) return;
+                const t = btn.getAttribute('data-ops-filter');
+                activeOpsFilter = t;
+                $opsFilterTypeBtn.textContent = opsFilterMap[t].label;
+
+                // Clear stale hidden values so switching filter type doesn't keep an old filter active
+                if (t !== 'type' && filters.operations.type) filters.operations.type.value = '';
+                if (t !== 'fournisseur' && filters.operations.fournisseur) filters.operations.fournisseur.value = '';
+                if (t !== 'banque' && filters.operations.banque) filters.operations.banque.value = '';
+                if (t !== 'chantier' && filters.operations.chantier) filters.operations.chantier.value = '';
+
+                Object.entries(opsFilterMap).forEach(([k, v]) => {
+                  document.getElementById(v.box).style.display = k === t ? '' : 'none';
+                });
+                updateOpsClearBtnVis();
+                filterRows();
+
+                // close dropdown after selection
+                toggleDropdown($opsFilterTypeDropdown, $opsFilterTypeMenu, $opsFilterTypeBtn, false);
+              });
+            }
+
+            if ($encFilterTypeMenu) {
+              const encFilterMap = {
+                'type': { box: 'encFilterBoxType', label: 'Type' },
+                'client': { box: 'encFilterBoxClient', label: 'Client' },
+                'banque': { box: 'encFilterBoxBanque', label: 'Banque' },
+                'chantier': { box: 'encFilterBoxChantier', label: 'Chantier' }
+              };
+
+              $encFilterTypeMenu.addEventListener('click', e => {
+                const btn = e.target.closest('button[data-enc-filter]');
+                if (!btn) return;
+                const t = btn.getAttribute('data-enc-filter');
+                activeEncFilter = t;
+                $encFilterTypeBtn.textContent = encFilterMap[t].label;
+
+                // Clear stale hidden values so switching filter type doesn't keep an old filter active
+                if (t !== 'type' && filters.encaissements.type) filters.encaissements.type.value = '';
+                if (t !== 'client' && filters.encaissements.client) filters.encaissements.client.value = '';
+                if (t !== 'banque' && filters.encaissements.banque) filters.encaissements.banque.value = '';
+                if (t !== 'chantier' && filters.encaissements.chantier) filters.encaissements.chantier.value = '';
+
+                Object.entries(encFilterMap).forEach(([k, v]) => {
+                  document.getElementById(v.box).style.display = k === t ? '' : 'none';
+                });
+                updateEncClearBtnVis();
+                filterRows();
+
+                // close dropdown after selection
+                toggleDropdown($encFilterTypeDropdown, $encFilterTypeMenu, $encFilterTypeBtn, false);
+              });
+            }
+
+            // Get table elements
+            const tables = {
+              operations: document.getElementById('chequesTable'),
+              encaissements: document.getElementById('encaissementsTable'),
+              virements: document.getElementById('virementDeFondsTable')
+            };
+
+            // Get table rows
+            const rows = {
+              operations: tables.operations?.querySelectorAll('tbody tr.operation-row') || [],
+              encaissements: tables.encaissements?.querySelectorAll('tbody tr.operation-row') || [],
+              virements: tables.virements?.querySelectorAll('tbody tr.virement-row') || []
+            };
+
+            // Get total display elements
+            const totals = {
+              operations: document.getElementById('displayTotalOperations'),
+              encaissements: document.getElementById('displayTotalEncaissements'),
+              virements: document.getElementById('displayTotalVirements')
+            };
+
+            const pagination = {
+              operations: {
+                page: 1,
+                pageSizeEl: document.getElementById('operationsPageSize'),
+                infoEl: document.getElementById('operationsPageInfo'),
+                prevBtn: document.getElementById('operationsPrev'),
+                nextBtn: document.getElementById('operationsNext')
+              },
+              encaissements: {
+                page: 1,
+                pageSizeEl: document.getElementById('encaissementsPageSize'),
+                infoEl: document.getElementById('encaissementsPageInfo'),
+                prevBtn: document.getElementById('encaissementsPrev'),
+                nextBtn: document.getElementById('encaissementsNext')
+              }
+            };
+
+            const setRowVisibility = (row) => {
+              const filterVisible = row.dataset.filterVisible === '1';
+              const pageVisible = row.dataset.pageVisible === '1';
+              row.style.display = (filterVisible && pageVisible) ? '' : 'none';
+            };
+
+            const getFilteredRows = (tableKey) => {
+              const list = Array.from(rows[tableKey] || []);
+              return list.filter(r => r.dataset.filterVisible === '1');
+            };
+
+            const applyPagination = (tableKey) => {
+              const p = pagination[tableKey];
+              if (!p) return;
+              const pageSize = p.pageSizeEl ? Number(p.pageSizeEl.value || 20) : 20;
+              const filtered = getFilteredRows(tableKey);
+              const total = filtered.length;
+              const totalPages = Math.max(1, Math.ceil(total / pageSize));
+              if (p.page > totalPages) p.page = totalPages;
+              if (p.page < 1) p.page = 1;
+
+              const start = (p.page - 1) * pageSize;
+              const end = start + pageSize;
+
+              filtered.forEach((row, idx) => {
+                row.dataset.pageVisible = (idx >= start && idx < end) ? '1' : '0';
+                setRowVisibility(row);
+              });
+
+              // ensure filtered-out rows remain hidden
+              (rows[tableKey] || []).forEach(row => {
+                if (row.dataset.filterVisible !== '1') {
+                  row.dataset.pageVisible = '0';
+                  setRowVisibility(row);
+                }
+              });
+
+              if (p.infoEl) {
+                const shownFrom = total === 0 ? 0 : (start + 1);
+                const shownTo = Math.min(end, total);
+                p.infoEl.textContent = `Affichage ${shownFrom}-${shownTo} / ${total}`;
+              }
+              if (p.prevBtn) p.prevBtn.disabled = p.page <= 1;
+              if (p.nextBtn) p.nextBtn.disabled = p.page >= totalPages;
+            };
+
+            // Filter rows based on selected criteria
+            const filterRows = () => {
+              const selected = {
+                operations: {
+                  type: filters.operations.type?.value.toLowerCase() || '',
+                  fournisseur: filters.operations.fournisseur?.value.toLowerCase() || '',
+                  banque: filters.operations.banque?.value.toLowerCase() || '',
+                  chantier: filters.operations.chantier?.value.toLowerCase() || '',
+                  fromDate: filters.operations.dateFrom?.value ? new Date(filters.operations.dateFrom.value) : null,
+                  toDate: filters.operations.dateTo?.value ? new Date(filters.operations.dateTo.value) : null
+                },
+                encaissements: {
+                  type: filters.encaissements.type?.value.toLowerCase() || '',
+                  client: filters.encaissements.client?.value.toLowerCase() || '',
+                  banque: filters.encaissements.banque?.value.toLowerCase() || '',
+                  chantier: filters.encaissements.chantier?.value.toLowerCase() || '',
+                  fromDate: filters.encaissements.dateFrom?.value ? new Date(filters.encaissements.dateFrom.value) : null,
+                  toDate: filters.encaissements.dateTo?.value ? new Date(filters.encaissements.dateTo.value) : null
+                },
+                virements: {
+                  banque: filters.virements.banque?.value.toLowerCase() || '',
+                  fromDate: filters.virements.dateFrom?.value ? new Date(filters.virements.dateFrom.value) : null,
+                  toDate: filters.virements.dateTo?.value ? new Date(filters.virements.dateTo.value) : null
+                }
+              };
+
+              // Filter function for table rows
+              const filterTableRows = (rows, table, noResultId, colspan, filterType) => {
+                let visibleRows = 0;
+                rows.forEach(row => {
+                  if (filterType === 'operations') {
+                    const rowType = row.getAttribute('data-type')?.toLowerCase() || '';
+                    const rowFournisseur = row.getAttribute('data-fournisseur')?.toLowerCase() || '';
+                    const rowBanque = row.getAttribute('data-banque')?.toLowerCase() || '';
+                    const rowChantier = row.getAttribute('data-chantier')?.toLowerCase() || '';
+                    const rowDate = new Date(row.getAttribute('data-date'));
+
+                    const showType = !selected.operations.type || rowType === selected.operations.type;
+                    const showFournisseur = !selected.operations.fournisseur || rowFournisseur.includes(selected.operations.fournisseur);
+                    const showBanque = !selected.operations.banque || rowBanque.includes(selected.operations.banque);
+                    const showChantier = !selected.operations.chantier || rowChantier.split('|').includes(selected.operations.chantier);
+                    const showDate = (!selected.operations.fromDate || rowDate >= selected.operations.fromDate) && (!selected.operations.toDate || rowDate <= selected.operations.toDate);
+
+                    const ok = showType && showFournisseur && showBanque && showChantier && showDate;
+                    row.dataset.filterVisible = ok ? '1' : '0';
+                    if (ok) visibleRows++;
+                  } else if (filterType === 'encaissements') {
+                    const rowType = row.getAttribute('data-type')?.toLowerCase() || '';
+                    const rowClient = row.getAttribute('data-fournisseur')?.toLowerCase() || '';
+                    const rowBanque = row.getAttribute('data-banque')?.toLowerCase() || '';
+                    const rowChantier = row.getAttribute('data-chantier')?.toLowerCase() || '';
+                    const rowDate = new Date(row.getAttribute('data-date'));
+
+                    const showType = !selected.encaissements.type || rowType === selected.encaissements.type;
+                    const showClient = !selected.encaissements.client || rowClient.includes(selected.encaissements.client);
+                    const showBanque = !selected.encaissements.banque || rowBanque.includes(selected.encaissements.banque);
+                    const showChantier = !selected.encaissements.chantier || rowChantier === selected.encaissements.chantier;
+                    const showDate = (!selected.encaissements.fromDate || rowDate >= selected.encaissements.fromDate) && (!selected.encaissements.toDate || rowDate <= selected.encaissements.toDate);
+
+                    const ok = showType && showClient && showBanque && showChantier && showDate;
+                    row.dataset.filterVisible = ok ? '1' : '0';
+                    if (ok) visibleRows++;
+                  } else if (filterType === 'virements') {
+                    const rowBanque = row.getAttribute('data-banque')?.toLowerCase() || '';
+                    const rowDate = new Date(row.getAttribute('data-date'));
+
+                    const showBanque = !selected.virements.banque || rowBanque === selected.virements.banque;
+                    const showDate = (!selected.virements.fromDate || rowDate >= selected.virements.fromDate) && (!selected.virements.toDate || rowDate <= selected.virements.toDate);
+
+                    const ok = showBanque && showDate;
+                    row.dataset.filterVisible = ok ? '1' : '0';
+                    if (ok) visibleRows++;
+                  }
+                });
+
+                // Handle "no results" message
+                let noResultMsg = document.getElementById(noResultId);
+                if (visibleRows === 0) {
+                  if (!noResultMsg && table) {
+                    noResultMsg = document.createElement('tr');
+                    noResultMsg.id = noResultId;
+                    noResultMsg.innerHTML = `<td colspan="${colspan}" class="text-muted text-center">Aucune opération trouvée pour ce filtre.</td>`;
+                    table.querySelector('tbody').appendChild(noResultMsg);
+                  }
+                } else if (noResultMsg) {
+                  noResultMsg.remove();
+                }
+              };
+
+              // Apply filters to all tables
+              filterTableRows(rows.operations, tables.operations, 'noOperationMsg', 10, 'operations');
+              filterTableRows(rows.encaissements, tables.encaissements, 'noEncaissementMsg', 7, 'encaissements');
+              filterTableRows(rows.virements, tables.virements, 'noVirementMsg', 5, 'virements');
+
+              // reset pagination to first page when filters change
+              if (pagination.operations) pagination.operations.page = 1;
+              if (pagination.encaissements) pagination.encaissements.page = 1;
+
+              // Apply pagination display (no pagination for virements in this page as table may not exist)
+              applyPagination('operations');
+              applyPagination('encaissements');
+
+              // For cheque rows: if chantier filter is selected, show only that chantier line
+              const selectedChantier = selected.operations.chantier;
+              rows.operations.forEach(row => {
+                const rowType = row.getAttribute('data-type')?.toLowerCase() || '';
+                if (rowType !== 'chèque') return;
+                const lines = row.querySelectorAll('.alloc-line');
+                if (!lines || !lines.length) return;
+
+                lines.forEach(l => {
+                  if (!selectedChantier) {
+                    l.style.display = '';
+                    return;
+                  }
+                  const n = (l.getAttribute('data-chantier') || '').toLowerCase();
+                  l.style.display = (n === selectedChantier) ? '' : 'none';
+                });
+              });
+
+              // Update totals
+              updateTotals();
+            };
+
+            // Update totals for visible rows
+            const updateTotals = () => {
+              let totalOperations = 0;
+              let totalEncaissements = 0;
+              let totalVirements = 0;
+
+              rows.operations.forEach(row => {
+                if (row.dataset.filterVisible === '1') {
+                  const montant = parseFrenchNumber(row.querySelector('.montant')?.textContent);
+                  totalOperations += montant;
+                }
+              });
+
+              rows.encaissements.forEach(row => {
+                if (row.dataset.filterVisible === '1') {
+                  const montant = parseFrenchNumber(row.querySelector('.montant')?.textContent);
+                  totalEncaissements += montant;
+                }
+              });
+
+              rows.virements.forEach(row => {
+                if (row.dataset.filterVisible === '1') {
+                  const montant = parseFrenchNumber(row.querySelector('.montant')?.textContent);
+                  totalVirements += montant;
+                }
+              });
+
+              // Update table footers
+              if (totals.operations) totals.operations.textContent = formatFrenchNumber(totalOperations);
+              if (totals.encaissements) totals.encaissements.textContent = formatFrenchNumber(totalEncaissements);
+              if (totals.virements) totals.virements.textContent = formatFrenchNumber(totalVirements);
+            };
+
+            // Reset filters to default values
+            const resetFilters = (table) => {
+              if (table === 'operations') {
+                activeOpsFilter = '';
+                if ($opsFilterTypeBtn) $opsFilterTypeBtn.textContent = 'Filtrer Par';
+                ['opsFilterBoxType', 'opsFilterBoxFournisseur', 'opsFilterBoxBanque', 'opsFilterBoxChantier'].forEach(id => {
+                  const el = document.getElementById(id);
+                  if (el) el.style.display = 'none';
+                });
+                filters.operations.type.value = '';
+                filters.operations.fournisseur.value = '';
+                filters.operations.banque.value = '';
+                if (filters.operations.chantier) filters.operations.chantier.value = '';
+                filters.operations.dateFrom.value = '';
+                filters.operations.dateTo.value = '';
+                updateOpsClearBtnVis();
+              } else if (table === 'encaissements') {
+                activeEncFilter = '';
+                if ($encFilterTypeBtn) $encFilterTypeBtn.textContent = 'Filtrer Par';
+                ['encFilterBoxType', 'encFilterBoxClient', 'encFilterBoxBanque', 'encFilterBoxChantier'].forEach(id => {
+                  const el = document.getElementById(id);
+                  if (el) el.style.display = 'none';
+                });
+                filters.encaissements.type.value = '';
+                filters.encaissements.client.value = '';
+                filters.encaissements.banque.value = '';
+                if (filters.encaissements.chantier) filters.encaissements.chantier.value = '';
+                filters.encaissements.dateFrom.value = '';
+                filters.encaissements.dateTo.value = '';
+                updateEncClearBtnVis();
+              } else if (table === 'virements') {
+                filters.virements.banque.value = '';
+                filters.virements.dateFrom.value = '';
+                filters.virements.dateTo.value = '';
+              }
+              filterRows();
+            };
+
+            // Event Listeners
+            const attachOpsListener = el => {
+              if (el) el.addEventListener('change', () => { updateOpsClearBtnVis(); filterRows(); });
+            };
+            attachOpsListener(filters.operations.type);
+            attachOpsListener(filters.operations.fournisseur);
+            attachOpsListener(filters.operations.banque);
+            attachOpsListener(filters.operations.chantier);
+            attachOpsListener(filters.operations.dateFrom);
+            attachOpsListener(filters.operations.dateTo);
+            filters.operations.clearFiltersBtn?.addEventListener('click', () => resetFilters('operations'));
+
+            const attachEncListener = el => {
+              if (el) el.addEventListener('change', () => { updateEncClearBtnVis(); filterRows(); });
+            };
+            attachEncListener(filters.encaissements.type);
+            attachEncListener(filters.encaissements.client);
+            attachEncListener(filters.encaissements.banque);
+            attachEncListener(filters.encaissements.chantier);
+            attachEncListener(filters.encaissements.dateFrom);
+            attachEncListener(filters.encaissements.dateTo);
+            filters.encaissements.clearFiltersBtn?.addEventListener('click', () => resetFilters('encaissements'));
+
+            filters.virements.banque?.addEventListener('change', filterRows);
+            filters.virements.dateFrom?.addEventListener('change', filterRows);
+            filters.virements.dateTo?.addEventListener('change', filterRows);
+            filters.virements.resetButton?.addEventListener('click', () => resetFilters('virements'));
+
+            // Initial filter run
+            filterRows();
           });
-        });
+        </script>
 
-        // Update totals
-        updateTotals();
-      };
-
-      // Update totals for visible rows
-      const updateTotals = () => {
-        let totalOperations = 0;
-        let totalEncaissements = 0;
-        let totalVirements = 0;
-
-        rows.operations.forEach(row => {
-          if (row.dataset.filterVisible === '1') {
-            const montant = parseFrenchNumber(row.querySelector('.montant')?.textContent);
-            totalOperations += montant;
-          }
-        });
-
-        rows.encaissements.forEach(row => {
-          if (row.dataset.filterVisible === '1') {
-            const montant = parseFrenchNumber(row.querySelector('.montant')?.textContent);
-            totalEncaissements += montant;
-          }
-        });
-
-        rows.virements.forEach(row => {
-          if (row.dataset.filterVisible === '1') {
-            const montant = parseFrenchNumber(row.querySelector('.montant')?.textContent);
-            totalVirements += montant;
-          }
-        });
-
-        // Update table footers
-        if (totals.operations) totals.operations.textContent = formatFrenchNumber(totalOperations);
-        if (totals.encaissements) totals.encaissements.textContent = formatFrenchNumber(totalEncaissements);
-        if (totals.virements) totals.virements.textContent = formatFrenchNumber(totalVirements);
-      };
-
-      // Reset filters to default values
-      const resetFilters = (table) => {
-        if (table === 'operations') {
-          filters.operations.type.value = '';
-          filters.operations.fournisseur.value = '';
-          filters.operations.banque.value = '';
-          if (filters.operations.chantier) filters.operations.chantier.value = '';
-          filters.operations.dateFrom.value = '';
-          filters.operations.dateTo.value = '';
-        } else if (table === 'encaissements') {
-          filters.encaissements.type.value = '';
-          filters.encaissements.client.value = '';
-          filters.encaissements.banque.value = '';
-          if (filters.encaissements.chantier) filters.encaissements.chantier.value = '';
-          filters.encaissements.dateFrom.value = '';
-          filters.encaissements.dateTo.value = '';
-        } else if (table === 'virements') {
-          filters.virements.banque.value = '';
-          filters.virements.dateFrom.value = '';
-          filters.virements.dateTo.value = '';
-        }
-        filterRows();
-      };
-
-      // Event Listeners
-      filters.operations.type?.addEventListener('change', filterRows);
-      filters.operations.fournisseur?.addEventListener('change', filterRows);
-      filters.operations.banque?.addEventListener('change', filterRows);
-      filters.operations.chantier?.addEventListener('change', filterRows);
-      filters.operations.dateFrom?.addEventListener('change', filterRows);
-      filters.operations.dateTo?.addEventListener('change', filterRows);
-      filters.operations.resetButton?.addEventListener('click', () => resetFilters('operations'));
-
-      filters.encaissements.type?.addEventListener('change', filterRows);
-      filters.encaissements.client?.addEventListener('change', filterRows);
-      filters.encaissements.banque?.addEventListener('change', filterRows);
-      filters.encaissements.chantier?.addEventListener('change', filterRows);
-      filters.encaissements.dateFrom?.addEventListener('change', filterRows);
-      filters.encaissements.dateTo?.addEventListener('change', filterRows);
-      filters.encaissements.resetButton?.addEventListener('click', () => resetFilters('encaissements'));
-
-      filters.virements.banque?.addEventListener('change', filterRows);
-      filters.virements.dateFrom?.addEventListener('change', filterRows);
-      filters.virements.dateTo?.addEventListener('change', filterRows);
-      filters.virements.resetButton?.addEventListener('click', () => resetFilters('virements'));
-
-      // Initial filter run
-      filterRows();
-    });
-  </script>
-  <script src="/vendor/jquery/jquery.min.js"></script>
-  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
-  <script src="/js/sb-admin-2.min.js"></script>
 </body>
-  
+
 </html>

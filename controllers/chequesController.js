@@ -135,8 +135,36 @@ function normalizeDateQueryToIso(value) {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+function hasAnyChequeFilters(req) {
+  const q = (req && req.query) ? req.query : {};
+  const keys = [
+    'banqueId',
+    'fournisseurId',
+    'statut',
+    'search',
+    'montant',
+    'montantMin',
+    'montantMax',
+    'chantierId',
+    'dateEcheanceFrom',
+    'dateEcheanceTo',
+  ];
+  return keys.some((k) => {
+    const v = q[k];
+    return v !== undefined && v !== null && String(v).trim() !== '';
+  });
+}
+
 function buildChequeWhereFromQuery(req, extraWhere = {}) {
   const where = { ...extraWhere };
+
+  // Business rule:
+  // - default list (no filters): show all statuses (including annulé)
+  // - when any filter is applied: annulé must be hidden and excluded from totals
+  if (hasAnyChequeFilters(req)) {
+    where.AND = Array.isArray(where.AND) ? where.AND : [];
+    where.AND.push({ statut: { not: 'annulé' } });
+  }
 
   if (req.query.banqueId) where.banqueId = Number(req.query.banqueId);
   if (req.query.fournisseurId) where.fournisseurId = Number(req.query.fournisseurId);
@@ -206,6 +234,11 @@ function buildChequeWhereFromQuery(req, extraWhere = {}) {
 
 function buildChequeWhereFromQueryWithoutChantier(req, extraWhere = {}) {
   const where = { ...extraWhere };
+
+  if (hasAnyChequeFilters(req)) {
+    where.AND = Array.isArray(where.AND) ? where.AND : [];
+    where.AND.push({ statut: { not: 'annulé' } });
+  }
 
   if (req.query.banqueId) where.banqueId = Number(req.query.banqueId);
   if (req.query.fournisseurId) where.fournisseurId = Number(req.query.fournisseurId);
@@ -819,6 +852,7 @@ export const exportChequesExcel = async (req, res) => {
     ws.columns = [
       { header: 'Date', key: 'dateEtablissement', width: 12 },
       { header: 'N° chèque', key: 'numero', width: 16 },
+      { header: 'Montant', key: 'montant', width: 14 },
       { header: 'Bénéficiaire', key: 'beneficiaire', width: 30 },
       { header: 'Banque', key: 'banque', width: 18 },
       { header: 'Échéance', key: 'dateEcheance', width: 12 },
@@ -827,7 +861,6 @@ export const exportChequesExcel = async (req, res) => {
       { header: 'Chantier', key: 'chantier', width: 28 },
       { header: 'Montant chantier', key: 'montantChantier', width: 18 },
       { header: 'Observation', key: 'obs', width: 40 },
-      { header: 'Montant', key: 'montant', width: 14 },
     ];
 
     const fmtIso = (d) => {
@@ -902,6 +935,7 @@ export const exportChequesExcel = async (req, res) => {
       ws.addRow({
         dateEtablissement: fmtIso(c.dateEtablissement),
         numero: c.numero || '',
+        montant: Number(c.montant || 0),
         beneficiaire: c.beneficiaire || '',
         banque: c.banque?.name || '',
         dateEcheance: fmtIso(c.dateEcheance),
@@ -910,12 +944,11 @@ export const exportChequesExcel = async (req, res) => {
         chantier: ca.chantier,
         montantChantier: ca.montantChantier,
         obs: c.obs || '',
-        montant: Number(c.montant || 0),
       });
     }
 
     const totalRow = ws.addRow({
-      obs: 'Montant Total : ',
+      numero: 'Total',
       montant: totalMontant,
     });
     totalRow.font = { bold: true };
@@ -923,9 +956,8 @@ export const exportChequesExcel = async (req, res) => {
     let totalChantierRow = null;
     if (hasValidChantierId) {
       totalChantierRow = ws.addRow({
-        obs: 'Total chantier',
+        numero: 'Total chantier',
         montantChantier: Number(totalMontantChantier || 0),
-        montant: Number(totalMontantChantier || 0),
       });
       totalChantierRow.font = { bold: true };
     }
@@ -973,7 +1005,9 @@ export const exportChequesPdf = async (req, res) => {
     const where = buildChequeWhereFromQuery(req, banqueId ? { banqueId } : {});
 
     const chantierIdQuery = (req.query.chantierId || '').toString().trim();
+
     const chantierId = chantierIdQuery ? Number(chantierIdQuery) : null;
+
     const hasValidChantierId = chantierIdQuery && !Number.isNaN(chantierId);
 
     const cheques = await prisma.cheque.findMany({
@@ -1094,12 +1128,15 @@ export const exportChequesPdf = async (req, res) => {
       return [
         fmtFr(c.dateEtablissement),
         c.numero || '',
+        moneyFr(c.montant || 0),
         c.beneficiaire || '',
         c.banque?.name || '',
+        fmtFr(c.dateEcheance),
+        c.statut || '',
+        fmtFr(c.dateReglement),
         ca.chantier,
         ca.montantChantier,
-        fmtFr(c.dateEcheance),
-        moneyFr(c.montant || 0),
+        c.obs || '',
       ];
     });
 
@@ -1119,12 +1156,15 @@ export const exportChequesPdf = async (req, res) => {
     const cols = [
       { label: 'Date', min: 52, max: 75, align: 'left' },
       { label: 'N°', min: 48, max: 75, align: 'left' },
+      { label: 'Montant', min: 65, max: 90, align: 'right' },
       { label: 'Bénéficiaire', min: 110, max: 200, align: 'left' },
       { label: 'Banque', min: 70, max: 120, align: 'left' },
+      { label: 'Échéance', min: 55, max: 75, align: 'left' },
+      { label: 'Statut', min: 60, max: 95, align: 'left' },
+      { label: 'Date règlement', min: 68, max: 90, align: 'left' },
       { label: 'Chantier', min: 90, max: 190, align: 'left' },
       { label: 'Mt chantier', min: 70, max: 95, align: 'right' },
-      { label: 'Échéance', min: 55, max: 75, align: 'left' },
-      { label: 'Montant', min: 65, max: 90, align: 'right' },
+      { label: 'Observation', min: 90, max: 160, align: 'left' },
     ];
 
     const cellPadding = 6; // x+3 left and x+3 right in drawRow
@@ -1225,28 +1265,12 @@ export const exportChequesPdf = async (req, res) => {
       drawRow(rowStrings[i], false);
     }
 
-    drawRow([
-      '',
-      '',
-      'Total',
-      '',
-      '',
-      '',
-      '',
-      moneyFr(totalMontant),
-    ], true);
-
+    // Totals row: Total value under Montant column
+    // If chantier filter exists, also show Total chantier on the same line (label under Chantier, amount under Mt chantier)
     if (hasValidChantierId) {
-      drawRow([
-        '',
-        '',
-        'Total chantier',
-        '',
-        '',
-        moneyFr(totalMontantChantier),
-        '',
-        '',
-      ], true);
+      drawRow(['', 'Total', moneyFr(totalMontant), '', '', '', '', '', 'Total chantier', moneyFr(totalMontantChantier), ''], true);
+    } else {
+      drawRow(['', 'Total', moneyFr(totalMontant), '', '', '', '', '', '', '', ''], true);
     }
 
     doc.end();

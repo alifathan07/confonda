@@ -440,27 +440,59 @@
 
           <!-- Filter Section -->
           <div class="filter-section mb-4">
-            <form class="form-inline" method="GET">
-              <div class="form-group mr-2">
-                <label for="dateFilter" class="mr-2">Date :</label>
-                <div class="input-group">
-                  <input type="date" id="dateFilter" class="form-control" value="2020-01-01" hidden>
-                  <div class="input-group-append">
-                    <span class="input-group-text">à</span>
+            <div class="row" style="gap:0; align-items:flex-end;">
+              <!-- Filtrer Par dropdown -->
+              <div class="col-auto mb-2">
+                <label class="small text-muted mb-1 d-block">Filtre chèques</label>
+                <div class="dropdown" id="situationFilterTypeDropdown">
+                  <button class="btn btn-success dropdown-toggle" type="button" id="situationFilterTypeBtn"
+                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="min-width:150px;">
+                    Filtrer Par
+                  </button>
+                  <div class="dropdown-menu" id="situationFilterTypeMenu" aria-labelledby="situationFilterTypeBtn">
+                    <button class="dropdown-item" type="button" data-sit-filter="statut">Statut</button>
+                    <button class="dropdown-item" type="button" data-sit-filter="banque">Banque</button>
                   </div>
-                  <input type="date" id="dateToFilter" class="form-control">
+                </div>
+                <div id="situationFilterDynamic" class="mt-1">
+                  <div id="sitFilterBoxStatut" style="display:none;">
+                    <select id="statutFilterCheques" class="form-control">
+                      <option value="">Tous</option>
+                      <option value="En circulation">En Circulation</option>
+                      <option value="Impayé">Impayé</option>
+                    </select>
+                  </div>
+                  <div id="sitFilterBoxBanque" style="display:none;">
+                    <select id="banqueFilterCheques" class="form-control">
+                      <option value="">Tous</option>
+                      <% banques.forEach(b => { %>
+                        <option value="<%= b.name %>"><%= b.name %></option>
+                      <% }) %>
+                    </select>
+                  </div>
                 </div>
               </div>
-              <div class="form-group mr-2">
-                <label for="statutFilterCheques" class="mr-2">Statut :</label>
-                <select id="statutFilterCheques" class="form-control">
-                  <option value="">Tous</option>
-                  <option value="En circulation">En Circulation</option>
-                  <option value="Impayé">Impayé</option>
-                </select>
+
+              <!-- Annuler filtre (red, hidden by default) -->
+              <div class="col-auto mb-2 d-flex align-items-end">
+                <button id="situationClearFilters" type="button" class="btn btn-danger" style="display:none;">
+                  <i class="fas fa-times mr-1"></i>Annuler filtre
+                </button>
               </div>
-              <div class="form-group mr-2">
-                <label class="mr-2">Fournisseur :</label>
+
+              <!-- Date range -->
+              <div class="col-auto mb-2">
+                <label class="small text-muted mb-1 d-block">Date du</label>
+                <input type="date" id="dateToFilter" class="form-control">
+              </div>
+              <div class="col-auto mb-2">
+                <label class="small text-muted mb-1 d-block">Date au</label>
+                <input type="date" id="dateToFilter2" class="form-control">
+              </div>
+
+              <!-- Fournisseur (kept exactly as before) -->
+              <div class="col-auto mb-2">
+                <label class="small text-muted mb-1 d-block">Fournisseur</label>
                 <div class="dropdown d-inline-block">
                   <button class="btn btn-info dropdown-toggle" type="button" id="supplierFilterBtn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Sélection
@@ -475,18 +507,7 @@
                   </div>
                 </div>
               </div>
-              <div class="form-group mr-2">
-                <label for="banqueFilterCheques" class="mr-2">Banque :</label>
-                <select id="banqueFilterCheques" class="form-control">
-                  <option value="">Tous</option>
-                  <% banques.forEach(b => { %>
-                    <option value="<%= b.name %>"><%= b.name %></option>
-                  <% }) %>
-                </select>
-              </div>
-              <button type="button" class="btn btn-secondary" id="resetDateBtn" aria-label="Annuler filtre" style="background-color: #6a5ae7;">Annuler filtre</button>
-              <input type="hidden" name="from" value="01/01/2020">
-            </form>
+            </div>
           </div>
 
           <!-- Soldes Bancaires -->
@@ -1473,10 +1494,6 @@
       applyFilters();
     });
   </script>
-</body>
-
-
-
 
 <!-- <<<<<<<<<<<<< SCRIPT >>>>>>>>>>>>> -->
 
@@ -1488,12 +1505,56 @@
   // Filter elements
   const statutFilter = document.getElementById('statutFilterCheques');
   const banqueFilter = document.getElementById('banqueFilterCheques');
-  const dateFromFilter = document.getElementById('dateFilter');
-  const dateToFilter = document.getElementById('dateToFilter');
-  const resetButton = document.getElementById('resetDateBtn');
+  const dateFromFilter = document.getElementById('dateToFilter'); // date du
+  const dateToFilter = document.getElementById('dateToFilter2'); // date au
+  const clearFiltersBtn = document.getElementById('situationClearFilters');
   const supplierList = document.getElementById('supplierList');
   const selectAllEl = document.getElementById('supplierSelectAll');
   const countBadge = document.getElementById('supplierSelectedCount');
+
+  // New Dropdown Logic
+  const $sitFilterTypeBtn = document.getElementById('situationFilterTypeBtn');
+  const $sitFilterTypeMenu = document.getElementById('situationFilterTypeMenu');
+  let activeSitFilter = '';
+
+  const updateClearBtnVis = () => {
+    let show = false;
+    if (activeSitFilter) show = true;
+    if (dateFromFilter && dateFromFilter.value) show = true;
+    if (dateToFilter && dateToFilter.value) show = true;
+    
+    // Check if supplier is touched (not all selected)
+    const boxes = supplierList?.querySelectorAll('input[type="checkbox"]');
+    if (boxes) {
+      const allChecked = Array.from(boxes).every(b => b.checked);
+      if (!allChecked) show = true;
+    }
+    
+    if (clearFiltersBtn) {
+      clearFiltersBtn.style.display = show ? '' : 'none';
+    }
+  };
+
+  if ($sitFilterTypeMenu) {
+    const filters = {
+      'statut': { box: 'sitFilterBoxStatut', label: 'Statut' },
+      'banque': { box: 'sitFilterBoxBanque', label: 'Banque' }
+    };
+
+    $sitFilterTypeMenu.addEventListener('click', e => {
+      const btn = e.target.closest('button[data-sit-filter]');
+      if (!btn) return;
+      const t = btn.getAttribute('data-sit-filter');
+      activeSitFilter = t;
+      $sitFilterTypeBtn.textContent = filters[t].label;
+      
+      Object.entries(filters).forEach(([k, v]) => {
+        document.getElementById(v.box).style.display = k === t ? '' : 'none';
+      });
+      updateClearBtnVis();
+      applyFilters();
+    });
+  }
 
   // Table elements
   const chequesTable = document.getElementById('chequesTable');
@@ -1767,24 +1828,32 @@
 
   // Reset filters
   const resetFilters = () => {
+    activeSitFilter = '';
+    if ($sitFilterTypeBtn) $sitFilterTypeBtn.textContent = 'Filtrer Par';
+    ['sitFilterBoxStatut', 'sitFilterBoxBanque'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+
     if (statutFilter) statutFilter.value = '';
     if (banqueFilter) banqueFilter.value = '';
-    if (dateFromFilter) dateFromFilter.value = '2020-01-01';
+    if (dateFromFilter) dateFromFilter.value = '';
     if (dateToFilter) dateToFilter.value = '';
     if (supplierList) {
       supplierList.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
       syncSelectAll();
       updateBadge();
     }
+    updateClearBtnVis();
     applyFilters();
   };
 
   // Add event listeners
-  statutFilter?.addEventListener('change', applyFilters);
-  banqueFilter?.addEventListener('change', applyFilters);
-  dateFromFilter?.addEventListener('change', applyFilters);
-  dateToFilter?.addEventListener('change', applyFilters);
-  resetButton?.addEventListener('click', resetFilters);
+  statutFilter?.addEventListener('change', () => { updateClearBtnVis(); applyFilters(); });
+  banqueFilter?.addEventListener('change', () => { updateClearBtnVis(); applyFilters(); });
+  dateFromFilter?.addEventListener('change', () => { updateClearBtnVis(); applyFilters(); });
+  dateToFilter?.addEventListener('change', () => { updateClearBtnVis(); applyFilters(); });
+  clearFiltersBtn?.addEventListener('click', resetFilters);
 
   // Handle validation checkboxes
   const validationCheckboxes = document.querySelectorAll('input[name="validation"], input[name="validationEffet"], input[name="validationPayavenir"]');
@@ -2982,3 +3051,5 @@ function deleteBanque(id) {
   });
 }
 </script>
+</body>
+</html>

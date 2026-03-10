@@ -372,6 +372,20 @@ model Virement {
   banqueId       Int
   chantier       Chantier?    @relation("VirementsChantier", fields: [chantierId], references: [id])
   chantierId     Int?
+  allocations    VirementAllocation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Add this new model
+model VirementAllocation {
+  id         Int      @id @default(autoincrement())
+  virement   Virement @relation(fields: [virementId], references: [id], onDelete: Cascade)
+  virementId Int
+  chantier   Chantier @relation(fields: [chantierId], references: [id])
+  chantierId Int
+  montant    Float
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -590,8 +604,9 @@ model Chantier {
 
   demandes          DemandeFourniture[]
   JustifCaisse      JustifCaisse[]
-  items             ChantierItem[] // 🔥 chantier has many invoice-like items
-  chequeAllocations ChequeAllocation[] // Add this line
+  items               ChantierItem[] // 🔥 chantier has many invoice-like items
+  chequeAllocations   ChequeAllocation[] // Add this line
+  virementAllocations VirementAllocation[] // Add this line
 
   cheques   Cheque[]    @relation("ChequesChantier")
   effets    Effet[]     @relation("EffetsChantier")

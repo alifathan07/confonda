@@ -70,6 +70,13 @@ export const indexHis = async (req, res) => {
         date: true,
         montant: true,
         chantier : {select: {nom: true}},
+        allocations: {
+          select: {
+            montant: true,
+            chantierId: true,
+            chantier: { select: { nom: true } },
+          },
+        },
         dateReglement: true,
         beneficiaire: true,
         obs: true,
@@ -204,9 +211,45 @@ export const indexHis = async (req, res) => {
         numero: v.designation || 'Aucun',
         dateEtablissement: v.date,
         montant: v.montant,
-        chantier : v.chantier?.nom || 'Aucun',
-        chantierLines: [],
-        chantierNames: v.chantier?.nom ? [String(v.chantier.nom)] : [],
+        chantier: (() => {
+          const allocs = Array.isArray(v.allocations) ? v.allocations : [];
+          const names = allocs
+            .map(a => (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '')
+            .filter(Boolean);
+
+          if (names.length) {
+            return Array.from(new Set(names)).join(', ');
+          }
+
+          return v.chantier?.nom || 'Aucun';
+        })(),
+        chantierLines: (() => {
+          const allocs = Array.isArray(v.allocations) ? v.allocations : [];
+          const map = new Map();
+          for (const a of allocs) {
+            const nom = (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '';
+            if (!nom) continue;
+            const prev = map.get(nom) || 0;
+            map.set(nom, prev + Number(a.montant || 0));
+          }
+
+          const lines = Array.from(map.entries()).map(([nom, montant]) => ({ nom, montant }));
+          if (lines.length) return lines;
+
+          if (v.chantier?.nom) {
+            return [{ nom: v.chantier.nom, montant: Number(v.montant || 0) }];
+          }
+          return [];
+        })(),
+        chantierNames: (() => {
+          const allocs = Array.isArray(v.allocations) ? v.allocations : [];
+          const names = allocs
+            .map(a => (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '')
+            .filter(Boolean);
+          if (names.length) return Array.from(new Set(names));
+          if (v.chantier?.nom) return [String(v.chantier.nom)];
+          return [];
+        })(),
         dateEcheance: v.date,
         validation: false,
         beneficiaire: v.beneficiaire,

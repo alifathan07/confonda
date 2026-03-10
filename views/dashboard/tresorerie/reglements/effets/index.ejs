@@ -1,1257 +1,858 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
   <meta name="description" content="effets" />
   <meta name="author" content="Confonda" />
-  <title>effets</title>
+  <title>Effets</title>
   <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
   <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
-   <!-- Enhanced Status Styles -->
-      <style>
-        /* General Button Style */
-  .custom-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 600;
-    font-size: 15px;
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: none;
-    transition: all 0.2s ease-in-out;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    text-transform: uppercase;
-  }
+  <style>
+    .effet-table td,
+    .effet-table th {
+      vertical-align: middle;
+    }
 
-  .custom-btn i {
-    font-size: 14px;
-  }
+    .effet-table.table-bordered td,
+    .effet-table.table-bordered th {
+      border-color: #e6e8f0;
+    }
 
-  .custom-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
+    .badge-statut {
+      display: inline-block;
+      padding: 4px 10px;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: box-shadow .2s;
+    }
 
-  /* Specific Color Variants */
-  .btn-success.custom-btn {
-    background-color: #28a745;
-    color: white;
-  }
+    .badge-statut:hover {
+      box-shadow: 0 2px 8px rgba(0,0,0,.18);
+    }
 
-  .btn-success.custom-btn:hover {
-    background-color: #218838;
-  }
+    .badge-statut.en-circulation {
+      background: #fff3cd;
+      color: #856404;
+    }
 
-  .btn-outline-success.custom-btn {
-    background-color: white;
-    color: #28a745;
-    border: 2px solid #28a745;
-  }
+    .badge-statut.paye {
+      background: #d4edda;
+      color: #155724;
+    }
 
-  .btn-outline-success.custom-btn:hover {
-    background-color: #28a745;
-    color: white;
-  }
+    .badge-statut.impaye {
+      background: #f8d7da;
+      color: #721c24;
+    }
 
-  .btn-secondary.custom-btn {
-    background-color: #6c757d;
-    color: white;
-  }
+    .badge-statut.annule {
+      background: #e2e3e5;
+      color: #383d41;
+    }
 
-  .btn-secondary.custom-btn:hover {
-    background-color: #5a6268;
-  }
+    .badge-statut.treso {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
 
-  .btn-primary.custom-btn {
-    background-color: #007bff;
-    color: white;
-  }
+    .statut-select {
+      min-width: 140px;
+      font-weight: 700;
+    }
 
-  .btn-primary.custom-btn:hover {
-    background-color: #0056b3;
-  }
+    .table-actions {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
 
-  .btn-warning.excel-save-btn {
-    font-size: 13px;
-    padding: 6px 10px;
-    border-radius: 6px;
-  }
+    .cell-edit {
+      min-width: 100px;
+    }
 
-  .excel-delete-btn {
-    background-color: transparent;
-    color: #dc3545;
-    border: none;
-    padding: 6px;
-    font-size: 15px;
-    cursor: pointer;
-  }
+    .cell-edit[contenteditable="true"] {
+      outline: none;
+    }
 
-  .excel-delete-btn:hover {
-    color: #bd2130;
-  }
-         .excel-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
+    .cell-edit[contenteditable="true"]:focus {
+      box-shadow: inset 0 0 0 2px rgba(78, 115, 223, .25);
+      border-radius: 4px;
+    }
 
-  .excel-table th,
-  .excel-table td {
-    border: 1px solid #dee2e6;
-    padding: 8px;
-    text-align: center;
-    vertical-align: middle;
-  }
+    .obs-cell {
+      min-width: 220px;
+      max-width: 380px;
+      white-space: normal;
+      line-height: 1.25;
+    }
 
-  .excel-table thead th {
-    background-color: #f8f9fa;
-    font-weight: bold;
-  }
+    #filterTypeDropdown .dropdown-menu {
+      z-index: 2000;
+    }
 
-  .excel-table tbody tr:nth-child(even) {
-    background-color: #f2f2f2;
-  }
+    body {
+      padding-bottom: 26px;
+    }
 
-  .excel-table tbody td {
-      padding: 1px;
+    .bottom-hscroll {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 18px;
+      overflow-x: scroll;
+      overflow-y: hidden;
+      background: rgba(255, 255, 255, .95);
+      border-top: 1px solid rgba(0, 0, 0, .08);
+      z-index: 4000;
+      display: block;
+    }
+
+    .bottom-hscroll::-webkit-scrollbar {
+      height: 12px;
+    }
+
+    .bottom-hscroll::-webkit-scrollbar-thumb {
+      background: rgba(108, 117, 125, .6);
+      border-radius: 10px;
+    }
+
+    .bottom-hscroll::-webkit-scrollbar-track {
+      background: rgba(108, 117, 125, .12);
+    }
+
+    .bottom-hscroll-inner {
       height: 1px;
-  }
+    }
+  </style>
+</head>
 
- 
-        .statut-cell {
-          text-align: center !important;
-          vertical-align: middle !important;
-          padding: 8px !important;
-        }
-        
-        .statut-badge {
-          display: inline-block;
-          padding: 6px 12px;
-          font-weight: bold;
-          font-size: 12px;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          border-radius: 20px;
-          border: 2px solid transparent;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          min-width: 100px;
-          text-align: center;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .statut-badge:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        }
-        
-        .statut-badge.en-circulation {
-          background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-          color: #856404;
-          border-color: #ffc107;
-        }
-        
-        .statut-badge.paye {
-          background: linear-gradient(135deg, #d4edda, #00b894);
-          color: #155724;
-          border-color: #28a745;
-        }
-        
-        .statut-badge.impaye {
-          background: linear-gradient(135deg, #fff3e0, #e17055);
-          color: #8a2e05;
-          border-color: #fd7e14;
-        }
-        
-        .statut-badge.annule {
-          background: linear-gradient(135deg, #f8d7da, #d63031);
-          color: #721c24;
-          border-color: #dc3545;
-        }
-        
-        .statut-select {
-          display: block;
-          margin: 0 auto;
-          font-weight: bold;
-          font-size: 13px;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          border-radius: 20px;
-          padding: 8px 16px;
-          border: 2px solid #007bff;
-          background: linear-gradient(135deg, #ffffff, #f8f9fa);
-          cursor: pointer;
-          min-width: 120px;
-          text-align: center;
-          box-shadow: 0 2px 6px rgba(0,123,255,0.2);
-          transition: all 0.3s ease;
-          outline: none;
-        }
-        
-        .statut-select:focus {
-          border-color: #0056b3;
-          box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
-          transform: scale(1.02);
-        }
-        
-        .statut-select option {
-          padding: 8px;
-          font-weight: bold;
-          text-transform: uppercase;
-        }
-        
-        @keyframes statusChange {
-          0% { transform: scale(1); }
-          50% { transform: scale(1.05); }
-          100% { transform: scale(1); }
-        }
-        
-        .status-updating {
-          animation: statusChange 0.3s ease;
-        }
-      </style>
-      
-        
-        <body id="page-top">
-          <div id="wrapper">
-            <%- include('../../../../layouts/sidebar') %>
-            <div id="content-wrapper" class="d-flex flex-column">
-              <div id="content">
-                <%- include('../../../../layouts/topbar') %>
-                <div class="container-fluid">
-                  <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                      <% if (id) { %>
-                        <h6 class="m-0 font-weight-bold text-primary">Liste des effets <%= banqueName.name %></h6>
-                      <% } else { %>
-                        <h6 class="m-0 font-weight-bold text-primary">Liste des effets</h6>
-                      <% } %>
+<body id="page-top">
+  <div id="wrapper">
+    <%- include('../../../../layouts/sidebar') %>
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <%- include('../../../../layouts/topbar') %>
+
+        <div class="container-fluid">
+          <!-- Page header -->
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div>
+              <h1 class="h3 mb-0 text-gray-800">
+                <% if (typeof id !== 'undefined' && id && typeof banqueName !== 'undefined' && banqueName) { %>
+                  Effets — <%= banqueName.name %>
+                <% } else { %>
+                  Liste des Effets
+                <% } %>
+              </h1>
+              <div class="small text-muted" id="effetCount">
+                <% if (typeof effets !== 'undefined') { %><%= effets.length %> résultat(s)<% } %>
+              </div>
+            </div>
+            <div class="d-flex" style="gap: 10px;">
+              <button id="btnExportPdf" type="button" class="btn btn-outline-danger">
+                <i class="fas fa-file-pdf mr-2"></i>PDF
+              </button>
+              <button id="btnExportExcel" type="button" class="btn btn-outline-success">
+                <i class="fas fa-file-excel mr-2"></i>Excel
+              </button>
+              <button id="addRowBtn" type="button" class="btn btn-secondary">
+                <i class="fas fa-plus mr-2"></i>Ajouter
+              </button>
+              <button id="saveTableBtn" type="button" class="btn btn-warning">
+                <i class="fas fa-save mr-2"></i>Enregistrer
+              </button>
+              <% if (typeof id !== 'undefined' && id && typeof banqueName !== 'undefined' && banqueName) {
+                const supportedBanks = (banques || []).map(b => b.name.toLowerCase());
+                const bankKey = banqueName.name.toLowerCase();
+                const bankRoute = bankKey === 'credit agricole' ? 'credit_agricole' : bankKey;
+                if (supportedBanks.includes(bankKey)) { %>
+                  <a href="/tresorerie/effets/create/format/<%= bankRoute %>/<%= id %>" class="btn btn-primary">
+                    <i class="fas fa-file-invoice-dollar mr-2"></i>Établir effet
+                  </a>
+              <% } } %>
+            </div>
+          </div>
+
+          <div class="card shadow mb-4">
+            <div class="card-body">
+              <!-- Filters row -->
+              <div class="row mb-3">
+                <div class="col-md-3 mb-2">
+                  <label class="small text-muted mb-1">Filtre</label>
+                  <div class="dropdown" id="filterTypeDropdown">
+                    <button class="btn btn-success dropdown-toggle w-100" type="button" id="filterTypeBtn"
+                      data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      Filtrer Par
+                    </button>
+                    <div class="dropdown-menu w-100" id="filterTypeMenu" aria-labelledby="filterTypeBtn">
+                      <button class="dropdown-item" type="button" data-filter-type="beneficiaire">Bénéficiaire</button>
+                      <button class="dropdown-item" type="button" data-filter-type="banque">Banque</button>
+                      <button class="dropdown-item" type="button" data-filter-type="statut">Statut</button>
+                      <button class="dropdown-item" type="button" data-filter-type="chantier">Chantier</button>
+                      <button class="dropdown-item" type="button" data-filter-type="montant">Montant</button>
+                      <button class="dropdown-item" type="button" data-filter-type="numero">N° Effet</button>
                     </div>
-                    <div class="card-body">
-                      <div class="mb-4" style="display: flex; align-items: center; gap: 20px;">
-                        <form id="excelUploadForm" enctype="multipart/form-data" method="POST" action="/" style="margin: 0;">
-                            <input type="file" id="excelFile" name="excelFile" accept=".xlsx,.xls" style="display:none;" hidden>
-                        </form>
-                        <% if (id) { %>
-                          <%
-                            const supportedBanks = banques.map(banque => banque.name.toLowerCase());
-                            const bankKey = banqueName.name.toLowerCase();
-                          %>
-                          <% if (bankKey === "credit agricole" && supportedBanks.includes("credit agricole")) { %>
-                            <a href="/tresorerie/effets/create/format/credit_agricole/<%=id%>" 
-                               class="btn btn-outline-danger d-flex align-items-center" 
-                               type="button" 
-                               style="font-weight:600; font-size:15px; height: 42px;">
-                              <i class="fas fa-file-invoice-dollar mr-2"></i> Etablir effet
-                            </a>
-                          <% } else if (supportedBanks.includes(bankKey)) { %>
-                            <a href="/tresorerie/effets/create/format/<%= bankKey %>/<%=id%>" 
-                               class="btn btn-outline-danger d-flex align-items-center" 
-                               type="button" 
-                               style="font-weight:600; font-size:15px; height: 42px;">
-                              <i class="fas fa-file-invoice-dollar mr-2"></i> Etablir effet
-                            </a>
-                          <% } %>
-                        <% } %>
-                        <button id="addRowBtn" class="btn btn-primary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
-                          <i class="fas fa-plus mr-2"></i> Ajouter Effet
-                        </button>
-                        <button id="saveTableBtn" class="btn btn-primary d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
-                          <i class="fas fa-save mr-2"></i> Enregistrer
-                        </button>
-                        <button id="downloadPdfBtn" class="btn btn-success d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
-                          <i class="fas fa-file-pdf mr-2"></i> Télécharger PDF
-                        </button>
-                        <button id="downloadExcelBtn" class="btn btn-success d-flex align-items-center" type="button" style="font-weight:600; font-size:15px; height: 42px;">
-                          <i class="fas fa-file-excel mr-2"></i> Télécharger Excel
-                        </button>
-                        <span id="excelUploadMsg" style="font-size:15px; margin-left:10px;"></span>
-                      </div>
-                      <div class="mb-3" style="max-width: 350px;">
-                        <input
-                          type="text"
-                          id="supplierSearch"
-                          class="form-control"
-                          placeholder="Rechercher un chèque..."
-                          style="font-size: 15px;"
-                        />
-                      </div>
-                      <div class="mb-3 d-flex align-items-center" style="max-width: 350px;">
-                        <select id="banqueFilter" class="form-control mr-2" style="font-size: 15px; width: 300px;">
-                          <option value="">-- Filtrer par banque --</option>
-                          <% banques.forEach(banque => { %>
-                            <option value="<%= banque.name %>"><%= banque.name %></option>
-                          <% }); %>
-                        </select>
-                        <select id="supplierFilter" class="form-control" style="font-size: 15px; width: 250px;">
-                          <option value="">-- Filtrer par fournisseur --</option>
-                          <% fournisseurs.forEach(fournisseur => { %>
-                            <option value="<%= fournisseur.name %>"><%= fournisseur.name %></option>
-                          <% }); %>
-                        </select>
-                        
-                      </div>
-                      <div class="mb-3 d-flex align-items-center" style="max-width: 350px;">
-                        <select id="statusFilter" class="form-control mr-2" style="font-size: 15px; width: 200px;">
-                          <option value="">-- Filtrer par statut --</option>
-                          <option value="En Circulation">En Circulation</option>
-                          <option value="PAYÉ">Payé</option>
-                          <option value="Impayé">Impayé</option>
-                          <option value="Annulé">Annulé</option>
-                          <option value="Treso">Treso</option>
-                        </select>
-                        <select id="chantierFilter" class="form-control mr-2" style="font-size: 15px; width: 200px;">
-                          <option value="">-- Filtrer par chantier --</option>
-                          <% chantiers.forEach(chantier => { %>
-                            <option value="<%= chantier.nom %>"><%= chantier.nom ? chantier.nom : '-- Aucun --' %></option>
-                          <% }); %>
-                        </select>
-                      </div>
-    
-                      <div class="form-group mr-2">
-                        <label for="dateFilter" class="mr-2">Date :</label>
-                        <div class="input-group">
-                          <span class="input-group-text">Du</span>
+                  </div>
 
-                          <input type="date" id="dateFilter" class="form-control" >
-                          <div class="input-group-append">
-                            <span class="input-group-text">AU</span>
-                          </div>
-                          <input type="date" id="dateToFilter" class="form-control" style="font-size: 15px; width: 20px;">
-                        </div>
-                      </div>
-                      <button id="resetFilters" class="btn btn-secondary custom-btn">
-                        <i class="fas fa-undo mr-2"></i> Réinitialiser
-                      </button>
-          
-                      <div class="table-responsive">
-                        <%
-                          function formatDateToDDMMYYYY(dateInput) {
-                            if (!dateInput) return '';
-                            const date = new Date(dateInput);
-                            if (isNaN(date)) return dateInput;
-                            const day = String(date.getDate()).padStart(2, '0');
-                            const month = String(date.getMonth() + 1).padStart(2, '0');
-                            const year = date.getFullYear();
-                            return `${day}/${month}/${year}`;
-                          }
-                        %>
-                        <table id="editableTable" class="excel-table">
-                          <thead>
-                            <tr style="position: sticky; top: 0; background-color: white; z-index: 1;">
-                              <th draggable="true">Date</th>
-                              <th draggable="true">N° Effet</th>
-                              <th draggable="true">Banque</th>
-                              <th draggable="true">Bénéficiaire</th>
-                              <th draggable="true" style="width: 200px;">Montant</th>
-                              <th draggable="true">Echeance</th>
-                              <th draggable="true">Statut</th>
-                              <th draggable="true">Date Reglement</th>
-                              <th draggable="true">Chantier</th>
-                              <th draggable="true">Observation</th>
-                              <th style="width:70px;">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <% if (typeof effets !== 'undefined' && effets.length) { %>
-                              <% effets.forEach(effet => { %>
-                                <tr data-id="<%= effet.id %>">
-                                  <td contenteditable="true" data-name="dateEtablissement"><%= formatDateToDDMMYYYY(effet.dateEtablissement) %></td>
-                                  <td contenteditable="true" data-name="numero"><%= effet.numero %></td>
-                                  <td contenteditable="true" data-name="banque"><%= effet.banque ? effet.banque.name : '' %></td>
-                                  <td contenteditable="true" data-name="beneficiaire"><%= effet.beneficiaire %></td>
-                                  <td contenteditable="true" data-name="montant"><%= effet.montant ? effet.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '' %></td>
-                                  <td contenteditable="true" data-name="dateEcheance"><%= effet.dateEcheance ? formatDateToDDMMYYYY(effet.dateEcheance) : '' %></td>
-                                  <td data-name="statut" class="statut-cell">
-                                    <span 
-                                      class="statut-badge <%= effet.statut.toLowerCase().replace(/[éè]/g, 'e').replace(/\s+/g, '-') %>"
-                                      onclick="toggleSelect(this)">
-                                      <%= effet.statut %>
-                                    </span>
-                                  </td>
-                                  <td contenteditable="true" data-name="dateReglement"><%= formatDateToDDMMYYYY(effet.dateReglement) %></td>
-                                  <td data-name="chantier" class="chantier-cell">
-                                    <select class="chantier-select">
-                                      <% chantiers.forEach(chantier => { %>
-                                        <option value="<%= chantier.nom %>" <%= effet.chantier && effet.chantier.nom === chantier.nom ? 'selected' : '' %>><%= chantier.nom %></option>
-                                      <% }); %>
-                                    </select>
-                                  </td>
-                                  <td contenteditable="true" data-name="obs"><%= effet.obs %></td>
-                                  <td>
-                                    <button class="delete-row excel-delete-btn" title="Supprimer" aria-label="Supprimer"><i class="fas fa-trash"></i></button>
-                                  </td>
-                                </tr>
-                              <% }) %>
-                            <% } %>
-                            <tr>
-                              <td colspan="4">Total</td>
-                              <td id="total">
-                                <%= effets.reduce((total, effet) => total + effet.montant, 0).toFixed(2) %>
-                              </td>
-                              <td colspan="6"></td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
+                  <div id="filterDynamicContainer" class="mt-2">
+                    <div id="filterBoxBeneficiaire" style="display:none;">
+                      <input id="filterBeneficiaire" class="form-control" placeholder="Bénéficiaire..." />
+                    </div>
+                    <div id="filterBoxBanque" style="display:none;">
+                      <select id="filterBanque" class="form-control">
+                        <option value="">Tous</option>
+                        <% (banques || []).forEach(b => { %>
+                          <option value="<%= b.name %>"><%= b.name %></option>
+                        <% }) %>
+                      </select>
+                    </div>
+                    <div id="filterBoxStatut" style="display:none;">
+                      <select id="filterStatut" class="form-control">
+                        <option value="">Tous</option>
+                        <option value="En Circulation">En Circulation</option>
+                        <option value="PAYÉ">Payé</option>
+                        <option value="Impayé">Impayé</option>
+                        <option value="Annulé">Annulé</option>
+                        <option value="Treso">Treso</option>
+                      </select>
+                    </div>
+                    <div id="filterBoxChantier" style="display:none;">
+                      <select id="filterChantier" class="form-control">
+                        <option value="">Tous</option>
+                        <% (chantiers || []).forEach(c => { %>
+                          <option value="<%= c.nom %>"><%= c.nom %></option>
+                        <% }) %>
+                      </select>
+                    </div>
+                    <div id="filterBoxMontant" style="display:none;">
+                      <input id="filterMontant" class="form-control" placeholder="ex: 1200" />
+                    </div>
+                    <div id="filterBoxNumero" style="display:none;">
+                      <input id="filterNumero" class="form-control" placeholder="N° effet..." />
                     </div>
                   </div>
                 </div>
+
+                <div class="col-md-2 mb-2 d-flex align-items-end">
+                  <button id="btnClearFilters" type="button" class="btn btn-danger w-100" style="display:none;">
+                    <i class="fas fa-times mr-1"></i>Annuler filtre
+                  </button>
+                </div>
+
+                <div class="col-md-2 mb-2">
+                  <label class="small text-muted mb-1">Échéance du</label>
+                  <input id="filterDateFrom" type="date" class="form-control" />
+                </div>
+                <div class="col-md-2 mb-2">
+                  <label class="small text-muted mb-1">Échéance au</label>
+                  <input id="filterDateTo" type="date" class="form-control" />
+                </div>
               </div>
-              <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-              <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
-             
-            <script>
-              document.addEventListener("DOMContentLoaded", function () {
-  const { jsPDF } = window.jspdf;
-  const uploadForm = document.getElementById('excelUploadForm');
-  const fileInput = document.getElementById('excelFile');
-  const msg = document.getElementById('excelUploadMsg');
-  const table = document.getElementById("editableTable");
-  const statusFilter = document.getElementById("statusFilter");
-  const chantierFilter = document.getElementById("chantierFilter");
-  const banqueFilter = document.getElementById("banqueFilter");
-  const supplierFilter = document.getElementById("supplierFilter");
-  const searchInput = document.getElementById("supplierSearch");
-  const dateFilter = document.getElementById("dateFilter");
-  const dateToFilter = document.getElementById("dateToFilter");
-  const resetFilters = document.getElementById("resetFilters");
 
-
-  // Convert dd/mm/yyyy → yyyy-mm-dd ISO format or null if empty
-  function convertDateToISO(dateStr) {
-    if (!dateStr || dateStr.trim() === '') return null;
-    const parts = dateStr.split('/');
-    if (parts.length !== 3) return dateStr.trim();
-    const [day, month, year] = parts;
-    return `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-  }
-
-  // Convert yyyy-mm-dd to Date object, or null if invalid/empty
-  function toDate(dateStr) {
-    if (!dateStr) return null;
-    const date = new Date(dateStr);
-    return isNaN(date.getTime()) ? null : date;
-  }
-
-  resetFilters.addEventListener("click", function () {
-    statusFilter.value = "";
-    chantierFilter.value = "";
-    banqueFilter.value = "";
-    supplierFilter.value = "";
-    searchInput.value = "";
-    dateFilter.value = "";
-    dateToFilter.value = "";
-      applyAllFilters();
-  });
-  // Function to update total - calculates only visible rows
-  function updateTotal() {
-    const rows = document.querySelectorAll("#editableTable tbody tr:not(:last-child)");
-    let total = 0;
-
-    rows.forEach(row => {
-      if (row.style.display !== "none") {
-        const montantCell = row.querySelector("td[data-name='montant']");
-        if (montantCell) {
-          const value = parseFloat(montantCell.innerText.replace(/,/g, '.').replace(/[^\d.-]/g, ''));
-          if (!isNaN(value)) total += value;
-        }
-      }
-    });
-
-    const totalCell = document.getElementById("total");
-    if (totalCell) {
-      totalCell.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-  }
-
-  // Combined filter function to apply all filters
-  function applyAllFilters() {
-    const selectedStatus = statusFilter?.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim() || "";
-    const selectedChantier = chantierFilter?.value.toLowerCase().trim() || "";
-    const selectedBanque = banqueFilter?.value.toLowerCase().trim() || "";
-    const selectedSupplier = supplierFilter?.value.toLowerCase().trim() || "";
-    const searchText = searchInput?.value.toLowerCase().trim() || "";
-    const startDate = dateFilter?.value ? toDate(dateFilter.value) : null;
-    const endDate = dateToFilter?.value ? toDate(dateToFilter.value) : null;
-
-    const rows = document.querySelectorAll("#editableTable tbody tr:not(:last-child)");
-
-    rows.forEach(row => {
-      const statusCell = row.querySelector("td[data-name='statut']");
-      const chantierCell = row.querySelector("td[data-name='chantier']");
-      const banqueCell = row.querySelector("td[data-name='banque']");
-      const supplierCell = row.querySelector("td[data-name='beneficiaire']");
-      const dateCell = row.querySelector("td[data-name='dateEcheance']");
-      
-      const statusText = (statusCell ? (statusCell.querySelector("select")?.value || statusCell.querySelector("span")?.textContent || "").toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') : "").trim();
-      const chantierName = (chantierCell ? chantierCell.querySelector("select")?.value.toLowerCase() || "" : "").trim();
-      const banqueName = (banqueCell ? banqueCell.innerText.toLowerCase() : "").trim();
-      const supplierName = (supplierCell ? supplierCell.innerText.toLowerCase() : "").trim();
-      const rowText = row.innerText.toLowerCase();
-      const dateText = dateCell ? dateCell.innerText.trim() : "";
-      const rowDate = dateText ? toDate(convertDateToISO(dateText)) : null;
-
-      const matchesStatus = selectedStatus === "" || statusText === selectedStatus;
-      const matchesChantier = selectedChantier === "" || chantierName === selectedChantier;
-      const matchesBanque = selectedBanque === "" || banqueName === selectedBanque;
-      const matchesSupplier = selectedSupplier === "" || supplierName === selectedSupplier;
-      const matchesSearch = searchText === "" || rowText.includes(searchText);
-      const matchesDate = (!startDate || !rowDate || rowDate >= startDate) && (!endDate || !rowDate || rowDate <= endDate);
-
-      row.style.display = (matchesStatus && matchesChantier && matchesBanque && matchesSupplier && matchesSearch && matchesDate) ? "" : "none";
-    });
-
-    updateTotal();
-  }
-
-  // Attach filter listeners
-  if (statusFilter) statusFilter.addEventListener("change", applyAllFilters);
-  if (chantierFilter) chantierFilter.addEventListener("change", applyAllFilters);
-  if (banqueFilter) banqueFilter.addEventListener("change", applyAllFilters);
-  if (supplierFilter) supplierFilter.addEventListener("change", applyAllFilters);
-  if (searchInput) searchInput.addEventListener("input", applyAllFilters);
-  if (dateFilter) dateFilter.addEventListener("change", applyAllFilters);
-  if (dateToFilter) dateToFilter.addEventListener("change", applyAllFilters);
-
-  // Auto-submit Excel upload form on file select
-  fileInput.addEventListener('change', function () {
-    if (fileInput.files.length) {
-      uploadForm.requestSubmit();
-    }
-  });
-
-  uploadForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    if (!fileInput.files.length) {
-      msg.textContent = 'Veuillez sélectionner un fichier Excel.';
-      msg.style.color = 'red';
-      return;
-    }
-    const formData = new FormData(uploadForm);
-    msg.textContent = 'Importation en cours...';
-    msg.style.color = '#1976d2';
-    fetch('/tresorerie/effets/import', {
-      method: 'POST',
-      body: formData
-    })
-    .then(res => res.text())
-    .then(text => {
-      msg.textContent = text;
-      msg.style.color = 'green';
-      setTimeout(() => window.location.reload(), 1200);
-    })
-    .catch(() => {
-      msg.textContent = 'Erreur lors de l\'importation du fichier.';
-      msg.style.color = 'red';
-    });
-  });
-
-  // Drag and drop columns
-  let dragSrcIdx = null;
-  function swapColumns(table, fromIdx, toIdx) {
-    const headerRow = table.tHead.rows[0];
-    if (fromIdx === toIdx) return;
-    headerRow.insertBefore(headerRow.children[fromIdx], headerRow.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
-    Array.from(table.tBodies[0].rows).forEach(row => {
-      row.insertBefore(row.children[fromIdx], row.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
-    });
-  }
-
-  Array.from(table.tHead.rows[0].cells).forEach((th, idx) => {
-    th.addEventListener('dragstart', function (e) {
-      dragSrcIdx = idx;
-      e.dataTransfer.effectAllowed = 'move';
-      th.classList.add('dragging');
-    });
-    th.addEventListener('dragend', function () {
-      dragSrcIdx = null;
-      th.classList.remove('dragging');
-      Array.from(table.tHead.rows[0].cells).forEach(cell => cell.classList.remove('drag-over'));
-    });
-    th.addEventListener('dragover', function (e) {
-      e.preventDefault();
-      th.classList.add('drag-over');
-    });
-    th.addEventListener('dragleave', function () {
-      th.classList.remove('drag-over');
-    });
-    th.addEventListener('drop', function (e) {
-      e.preventDefault();
-      th.classList.remove('drag-over');
-      if (dragSrcIdx !== null && dragSrcIdx !== idx) {
-        swapColumns(table, dragSrcIdx, idx);
-      }
-    });
-  });
-
-  // Enhanced function to get status class
-  function getStatusClass(statut) {
-    const normalized = statut.toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/\s+/g, '-')
-      .trim();
-    
-    switch(normalized) {
-      case 'en-circulation': return 'en-circulation';
-      case 'paye': return 'paye';
-      case 'impaye': return 'impaye';
-      case 'annule': return 'annule';
-      case 'treso': return 'treso';
-      default: return 'en-circulation';
-    }
-  }
-
-  // Add Row functionality with chantier select
-  document.getElementById("addRowBtn").addEventListener("click", function () {
-    const tbody = table.querySelector("tbody");
-    const colCount = table.querySelectorAll("thead th").length;
-    const tr = document.createElement("tr");
-
-    for (let i = 0; i < colCount - 1; i++) {
-      const td = document.createElement("td");
-      const header = table.querySelectorAll("thead th")[i];
-
-      if (header && header.innerText) {
-        let dataName = '';
-        switch (header.innerText.trim()) {
-          case 'N° Effet': 
-            dataName = 'numero'; 
-            td.contentEditable = "true"; 
-            break;
-          case 'Date': 
-            dataName = 'dateEtablissement'; 
-            td.contentEditable = "true"; 
-            break;
-          case 'Banque': 
-            dataName = 'banque'; 
-            td.contentEditable = "true"; 
-            break;
-          case 'Bénéficiaire': 
-            dataName = 'beneficiaire'; 
-            td.contentEditable = "true"; 
-            break;
-          case 'Montant': 
-            dataName = 'montant'; 
-            td.contentEditable = "true"; 
-            break;
-          case 'Echeance': 
-            dataName = 'dateEcheance'; 
-            td.contentEditable = "true"; 
-            break;
-          case 'Date Reglement': 
-            dataName = 'dateReglement'; 
-            td.contentEditable = "true"; 
-            break;
-          case 'Observation': 
-            dataName = 'obs'; 
-            td.contentEditable = "true"; 
-            break;
-          case 'Statut': 
-            dataName = 'statut'; 
-            td.classList.add('statut-cell');
-            const select = document.createElement('select');
-            select.className = 'statut-select';
-            const statutOptions = ['En circulation', 'Payé', 'Impayé', 'Annulé', 'Treso'];
-            statutOptions.forEach(option => {
-              const opt = document.createElement('option');
-              opt.value = option;
-              opt.textContent = option;
-              select.appendChild(opt);
-            });
-            td.appendChild(select);
-            break;
-          case 'Chantier': 
-            dataName = 'chantier'; 
-            td.classList.add('chantier-cell');
-            const chantierSelect = document.createElement('select');
-            chantierSelect.className = 'chantier-select';
-            const chantierOptions = <%- JSON.stringify(chantiers.map(c => c.nom)) %>;
-            chantierOptions.forEach(option => {
-              const opt = document.createElement('option');
-              opt.value = option;
-              opt.textContent = option;
-              chantierSelect.appendChild(opt);
-            });
-            td.appendChild(chantierSelect);
-            break;
-        }
-        if (dataName) td.setAttribute('data-name', dataName);
-      }
-      tr.appendChild(td);
-    }
-
-    const tdDelete = document.createElement("td");
-    tdDelete.innerHTML = '<button class="delete-row excel-delete-btn" title="Supprimer" aria-label="Supprimer"><i class="fas fa-trash"></i></button><button class="update-row excel-save-btn btn btn-sm btn-warning" title="Mettre à jour" aria-label="Mettre à jour" style="margin-left:5px;"><i class="fas fa-edit"></i></button>';
-    tr.appendChild(tdDelete);
-    tr.setAttribute("data-dirty", "true");
-    tr.classList.add("excel-dirty-row");
-    tbody.insertBefore(tr, tbody.firstChild);
-
-    updateTotal();
-  });
-
-  // Delete row functionality (event delegation)
-  table.querySelector("tbody").addEventListener("click", async function (e) {
-    if (e.target.closest(".delete-row")) {
-      const row = e.target.closest("tr");
-      const id = row.getAttribute("data-id");
-      if (confirm("Êtes-vous sûr de vouloir supprimer ce chèque ?")) {
-        if (id) {
-          try {
-            const response = await fetch(`/tresorerie/effets/${id}`, {
-              method: "DELETE"
-            });
-            if (response.ok) {
-              row.parentNode.removeChild(row);
-              alert("Chèque supprimé avec succès.");
-              updateTotal();
-            } else {
-              alert("Erreur lors de la suppression du chèque.");
-            }
-          } catch (err) {
-            alert("Erreur réseau lors de la suppression.");
-          }
-        } else {
-          row.parentNode.removeChild(row);
-          updateTotal();
-        }
-      }
-    }
-
-    if (e.target.closest(".update-row")) {
-      const row = e.target.closest("tr");
-      await autoUpdateRow(row);
-    }
-  });
-
-  // Auto-update row after editing any cell or select change
-  table.addEventListener("blur", async function (e) {
-    const cell = e.target.closest("td[data-name]");
-    if (cell && (cell.isContentEditable || cell.querySelector("select"))) {
-      const row = cell.parentElement;
-      if (row.getAttribute("data-id")) {
-        await autoUpdateRow(row);
-      }
-    }
-  }, true);
-
-  // Handle select change for chantier and statut
-  table.addEventListener("change", async function (e) {
-    const select = e.target.closest("select");
-    if (select && (select.classList.contains('chantier-select') || select.classList.contains('statut-select'))) {
-      const row = select.closest("tr");
-      if (row.getAttribute("data-id")) {
-        await autoUpdateRow(row);
-      }
-    }
-  });
-
-  // Helper function for updating a row
-  async function autoUpdateRow(row) {
-    if (!row.getAttribute("data-dirty")) return;
-    const cells = Array.from(row.querySelectorAll("td[data-name]"));
-    const data = {};
-    let id = row.getAttribute("data-id");
-
-    cells.forEach(cell => {
-      const key = cell.getAttribute("data-name");
-      let value;
-      if (cell.querySelector("select")) {
-        value = cell.querySelector("select").value;
-      } else {
-        value = cell.innerText.trim();
-      }
-      if (['dateEtablissement', 'dateEcheance', 'dateReglement'].includes(key)) {
-        value = convertDateToISO(value);
-      }
-      data[key] = value;
-    });
-
-    if (!id) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/tresorerie/effets/${id}/`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
-      if (response.ok) {
-        row.removeAttribute("data-dirty");
-        row.classList.remove("excel-dirty-row");
-        updateTotal();
-      }
-    } catch(err) {
-      console.log("Error : " + err.message);
-    }
-  }
-
-  // Mark row as dirty on cell edit or select change
-  table.addEventListener("input", function (e) {
-    const cell = e.target.closest("td[data-name]");
-    if (cell) {
-      const row = cell.parentElement;
-      row.setAttribute("data-dirty", "true");
-      row.classList.add("excel-dirty-row");
-      
-      if (cell.getAttribute("data-name") === "montant") {
-        updateTotal();
-      }
-    }
-  });
-
-  // Save functionality (send all dirty rows to backend)
-  document.getElementById("saveTableBtn").addEventListener("click", async function () {
-    const dirtyRows = Array.from(table.querySelectorAll("tbody tr[data-dirty='true']"));
-    if (dirtyRows.length === 0) {
-      alert("Aucune modification à enregistrer.");
-      return;
-    }
-
-    let successCount = 0, failCount = 0;
-
-    for (const row of dirtyRows) {
-      const cells = Array.from(row.querySelectorAll("td[data-name]"));
-      const data = {};
-      let id = row.getAttribute("data-id");
-
-      cells.forEach(cell => {
-        const key = cell.getAttribute("data-name");
-        let value;
-        if (cell.querySelector("select")) {
-          value = cell.querySelector("select").value;
-        } else {
-          value = cell.innerText.trim();
-        }
-
-        if (['dateEtablissement', 'dateEcheance', 'dateReglement'].includes(key)) {
-          value = convertDateToISO(value);
-        }
-
-        data[key] = value;
-      });
-
-      let url = '';
-      let method = '';
-
-      if (id) {
-        url = `/tresorerie/effets/${id}/`;
-        method = "PUT";
-      } else {
-        const banqueCell = row.querySelector("td[data-name='banque']");
-        const banqueId = (banqueCell?.innerText || "").trim().split("/").pop();
-        url = `/tresorerie/effets/create`;
-        method = "POST";
-      }
-
-      try {
-        const response = await fetch(url, {
-          method,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        });
-
-        if (response.ok) {
-          if (!id) {
-            const result = await response.json();
-            if (result && result.id) {
-              row.setAttribute("data-id", result.id);
-            }
-          }
-          row.removeAttribute("data-dirty");
-          row.classList.remove("excel-dirty-row");
-          successCount++;
-        } else {
-          failCount++;
-        }
-      } catch {
-        failCount++;
-      }
-    }
-
-    if (successCount > 0) alert(successCount + " chèque(s) enregistré(s)/modifié(s) avec succès !");
-    if (failCount > 0) alert(failCount + " chèque(s) n'ont pas pu être enregistrés.");
-
-    updateTotal();
-    window.location.reload();
-  });
-
-  // Download Excel functionality
-  document.getElementById("downloadExcelBtn")?.addEventListener("click", function () {
-  const table = document.getElementById("editableTable");
-  const rows = table.querySelectorAll("tbody tr:not(:last-child)");
-  const headers = Array.from(table.querySelectorAll("thead th"))
-    .slice(0, -1)
-    .map(th => th.innerText);
-
-  // Prepare data for the Excel sheet
-  const tableData = [];
-  rows.forEach(row => {
-    if (row.style.display !== "none") {
-      const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
-        let value = "";
-        const select = cell.querySelector("select");
-        if (select) {
-          // For select elements (Chantier and Statut), use the selected value
-          value = select.value || "";
-        } else {
-          // For other cells, use the text content
-          value = cell.innerText.trim();
-        }
-
-        // Handle date formatting
-        if (cell.dataset.name && ['dateEtablissement', 'dateEcheance', 'dateReglement'].includes(cell.dataset.name) && value) {
-          if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            const [year, month, day] = value.split('-');
-            value = `${day}/${month}/${year}`;
-          } else if (!value.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-            const date = new Date(value);
-            if (!isNaN(date.getTime())) {
-              const day = String(date.getDate()).padStart(2, '0');
-              const month = String(date.getMonth() + 1).padStart(2, '0');
-              const year = date.getFullYear();
-              value = `${day}/${month}/${year}`;
-            }
-          }
-        }
-
-        // Handle montant formatting
-        if (cell.dataset.name === "montant" && value) {
-          let cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-          const number = parseFloat(cleaned);
-          if (!isNaN(number)) {
-            value = number;
-          }
-        }
-
-        return value || "";
-      });
-      tableData.push(rowData);
-    }
-  });
-
-  // Create worksheet from headers and table data
-  const ws = XLSX.utils.aoa_to_sheet([headers, ...tableData]);
-
-  // Set number format for montant column (index 4)
-  const range = XLSX.utils.decode_range(ws['!ref']);
-  for (let R = 1; R <= range.e.r; ++R) {
-    const cellAddress = { c: 4, r: R }; // Montant column
-    const cellRef = XLSX.utils.encode_cell(cellAddress);
-    if (ws[cellRef] && typeof ws[cellRef].v === 'number') {
-      ws[cellRef].z = '#,##0.00'; // Format as number with 2 decimal places
-    }
-  }
-
-  // Add total row
-  const totalRow = Array(headers.length).fill('');
-  totalRow[3] = 'Total';
-  totalRow[4] = parseFloat(document.getElementById("total").innerText.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.')) || 0;
-  XLSX.utils.sheet_add_aoa(ws, [totalRow], { origin: -1 });
-
-  // Create workbook and save
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "effets");
-  XLSX.writeFile(wb, "liste_effets.xlsx");
-});
-  // Download PDF functionality
-  document.getElementById("downloadPdfBtn")?.addEventListener("click", function () {
-    try {
-      const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-      const table = document.getElementById("editableTable");
-      const rows = table.querySelectorAll("tbody tr:not(:last-child)");
-      const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
-      const title = document.querySelector(".card-header h6").innerText;
-
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(18);
-      doc.setTextColor(40, 40, 40);
-      doc.text(title, 10, 20);
-
-      const tableData = [];
-      rows.forEach(row => {
-        if (row.style.display !== "none") {
-          const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
-            let value = "";
-            const select = cell.querySelector("select");
-            if (select) {
-              value = select.value;
-            } else if (cell.innerText) {
-              value = cell.innerText.trim();
-            }
-
-            if (cell.dataset.name && ['dateEtablissement', 'dateEcheance', 'dateReglement'].includes(cell.dataset.name) && value) {
-              if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                const [year, month, day] = value.split('-');
-                value = `${day}/${month}/${year}`;
-              } else if (!value.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-                const date = new Date(value);
-                if (!isNaN(date.getTime())) {
-                  const day = String(date.getDate()).padStart(2, '0');
-                  const month = String(date.getMonth() + 1).padStart(2, '0');
-                  const year = date.getFullYear();
-                  value = `${day}/${month}/${year}`;
-                }
-              }
-            }
-
-            if (cell.dataset.name === "montant" && value) {
-              let cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-              const number = parseFloat(cleaned);
-              if (!isNaN(number)) {
-                const parts = number.toFixed(2).split('.');
-                const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-                value = `${integerPart},${parts[1]}`;
-              }
-            }
-
-            return value || "";
-          });
-          tableData.push(rowData);
-        }
-      });
-
-      doc.autoTable({
-        head: [headers],
-        body: tableData,
-        startY: 30,
-        theme: 'grid',
-        styles: {
-          font: 'helvetica',
-          fontSize: 8,
-          textColor: [40, 40, 40],
-          cellPadding: 2,
-          lineColor: [200, 200, 200],
-          lineWidth: 0.1,
-          minCellHeight: 10,
-          overflow: 'linebreak'
-        },
-        headStyles: {
-          fillColor: [22, 160, 133],
-          textColor: [255, 255, 255],
-          fontSize: 7,
-          fontStyle: 'bold',
-          halign: 'center',
-          cellPadding: 2
-        },
-        bodyStyles: {
-          fillColor: [255, 255, 255]
-        },
-        alternateRowStyles: {
-          fillColor: [245, 245, 245]
-        },
-        columnStyles: {
-          0: { cellWidth: 18, halign: 'center' },
-          1: { cellWidth: 18, halign: 'left' },
-          2: { cellWidth: 15, halign: 'left' },
-          3: { cellWidth: 25, halign: 'left' },
-          4: { cellWidth: 20, halign: 'right' },
-          5: { cellWidth: 18, halign: 'center' },
-          6: { cellWidth: 23, halign: 'left' },
-          7: { cellWidth: 18, halign: 'center' },
-          8: { cellWidth: 15, halign: 'left' },
-          9: { cellWidth: 25, halign: 'left', overflow: 'linebreak' }
-        },
-        margin: { top: 30, left: 10, right: 10 },
-        tableWidth: 'wrap',
-        didDrawPage: function (data) {
-          console.log('Table Width:', data.table.width);
-          console.log('Page Width:', doc.internal.pageSize.width);
-        }
-      });
-
-      const pageCount = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(100);
-        doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
-      }
-
-      let total = document.getElementById("total").innerText || "0";
-      total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-      const totalNumber = parseFloat(total);
-      if (!isNaN(totalNumber)) {
-        const parts = totalNumber.toFixed(2).split('.');
-        const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-        total = `${integerPart},${parts[1]}`;
-      }
-
-      const finalY = doc.lastAutoTable.finalY || 30;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.setTextColor(22, 160, 133);
-      doc.text(`Total: ${total} MAD`, 10, finalY + 15);
-
-      doc.save("liste_effets.pdf");
-    } catch (err) {
-      console.error("PDF generation error:", err);
-      alert("Erreur lors de la génération du PDF. Veuillez vérifier la console.");
-    }
-  });
-
-  // Enhanced toggleSelect function for statut with professional styling
-  window.toggleSelect = function(spanElem) {
-    console.log('toggleSelect triggered for:', spanElem.textContent);
-    const currentStatut = spanElem.textContent.trim();
-    const statutOptions = ['En Circulation', 'Payé', 'Impayé', 'Annulé', 'Treso'];
-    let hasChanged = false;
-
-    const select = document.createElement('select');
-    select.className = 'statut-select';
-    select.style.width = '100%';
-    select.style.padding = '5px';
-    select.style.border = 'none';
-    select.style.background = 'transparent';
-    select.style.fontSize = '15px';
-    select.style.color = '#333';
-    select.style.display = 'block';
-
-    statutOptions.forEach(option => {
-      const opt = document.createElement('option');
-      opt.value = option;
-      opt.textContent = option;
-      if (option.toLowerCase() === currentStatut.toLowerCase()) {
-        opt.selected = true;
-      }
-      select.appendChild(opt);
-    });
-
-    spanElem.parentNode.replaceChild(select, spanElem);
-    select.focus();
-
-    select.addEventListener('change', async function () {
-      const newStatut = select.value;
-      const row = select.closest('tr');
-      const effetId = row.getAttribute('data-id');
-
-      if (!effetId) {
-        alert("Impossible de modifier un chèque non enregistré.");
-        select.blur();
-        return;
-      }
-
-      select.disabled = true;
-      select.classList.add('status-updating');
-
-      try {
-        const res = await fetch(`/tresorerie/effets/${effetId}/update-statut`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ statut: newStatut }),
-        });
-
-        if (res.ok) {
-          hasChanged = true;
-          const statusClass = getStatusClass(newStatut);
-          const newSpan = document.createElement('span');
-          newSpan.className = `statut-badge ${statusClass}`;
-          newSpan.textContent = newStatut;
-          newSpan.onclick = () => window.toggleSelect(newSpan);
-
-          if (select.parentNode) {
-            select.parentNode.replaceChild(newSpan, select);
-          }
-
-          newSpan.classList.add('status-updating');
-          setTimeout(() => newSpan.classList.remove('status-updating'), 300);
-        } else {
-          window.location.reload();
-        }
-      } catch (err) {
-        console.error('Status update error:', err);
-        alert(err.message || 'Erreur lors de la mise à jour du statut');
-        select.classList.remove('status-updating');
-        select.blur();
-      } finally {
-        select.disabled = false;
-      }
-    });
-
-    select.addEventListener('blur', () => {
-      if (hasChanged) return;
-
-      const statusClass = getStatusClass(currentStatut);
-      const span = document.createElement('span');
-      span.className = `statut-badge ${statusClass}`;
-      span.textContent = currentStatut;
-      span.onclick = () => window.toggleSelect(span);
-
-      if (select.parentNode) {
-        select.parentNode.replaceChild(span, select);
-      }
-    });
-  }
-
-  // Initialize total calculation and apply filters on page load
-  applyAllFilters();
-});
-            </script>
-              <style>
-                .statut-select {
-                  width: 100%;
-                  padding: 5px;
-                  border: none;
-                  background: transparent;
-                  font-size: 15px;
-                  color: #333;
-                }
-                .statut-select:focus {
-                  outline: none;
-                  border: 1px solid #007bff;
-                  border-radius: 4px;
-                }
-                .statut-cell {
-                  padding: 5px;
-                }
-                .statut-badge {
-                  display: inline-block;
-                  padding: 5px 10px;
-                  border-radius: 12px;
-                  font-size: 14px;
-                  font-weight: 500;
-                  cursor: pointer;
-                  transition: all 0.3s ease;
-                }
-                .statut-badge.en-circulation {
-                  background-color: #e3f2fd;
-                  color: #1976d2;
-                }
-                .statut-badge.paye {
-                  background-color: #e8f5e9;
-                  color: #2e7d32;
-                }
-                .statut-badge.impaye {
-                  background-color: #ffebee;
-                  color: #d32f2f;
-                }
-                .statut-badge.annule {
-                  background-color: #f5f5f5;
-                  color: #616161;
-                }
-                .statut-badge.treso {
-                  background-color: #fff3e0;
-                  color: #f57c00;
-                }
-                .status-updating {
-                  opacity: 0.6;
-                  transition: opacity 0.3s ease;
-                }
-              </style>
-              <script src="/vendor/jquery/jquery.min.js"></script>
-              <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-              <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
-              <script src="/js/sb-admin-2.min.js"></script>
-              <script src="/vendor/datatables/jquery.dataTables.min.js"></script>
-              <script src="/vendor/datatables/dataTables.bootstrap4.min.js"></script>
-              <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-              <script src="/js/demo/datatables-demo.js"></script>
+              <!-- Table -->
+              <div class="table-responsive" id="effetsTableResponsive">
+                <%
+                  function fmtDate(d) {
+                    if (!d) return '';
+                    const dt = new Date(d);
+                    if (isNaN(dt)) return '';
+                    return String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0') + '/' + dt.getFullYear();
+                  }
+                  function statutClass(s) {
+                    return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-');
+                  }
+                %>
+                <table class="table table-sm table-hover table-bordered effet-table" style="min-width: 1200px;" id="editableTable">
+                  <thead class="thead-light">
+                    <tr>
+                      <th>Date</th>
+                      <th>N° Effet</th>
+                      <th>Banque</th>
+                      <th>Bénéficiaire</th>
+                      <th class="text-right">Montant</th>
+                      <th>Échéance</th>
+                      <th>Statut</th>
+                      <th>Date Règlement</th>
+                      <th>Chantier</th>
+                      <th>Observation</th>
+                      <th class="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="effetTbody">
+                    <% if (typeof effets === 'undefined' || !effets.length) { %>
+                      <tr><td colspan="11" class="text-center text-muted">Aucun effet disponible.</td></tr>
+                    <% } else { %>
+                      <% effets.forEach(e => { %>
+                        <tr data-id="<%= e.id %>">
+                          <td class="cell-edit" contenteditable="true" data-name="dateEtablissement"><%= fmtDate(e.dateEtablissement) %></td>
+                          <td class="cell-edit" contenteditable="true" data-name="numero"><%= e.numero || '' %></td>
+                          <td class="cell-edit" contenteditable="true" data-name="banque"><%= e.banque ? e.banque.name : '' %></td>
+                          <td class="cell-edit" contenteditable="true" data-name="beneficiaire"><%= e.beneficiaire || '' %></td>
+                          <td class="text-right cell-edit" contenteditable="true" data-name="montant"><%= e.montant ? Number(e.montant).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '' %></td>
+                          <td class="cell-edit" contenteditable="true" data-name="dateEcheance"><%= e.dateEcheance ? fmtDate(e.dateEcheance) : '' %></td>
+                          <td data-name="statut" class="text-center">
+                            <span class="badge-statut <%= statutClass(e.statut) %>" onclick="toggleStatutSelect(this)">
+                              <%= e.statut %>
+                            </span>
+                          </td>
+                          <td class="cell-edit" contenteditable="true" data-name="dateReglement"><%= fmtDate(e.dateReglement) %></td>
+                          <td data-name="chantier">
+                            <select class="form-control form-control-sm chantier-select">
+                              <option value="">-- Aucun --</option>
+                              <% (chantiers || []).forEach(c => { %>
+                                <option value="<%= c.nom %>" <%= (e.chantier && e.chantier.nom === c.nom) ? 'selected' : '' %>><%= c.nom %></option>
+                              <% }) %>
+                            </select>
+                          </td>
+                          <td class="cell-edit obs-cell" contenteditable="true" data-name="obs"><%= e.obs || '' %></td>
+                          <td class="text-right">
+                            <div class="table-actions">
+                              <button class="btn btn-sm btn-outline-danger btn-delete-effet" title="Supprimer" data-id="<%= e.id %>">
+                                <i class="fas fa-trash"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    <% } %>
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <th colspan="4" class="text-right">Total</th>
+                      <th class="text-right" id="totalMontantCell">
+                        <%= (typeof effets !== 'undefined' && effets.length) ? effets.reduce((s, e2) => s + Number(e2.montant || 0), 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00' %>
+                      </th>
+                      <th colspan="6"></th>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <!-- Fixed bottom scrollbar -->
+              <div id="effetsBottomHScroll" class="bottom-hscroll" aria-hidden="true">
+                <div id="effetsBottomHScrollInner" class="bottom-hscroll-inner"></div>
+              </div>
+
+              <!-- Results info -->
+              <div class="mt-3">
+                <div class="small text-muted" id="effetInfo">
+                  <% if (typeof effets !== 'undefined') { %><%= effets.length %> résultat(s)<% } %>
+                </div>
+              </div>
             </div>
           </div>
-        </body> 
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+  <script src="/js/sb-admin-2.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <script>
+    /* ── chantier data for add-row ── */
+    const CHANTIERS_DATA = <%- JSON.stringify((chantiers || []).map(c => ({ nom: c.nom }))) %>;
+
+    /* ── helpers ── */
+    function fmtFr(d) {
+      if (!d) return '';
+      const s = String(d).trim();
+      const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
+      const dt = new Date(s);
+      return isNaN(dt) ? '' : dt.toLocaleDateString('fr-FR');
+    }
+
+    function moneyFr(v) {
+      return Number(v || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function parseMoney(v) {
+      const s = String(v || '').trim().replace(/\s/g, '').replace(/[^\d,.-]/g, '').replace(',', '.');
+      const n = Number(s);
+      return isNaN(n) ? null : n;
+    }
+
+    function dateToISO(str) {
+      if (!str) return null;
+      const parts = String(str).trim().split('/');
+      if (parts.length !== 3) return null;
+      const [dd, mm, yyyy] = parts.map(p => p.trim());
+      if (!dd || !mm || !yyyy) return null;
+      const val = `${yyyy.padStart(4, '0')}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+      return isNaN(new Date(val)) ? null : val;
+    }
+
+    function statutClass(s) {
+      return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
+    }
+
+    /* ── DOM refs ── */
+    const $tbody = document.getElementById('effetTbody');
+    const $totalCell = document.getElementById('totalMontantCell');
+    const $filterTypeBtn = document.getElementById('filterTypeBtn');
+    const $filterTypeDropdown = document.getElementById('filterTypeDropdown');
+    const $filterTypeMenu = document.getElementById('filterTypeMenu');
+    const $btnClearFilters = document.getElementById('btnClearFilters');
+    const $filterBeneficiaire = document.getElementById('filterBeneficiaire');
+    const $filterBanque = document.getElementById('filterBanque');
+    const $filterStatut = document.getElementById('filterStatut');
+    const $filterChantier = document.getElementById('filterChantier');
+    const $filterMontant = document.getElementById('filterMontant');
+    const $filterNumero = document.getElementById('filterNumero');
+    const $filterDateFrom = document.getElementById('filterDateFrom');
+    const $filterDateTo = document.getElementById('filterDateTo');
+
+    let activeFilterType = '';
+
+    /* ── filter dropdown ── */
+    function setFilterType(type) {
+      const t = String(type || '').trim();
+      activeFilterType = t;
+      document.getElementById('filterBoxBeneficiaire').style.display = t === 'beneficiaire' ? '' : 'none';
+      document.getElementById('filterBoxBanque').style.display = t === 'banque' ? '' : 'none';
+      document.getElementById('filterBoxStatut').style.display = t === 'statut' ? '' : 'none';
+      document.getElementById('filterBoxChantier').style.display = t === 'chantier' ? '' : 'none';
+      document.getElementById('filterBoxMontant').style.display = t === 'montant' ? '' : 'none';
+      document.getElementById('filterBoxNumero').style.display = t === 'numero' ? '' : 'none';
+
+      $filterTypeBtn.textContent =
+        t === 'beneficiaire' ? 'Bénéficiaire' :
+        t === 'banque' ? 'Banque' :
+        t === 'statut' ? 'Statut' :
+        t === 'chantier' ? 'Chantier' :
+        t === 'montant' ? 'Montant' :
+        t === 'numero' ? 'N° Effet' :
+        'Filtrer Par';
+
+      updateClearBtn();
+      applyFilters();
+    }
+
+    function updateClearBtn() {
+      const active = !!(activeFilterType ||
+        ($filterBeneficiaire && $filterBeneficiaire.value) ||
+        ($filterBanque && $filterBanque.value) ||
+        ($filterStatut && $filterStatut.value) ||
+        ($filterChantier && $filterChantier.value) ||
+        ($filterMontant && $filterMontant.value) ||
+        ($filterNumero && $filterNumero.value) ||
+        ($filterDateFrom && $filterDateFrom.value) ||
+        ($filterDateTo && $filterDateTo.value));
+      $btnClearFilters.style.display = active ? '' : 'none';
+    }
+
+    function clearFilters() {
+      activeFilterType = '';
+      [$filterBeneficiaire, $filterBanque, $filterStatut, $filterChantier, $filterMontant, $filterNumero, $filterDateFrom, $filterDateTo].forEach(el => { if (el) el.value = ''; });
+      setFilterType('');
+    }
+
+    function toggleMenu(forceOpen) {
+      const open = typeof forceOpen === 'boolean' ? forceOpen : !$filterTypeMenu.classList.contains('show');
+      $filterTypeDropdown.classList.toggle('show', open);
+      $filterTypeMenu.classList.toggle('show', open);
+      $filterTypeBtn.setAttribute('aria-expanded', String(open));
+    }
+
+    $filterTypeBtn.addEventListener('click', e => { e.preventDefault(); toggleMenu(); });
+    document.addEventListener('click', e => { if (!$filterTypeDropdown.contains(e.target)) toggleMenu(false); });
+    $filterTypeDropdown.addEventListener('click', e => {
+      const btn = e.target && e.target.closest ? e.target.closest('[data-filter-type]') : null;
+      if (!btn) return;
+      setFilterType(btn.getAttribute('data-filter-type'));
+      toggleMenu(false);
+    });
+    $btnClearFilters.addEventListener('click', clearFilters);
+
+    /* ── filtering ── */
+    function applyFilters() {
+      const benVal = ($filterBeneficiaire && $filterBeneficiaire.value || '').toLowerCase().trim();
+      const banVal = $filterBanque && $filterBanque.value || '';
+      const stVal = ($filterStatut && $filterStatut.value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+      const chVal = $filterChantier && $filterChantier.value || '';
+      const mtVal = parseMoney($filterMontant && $filterMontant.value);
+      const numVal = ($filterNumero && $filterNumero.value || '').toLowerCase().trim();
+      const dateFrom = $filterDateFrom && $filterDateFrom.value;
+      const dateTo = $filterDateTo && $filterDateTo.value;
+
+      const rows = $tbody ? $tbody.querySelectorAll('tr[data-id]') : [];
+      let total = 0;
+      let shown = 0;
+
+      rows.forEach(tr => {
+        let show = true;
+
+        if (benVal) {
+          const c = tr.querySelector('td[data-name="beneficiaire"]');
+          show = show && c && c.textContent.toLowerCase().includes(benVal);
+        }
+        if (banVal) {
+          const c = tr.querySelector('td[data-name="banque"]');
+          show = show && c && c.textContent.trim() === banVal;
+        }
+        if (stVal) {
+          const span = tr.querySelector('td[data-name="statut"] .badge-statut');
+          const sel = tr.querySelector('td[data-name="statut"] select');
+          const raw = (sel ? sel.value : (span ? span.textContent : '')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+          show = show && raw === stVal;
+        }
+        if (chVal) {
+          const sel = tr.querySelector('select.chantier-select');
+          show = show && sel && sel.value === chVal;
+        }
+        if (mtVal !== null) {
+          const c = tr.querySelector('td[data-name="montant"]');
+          const v = parseMoney(c ? c.textContent : '');
+          show = show && v !== null && Math.abs(v - mtVal) < 0.01;
+        }
+        if (numVal) {
+          const c = tr.querySelector('td[data-name="numero"]');
+          show = show && c && c.textContent.toLowerCase().includes(numVal);
+        }
+        if (dateFrom || dateTo) {
+          const c = tr.querySelector('td[data-name="dateEcheance"]');
+          const iso = dateToISO(c ? c.textContent.trim() : '');
+          if (iso) {
+            const d = new Date(iso);
+            if (dateFrom && d < new Date(dateFrom)) show = false;
+            if (dateTo && d > new Date(dateTo)) show = false;
+          } else {
+            show = false;
+          }
+        }
+
+        tr.style.display = show ? '' : 'none';
+        if (show) {
+          const mc = tr.querySelector('td[data-name="montant"]');
+          const v = parseMoney(mc ? mc.textContent : '');
+          if (v !== null) total += v;
+          shown++;
+        }
+      });
+
+      if ($totalCell) $totalCell.textContent = moneyFr(total);
+      const info = document.getElementById('effetInfo');
+      if (info) info.textContent = `${shown} résultat(s)`;
+    }
+
+    [$filterBeneficiaire, $filterMontant, $filterNumero].forEach(el => {
+      if (el) el.addEventListener('input', () => { updateClearBtn(); applyFilters(); });
+    });
+    [$filterBanque, $filterStatut, $filterChantier, $filterDateFrom, $filterDateTo].forEach(el => {
+      if (el) el.addEventListener('change', () => { updateClearBtn(); applyFilters(); });
+    });
+
+    applyFilters();
+
+    /* ── bottom scrollbar sync ── */
+    function updateBottomHScroll() {
+      const sc = document.getElementById('effetsTableResponsive');
+      const bar = document.getElementById('effetsBottomHScroll');
+      const inner = document.getElementById('effetsBottomHScrollInner');
+      if (!sc || !bar || !inner) return;
+      inner.style.width = sc.scrollWidth + 'px';
+      bar.scrollLeft = sc.scrollLeft;
+    }
+
+    (function () {
+      const sc = document.getElementById('effetsTableResponsive');
+      const bar = document.getElementById('effetsBottomHScroll');
+      if (!sc || !bar) return;
+      let lock = false;
+      sc.addEventListener('scroll', () => { if (lock) return; lock = true; bar.scrollLeft = sc.scrollLeft; lock = false; }, { passive: true });
+      bar.addEventListener('scroll', () => { if (lock) return; lock = true; sc.scrollLeft = bar.scrollLeft; lock = false; }, { passive: true });
+      window.addEventListener('resize', updateBottomHScroll);
+      setTimeout(updateBottomHScroll, 0);
+      window.addEventListener('load', () => { updateBottomHScroll(); setTimeout(updateBottomHScroll, 200); });
+    })();
+
+    /* ── statut badge → select toggle ── */
+    function toggleStatutSelect(span) {
+      const td = span.closest('td[data-name="statut"]');
+      if (!td) return;
+      span.style.display = 'none';
+      const sel = document.createElement('select');
+      sel.className = 'form-control form-control-sm statut-select';
+      ['En Circulation', 'PAYÉ', 'Impayé', 'Annulé', 'Treso'].forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt;
+        o.textContent = opt;
+        if (span.textContent.trim() === opt) o.selected = true;
+        sel.appendChild(o);
+      });
+      sel.addEventListener('change', async () => {
+        const tr = td.closest('tr[data-id]');
+        const id = tr && tr.dataset.id;
+        const val = sel.value;
+        if (id) {
+          try {
+            await fetch(`/tresorerie/effets/${id}/`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ statut: val })
+            });
+          } catch (e) { console.error(e); }
+        }
+        span.textContent = val;
+        span.className = `badge-statut ${statutClass(val)}`;
+        span.style.display = '';
+        sel.remove();
+        applyFilters();
+      });
+      sel.addEventListener('blur', () => {
+        span.style.display = '';
+        sel.remove();
+      });
+      td.appendChild(sel);
+      sel.focus();
+    }
+
+    /* ── inline edit (blur → PATCH) ── */
+    let dirtyRows = new Set();
+
+    if ($tbody) {
+      $tbody.addEventListener('input', e => {
+        const td = e.target.closest('td[data-name]');
+        if (!td) return;
+        const tr = td.closest('tr[data-id]');
+        if (tr) dirtyRows.add(tr);
+      });
+
+      $tbody.addEventListener('change', e => {
+        const sel = e.target.closest('select.chantier-select');
+        if (!sel) return;
+        const tr = sel.closest('tr[data-id]');
+        if (tr) { dirtyRows.add(tr); saveRow(tr); }
+      });
+
+      $tbody.addEventListener('focusout', async e => {
+        const td = e.target.closest('td[data-name]');
+        if (!td) return;
+        const tr = td.closest('tr[data-id]');
+        if (!tr || !dirtyRows.has(tr)) return;
+        await saveRow(tr);
+      }, true);
+    }
+
+    async function saveRow(tr) {
+      const id = tr.dataset.id;
+      if (!id) return;
+      const data = {};
+      tr.querySelectorAll('[data-name]').forEach(el => {
+        const key = el.getAttribute('data-name');
+        if (el.tagName === 'SELECT' && el.classList.contains('chantier-select')) {
+          data[key] = el.value || null;
+        } else if (el.tagName === 'TD' && el.contentEditable === 'true') {
+          let val = el.textContent.trim();
+          if (key === 'montant') {
+            const n = parseMoney(val); if (n !== null) data[key] = n;
+          } else if (['dateEtablissement', 'dateEcheance', 'dateReglement'].includes(key)) {
+            data[key] = dateToISO(val);
+          } else {
+            data[key] = val;
+          }
+        }
+      });
+
+      try {
+        const res = await fetch(`/tresorerie/effets/${id}/`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (res.ok) {
+          dirtyRows.delete(tr);
+          applyFilters();
+        } else {
+          const j = await res.json().catch(() => ({}));
+          alert(j.message || 'Erreur mise à jour');
+        }
+      } catch (err) { alert(err.message || 'Erreur réseau'); }
+    }
+
+    /* ── "Enregistrer" saves all dirty rows ── */
+    document.getElementById('saveTableBtn').addEventListener('click', async () => {
+      const rows = [...dirtyRows];
+      if (!rows.length) return alert('Aucune modification à enregistrer.');
+      for (const tr of rows) await saveRow(tr);
+      alert('Modifications enregistrées.');
+    });
+
+    /* ── delete ── */
+    if ($tbody) {
+      $tbody.addEventListener('click', async e => {
+        const btn = e.target.closest('.btn-delete-effet');
+        if (!btn) return;
+        const tr = btn.closest('tr[data-id]');
+        const id = tr && tr.dataset.id;
+        if (!id || !confirm('Supprimer cet effet ?')) return;
+        const res = await fetch(`/tresorerie/effets/${id}`, { method: 'DELETE' });
+        if (res.ok) { tr.remove(); applyFilters(); }
+        else alert('Erreur suppression');
+      });
+    }
+
+    /* ── add row ── */
+    document.getElementById('addRowBtn').addEventListener('click', () => {
+      const tr = document.createElement('tr');
+      tr.setAttribute('data-dirty', 'true');
+
+      const dateFields = ['dateEtablissement', 'numero', 'banque', 'beneficiaire'];
+      [
+        { key: 'dateEtablissement', label: 'Date', editable: true },
+        { key: 'numero', label: 'N° Effet', editable: true },
+        { key: 'banque', label: 'Banque', editable: true },
+        { key: 'beneficiaire', label: 'Bénéficiaire', editable: true },
+        { key: 'montant', label: 'Montant', editable: true, cls: 'text-right' },
+        { key: 'dateEcheance', label: 'Échéance', editable: true },
+        { key: 'statut', label: 'Statut', editable: false },
+        { key: 'dateReglement', label: 'Date Règlement', editable: true },
+        { key: 'chantier', label: 'Chantier', editable: false },
+        { key: 'obs', label: 'Observation', editable: true, cls: 'obs-cell' },
+      ].forEach(col => {
+        const td = document.createElement('td');
+        td.setAttribute('data-name', col.key);
+        if (col.cls) td.className = col.cls;
+
+        if (col.key === 'statut') {
+          const sel = document.createElement('select');
+          sel.className = 'form-control form-control-sm statut-select';
+          ['En Circulation', 'PAYÉ', 'Impayé', 'Annulé', 'Treso'].forEach(o => {
+            const opt = document.createElement('option');
+            opt.value = o; opt.textContent = o;
+            sel.appendChild(opt);
+          });
+          td.appendChild(sel);
+        } else if (col.key === 'chantier') {
+          const sel = document.createElement('select');
+          sel.className = 'form-control form-control-sm chantier-select';
+          const defOpt = document.createElement('option');
+          defOpt.value = ''; defOpt.textContent = '-- Aucun --';
+          sel.appendChild(defOpt);
+          CHANTIERS_DATA.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.nom; opt.textContent = c.nom;
+            sel.appendChild(opt);
+          });
+          td.appendChild(sel);
+        } else {
+          td.contentEditable = 'true';
+          td.className = (td.className ? td.className + ' ' : '') + 'cell-edit';
+        }
+
+        tr.appendChild(td);
+      });
+
+      const tdAct = document.createElement('td');
+      tdAct.className = 'text-right';
+      tdAct.innerHTML = `<div class="table-actions"><button class="btn btn-sm btn-success btn-save-new" title="Enregistrer"><i class="fas fa-save"></i></button></div>`;
+      tr.appendChild(tdAct);
+
+      $tbody.prepend(tr);
+
+      /* save new row */
+      tdAct.querySelector('.btn-save-new').addEventListener('click', async () => {
+        const data = {};
+        tr.querySelectorAll('[data-name]').forEach(el => {
+          const key = el.getAttribute('data-name');
+          if (el.tagName === 'SELECT') {
+            data[key] = el.value || null;
+          } else {
+            let val = el.textContent.trim();
+            if (['dateEtablissement', 'dateEcheance', 'dateReglement'].includes(key)) val = dateToISO(val);
+            else if (key === 'montant') { const n = parseMoney(val); val = n; }
+            data[key] = val;
+          }
+        });
+        try {
+          const res = await fetch('/tresorerie/effets/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          const json = await res.json().catch(() => ({}));
+          if (res.ok && json.id) {
+            tr.setAttribute('data-id', json.id);
+            tr.removeAttribute('data-dirty');
+            tdAct.innerHTML = `<div class="table-actions"><button class="btn btn-sm btn-outline-danger btn-delete-effet" data-id="${json.id}" title="Supprimer"><i class="fas fa-trash"></i></button></div>`;
+            applyFilters();
+          } else {
+            alert(json.message || 'Erreur création effet');
+          }
+        } catch (err) { alert(err.message || 'Erreur réseau'); }
+      });
+    });
+
+    /* ── bulk PDF export ── */
+    document.getElementById('btnExportPdf').addEventListener('click', () => {
+      const { jsPDF } = window.jspdf;
+      const headers = Array.from(document.querySelectorAll('#editableTable thead th')).slice(0, -1).map(th => th.innerText);
+      const rows = [];
+      document.querySelectorAll('#effetTbody tr[data-id]').forEach(tr => {
+        if (tr.style.display === 'none') return;
+        const row = [];
+        tr.querySelectorAll('td:not(:last-child)').forEach(td => {
+          const sel = td.querySelector('select:not(.statut-select)');
+          const badge = td.querySelector('.badge-statut');
+          const statSel = td.querySelector('.statut-select');
+          if (sel) row.push(sel.options[sel.selectedIndex].text);
+          else if (statSel) row.push(statSel.value);
+          else if (badge) row.push(badge.textContent.trim());
+          else row.push(td.textContent.trim());
+        });
+        rows.push(row);
+      });
+      if (!rows.length) return alert('Aucune donnée à exporter.');
+      const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
+      doc.text('Liste des Effets', 10, 15);
+      doc.autoTable({ head: [headers], body: rows, startY: 22, theme: 'grid' });
+      doc.save('effets.pdf');
+    });
+
+    /* ── bulk Excel export ── */
+    document.getElementById('btnExportExcel').addEventListener('click', () => {
+      const headers = Array.from(document.querySelectorAll('#editableTable thead th')).slice(0, -1).map(th => th.innerText);
+      const rows = [];
+      document.querySelectorAll('#effetTbody tr[data-id]').forEach(tr => {
+        if (tr.style.display === 'none') return;
+        const row = [];
+        tr.querySelectorAll('td:not(:last-child)').forEach(td => {
+          const sel = td.querySelector('select:not(.statut-select)');
+          const badge = td.querySelector('.badge-statut');
+          const statSel = td.querySelector('.statut-select');
+          let val;
+          if (sel) val = sel.options[sel.selectedIndex].text;
+          else if (statSel) val = statSel.value;
+          else if (badge) val = badge.textContent.trim();
+          else val = td.textContent.trim();
+          if (td.dataset.name === 'montant') { const n = parseMoney(val); if (n !== null) val = n; }
+          row.push(val);
+        });
+        rows.push(row);
+      });
+      if (!rows.length) return alert('Aucune donnée à exporter.');
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      XLSX.utils.book_append_sheet(wb, ws, 'Effets');
+      XLSX.writeFile(wb, 'effets.xlsx');
+    });
+  </script>
+</body>
+
+</html>

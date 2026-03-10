@@ -11,7 +11,7 @@ import { awb, bmce, bmci, bp, cam, cdm, createCheque, deleteCheque, etablirChequ
 import { createEffet, deleteEffet, Eawb, Ebmce, Ebmci, Ebp, Ecam, Ecdm, etablirEffet, importExelEffets, listBanquesEffets, showEffets, showEffetsForbanque, updateEffet, updateEffetStatut } from '../controllers/effetsController.js';
 import { createPayavenir, deletePayavenir, showPayavenir, updatePayavenir, updatePayavenirChantier, updatePayavenirStatut } from '../controllers/payavenirController.js';
 import { createRecavenir, deleteRecavenir, showRecavenir, updateRecavenir, updateRecavenirStatut } from '../controllers/recavenirController.js';
-import { createVirement, deleteVirement, generateVirementPDF, index, listBanquesVirements, postVirement, showUpdateVirement, suppliersList, updateVire } from '../controllers/virementController.js';
+import { createVirement, deleteVirement, generateVirementPDF, index, listBanquesVirements, postVirement, showUpdateVirement, suppliersList, updateVire, updateVirementAllocations } from '../controllers/virementController.js';
 import { createMiseadis, deleteMiseadis, generateMiseadisPDF, indexDis, listBanquesMiseadis, postMiseadis, showUpdateMiseadis, updateMis } from '../controllers/misediscontrollrt.js';
 import { createFourniture, postFourniture } from '../controllers/fournitureController.js';
 import { addUser, deleteUser, editUser, listUsers } from '../controllers/usersController.js';
@@ -247,6 +247,7 @@ dashboardRouter.get('/tresorerie/virements/banque/:id/create', createVirement);
 dashboardRouter.get('/tresorerie/virements', index);
 dashboardRouter.get('/tresorerie/virements/banque/:banqueId/update/:id', showUpdateVirement);
 dashboardRouter.patch('/tresorerie/virements/update/:id', updateVire);
+dashboardRouter.patch('/tresorerie/virements/:id/allocations', updateVirementAllocations);
 dashboardRouter.get('/tresorerie/virements/banque/:id/pdf', generateVirementPDF);
 dashboardRouter.post('/tresorerie/virements/banque/:id/create', postVirement);
 dashboardRouter.delete('/tresorerie/virements/delete/:id', deleteVirement);

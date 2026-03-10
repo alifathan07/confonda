@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -18,10 +19,12 @@
       gap: 1.5rem;
       padding: 1rem;
     }
+
     .disabled-card {
       pointer-events: none;
       opacity: 0.6;
     }
+
     .achat-card {
       display: flex;
       flex-direction: column;
@@ -38,22 +41,26 @@
       color: inherit;
       height: 180px;
     }
+
     .achat-card:hover {
       transform: translateY(-5px);
       box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
       background: linear-gradient(135deg, #3b82f6, #6366f1);
       color: white;
     }
+
     .achat-card:hover .card-icon-wrapper i,
     .achat-card:hover .card-title {
       color: white;
     }
+
     .card-icon-wrapper {
       font-size: 2.5rem;
       margin-bottom: 1rem;
       color: #3b82f6;
       transition: color 0.3s ease;
     }
+
     .card-title {
       font-size: 1.125rem;
       font-weight: 600;
@@ -63,35 +70,38 @@
     }
   </style>
 </head>
+
 <body id="page-top">
   <div id="wrapper">
     <%- include('../../layouts/sidebar') %>
-    <div id="content-wrapper" class="d-flex flex-column">
-      <div id="content">
-        <%- include('../../layouts/topbar') %>
-        <div class="container-fluid">
-            <div class="section-spacing">
-              <div class="action-grid" id="cards">
-                <a id="card-cheques-etablir" href="/virementpay/bmce" class="achat-card">
-                  <div class="card-icon-wrapper">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Bank_of_Africa_Logo.png/420px-Bank_of_Africa_Logo.png" alt="BMCE Bank Logo" class="bank-logo" style="width: 800px; height: 800px;">
-                  </div>
-                  <span class="card-title">BMCE</span>
-                </a>
+      <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+          <%- include('../../layouts/topbar') %>
+            <div class="container-fluid">
+              <div class="section-spacing">
+                <div class="action-grid" id="cards">
+                  <a id="card-cheques-etablir" href="/virementpay/bmce" class="achat-card">
+                    <div class="card-icon-wrapper">
+                      <img src="https://www.bankofafrica.ma/sites/default/files/BANKOFAFRICA-LOGOO.png"
+                        alt="BMCE Bank Logo" class="bank-logo" style="width: 800px; height: 800px;">
+                    </div>
+                    <span class="card-title">BMCE</span>
+                  </a>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <style>
-            .bank-logo {
-              max-width: 100%;
-              height: auto;
-              max-height: 50px; /* Adjust based on your design */
-              object-fit: contain;
-            }
-          </style>
+
+            <style>
+              .bank-logo {
+                max-width: 100%;
+                height: auto;
+                max-height: 50px;
+                /* Adjust based on your design */
+                object-fit: contain;
+              }
+            </style>
+        </div>
       </div>
-    </div>
   </div>
   <script src="/vendor/jquery/jquery.min.js"></script>
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
@@ -102,4 +112,5 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="/js/demo/datatables-demo.js"></script>
 </body>
+
 </html>
