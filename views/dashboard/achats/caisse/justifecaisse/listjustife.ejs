@@ -169,12 +169,46 @@
       outline-offset: -2px;
       background-color: #ffffff;
     }
+
+    @media (max-width: 576px) {
+      .action-section {
+        padding: 12px;
+      }
+      .filter-section {
+        padding: 12px;
+      }
+
+      .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      #editableTable {
+        min-width: 1100px;
+      }
+
+      #editableTable .btn-group {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+      }
+
+      #editableTable .btn-group .btn {
+        width: 100%;
+        margin-bottom: 6px;
+      }
+
+      #editableTable .btn-group .btn:last-child {
+        margin-bottom: 0;
+      }
+    }
   </style>
 </head>
 <body id="page-top">
-  <div id="wrapper">
+  <div id="wrapper" class="d-flex">
     <%- include('../../../../layouts/sidebar') %>
-    <div id="content-wrapper" class="d-flex flex-column">
+    <div id="content-wrapper" class="d-flex flex-column bg-light min-vh-100 w-100">
       <div id="content">
         <%- include('../../../../layouts/topbar') %>
         <div class="container-fluid">

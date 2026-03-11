@@ -28,6 +28,136 @@
     .card-body { overflow-x: auto; }
     .readonly input, .readonly select { background-color: #e9ecef; cursor: not-allowed; }
     .edit-btn { margin-right: 10px; }
+
+    /* Toggle Buttons for Table Visibility */
+    .table-toggle-container {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+    .table-toggle-btn {
+      padding: 15px 40px;
+      font-size: 16px;
+      font-weight: 600;
+      border: 2px solid #e3e6f0;
+      border-radius: 10px;
+      background: #fff;
+      color: #6c757d;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    }
+    .table-toggle-btn:hover {
+      border-color: #4e73df;
+      color: #4e73df;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(78,115,223,0.15);
+    }
+    .table-toggle-btn.active {
+      background: #4e73df;
+      border-color: #4e73df;
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(78,115,223,0.3);
+    }
+    #showRecettesBtn {
+      border-color: #e74a3b;
+      color: #e74a3b;
+    }
+    #showRecettesBtn:hover {
+      border-color: #e74a3b;
+      color: #e74a3b;
+      box-shadow: 0 4px 12px rgba(231,74,59,0.18);
+    }
+    #showRecettesBtn.active {
+      background: #e74a3b;
+      border-color: #e74a3b;
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(231,74,59,0.32);
+    }
+    #showDepensesBtn {
+      border-color: #1cc88a;
+      color: #1cc88a;
+    }
+    #showDepensesBtn:hover {
+      border-color: #1cc88a;
+      color: #1cc88a;
+      box-shadow: 0 4px 12px rgba(28,200,138,0.18);
+    }
+    #showDepensesBtn.active {
+      background: #1cc88a;
+      border-color: #1cc88a;
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(28,200,138,0.32);
+    }
+    .table-toggle-btn i {
+      font-size: 18px;
+    }
+    .table-section {
+      display: none !important;
+    }
+    .table-section.visible {
+      display: block !important;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 576px) {
+      .table-toggle-container {
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+      .table-toggle-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 18px;
+        font-size: 15px;
+      }
+
+      #recettes .card-header,
+      #depenses .card-header {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 10px;
+      }
+      #recettes .card-header > div,
+      #depenses .card-header > div {
+        width: 100%;
+      }
+
+      #recettes .card-body,
+      #depenses .card-body {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      #recettes table,
+      #depenses table {
+        min-width: 720px;
+      }
+
+      #recettes .btn,
+      #depenses .btn {
+        width: 100%;
+      }
+
+      #recettes .card-header .btn,
+      #depenses .card-header .btn {
+        margin-bottom: 6px;
+      }
+
+      #recettes .card-header .btn:last-child,
+      #depenses .card-header .btn:last-child {
+        margin-bottom: 0;
+      }
+    }
   </style>
 </head>
 <body id="page-top">
@@ -106,8 +236,18 @@
             </div>
           </div>
 
+          <!-- Toggle Buttons for Tables -->
+          <div class="table-toggle-container">
+            <button class="table-toggle-btn" id="showRecettesBtn" onclick="showTable('recettes')">
+              <i class="fas fa-arrow-down"></i> Recettes
+            </button>
+            <button class="table-toggle-btn" id="showDepensesBtn" onclick="showTable('depenses')">
+              <i class="fas fa-arrow-up"></i> Dépenses
+            </button>
+          </div>
+
           <!-- Recettes Table -->
-          <div id="recettes" class="card shadow mb-4">
+          <div id="recettes" class="card shadow mb-4 table-section">
             <div class="card-header d-flex justify-content-between align-items-center">
               <h2 class="card-title">Caisse Reçue</h2>
               <div class="d-flex justify-content-end mb-3">
@@ -170,7 +310,7 @@
           </div>
 
           <!-- Depenses Table -->
-          <div id="depenses" class="card shadow mb-4">
+          <div id="depenses" class="card shadow mb-4 table-section">
             <div class="card-header d-flex justify-content-between align-items-center">
               <h2 class="card-title">DÉPENSES</h2>
               <span class="badge bg-primary ms-1 text-white d-flex justify-content-center" style="font-size: 15px;">
@@ -412,6 +552,58 @@
         //   }
         // }
       
+      // Toggle table visibility 
+      function hideTables() {
+        const recettesSection = document.getElementById('recettes');
+        const depensesSection = document.getElementById('depenses');
+        const recettesBtn = document.getElementById('showRecettesBtn');
+        const depensesBtn = document.getElementById('showDepensesBtn');
+
+        recettesSection.classList.remove('visible');
+        depensesSection.classList.remove('visible');
+        recettesBtn.classList.remove('active');
+        depensesBtn.classList.remove('active');
+      }
+
+      function showTable(tableName) {
+        const recettesSection = document.getElementById('recettes');
+        const depensesSection = document.getElementById('depenses');
+
+        const target = tableName === 'recettes' ? recettesSection : depensesSection;
+        const isAlreadyVisible = target.classList.contains('visible');
+
+        // If you click the same active button again => hide both
+        if (isAlreadyVisible) {
+          hideTables();
+          sessionStorage.removeItem('justifTable');
+          return;
+        }
+
+        // Otherwise show the selected one
+        hideTables();
+        if (tableName === 'recettes') {
+          recettesSection.classList.add('visible');
+          document.getElementById('showRecettesBtn').classList.add('active');
+        } else if (tableName === 'depenses') {
+          depensesSection.classList.add('visible');
+          document.getElementById('showDepensesBtn').classList.add('active');
+        }
+
+        // Store in sessionStorage to persist after save-triggered reload/redirect
+        sessionStorage.setItem('justifTable', tableName);
+      }
+
+      // Restore only after a save-triggered reload/redirect
+      document.addEventListener('DOMContentLoaded', function () {
+        const shouldRestore = sessionStorage.getItem('restoreJustifTable') === '1';
+        if (!shouldRestore) return;
+        sessionStorage.removeItem('restoreJustifTable');
+
+        const savedTable = sessionStorage.getItem('justifTable');
+        if (savedTable) showTable(savedTable);
+      });
+
+
       // Determine if it's a new justification
       const isNewJustification = !document.querySelector('input[name="justifId"]').value;
 
@@ -432,28 +624,28 @@
 
       // Add new recette row
       function addNewRecetteRow() {
-  const tbody = document.querySelector('#recetteTable tbody');
-  const placeholder = tbody.querySelector('.no-data');
-  if (placeholder) placeholder.remove();
+        const tbody = document.querySelector('#recetteTable tbody');
+        const placeholder = tbody.querySelector('.no-data');
+        if (placeholder) placeholder.remove();
 
-  const newRow = document.createElement('tr');
-  newRow.innerHTML = `
-    <td><input type="date" name="dateRecette" class="form-control" value="${new Date().toISOString().split('T')[0]}" required></td>
-    <td><input type="text" name="source" class="form-control" required></td>
-    <td><input type="number" name="montant" step="0.01" min="0.01" class="form-control" required></td>
-    <td><button class="btn btn-danger btn-sm" onclick="deleteRecetteItem(this)">Supprimer</button></td>
-  `;
-  tbody.appendChild(newRow);
-}
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+          <td><input type="date" name="dateRecette" class="form-control" value="${new Date().toISOString().split('T')[0]}" required></td>
+          <td><input type="text" name="source" class="form-control" required></td>
+          <td><input type="number" name="montant" step="0.01" min="0.01" class="form-control" required></td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteRecetteItem(this)">Supprimer</button></td>
+        `;
+        tbody.appendChild(newRow);
+      }
 
       function saveSoldePrecedentOnly() {
-        const userId = document.querySelector('input[name="userId"]')?.value?.trim();
-        const justifId = document.querySelector('input[name="justifId"]')?.value?.trim() || null;
-        const designation = document.querySelector('#mois')?.value?.trim();
+        const userId = document.querySelector('input[name="userId"]').value.trim();
+        const justifId = document.querySelector('input[name="justifId"]').value.trim() || null;
+        const designation = document.querySelector('#mois').value.trim();
 
-        const chantierId = document.querySelector('input[name="chantierId"]')?.value?.trim() || null;
+        const chantierId = document.querySelector('input[name="chantierId"]').value.trim() || null;
 
-        const soldePrecedentInput = document.querySelector('#soldePrecedent')?.value?.trim();
+        const soldePrecedentInput = document.querySelector('#soldePrecedent').value.trim();
         const soldePrecedent = soldePrecedentInput !== '' ? parseFloat(soldePrecedentInput) : null;
 
         const errors = [];
@@ -485,8 +677,10 @@
             if (data.success) {
               alert('Solde précédent enregistré avec succès.');
               if (data.justifId && (!justifId || justifId !== String(data.justifId))) {
+                sessionStorage.setItem('restoreJustifTable', '1');
                 window.location.href = `/achats/caisse/admin/${userId}/${data.justifId}`;
               } else {
+                sessionStorage.setItem('restoreJustifTable', '1');
                 window.location.reload();
               }
             } else {
@@ -502,118 +696,120 @@
       // Save all recette items
    
       function saveAllRecetteItems() {
-  const rows = document.querySelectorAll('#recetteTable tbody tr');
-  const items = [];
-  let valid = true;
-  let errorMessages = [];
+        const rows = document.querySelectorAll('#recetteTable tbody tr');
+        const items = [];
+        let valid = true;
+        let errorMessages = [];
 
-  // Collect recettes
-  rows.forEach((row, index) => {
-    const dateInput = row.querySelector('input[name="dateRecette"]')?.value;
-    const sourceInput = row.querySelector('input[name="source"]')?.value?.trim();
-    const montantInput = row.querySelector('input[name="montant"]')?.value?.trim();
+        // Collect recettes
+        rows.forEach((row, index) => {
+          const dateInput = row.querySelector('input[name="dateRecette"]')?.value;
+          const sourceInput = row.querySelector('input[name="source"]')?.value?.trim();
+          const montantInput = row.querySelector('input[name="montant"]')?.value?.trim();
 
-    if (!dateInput && !sourceInput && !montantInput) return;
+          if (!dateInput && !sourceInput && !montantInput) return;
 
-    if (!dateInput) {
-      errorMessages.push(`Ligne ${index + 1}: Date manquante`);
-      valid = false;
-      return;
-    }
-    if (!sourceInput) {
-      errorMessages.push(`Ligne ${index + 1}: Source manquante`);
-      valid = false;
-      return;
-    }
-    const montant = parseFloat(montantInput);
-    if (isNaN(montant) || montant <= 0) {
-      errorMessages.push(`Ligne ${index + 1}: Montant invalide ou non positif`);
-      valid = false;
-      return;
-    }
+          if (!dateInput) {
+            errorMessages.push(`Ligne ${index + 1}: Date manquante`);
+            valid = false;
+            return;
+          }
+          if (!sourceInput) {
+            errorMessages.push(`Ligne ${index + 1}: Source manquante`);
+            valid = false;
+            return;
+          }
+          const montant = parseFloat(montantInput);
+          if (isNaN(montant) || montant <= 0) {
+            errorMessages.push(`Ligne ${index + 1}: Montant invalide ou non positif`);
+            valid = false;
+            return;
+          }
 
-    items.push({
-      _id: row.dataset.id || null,
-      dateRecette: dateInput,
-      source: sourceInput,
-      montant,
-    });
-  });
-
-  const responsable = document.querySelector('input[name="responsable"]')?.value?.trim();
-  const userId = document.querySelector('input[name="userId"]')?.value?.trim();
-  const chantierId = document.querySelector('input[name="chantierId"]')?.value?.trim();
-  const designation = document.querySelector('#mois')?.value?.trim();
-  const justifId = document.querySelector('input[name="justifId"]')?.value?.trim() || null;
-  const soldePrecedentInput = document.querySelector('#soldePrecedent')?.value?.trim();
-  const soldePrecedent = soldePrecedentInput ? parseFloat(soldePrecedentInput) : null;
-
-  if (!responsable || !userId || !chantierId || !designation) {
-    const missingFields = [];
-    if (!responsable) missingFields.push('responsable');
-    if (!userId) missingFields.push('userId');
-    if (!chantierId) missingFields.push('chantierId');
-    if (!designation) missingFields.push('mois');
-    errorMessages.push(`Champs manquants: ${missingFields.join(', ')}`);
-    valid = false;
-  }
-
-  if (soldePrecedent === null || isNaN(soldePrecedent) || soldePrecedent < 0) {
-    errorMessages.push('Solde Précédent manquant ou invalide');
-    valid = false;
-  }
-
-  if (!valid) {
-    alert(`Erreurs détectées pour la justification de ${responsable || 'l\'utilisateur'}:\n${errorMessages.join('\n')}`);
-    return;
-  }
-
-  if (items.length === 0) {
-    alert('Veuillez ajouter au moins une recette valide.');
-    return;
-  }
-
-  const id = window.location.pathname.split('/').pop();
-  const payload = { userId, responsable, chantierId, designation, justifId, items };
-  payload.soldePrecedent = soldePrecedent;
-
-  fetch(`/achats/caisse/admin/${userId}/${id}/recettes`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
-    .then(res => {
-      if (!res.ok) {
-        return res.json().then(data => {
-          throw new Error(data.error || `Erreur HTTP ${res.status}`);
+          items.push({
+            _id: row.dataset.id || null,
+            dateRecette: dateInput,
+            source: sourceInput,
+            montant,
+          });
         });
-      }
-      return res.json();
-    })
-    .then(data => {
-      if (data.success) {
-        alert('Recettes enregistrées avec succès.');
-        if (isNewJustification && data.justifId) {
-          window.location.href = `/achats/caisse/admin/${userId}/${data.justifId}`;
-        } else {
-          window.location.reload();
+
+        const responsable = document.querySelector('input[name="responsable"]')?.value?.trim();
+        const userId = document.querySelector('input[name="userId"]')?.value?.trim();
+        const chantierId = document.querySelector('input[name="chantierId"]')?.value?.trim();
+        const designation = document.querySelector('#mois')?.value?.trim();
+        const justifId = document.querySelector('input[name="justifId"]')?.value?.trim() || null;
+        const soldePrecedentInput = document.querySelector('#soldePrecedent')?.value?.trim();
+        const soldePrecedent = soldePrecedentInput ? parseFloat(soldePrecedentInput) : null;
+
+        if (!responsable || !userId || !chantierId || !designation) {
+          const missingFields = [];
+          if (!responsable) missingFields.push('responsable');
+          if (!userId) missingFields.push('userId');
+          if (!chantierId) missingFields.push('chantierId');
+          if (!designation) missingFields.push('mois');
+          errorMessages.push(`Champs manquants: ${missingFields.join(', ')}`);
+          valid = false;
         }
-      } else {
-        alert(`Erreur: ${data.error || 'Erreur inconnue.'}`);
+
+        if (soldePrecedent === null || isNaN(soldePrecedent) || soldePrecedent < 0) {
+          errorMessages.push('Solde Précédent manquant ou invalide');
+          valid = false;
+        }
+
+        if (!valid) {
+          alert(`Erreurs détectées pour la justification de ${responsable || 'l\'utilisateur'}:\n${errorMessages.join('\n')}`);
+          return;
+        }
+
+        if (items.length === 0) {
+          alert('Veuillez ajouter au moins une recette valide.');
+          return;
+        }
+
+        const id = window.location.pathname.split('/').pop();
+        const payload = { userId, responsable, chantierId, designation, justifId, items };
+        payload.soldePrecedent = soldePrecedent;
+
+        fetch(`/achats/caisse/admin/${userId}/${id}/recettes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+          .then(res => {
+            if (!res.ok) {
+              return res.json().then(data => {
+                throw new Error(data.error || `Erreur HTTP ${res.status}`);
+              });
+            }
+            return res.json();
+          })
+          .then(data => {
+            if (data.success) {
+              alert('Recettes enregistrées avec succès.');
+              if (isNewJustification && data.justifId) {
+                sessionStorage.setItem('restoreJustifTable', '1');
+                window.location.href = `/achats/caisse/admin/${userId}/${data.justifId}`;
+              } else {
+                sessionStorage.setItem('restoreJustifTable', '1');
+                window.location.reload();
+              }
+            } else {
+              alert(`Erreur: ${data.error || 'Erreur inconnue.'}`);
+            }
+          })
+          .catch(err => {
+            console.error('Fetch error:', err);
+            alert(`Erreur: ${err.message}`);
+          });
       }
-    })
-    .catch(err => {
-      console.error('Fetch error:', err);
-      alert(`Erreur: ${err.message}`);
-    });
-}
       // Delete recette item
       function deleteRecetteItem(button) {
         if (confirm('Supprimer cette recette ?')) {
           const row = button.closest('tr');
           const id = row.dataset.id;
-          const userId = document.querySelector('input[name="userId"]')?.value?.trim();
-          const justifId = document.querySelector('input[name="justifId"]')?.value?.trim();
+          const userId = document.querySelector('input[name="userId"]').value.trim();
+          const justifId = document.querySelector('input[name="justifId"]').value.trim();
 
           if (id && justifId && userId) {
             fetch(`/achats/caisse/justification/recettes/${id}`, {
@@ -788,8 +984,10 @@
             if (data.success) {
               alert('Justification enregistrée avec succès.');
               if (isNewJustification && data.justifId) {
+                sessionStorage.setItem('restoreJustifTable', '1');
                 window.location.href = `/achats/caisse/admin/${userId}/${data.justifId}`;
               } else {
+                sessionStorage.setItem('restoreJustifTable', '1');
                 window.location.reload();
               }
             } else {

@@ -89,6 +89,78 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    /* Modern Search Input Styles */
+    .search-container {
+      position: relative;
+      max-width: 400px;
+      margin-bottom: 20px;
+    }
+    .search-input {
+      width: 100%;
+      padding: 12px 20px 12px 45px;
+      font-size: 15px;
+      border: 2px solid #e3e6f0;
+      border-radius: 50px;
+      background: #fff;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: #4e73df;
+      box-shadow: 0 4px 15px rgba(78,115,223,0.15);
+    }
+    .search-input::placeholder {
+      color: #aaa;
+      font-weight: 400;
+    }
+    .search-icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #4e73df;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+    .search-container:focus-within .search-icon {
+      color: #224abe;
+    }
+    .search-clear {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #e3e6f0;
+      border: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      color: #666;
+      font-size: 12px;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .search-clear:hover {
+      background: #d1d3e2;
+      color: #333;
+    }
+    .search-clear.visible {
+      display: flex;
+    }
+    .no-results {
+      text-align: center;
+      padding: 30px;
+      color: #666;
+      font-style: italic;
+      display: none;
+    }
+    .no-results.visible {
+      display: block;
+    }
   </style>
 </head>
 <body id="page-top">
@@ -103,37 +175,45 @@
               <h6 class="m-0 font-weight-bold text-primary">Liste Des Chantiers</h6>
             </div>
             <div class="card-body">
-                <table class="excel-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Nom</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% if (chantiers.length === 0) { %>
-                      <tr><td colspan="5">Aucun chantier trouvé</td></tr>
-                    <% } else { %>
-                      <% chantiers.forEach((chantier, index) => { %>
-                        <tr>
-                          <td><%= index + 1 %></td>
-                          <td>
-                            <a href="<%= '/achats/caisse/justif/' + chantier.id %>" class="text-primary font-weight-bold">
-                              <%= chantier.nom %>
-                            </a>
-                          </td>
-                          <td>
-                            <a href="<%='/achats/caisse/justif/'+chantier.id %>"  class="btn btn-sm btn-primary custom-btn">
-                              <i class="fas fa-eye"></i> Voir
-                            </a>
-                          </td>
-                        </tr>
-                      <% }) %>
-                    <% } %>
-                  </tbody>
-                </table>
+              <!-- Modern Search Input -->
+              <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchChantier" class="search-input" placeholder="Rechercher un chantier...">
+                <button class="search-clear" id="clearSearch"><i class="fas fa-times"></i></button>
               </div>
+              <div class="no-results" id="noResults">Aucun chantier trouvé pour cette recherche</div>
+              
+              <table class="excel-table" id="chantierTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Nom</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (chantiers.length === 0) { %>
+                    <tr><td colspan="3">Aucun chantier trouvé</td></tr>
+                  <% } else { %>
+                    <% chantiers.forEach((chantier, index) => { %>
+                      <tr class="chantier-row" data-name="<%= chantier.nom.toLowerCase() %>">
+                        <td><%= index + 1 %></td>
+                        <td>
+                          <a href="<%= '/achats/caisse/justif/' + chantier.id %>" class="text-primary font-weight-bold">
+                            <%= chantier.nom %>
+                          </a>
+                        </td>
+                        <td>
+                          <a href="<%='/achats/caisse/justif/'+chantier.id %>"  class="btn btn-sm btn-primary custom-btn">
+                            <i class="fas fa-eye"></i> Voir
+                          </a>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
               
           </div>
         </div>
@@ -148,6 +228,57 @@
       <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
       <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
       <script src="/js/sb-admin-2.min.js"></script>
+      <script>
+        // Search functionality - wrapped in DOMContentLoaded to ensure DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+          const searchInput = document.getElementById('searchChantier');
+          const clearBtn = document.getElementById('clearSearch');
+          const noResults = document.getElementById('noResults');
+          const rows = document.querySelectorAll('.chantier-row');
+          
+          // Debug: log how many rows we found
+          console.log('Found', rows.length, 'chantier rows');
+          
+          // Normalize text for better search (remove accents, lowercase)
+          function normalizeText(text) {
+            return text.toLowerCase()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '');
+          }
+          
+          searchInput.addEventListener('input', function() {
+            const query = normalizeText(this.value.trim());
+            let visibleCount = 0;
+            
+            // Show/hide clear button
+            clearBtn.classList.toggle('visible', this.value.length > 0);
+            
+            // Filter rows
+            rows.forEach(row => {
+              const name = row.dataset.name || '';
+              const visibleName = row.querySelector('td:nth-child(2)')?.textContent || '';
+              const normalizedName = normalizeText(name);
+              const normalizedVisible = normalizeText(visibleName);
+              
+              const isMatch = query === '' || normalizedName.includes(query) || normalizedVisible.includes(query);
+              row.style.display = isMatch ? '' : 'none';
+              if (isMatch) visibleCount++;
+            });
+            
+            // Show/hide no results message
+            noResults.classList.toggle('visible', visibleCount === 0 && this.value.length > 0);
+            console.log('Search:', query, 'Found:', visibleCount, 'matches');
+          });
+          
+          clearBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            clearBtn.classList.remove('visible');
+            noResults.classList.remove('visible');
+            rows.forEach(row => row.style.display = '');
+            searchInput.focus();
+          });
+        });
+      </script>
     </div>
   </div>
 </body>

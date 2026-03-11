@@ -126,250 +126,320 @@
     .excel-dirty-row {
       background-color: #fff3cd !important;
     }
+
+    .row-color-green {
+      background: #c6efc5;
+    }
+
+    .row-color-blue {
+      background: #f49797;
+      color: #fff;
+    }
+
+    .row-color-gray {
+      background: #f5f5f5;
+    }
+
+    .status-badge {
+      min-width: 100px;
+      display: inline-block;
+      text-align: center;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .status-verse {
+      background: #C6E2B5;
+      color: #256029;
+    }
+
+    .status-annule {
+      background: #FFD6D6;
+      color: #B71C1C;
+    }
+
+    .status-attente {
+      background: #FFF3CD;
+      color: #856404;
+    }
+
+    .status-default {
+      background: #F8F9FA;
+      color: #6C757D;
+    }
+
+    @media (max-width: 576px) {
+      .dc-actions {
+        flex-direction: column;
+        align-items: stretch !important;
+      }
+
+      .dc-actions .btn,
+      .dc-actions a.btn {
+        width: 100%;
+      }
+
+      .dc-filters-row {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 10px !important;
+      }
+
+      .dc-table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      #editableTable {
+        min-width: 980px;
+      }
+
+      #editableTable .btn-group {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+      }
+
+      #editableTable .btn-group .btn {
+        width: 100%;
+        margin-bottom: 6px;
+      }
+
+      #editableTable .btn-group .btn:last-child {
+        margin-bottom: 0;
+      }
+    }
   </style>
 </head>
 
 <body id="page-top">
-  <div id="wrapper">
+  <div id="wrapper" class="d-flex">
     <%- include('../../../../layouts/sidebar') %>
-      <div id="content-wrapper" class="d-flex flex-column">
-        <div id="content">
-          <%- include('../../../../layouts/topbar') %>
-            <div class="container-fluid">
-              <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                  <h6 class="m-0 font-weight-bold text-primary">Liste des Demandes de Caisse</h6>
-                </div>
-                <div class="card-body">
-                  <div class="d-flex justify-content-end" style="gap: 10px;">
-                    <a href="/achats/create/demandeCaisse" class="btn btn-primary custom-btn">
-                      <i class="fas fa-save"></i> Ajouter
-                    </a>
-                    <button id="downloadPdfBtn" class="btn btn-success custom-btn">
-                      <i class="fas fa-file-pdf"></i> Exporter PDF
-                    </button>
-                    <button id="downloadExcelBtn" class="btn btn-outline-success custom-btn">
-                      <i class="fas fa-file-excel"></i> Exporter Excel
-                    </button>
-                  </div>
-                  <% if ( user.role !=='user' ) { %>
-                    <div class="form-group mt-3">
-                      <div class="d-flex" style="gap: 10px; align-items: flex-end;">
-                        <div class="flex-grow-1">
-                          <label for="chantierFilter">Choisir un chantier</label>
-                          <select id="chantierFilter" class="form-control custom-select">
-                            <option value="">Tous</option>
-                            <% chantiers.forEach(chantier=> { %>
-                              <option value="<%= chantier.id %>">
-                                <%= chantier.nom %>
-                              </option>
-                              <% }) %>
-                          </select>
-                        </div>
-                        <div class="flex-grow-1">
-                          <label for="demandeurFilter">Choisir un demandeur</label>
-                          <select id="demandeurFilter" class="form-control custom-select">
-                            <option value="">Tous</option>
-                            <% users.forEach(user=> { %>
-                              <option value="<%= user.id %>">
-                                <%= user.name %>
-                              </option>
-                              <% }) %>
-                          </select>
-                        </div>
-                        <div class="flex-grow-1">
-                          <label for="moisFilter">Choisir un mois</label>
-                          <select id="moisFilter" class="form-control custom-select">
-                            <option value="">Tous</option>
-                            <option value="janvier">Janvier</option>
-                            <option value="février">Février</option>
-                            <option value="mars">Mars</option>
-                            <option value="avril">Avril</option>
-                            <option value="mai">Mai</option>
-                            <option value="juin">Juin</option>
-                            <option value="juillet">Juillet</option>
-                            <option value="août">Août</option>
-                            <option value="septembre">Septembre</option>
-                            <option value="octobre">Octobre</option>
-                            <option value="novembre">Novembre</option>
-                            <option value="décembre">Décembre</option>
-                          </select>
-                        </div>
-                        <div class="flex-grow-1">
-                          <label for="statusFilter">Choisir un statut</label>
-                          <select id="statusFilter" class="form-control custom-select">
-                            <option value="">Tous</option>
-                            <option value="En Attente">En Attente</option>
-                            <option value="Versée">Versée</option>
-                            <option value="Annulée">Annulée</option>
-                          </select>
-                        </div>
+    <div id="content-wrapper" class="d-flex flex-column bg-light min-vh-100 w-100">
+      <div id="content">
+        <%- include('../../../../layouts/topbar') %>
+        <div class="container-fluid">
 
-                        <div>
-                          <button id="resetFilters" class="btn btn-secondary custom-btn" style="margin-bottom: 0;">
-                            <i class="fas fa-undo"></i> Réinitialiser
-                          </button>
-                        </div>
-                      </div>
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">Liste des Demandes de Caisse</h6>
+            </div>
+            <div class="card-body">
+              <div class="d-flex justify-content-end dc-actions" style="gap: 10px;">
+                <a href="/achats/create/demandeCaisse" class="btn btn-primary custom-btn">
+                  <i class="fas fa-save"></i> Ajouter
+                </a>
+                <button id="downloadPdfBtn" class="btn btn-success custom-btn">
+                  <i class="fas fa-file-pdf"></i> Exporter PDF
+                </button>
+                <button id="downloadExcelBtn" class="btn btn-outline-success custom-btn">
+                  <i class="fas fa-file-excel"></i> Exporter Excel
+                </button>
+              </div>
+              <% if ( user.role !=='user' ) { %>
+                <div class="form-group mt-3">
+                  <div class="d-flex dc-filters-row" style="gap:10px; align-items:flex-end;">
+
+                    <div class="flex-grow-1">
+                      <label for="chantierFilter">Choisir un chantier</label>
+                      <select id="chantierFilter" class="form-control custom-select">
+                        <option value="">Tous</option>
+                        <% chantiers.forEach(chantier=> { %>
+                          <option value="<%= chantier.id %>">
+                            <%= chantier.nom %>
+                          </option>
+                          <% }) %>
+                      </select>
                     </div>
-                    <% } %>
-                      <br>
-                      <div class="table-responsive">
-                        <% function formatDateToDDMMYYYY(dateInput) { if (!dateInput) return '' ; const date=new
-                          Date(dateInput); if (isNaN(date)) return dateInput; const
-                          day=String(date.getDate()).padStart(2, '0' ); const month=String(date.getMonth() +
-                          1).padStart(2, '0' ); const year=date.getFullYear(); return `${day}/${month}/${year}`; } %>
-                          <table id="editableTable" class="excel-table">
-                            <thead>
-                              <tr style="position: sticky; top: 0; background-color: white; z-index: 1;">
-                                <th draggable="true">Numéro</th>
-                                <th draggable="true">Date Demande</th>
-                                <th draggable="true">Caisse Du Mois</th>
-                                <th draggable="true">Demandeur</th>
-                                <th draggable="true">Chantier</th>
-                                <th draggable="true">Montant Demandé</th>
-                                <th draggable="true">Statut</th>
-                                <th draggable="true">Etat</th>
-                                <th>Actions</th>
+
+                    <div class="flex-grow-1">
+                      <label for="demandeurFilter">Choisir un demandeur</label>
+                      <select id="demandeurFilter" class="form-control custom-select">
+                        <option value="">Tous</option>
+                        <% users.forEach(user=> { %>
+                          <option value="<%= user.id %>">
+                            <%= user.name %>
+                          </option>
+                          <% }) %>
+                      </select>
+                    </div>
+
+                    <div class="flex-grow-1">
+                      <label for="moisFilter">Choisir un mois</label>
+                      <select id="moisFilter" class="form-control custom-select">
+                        <option value="">Tous</option>
+                        <option value="janvier">Janvier</option>
+                        <option value="février">Février</option>
+                        <option value="mars">Mars</option>
+                        <option value="avril">Avril</option>
+                        <option value="mai">Mai</option>
+                        <option value="juin">Juin</option>
+                        <option value="juillet">Juillet</option>
+                        <option value="août">Août</option>
+                        <option value="septembre">Septembre</option>
+                        <option value="octobre">Octobre</option>
+                        <option value="novembre">Novembre</option>
+                        <option value="décembre">Décembre</option>
+                      </select>
+                    </div>
+
+                    <div class="flex-grow-1">
+                      <label for="statusFilter">Choisir un statut</label>
+                      <select id="statusFilter" class="form-control custom-select">
+                        <option value="">Tous</option>
+                        <option value="En Attente">En Attente</option>
+                        <option value="Versée">Versée</option>
+                        <option value="Annulée">Annulée</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <button id="resetFilters" class="btn btn-secondary custom-btn" style="margin-bottom: 0;">
+                        <i class="fas fa-undo"></i> Réinitialiser
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <% } %>
+                <br>
+                <div class="table-responsive dc-table-responsive">
+                  <% function formatDateToDDMMYYYY(dateInput) { if (!dateInput) return '' ; const date=new
+                    Date(dateInput); if (isNaN(date)) return dateInput; const
+                    day=String(date.getDate()).padStart(2, '0' ); const month=String(date.getMonth() +
+                    1).padStart(2, '0' ); const year=date.getFullYear(); return `${day}/${month}/${year}`; } %>
+                  <table id="editableTable" class="excel-table">
+
+                    <thead>
+                      <tr style="position: sticky; top: 0; background-color: white; z-index: 1;">
+                        <th draggable="true">Numéro</th>
+                        <th draggable="true">Date Demande</th>
+                        <th draggable="true">Caisse Du Mois</th>
+                        <th draggable="true">Demandeur</th>
+                        <th draggable="true">Chantier</th>
+                        <th draggable="true">Montant Demandé</th>
+                        <th draggable="true">Statut</th>
+                        <th draggable="true">Etat</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% if (!demande || demande.length===0) { %>
+                        <tr>
+                          <td colspan="9" style="text-align: center;">Aucune demande disponible.</td>
+                        </tr>
+                        <% } else { %>
+                          <% demande.forEach(d=> { %>
+                            <% if (user.role==='admin' || user.role==='grandadmin' || d.userId===user.id) { %>
+                              <tr data-id="<%= d.id %>"
+                                class="<%= d.color === 'green' ? 'row-color-green' : (d.color === 'blue' ? 'row-color-blue' : (d.color === 'gray' ? 'row-color-gray' : '')) %>">
+                                <td contenteditable="true" data-name="numero">
+                                  <%= d.numero || '' %>
+                                </td>
+                                <td contenteditable="true" data-name="dateSaisie">
+                                  <%= formatDateToDDMMYYYY(d.dateDemande) %>
+                                </td>
+                                <td contenteditable="true" data-name="designation">
+                                  <%= d.designation || '' %>
+                                </td>
+                                <td contenteditable="true" data-name="demandeur">
+                                  <%= d.user?.name || '' %>
+                                </td>
+                                <td contenteditable="true" data-name="chantier">
+                                  <%= d.chantier?.nom || '' %>
+                                </td>
+                                <td contenteditable="true" data-name="montant">
+                                  <%= Number(d.montantTotal || 0).toLocaleString('fr-FR', {
+                                    minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                                </td>
+                                <% if (user.role==='user' || user.role==='grandadmin' ) { %>
+                                  <td data-name="status" style="text-align: center; padding: 6px;">
+                                    <span class="status-badge <%= d.status === 'Versée' ? 'status-verse' : (d.status === 'Annulée' ? 'status-annule' : (d.status === 'En Attente' ? 'status-attente' : 'status-default')) %>">
+                                      <%= d.status || '—' %>
+                                    </span>
+                                  </td>
+                                  <% } else if (user.role==='admin' ) { %>
+                                    <td>
+                                      <select class="form-control" data-name="status"
+                                        onchange="updateStatus(<%= d.id %>, this.value)">
+                                        <option value="" <% if (!d.status) { %> selected <% } %>>Sélectionner
+                                        </option>
+                                        <option value="Versée" <% if (d.status==='Versée' ) { %> selected <% }
+                                          %>>Versée</option>
+                                        <option value="Annulée" <% if (d.status==='Annulée' ) { %> selected <% }
+                                          %>>Annulée</option>
+                                        <option value="En Attente" <% if (d.status==='En Attente' ) { %>
+                                          selected <% } %>>En Attente</option>
+                                      </select>
+                                    </td>
+                                    <% } %>
+
+                                    <% if (user.role==='user' || user.role==='grandadmin' ) { %>
+                                      <td data-name="etat" style="text-align: center; padding: 6px;">
+                                        <span class="badge badge-light"
+                                          style="min-width:100px; padding:6px 12px; border-radius:20px; font-weight:600;">
+                                          <%= d.etat || '—' %>
+                                        </span>
+                                      </td>
+                                      <% } else if (user.role==='admin' ) { %>
+                                        <td>
+                                          <select class="form-control" data-name="etat"
+                                            onchange="updateEtat(<%= d.id %>, this.value)">
+                                            <option value="" <%=!d.etat ? 'selected' : '' %>>Sélectionner
+                                            </option>
+                                            <option value="En cours" <%=d.etat==='En cours' ? 'selected' : ''
+                                              %>>En cours</option>
+                                            <option value="Accepter" <%=d.etat==='Accepter' ? 'selected' : ''
+                                              %>>Accepter</option>
+                                            <option value="Refuser" <%=d.etat==='Refuser' ? 'selected' : '' %>
+                                              >Refuser</option>
+                                          </select>
+                                        </td>
+                                        <% } %>
+
+                                        <td>
+                                          <div class="btn-group" role="group">
+                                            <a href="/achats/demandes/caisse/<%= d.id %>"
+                                              class="btn btn-info btn-sm" style="width: 60px;">
+                                              <i class="fas fa-eye"></i> Voir
+                                            </a>
+                                            <a href="/achats/demandes/caisse/<%= d.id %>/pdf"
+                                              class="btn btn-danger btn-sm" style="width: 60px;">
+                                              <i class="fas fa-file-pdf"></i> PDF
+                                            </a>
+                                            <a href="/achats/demandes/caisse/<%= d.id %>/excel"
+                                              class="btn btn-success btn-sm" style="width: 60px;">
+                                              <i class="fas fa-file-excel"></i> Excel
+                                            </a>
+
+                                            <% if (user.role==='admin' || user.role==='grandadmin' ) { %>
+                                              <button onclick="supprimerdemande(<%= d.id %>)"
+                                                class="excel-delete-btn">
+                                                <i class="fas fa-trash"></i>
+                                              </button>
+                                              <% } %>
+                                          </div>
+                                        </td>
                               </tr>
-                            </thead>
-                            <tbody>
-                              <% if (!demande || demande.length===0) { %>
-                                <tr>
-                                  <td colspan="9" style="text-align: center;">Aucune demande disponible.</td>
-                                </tr>
-                                <% } else { %>
-                                  <% demande.forEach(d=> { %>
-                                    <% if (user.role==='admin' || user.role==='grandadmin' || d.userId===user.id) { %>
-                                      <tr data-id="<%= d.id %>"
-                                        style="<%= d.color === 'green' ? 'background-color: #c6efc5;' : '' %> <%= d.color === 'blue' ? 'background-color: #f49797; color: white' : '' %> <%= d.color === 'gray' ? 'background-color: #f5f5f5;' : '' %>">
-                                        <td contenteditable="true" data-name="numero">
-                                          <%= d.numero || '' %>
-                                        </td>
-                                        <td contenteditable="true" data-name="dateSaisie">
-                                          <%= formatDateToDDMMYYYY(d.dateDemande) %>
-                                        </td>
-                                        <td contenteditable="true" data-name="designation">
-                                          <%= d.designation || '' %>
-                                        </td>
-                                        <td contenteditable="true" data-name="demandeur">
-                                          <%= d.user?.name || '' %>
-                                        </td>
-                                        <td contenteditable="true" data-name="chantier">
-                                          <%= d.chantier?.nom || '' %>
-                                        </td>
-                                        <td contenteditable="true" data-name="montant">
-                                          <%= Number(d.montantTotal || 0).toLocaleString('fr-FR', {
-                                            minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
-                                        </td>
-                                        <% if (user.role==='user' || user.role==='grandadmin' ) { %>
-                                          <td data-name="status" style="text-align: center; padding: 6px;">
-                                            <span style="
-                                  display: inline-block;
-                                  min-width: 100px;
-                                  text-align: center;
-                                  padding: 6px 12px;
-                                  border-radius: 20px;
-                                  font-weight: 600;
-                                  font-size: 0.9rem;
-                                  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                                  transition: all 0.2s ease;
-                                  <% if (d.status === 'Versée') { %>
-                                    background-color: #C6E2B5;
-                                    color: #256029;
-                                  <% } else if (d.status === 'Annulée') { %>
-                                    background-color: #FFD6D6;
-                                    color: #B71C1C;
-                                  <% } else if (d.status === 'En Attente') { %>
-                                    background-color: #FFF3CD;
-                                    color: #856404;
-                                  <% } else { %>
-                                    background-color: #F8F9FA;
-                                    color: #6C757D;
+                              <% } %>
+                                <% }); %>
                                   <% } %>
-                                ">
-                                              <%= d.status || '—' %>
-                                            </span>
-                                          </td>
-                                          <% } else if (user.role==='admin' ) { %>
-                                            <td>
-                                              <select class="form-control" data-name="status"
-                                                onchange="updateStatus(<%= d.id %>, this.value)">
-                                                <option value="" <% if (!d.status) { %> selected <% } %>>Sélectionner
-                                                </option>
-                                                <option value="Versée" <% if (d.status==='Versée' ) { %> selected <% }
-                                                    %>>Versée</option>
-                                                <option value="Annulée" <% if (d.status==='Annulée' ) { %> selected <% }
-                                                    %>>Annulée</option>
-                                                <option value="En Attente" <% if (d.status==='En Attente' ) { %>
-                                                  selected <% } %>>En Attente</option>
-                                              </select>
-                                            </td>
-                                            <% } %>
-
-                                              <% if (user.role==='user' || user.role==='grandadmin' ) { %>
-                                                <td data-name="etat" style="text-align: center; padding: 6px;">
-                                                  <span class="badge badge-light"
-                                                    style="min-width:100px; padding:6px 12px; border-radius:20px; font-weight:600;">
-                                                    <%= d.etat || '—' %>
-                                                  </span>
-                                                </td>
-                                                <% } else if (user.role==='admin' ) { %>
-                                                  <td>
-                                                    <select class="form-control" data-name="etat"
-                                                      onchange="updateEtat(<%= d.id %>, this.value)">
-                                                      <option value="" <%=!d.etat ? 'selected' : '' %>>Sélectionner
-                                                      </option>
-                                                      <option value="En cours" <%=d.etat==='En cours' ? 'selected' : ''
-                                                        %>>En cours</option>
-                                                      <option value="Accepter" <%=d.etat==='Accepter' ? 'selected' : ''
-                                                        %>>Accepter</option>
-                                                      <option value="Refuser" <%=d.etat==='Refuser' ? 'selected' : '' %>
-                                                        >Refuser</option>
-                                                    </select>
-                                                  </td>
-                                                  <% } %>
-
-                                                    <td>
-                                                      <div class="btn-group" role="group">
-                                                        <a href="/achats/demandes/caisse/<%= d.id %>"
-                                                          class="btn btn-info btn-sm" style="width: 60px;">
-                                                          <i class="fas fa-eye"></i> Voir
-                                                        </a>
-                                                        <a href="/achats/demandes/caisse/<%= d.id %>/pdf"
-                                                          class="btn btn-danger btn-sm" style="width: 60px;">
-                                                          <i class="fas fa-file-pdf"></i> PDF
-                                                        </a>
-                                                        <a href="/achats/demandes/caisse/<%= d.id %>/excel"
-                                                          class="btn btn-success btn-sm" style="width: 60px;">
-                                                          <i class="fas fa-file-excel"></i> Excel
-                                                        </a>
-
-                                                        <% if (user.role==='admin' || user.role==='grandadmin' ) { %>
-                                                          <button onclick="supprimerdemande(<%= d.id %>)"
-                                                            class="excel-delete-btn">
-                                                            <i class="fas fa-trash"></i>
-                                                          </button>
-                                                          <% } %>
-                                                      </div>
-                                                    </td>
-                                      </tr>
-                                      <% } %>
-                                        <% }); %>
-                                          <% } %>
-                            </tbody>
-                            <tfoot>
-                              <tr>
-                                <td colspan="7" style="text-align: right; font-weight: bold;">Total:</td>
-                                <td id="total" style="font-weight: bold;">0,00</td>
-                                <td></td>
-                              </tr>
-                            </tfoot>
-                          </table>
-                      </div>
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td colspan="7" style="text-align: right; font-weight: bold;">Total:</td>
+                        <td id="total" style="font-weight: bold;">0,00</td>
+                        <td></td>
+                      </tr>
+                    </tfoot>
+                  </table>
                 </div>
               </div>
             </div>
+          </div>
         </div>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
