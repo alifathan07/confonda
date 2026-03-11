@@ -89,6 +89,79 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    /* Modern Search Input Styles */
+    .search-container {
+      position: relative;
+      max-width: 400px;
+      margin-bottom: 20px;
+    }
+    .search-input {
+      width: 100%;
+      padding: 12px 20px 12px 45px;
+      font-size: 15px;
+      border: 2px solid #e3e6f0;
+      border-radius: 50px;
+      background: #fff;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: #4e73df;
+      box-shadow: 0 4px 15px rgba(78,115,223,0.15);
+    }
+    .search-input::placeholder {
+      color: #aaa;
+      font-weight: 400;
+    }
+    .search-icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #4e73df;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+    .search-container:focus-within .search-icon {
+      color: #224abe;
+    }
+    .search-clear {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #e3e6f0;
+      border: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      color: #666;
+      font-size: 12px;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .search-clear:hover {
+      background: #d1d3e2;
+      color: #333;
+    }
+    .search-clear.visible {
+      display: flex;
+    }
+    .no-results {
+      text-align: center;
+      padding: 30px;
+      color: #666;
+      font-style: italic;
+      display: none;
+    }
+    .no-results.visible {
+      display: block;
+    }
   </style>
 </head>
 <body id="page-top">
@@ -103,44 +176,49 @@
               <h6 class="m-0 font-weight-bold text-primary">Liste des Chef De Chantier</h6>
             </div>
             <div class="card-body">
-                <table class="excel-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Nom</th>
-                      <th>Email</th>
-                      <th>Chantier</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% if (users.length === 0) { %>
-                      <tr><td colspan="5">Aucun utilisateur trouvé</td></tr>
-                    <% } else { %>
-                      <% users.forEach((user, index) => { %>
-                        <% if (user.role === "user") { %>
-                          <tr>
-                            <td><%= index + 1 %></td>
-                            <td>
-                              <a href="/achats/caisse/admin/<%= user.id %>" class="text-primary font-weight-bold">
-                                <%= user.name %>
-                              </a>  
-                            </td>
-                            <td><%= user.email %></td>
-                            <td>Temprory </td>
-                            <td>
-                              <a href="/achats/caisse/admin/<%= user.id %>"  class="btn btn-sm btn-primary custom-btn">
-                                <i class="fas fa-eye"></i> Voir
-                              </a>
-                            </td>
-                          </tr>
-                        <% } %>
-                      <% }) %>
-                    <% } %>
-                  </tbody>
-                </table>
+              <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="chefSearchInput" class="search-input" placeholder="Rechercher Chef De Chantier...">
+                <button class="search-clear" id="clearChefSearch"><i class="fas fa-times"></i></button>
               </div>
-              
+              <div class="no-results" id="noChefResults">Aucun Chef De Chantier trouvé pour cette recherche</div>
+              <table class="excel-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Nom</th>
+                    <th>Email</th>
+                    <th>Chantier</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="chefTableBody">
+                  <% if (users.length === 0) { %>
+                    <tr><td colspan="5">Aucun utilisateur trouvé</td></tr>
+                  <% } else { %>
+                    <% users.forEach((user, index) => { %>
+                      <% if (user.role === "user") { %>
+                        <tr class="chef-row" data-search="<%= `${(user.name || '').toLowerCase()} ${(user.email || '').toLowerCase()}` %>">
+                          <td><%= index + 1 %></td>
+                          <td>
+                            <a href="/achats/caisse/admin/<%= user.id %>" class="text-primary font-weight-bold">
+                              <%= user.name %>
+                            </a>  
+                          </td>
+                          <td><%= user.email %></td>
+                          <td>Temprory </td>
+                          <td>
+                            <a href="/achats/caisse/admin/<%= user.id %>"  class="btn btn-sm btn-primary custom-btn">
+                              <i class="fas fa-eye"></i> Voir
+                            </a>
+                          </td>
+                        </tr>
+                      <% } %>
+                    <% }) %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -154,6 +232,48 @@
       <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
       <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
       <script src="/js/sb-admin-2.min.js"></script>
+
+      <script>
+        (function () {
+          const input = document.getElementById('chefSearchInput');
+          const clearBtn = document.getElementById('clearChefSearch');
+          const tbody = document.getElementById('chefTableBody');
+          const noResults = document.getElementById('noChefResults');
+          if (!input || !tbody || !clearBtn || !noResults) return;
+
+          const rows = Array.from(tbody.querySelectorAll('tr.chef-row'));
+
+          const apply = () => {
+            const q = (input.value || '').trim().toLowerCase();
+            if (q) clearBtn.classList.add('visible');
+            else clearBtn.classList.remove('visible');
+
+            let visible = 0;
+            rows.forEach((tr) => {
+              const hay = (tr.getAttribute('data-search') || '').toLowerCase();
+              const match = !q || hay.includes(q);
+              tr.style.display = match ? '' : 'none';
+              if (match) visible++;
+            });
+
+            if (!q) {
+              noResults.classList.remove('visible');
+              return;
+            }
+            if (visible === 0) noResults.classList.add('visible');
+            else noResults.classList.remove('visible');
+          };
+
+          input.addEventListener('input', apply);
+
+          clearBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            input.value = '';
+            input.focus();
+            apply();
+          });
+        })();
+      </script>
     </div>
   </div>
 </body>

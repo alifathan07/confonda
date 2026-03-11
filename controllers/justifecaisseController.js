@@ -1566,6 +1566,7 @@ export const validateAllDepenses = async (req, res) => {
     res.status(500).json({ success: false, error: 'Erreur lors de la validation des dépenses.' });
   }
 };
+
 export const generateJustifCaissePDF = async (req, res) => {
   const { id } = req.params;
   const user = req.session.user;
@@ -1599,6 +1600,15 @@ export const generateJustifCaissePDF = async (req, res) => {
   const MARGIN = 40;
   const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
   const FOOTER_HEIGHT = 70;
+
+  const getPageBottomY = () => PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT;
+
+  const ensureSpace = (currentY, neededHeight, onNewPage) => {
+    if (currentY + neededHeight <= getPageBottomY()) return currentY;
+    doc.addPage();
+    drawHeader();
+    return onNewPage();
+  };
 
   const drawHeader = () => {
     const logo = path.join(process.cwd(), "public/img/logo-4.png");
@@ -1673,6 +1683,20 @@ export const generateJustifCaissePDF = async (req, res) => {
     const minRowH = 22;
     const tableX = MARGIN;
 
+    const getRowHeight = (values) => {
+      doc.font("Helvetica").fontSize(9);
+      let maxHeight = minRowH;
+      cols.forEach((c, i) => {
+        const text = values[i] ?? "";
+        const textHeight = doc.heightOfString(String(text), {
+          width: c.w - 8,
+          align: i === 2 ? "right" : "left",
+        });
+        maxHeight = Math.max(maxHeight, textHeight + 12);
+      });
+      return maxHeight;
+    };
+
     const drawRow = (yy, values, bold = false) => {
       let x = tableX;
       doc.font(bold ? "Helvetica-Bold" : "Helvetica").fontSize(9);
@@ -1706,23 +1730,42 @@ export const generateJustifCaissePDF = async (req, res) => {
     yPosition += 25;
 
     // Header
-    const headerHeight = drawRow(yPosition, cols.map(c => c.label), true);
+    const headerValues = cols.map(c => c.label);
+    const headerHeightMeasured = getRowHeight(headerValues);
+    yPosition = ensureSpace(yPosition, headerHeightMeasured, () => (MARGIN + 80));
+    const headerHeight = drawRow(yPosition, headerValues, true);
     yPosition += headerHeight;
 
     // Data
     let totalRecettes = 0;
     justif.recettes.forEach(r => {
       totalRecettes += Number(r.montant ?? 0);
-      const rowHeight = drawRow(yPosition, [
+      const rowValues = [
         new Date(r.dateRecette).toLocaleDateString("fr-FR"),
         r.source ?? "",
         Number(r.montant ?? 0).toFixed(2),
-      ]);
+      ];
+      const rowHeightMeasured = getRowHeight(rowValues);
+      yPosition = ensureSpace(yPosition, rowHeightMeasured, () => {
+        const startY = MARGIN + 80;
+        doc.font("Helvetica-Bold").fontSize(12).fillColor("#000")
+          .text("RECETTES", MARGIN, startY);
+        return startY + 25;
+      });
+      const rowHeight = drawRow(yPosition, rowValues);
       yPosition += rowHeight;
     });
 
     // Total
-    const totalHeight = drawRow(yPosition, ["TOTAL", "", totalRecettes.toFixed(2)], true);
+    const totalValues = ["TOTAL", "", totalRecettes.toFixed(2)];
+    const totalHeightMeasured = getRowHeight(totalValues);
+    yPosition = ensureSpace(yPosition, totalHeightMeasured, () => {
+      const startY = MARGIN + 80;
+      doc.font("Helvetica-Bold").fontSize(12).fillColor("#000")
+        .text("RECETTES", MARGIN, startY);
+      return startY + 25;
+    });
+    const totalHeight = drawRow(yPosition, totalValues, true);
     yPosition += totalHeight + 20;
 
     return yPosition;
@@ -1768,6 +1811,20 @@ export const generateJustifCaissePDF = async (req, res) => {
       return maxHeight;
     };
 
+    const getRowHeight = (values) => {
+      doc.font("Helvetica").fontSize(9);
+      let maxHeight = minRowH;
+      cols.forEach((c, i) => {
+        const text = values[i] ?? "";
+        const textHeight = doc.heightOfString(String(text), {
+          width: c.w - 8,
+          align: i >= 4 ? "right" : "left",
+        });
+        maxHeight = Math.max(maxHeight, textHeight + 12);
+      });
+      return maxHeight;
+    };
+
     // Section title
     doc.font("Helvetica-Bold").fontSize(12).fillColor("#000")
       .text("DÉPENSES", MARGIN, yPosition);
@@ -1777,7 +1834,7 @@ export const generateJustifCaissePDF = async (req, res) => {
     const headerHeight = drawRow(yPosition, cols.map(c => c.label), true);
     yPosition += headerHeight;
 
-    return { yPosition, drawRow, cols, minRowH };
+    return { yPosition, drawRow, cols, minRowH, getRowHeight };
   };
 
   // Main logic
@@ -1793,14 +1850,6 @@ export const generateJustifCaissePDF = async (req, res) => {
   const depensesTable = drawDepensesTable(currentY);
   currentY = depensesTable.yPosition;
 
-  const getMaxRowsForPage = (yStartRows) => {
-    const available = (PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT) - yStartRows;
-    return Math.max(1, Math.floor(available / depensesTable.minRowH));
-  };
-
-  let maxRowsPerPage = getMaxRowsForPage(currentY);
-  let rowsOnPage = 0;
-
   let totalJ = 0;
   let totalNJ = 0;
 
@@ -1808,68 +1857,51 @@ export const generateJustifCaissePDF = async (req, res) => {
     totalJ += Number(d.montantJustifie ?? 0);
     totalNJ += Number(d.montantNonJustifie ?? 0);
 
-    // Check if we need a new page (estimate with minRowH)
-    if (currentY + depensesTable.minRowH > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT) {
-      doc.addPage();
-      drawHeader();
-      currentY = MARGIN + 80;
-      currentY = drawDepensesTable(currentY).yPosition - 25;
-      maxRowsPerPage = getMaxRowsForPage(currentY);
-      rowsOnPage = 0;
-    }
-
-    const rowHeight = depensesTable.drawRow(currentY, [
+    const rowValues = [
       new Date(d.dateDepense).toLocaleDateString("fr-FR"),
       d.numeroPiece ?? "",
       d.natureDepense ?? "",
       d.imputation ?? "",
       Number(d.montantJustifie ?? 0).toFixed(2),
       Number(d.montantNonJustifie ?? 0).toFixed(2),
-    ]);
+    ];
+
+    const measured = depensesTable.getRowHeight(rowValues);
+    currentY = ensureSpace(currentY, measured, () => {
+      const startY = MARGIN + 80;
+      return drawDepensesTable(startY).yPosition - 25;
+    });
+
+    const rowHeight = depensesTable.drawRow(currentY, rowValues);
     currentY += rowHeight;
-    rowsOnPage += 1;
   }
 
   // Empty rows
   for (let i = 0; i < 8; i++) {
-    if (currentY + depensesTable.minRowH > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT) {
-      doc.addPage();
-      drawHeader();
-      currentY = MARGIN + 80;
-      currentY = drawDepensesTable(currentY).yPosition - 25;
-      maxRowsPerPage = getMaxRowsForPage(currentY);
-      rowsOnPage = 0;
-    }
+    currentY = ensureSpace(currentY, depensesTable.minRowH, () => {
+      const startY = MARGIN + 80;
+      return drawDepensesTable(startY).yPosition - 25;
+    });
     const rowHeight = depensesTable.drawRow(currentY, ["", "", "", "", "", ""]);
     currentY += rowHeight;
-    rowsOnPage += 1;
   }
 
   // Totals - ensure we have space for both rows
-  if (currentY + (depensesTable.minRowH * 2) > PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT) {
-    doc.addPage();
-    drawHeader();
-    currentY = MARGIN + 80;
-  }
+  const totalRowValues = ["TOTAL", "", "", "", totalJ.toFixed(2), totalNJ.toFixed(2)];
+  const totalGeneralRowValues = ["TOTAL GÉNÉRAL", "", "", "", "", (totalJ + totalNJ).toFixed(2)];
+  const totalsBlockHeight = depensesTable.getRowHeight(totalRowValues) + depensesTable.getRowHeight(totalGeneralRowValues);
+  currentY = ensureSpace(currentY, totalsBlockHeight, () => (MARGIN + 80));
 
-  const totalRowHeight = depensesTable.drawRow(
-    currentY,
-    ["TOTAL", "", "", "", totalJ.toFixed(2), totalNJ.toFixed(2)],
-    true
-  );
+  const totalRowHeight = depensesTable.drawRow(currentY, totalRowValues, true);
   currentY += totalRowHeight;
 
   // General Total
-  const totalGeneral = totalJ + totalNJ;
-  depensesTable.drawRow(
-    currentY,
-    ["TOTAL GÉNÉRAL", "", "", "", "", totalGeneral.toFixed(2)],
-    true
-  );
+  depensesTable.drawRow(currentY, totalGeneralRowValues, true);
 
   drawFooter();
   doc.end();
 };
+
 export const generateJustifCaisseExcel = async (req, res) => {
   try {
     const { id } = req.params;
@@ -1914,7 +1946,7 @@ export const generateJustifCaisseExcel = async (req, res) => {
     headerRow.fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'FFA52A2A' } // soft red like PDF PRIMARY
+      fgColor: { argb: 'FFA52A2A' }
     };
     headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
     headerRow.eachCell((cell) => {
@@ -1937,7 +1969,6 @@ export const generateJustifCaisseExcel = async (req, res) => {
         Number(depense.montantNonJustifie ?? 0),
       ]);
 
-      // Optional: alternating row color
       const fillColor = sheet.lastRow.number % 2 === 0 ? 'FFF9F9F9' : 'FFFFFFFF';
       row.eachCell((cell) => {
         cell.fill = {
@@ -1969,10 +2000,8 @@ export const generateJustifCaisseExcel = async (req, res) => {
       };
     });
 
-    // ===== COLUMN WIDTHS =====
     sheet.columns.forEach(col => { col.width = 20; });
 
-    // ===== SEND FILE =====
     res.setHeader(
       'Content-Type',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -1990,6 +2019,7 @@ export const generateJustifCaisseExcel = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
 export const listChantierUser = async (req, res) => {
   const user = req.session.user;
   const chantiers = await prisma.chantier.findMany();

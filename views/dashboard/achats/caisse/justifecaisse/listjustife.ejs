@@ -148,12 +148,30 @@
       font-weight: 500;
     }
     
-    /* Button Group */
-    .btn-group .btn {
-      margin: 0 1px;
-      border-radius: 4px;
-      font-size: 11px;
-      padding: 5px 10px;
+    /* Button Group -> JC Actions */
+    .jc-actions {
+      display: flex;
+      gap: 4px;
+      flex-wrap: nowrap;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .jc-actions .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 6px;
+      font-weight: 600;
+      padding: 5px 8px;
+      border: 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+      transition: transform 120ms ease, box-shadow 120ms ease;
+      white-space: nowrap;
+    }
+
+    .jc-actions .btn i {
+      font-size: 12px;
     }
     
     /* Content Editable */
@@ -187,19 +205,17 @@
         min-width: 1100px;
       }
 
-      #editableTable .btn-group {
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        width: 100%;
+      #editableTable .jc-actions {
+        gap: 6px;
       }
 
-      #editableTable .btn-group .btn {
+      #editableTable .jc-actions .btn {
         width: 100%;
+        justify-content: center;
         margin-bottom: 6px;
       }
 
-      #editableTable .btn-group .btn:last-child {
+      #editableTable .jc-actions .btn:last-child {
         margin-bottom: 0;
       }
     }
@@ -308,7 +324,7 @@
                       <th draggable="true">Total Recettes</th>
                       <th draggable="true">Total Dépenses</th>
                       <th draggable="true">Solde Final</th>
-                      <th style="width: 120px;">Actions</th>
+                      <th style="width: auto;">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -342,20 +358,19 @@
                             <%= Number(d.soldeFinal || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
                           </td>
                               <td>
-                            <div class="btn-group" role="group">
-                              <a href="/achats/caisse/admin/<%= userId %>/<%= d.id %>" class="btn btn-info btn-sm">
+                            <div class="jc-actions">
+                              <a href="/achats/caisse/admin/<%= userId %>/<%= d.id %>" class="btn btn-info btn-sm" title="Détails">
                                 <i class="fas fa-eye"></i> Détails
                               </a>
-                              <!-- <button type="button" class="btn btn-danger btn-sm" onclick="supprimerjustifCaisse(<%= d.id %>)">
-                                <i class="fas fa-trash"></i> Supprimer
+                              <!-- <button type="button" class="btn btn-danger btn-sm" onclick="supprimerjustifCaisse(<%= d.id %>)" title="Supprimer">
+                                <i class="fas fa-trash"></i>
                               </button> -->
-                              <a href="/achats/caisse/justification/recettes/<%= d.id %>/pdf" class="btn btn-primary btn-sm">
+                              <a href="/achats/caisse/justification/recettes/<%= d.id %>/pdf" class="btn btn-primary btn-sm" title="PDF">
                                 <i class="fas fa-file-pdf"></i> PDF
                               </a>
-                              <a href="/achats/caisse/justification/recettes/<%= d.id %>/excel" class="btn btn-success btn-sm">
+                              <a href="/achats/caisse/justification/recettes/<%= d.id %>/excel" class="btn btn-success btn-sm" title="Excel">
                                 <i class="fas fa-file-excel"></i> Excel
                               </a>
-                              
                             </div>
                           </td>
                         </tr>

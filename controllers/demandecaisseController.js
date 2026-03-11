@@ -585,11 +585,11 @@ export const generateDemandePdf = async (req, res) => {
       PAGE_WIDTH: 595,
       PAGE_HEIGHT: 842,
       FOOTER_HEIGHT: 70,
-      ROW_HEIGHT: 25,
     };
 
-    const { PAGE_WIDTH, PAGE_HEIGHT, FOOTER_HEIGHT, MARGIN, ROW_HEIGHT } = SIZES;
+    const { PAGE_WIDTH, PAGE_HEIGHT, FOOTER_HEIGHT, MARGIN } = SIZES;
     const footerY = PAGE_HEIGHT - FOOTER_HEIGHT;
+    const getPageBottomY = () => PAGE_HEIGHT - FOOTER_HEIGHT - MARGIN;
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
@@ -597,213 +597,218 @@ export const generateDemandePdf = async (req, res) => {
       `attachment; filename=DemandeCaisse_${demandeCaisse.id}.pdf`
     );
 
-    // --- STEP 1: Create a temporary PDF in memory to measure height ---
-    const tempDoc = new PDFDocument({ margin: MARGIN, size: 'A4' });
-    const chunks = [];
-    let buffer;
-
-    tempDoc.on('data', (chunk) => chunks.push(chunk));
-    tempDoc.on('end', () => {
-      buffer = Buffer.concat(chunks);
-    });
-
-    // we simulate the height (approximate)
-    let contentHeight =
-      350 + demandeCaisse.items.length * SIZES.ROW_HEIGHT + 100; // header + table + footer
-
-    // --- STEP 2: Compute scale factor to fit on one page ---
-    const availableHeight = PAGE_HEIGHT - 2 * MARGIN;
-    const scaleFactor = contentHeight > availableHeight ? availableHeight / contentHeight : 1;
-
-    // --- STEP 3: Create real doc and apply scale ---
-    const doc = new PDFDocument({ margin: 0, size: 'A4' });
+    const doc = new PDFDocument({ margin: MARGIN, size: 'A4' });
     doc.pipe(res);
 
-    // center scale in page
-    const translateX = (PAGE_WIDTH - PAGE_WIDTH * scaleFactor) / 2;
-    const translateY = (PAGE_HEIGHT - PAGE_HEIGHT * scaleFactor) / 2;
-    doc.save();
-    doc.translate(translateX, translateY).scale(scaleFactor);
-
-    // --- ORIGINAL DRAWING LOGIC (unchanged) ---
-    const drawLine = (x1, y1, x2, y2, color = COLORS.BORDER) => {
-      doc.strokeColor(color).lineWidth(1).moveTo(x1, y1).lineTo(x2, y2).stroke();
+    const drawFooter = () => {
+      doc.rect(0, footerY, PAGE_WIDTH, FOOTER_HEIGHT).fill(COLORS.PRIMARY);
+      doc
+        .font(FONTS.REGULAR)
+        .fontSize(SIZES.SMALL)
+        .fillColor(COLORS.WHITE)
+        .text(
+          '82, angle Bd Abdelmoumen et rue Soumaya Imm. Shahrazad III, 2ème étage Casablanca',
+          0,
+          footerY + 20,
+          { align: 'center', width: PAGE_WIDTH }
+        )
+        .text(
+          'Tél: 0522-23-39-70 | Fax: 0522-23-42-60 | Capital: 18 500 000 DH | ICE: 001526422000063',
+          0,
+          footerY + 35,
+          { align: 'center', width: PAGE_WIDTH }
+        );
     };
 
-    const logoPath = path.join(__dirname, '../public/img/logo-4.png');
-    if (fs.existsSync(logoPath)) {
-      doc.image(logoPath, MARGIN, 25, { width: 100 });
-    }
+    const drawHeaderAndInfo = () => {
+      const logoPath = path.join(__dirname, '../public/img/logo-4.png');
+      if (fs.existsSync(logoPath)) {
+        doc.image(logoPath, MARGIN, 25, { width: 100 });
+      }
 
-    doc
-      .font(FONTS.BOLD)
-      .fontSize(SIZES.TITLE)
-      .fillColor(COLORS.PRIMARY)
-      .text('DEMANDE DE CAISSE', 0, 40, { align: 'center' });
+      doc
+        .font(FONTS.BOLD)
+        .fontSize(SIZES.TITLE)
+        .fillColor(COLORS.PRIMARY)
+        .text('DEMANDE DE CAISSE', 0, 40, { align: 'center' });
 
-    doc
-      .font(FONTS.REGULAR)
-      .fontSize(SIZES.BODY)
-      .fillColor(COLORS.SECONDARY)
-      .text(`N° Demande: D-${demandeCaisse.numero}`, PAGE_WIDTH - 180, 35)
-      .text(
-        `Date: ${new Date(demandeCaisse.dateDemande).toLocaleDateString('fr-FR')}`,
-        PAGE_WIDTH - 180,
-        50
-      );
+      doc
+        .font(FONTS.REGULAR)
+        .fontSize(SIZES.BODY)
+        .fillColor(COLORS.SECONDARY)
+        .text(`N° Demande: D-${demandeCaisse.numero}`, PAGE_WIDTH - MARGIN - 130, 35)
+        .text(
+          `Date: ${new Date(demandeCaisse.dateDemande).toLocaleDateString('fr-FR')}`,
+          PAGE_WIDTH - MARGIN - 130,
+          50
+        );
 
-    // === INFO BOX ===
-    doc.moveDown(10);
-    const infoY = doc.y;
-    doc
-      .rect(MARGIN, infoY - 5, PAGE_WIDTH - MARGIN * 2, 80)
-      .fillAndStroke(COLORS.BACKGROUND, COLORS.BORDER);
+      doc.moveDown(10);
+      const infoY = doc.y;
+      doc
+        .rect(MARGIN, infoY - 5, PAGE_WIDTH - MARGIN * 2, 80)
+        .fillAndStroke(COLORS.BACKGROUND, COLORS.BORDER);
+
+      doc
+        .font(FONTS.BOLD)
+        .fontSize(SIZES.SUBTITLE)
+        .fillColor(COLORS.PRIMARY)
+        .text('Informations de la Demande', MARGIN + 10, infoY);
+
+      doc
+        .font(FONTS.REGULAR)
+        .fontSize(SIZES.BODY)
+        .fillColor(COLORS.SECONDARY)
+        .text(`Demandeur : ${demandeCaisse.user?.name || 'Non spécifié'}`, MARGIN + 10, infoY + 20)
+        .text(`Chantier : ${demandeCaisse.chantier?.nom || 'Non spécifié'}`, MARGIN + 10, infoY + 35)
+        .text(`Mois : ${demandeCaisse.designation || 'N/A'}`, MARGIN + 10, infoY + 50)
+        .text(
+          `Montant Total : ${demandeCaisse.montantTotal
+            .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            .replace(/[\u00A0\u202F]/g, ' ')}`,
+          PAGE_WIDTH - MARGIN - 180,
+          infoY + 20
+        );
+
+      doc.moveDown(5);
+      return doc.y + 10;
+    };
+
+    const ensureSpace = (currentY, neededHeight, onNewPage) => {
+      if (currentY + neededHeight <= getPageBottomY()) return currentY;
+      drawFooter();
+      doc.addPage();
+      return onNewPage();
+    };
+
+    const startX = MARGIN;
+    const colWidths = [90, 220, 100, 85];
+    const tableWidth = colWidths.reduce((a, b) => a + b, 0);
+    const headerHeight = 28;
+    const minRowHeight = 25;
+    const cellPaddingY = 7;
+
+    const drawTableHeader = (y) => {
+      doc
+        .rect(startX, y, tableWidth, headerHeight)
+        .strokeColor('#000000')
+        .lineWidth(0.5)
+        .stroke();
+
+      doc
+        .font(FONTS.BOLD)
+        .fontSize(SIZES.BODY)
+        .fillColor(COLORS.PRIMARY)
+        .text('Date', startX + 5, y + 8, { width: colWidths[0] - 5, align: 'left' })
+        .text('Désignation', startX + colWidths[0] + 5, y + 8, {
+          width: colWidths[1] - 5,
+          align: 'left',
+        })
+        .text('Imputation', startX + colWidths[0] + colWidths[1] + 5, y + 8, {
+          width: colWidths[2] - 5,
+          align: 'left',
+        })
+        .text('Montant (DH)', startX + colWidths[0] + colWidths[1] + colWidths[2] + 5, y + 8, {
+          width: colWidths[3] - 10,
+          align: 'right',
+        });
+
+      let x = startX;
+      colWidths.forEach((w) => {
+        doc.moveTo(x, y).lineTo(x, y + headerHeight).stroke();
+        x += w;
+      });
+      doc.moveTo(x, y).lineTo(x, y + headerHeight).stroke();
+      return y + headerHeight;
+    };
+
+    const getRowHeight = (rowData) => {
+      doc.font(FONTS.REGULAR).fontSize(SIZES.BODY);
+      let maxH = minRowHeight;
+      rowData.forEach((data, i) => {
+        const text = data ?? '';
+        const h = doc.heightOfString(String(text), {
+          width: colWidths[i] - 10,
+          align: i === 3 ? 'right' : 'left',
+        });
+        maxH = Math.max(maxH, Math.ceil(h + cellPaddingY * 2));
+      });
+      return maxH;
+    };
+
+    const drawRow = (rowY, rowData, rowHeight) => {
+      doc
+        .rect(startX, rowY, tableWidth, rowHeight)
+        .strokeColor('#000000')
+        .lineWidth(0.3)
+        .stroke();
+
+      doc.font(FONTS.REGULAR).fontSize(SIZES.BODY).fillColor(COLORS.SECONDARY);
+
+      let x = startX + 5;
+      rowData.forEach((data, i) => {
+        doc.text(data ?? '', x, rowY + cellPaddingY, {
+          width: colWidths[i] - 10,
+          align: i === 3 ? 'right' : 'left',
+        });
+        x += colWidths[i];
+      });
+
+      let colX = startX;
+      colWidths.forEach((w) => {
+        doc.moveTo(colX, rowY).lineTo(colX, rowY + rowHeight).stroke();
+        colX += w;
+      });
+      doc.moveTo(colX, rowY).lineTo(colX, rowY + rowHeight).stroke();
+    };
+
+    let y = drawHeaderAndInfo();
+    y = ensureSpace(y, headerHeight, () => {
+      const startY = drawHeaderAndInfo();
+      return startY;
+    });
+    y = drawTableHeader(y);
+
+    demandeCaisse.items.forEach((item) => {
+      const rowData = [
+        new Date(item.dateCaisse).toLocaleDateString('fr-FR'),
+        item.designation || '-',
+        item.imputation || '-',
+        item.montant
+          .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          .replace(/[\u00A0\u202F]/g, ' '),
+      ];
+
+      const rowHeight = getRowHeight(rowData);
+      y = ensureSpace(y, rowHeight + headerHeight, () => {
+        const startY = drawHeaderAndInfo();
+        return drawTableHeader(startY);
+      });
+
+      drawRow(y, rowData, rowHeight);
+      y += rowHeight;
+    });
+
+    const totalBlockH = 30;
+    y = ensureSpace(y, totalBlockH, () => {
+      const startY = drawHeaderAndInfo();
+      return startY;
+    });
 
     doc
       .font(FONTS.BOLD)
       .fontSize(SIZES.SUBTITLE)
       .fillColor(COLORS.PRIMARY)
-      .text('Informations de la Demande', MARGIN + 10, infoY);
-
-    doc
-      .font(FONTS.REGULAR)
-      .fontSize(SIZES.BODY)
-      .fillColor(COLORS.SECONDARY)
-      .text(`Demandeur : ${demandeCaisse.user?.name || 'Non spécifié'}`, MARGIN + 10, infoY + 20)
-      .text(`Chantier : ${demandeCaisse.chantier?.nom || 'Non spécifié'}`, MARGIN + 10, infoY + 35)
-      .text(`Mois : ${demandeCaisse.designation || 'N/A'}`, MARGIN + 10, infoY + 50)
       .text(
-        `Montant Total : ${demandeCaisse.montantTotal
+        `Total : ${demandeCaisse.montantTotal
           .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
           .replace(/[\u00A0\u202F]/g, ' ')}`,
-        PAGE_WIDTH - MARGIN - 180,
-        infoY + 20
+        startX,
+        y + 10,
+        { align: 'right', width: tableWidth }
       );
 
-    doc.moveDown(5);
-
-   // === TABLE HEADER ===
-const startX = MARGIN;
-let y = doc.y + 10;
-const colWidths = [90, 220, 100, 85];
-const tableWidth = colWidths.reduce((a, b) => a + b, 0);
-const headerHeight = 28;
-
-// Draw table header border
-doc
-  .rect(startX, y, tableWidth, headerHeight)
-  .strokeColor('#000000')
-  .lineWidth(0.5)
-  .stroke();
-
-doc
-  .font(FONTS.BOLD)
-  .fontSize(SIZES.BODY)
-  .fillColor(COLORS.PRIMARY)
-  .text('Date', startX + 5, y + 8, { width: colWidths[0] - 5, align: 'left' })
-  .text('Désignation', startX + colWidths[0] + 5, y + 8, {
-    width: colWidths[1] - 5,
-    align: 'left',
-  })
-  .text('Imputation', startX + colWidths[0] + colWidths[1] + 5, y + 8, {
-    width: colWidths[2] - 5,
-    align: 'left',
-  })
-  .text('Montant (DH)', startX + colWidths[0] + colWidths[1] + colWidths[2] + 5, y + 8, {
-    width: colWidths[3] - 10,
-    align: 'right',
-  });
-
-// Draw vertical lines for header columns
-let x = startX;
-colWidths.forEach((w) => {
-  doc.moveTo(x, y).lineTo(x, y + headerHeight).stroke();
-  x += w;
-});
-doc.moveTo(x, y).lineTo(x, y + headerHeight).stroke();
-
-y += headerHeight;
-
-// === TABLE BODY ===
-demandeCaisse.items.forEach((item, i) => {
-  const rowHeight = SIZES.ROW_HEIGHT;
-  const rowY = y;
-
-  // Draw row border
-  doc
-    .rect(startX, rowY, tableWidth, rowHeight)
-    .strokeColor('#000000')
-    .lineWidth(0.3)
-    .stroke();
-
-  const rowData = [
-    new Date(item.dateCaisse).toLocaleDateString('fr-FR'),
-    item.designation || '-',
-    item.imputation || '-',
-    item.montant
-      .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-      .replace(/[\u00A0\u202F]/g, ' '),
-  ];
-
-  doc
-    .font(FONTS.REGULAR)
-    .fontSize(SIZES.BODY)
-    .fillColor(COLORS.SECONDARY);
-
-  let x = startX + 5;
-  rowData.forEach((data, i) => {
-    doc.text(data, x, rowY + 7, {
-      width: colWidths[i] - 10,
-      align: i === 3 ? 'right' : 'left',
-    });
-    x += colWidths[i];
-  });
-
-  // Draw vertical column lines
-  let colX = startX;
-  colWidths.forEach((w) => {
-    doc.moveTo(colX, rowY).lineTo(colX, rowY + rowHeight).stroke();
-    colX += w;
-  });
-  doc.moveTo(colX, rowY).lineTo(colX, rowY + rowHeight).stroke();
-
-  y += rowHeight;
-});
-
-// === TOTAL ===
-doc
-  .font(FONTS.BOLD)
-  .fontSize(SIZES.SUBTITLE)
-  .fillColor(COLORS.PRIMARY)
-  .text(
-    `Total : ${demandeCaisse.montantTotal
-      .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-      .replace(/[\u00A0\u202F]/g, ' ')}`,
-    startX,
-    y + 10,
-    { align: 'right', width: tableWidth }
-  );
-
-// === FOOTER ===
-doc.rect(0, footerY, PAGE_WIDTH, FOOTER_HEIGHT).fill(COLORS.PRIMARY);
-doc
-  .font(FONTS.REGULAR)
-  .fontSize(SIZES.SMALL)
-  .fillColor(COLORS.WHITE)
-  .text(
-    '82, angle Bd Abdelmoumen et rue Soumaya Imm. Shahrazad III, 2ème étage Casablanca',
-    0,
-    footerY + 20,
-    { align: 'center', width: PAGE_WIDTH }
-  )
-  .text(
-    'Tél: 0522-23-39-70 | Fax: 0522-23-42-60 | Capital: 18 500 000 DH | ICE: 001526422000063',
-    0,
-    footerY + 35,
-    { align: 'center', width: PAGE_WIDTH }
-  );
-
-    doc.restore();
+    drawFooter();
     doc.end();
   } catch (error) {
     console.error('Erreur lors de la génération du PDF :', error);
@@ -863,133 +868,166 @@ export const generateDemandeCaissePDFBuffer = async (demandeCaisseId) => {
     PAGE_WIDTH: 595,
     PAGE_HEIGHT: 842,
     FOOTER_HEIGHT: 70,
-    ROW_HEIGHT: 25,
   };
 
   const { PAGE_WIDTH, PAGE_HEIGHT, FOOTER_HEIGHT, MARGIN } = SIZES;
   const footerY = PAGE_HEIGHT - FOOTER_HEIGHT;
+  const getPageBottomY = () => PAGE_HEIGHT - FOOTER_HEIGHT - MARGIN;
 
-  // we simulate the height (approximate)
-  const contentHeight = 350 + demandeCaisse.items.length * SIZES.ROW_HEIGHT + 100;
-  const availableHeight = PAGE_HEIGHT - 2 * MARGIN;
-  const scaleFactor = contentHeight > availableHeight ? availableHeight / contentHeight : 1;
-
-  const doc = new PDFDocument({ margin: 0, size: 'A4' });
+  const doc = new PDFDocument({ margin: MARGIN, size: 'A4' });
   doc.pipe(pass);
 
-  const translateX = (PAGE_WIDTH - PAGE_WIDTH * scaleFactor) / 2;
-  const translateY = (PAGE_HEIGHT - PAGE_HEIGHT * scaleFactor) / 2;
-  doc.save();
-  doc.translate(translateX, translateY).scale(scaleFactor);
+  const drawFooter = () => {
+    doc.rect(0, footerY, PAGE_WIDTH, FOOTER_HEIGHT).fill(COLORS.PRIMARY);
+    doc
+      .font(FONTS.REGULAR)
+      .fontSize(SIZES.SMALL)
+      .fillColor(COLORS.WHITE)
+      .text(
+        '82, angle Bd Abdelmoumen et rue Soumaya Imm. Shahrazad III, 2ème étage Casablanca',
+        0,
+        footerY + 20,
+        { align: 'center', width: PAGE_WIDTH }
+      )
+      .text(
+        'Tél: 0522-23-39-70 | Fax: 0522-23-42-60 | Capital: 18 500 000 DH | ICE: 001526422000063',
+        0,
+        footerY + 35,
+        { align: 'center', width: PAGE_WIDTH }
+      );
+  };
 
-  const logoPath = path.join(__dirname, '../public/img/logo-4.png');
-  if (fs.existsSync(logoPath)) {
-    doc.image(logoPath, MARGIN, 25, { width: 100 });
-  }
+  const drawHeaderAndInfo = () => {
+    const logoPath = path.join(__dirname, '../public/img/logo-4.png');
+    if (fs.existsSync(logoPath)) {
+      doc.image(logoPath, MARGIN, 25, { width: 100 });
+    }
 
-  doc
-    .font(FONTS.BOLD)
-    .fontSize(SIZES.TITLE)
-    .fillColor(COLORS.PRIMARY)
-    .text('DEMANDE DE CAISSE', 0, 40, { align: 'center' });
+    doc
+      .font(FONTS.BOLD)
+      .fontSize(SIZES.TITLE)
+      .fillColor(COLORS.PRIMARY)
+      .text('DEMANDE DE CAISSE', 0, 40, { align: 'center' });
 
-  doc
-    .font(FONTS.REGULAR)
-    .fontSize(SIZES.BODY)
-    .fillColor(COLORS.SECONDARY)
-    .text(`N° Demande: D-${demandeCaisse.numero}`, PAGE_WIDTH - 180, 35)
-    .text(
-      `Date: ${new Date(demandeCaisse.dateDemande).toLocaleDateString('fr-FR')}`,
-      PAGE_WIDTH - 180,
-      50
-    );
+    doc
+      .font(FONTS.REGULAR)
+      .fontSize(SIZES.BODY)
+      .fillColor(COLORS.SECONDARY)
+      .text(`N° Demande: D-${demandeCaisse.numero}`, PAGE_WIDTH - MARGIN - 130, 35)
+      .text(
+        `Date: ${new Date(demandeCaisse.dateDemande).toLocaleDateString('fr-FR')}`,
+        PAGE_WIDTH - MARGIN - 130,
+        50
+      );
 
-  doc.moveDown(10);
-  const infoY = doc.y;
-  doc
-    .rect(MARGIN, infoY - 5, PAGE_WIDTH - MARGIN * 2, 80)
-    .fillAndStroke(COLORS.BACKGROUND, COLORS.BORDER);
+    doc.moveDown(10);
+    const infoY = doc.y;
+    doc
+      .rect(MARGIN, infoY - 5, PAGE_WIDTH - MARGIN * 2, 80)
+      .fillAndStroke(COLORS.BACKGROUND, COLORS.BORDER);
 
-  doc
-    .font(FONTS.BOLD)
-    .fontSize(SIZES.SUBTITLE)
-    .fillColor(COLORS.PRIMARY)
-    .text('Informations de la Demande', MARGIN + 10, infoY);
+    doc
+      .font(FONTS.BOLD)
+      .fontSize(SIZES.SUBTITLE)
+      .fillColor(COLORS.PRIMARY)
+      .text('Informations de la Demande', MARGIN + 10, infoY);
 
-  doc
-    .font(FONTS.REGULAR)
-    .fontSize(SIZES.BODY)
-    .fillColor(COLORS.SECONDARY)
-    .text(`Demandeur : ${demandeCaisse.user?.name || 'Non spécifié'}`, MARGIN + 10, infoY + 20)
-    .text(`Chantier : ${demandeCaisse.chantier?.nom || 'Non spécifié'}`, MARGIN + 10, infoY + 35)
-    .text(`Mois : ${demandeCaisse.designation || 'N/A'}`, MARGIN + 10, infoY + 50)
-    .text(
-      `Montant Total : ${demandeCaisse.montantTotal
-        .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        .replace(/[\u00A0\u202F]/g, ' ')}`,
-      PAGE_WIDTH - MARGIN - 180,
-      infoY + 20
-    );
+    doc
+      .font(FONTS.REGULAR)
+      .fontSize(SIZES.BODY)
+      .fillColor(COLORS.SECONDARY)
+      .text(`Demandeur : ${demandeCaisse.user?.name || 'Non spécifié'}`, MARGIN + 10, infoY + 20)
+      .text(`Chantier : ${demandeCaisse.chantier?.nom || 'Non spécifié'}`, MARGIN + 10, infoY + 35)
+      .text(`Mois : ${demandeCaisse.designation || 'N/A'}`, MARGIN + 10, infoY + 50)
+      .text(
+        `Montant Total : ${demandeCaisse.montantTotal
+          .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          .replace(/[\u00A0\u202F]/g, ' ')}`,
+        PAGE_WIDTH - MARGIN - 180,
+        infoY + 20
+      );
 
-  doc.moveDown(5);
+    doc.moveDown(5);
+    return doc.y + 10;
+  };
+
+  const ensureSpace = (currentY, neededHeight, onNewPage) => {
+    if (currentY + neededHeight <= getPageBottomY()) return currentY;
+    drawFooter();
+    doc.addPage();
+    return onNewPage();
+  };
 
   const startX = MARGIN;
-  let y = doc.y + 10;
   const colWidths = [90, 220, 100, 85];
   const tableWidth = colWidths.reduce((a, b) => a + b, 0);
   const headerHeight = 28;
+  const minRowHeight = 25;
+  const cellPaddingY = 7;
 
-  doc
-    .rect(startX, y, tableWidth, headerHeight)
-    .strokeColor('#000000')
-    .lineWidth(0.5)
-    .stroke();
+  const drawTableHeader = (y) => {
+    doc
+      .rect(startX, y, tableWidth, headerHeight)
+      .strokeColor('#000000')
+      .lineWidth(0.5)
+      .stroke();
 
-  doc
-    .font(FONTS.BOLD)
-    .fontSize(SIZES.BODY)
-    .fillColor(COLORS.PRIMARY)
-    .text('Date', startX + 5, y + 8, { width: colWidths[0] - 5, align: 'left' })
-    .text('Désignation', startX + colWidths[0] + 5, y + 8, { width: colWidths[1] - 5, align: 'left' })
-    .text('Imputation', startX + colWidths[0] + colWidths[1] + 5, y + 8, { width: colWidths[2] - 5, align: 'left' })
-    .text('Montant (DH)', startX + colWidths[0] + colWidths[1] + colWidths[2] + 5, y + 8, { width: colWidths[3] - 10, align: 'right' });
+    doc
+      .font(FONTS.BOLD)
+      .fontSize(SIZES.BODY)
+      .fillColor(COLORS.PRIMARY)
+      .text('Date', startX + 5, y + 8, { width: colWidths[0] - 5, align: 'left' })
+      .text('Désignation', startX + colWidths[0] + 5, y + 8, {
+        width: colWidths[1] - 5,
+        align: 'left',
+      })
+      .text('Imputation', startX + colWidths[0] + colWidths[1] + 5, y + 8, {
+        width: colWidths[2] - 5,
+        align: 'left',
+      })
+      .text('Montant (DH)', startX + colWidths[0] + colWidths[1] + colWidths[2] + 5, y + 8, {
+        width: colWidths[3] - 10,
+        align: 'right',
+      });
 
-  let x = startX;
-  colWidths.forEach((w) => {
+    let x = startX;
+    colWidths.forEach((w) => {
+      doc.moveTo(x, y).lineTo(x, y + headerHeight).stroke();
+      x += w;
+    });
     doc.moveTo(x, y).lineTo(x, y + headerHeight).stroke();
-    x += w;
-  });
-  doc.moveTo(x, y).lineTo(x, y + headerHeight).stroke();
+    return y + headerHeight;
+  };
 
-  y += headerHeight;
+  const getRowHeight = (rowData) => {
+    doc.font(FONTS.REGULAR).fontSize(SIZES.BODY);
+    let maxH = minRowHeight;
+    rowData.forEach((data, i) => {
+      const text = data ?? '';
+      const h = doc.heightOfString(String(text), {
+        width: colWidths[i] - 10,
+        align: i === 3 ? 'right' : 'left',
+      });
+      maxH = Math.max(maxH, Math.ceil(h + cellPaddingY * 2));
+    });
+    return maxH;
+  };
 
-  demandeCaisse.items.forEach((item) => {
-    const rowHeight = SIZES.ROW_HEIGHT;
-    const rowY = y;
-
+  const drawRow = (rowY, rowData, rowHeight) => {
     doc
       .rect(startX, rowY, tableWidth, rowHeight)
       .strokeColor('#000000')
       .lineWidth(0.3)
       .stroke();
 
-    const rowData = [
-      new Date(item.dateCaisse).toLocaleDateString('fr-FR'),
-      item.designation || '-',
-      item.imputation || '-',
-      item.montant
-        .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        .replace(/[\u00A0\u202F]/g, ' '),
-    ];
-
-    doc
-      .font(FONTS.REGULAR)
-      .fontSize(SIZES.BODY)
-      .fillColor(COLORS.SECONDARY);
+    doc.font(FONTS.REGULAR).fontSize(SIZES.BODY).fillColor(COLORS.SECONDARY);
 
     let x = startX + 5;
     rowData.forEach((data, i) => {
-      doc.text(data, x, rowY + 7, { width: colWidths[i] - 10, align: i === 3 ? 'right' : 'left' });
+      doc.text(data ?? '', x, rowY + cellPaddingY, {
+        width: colWidths[i] - 10,
+        align: i === 3 ? 'right' : 'left',
+      });
       x += colWidths[i];
     });
 
@@ -999,8 +1037,39 @@ export const generateDemandeCaissePDFBuffer = async (demandeCaisseId) => {
       colX += w;
     });
     doc.moveTo(colX, rowY).lineTo(colX, rowY + rowHeight).stroke();
+  };
 
+  let y = drawHeaderAndInfo();
+  y = ensureSpace(y, headerHeight, () => {
+    const startY = drawHeaderAndInfo();
+    return startY;
+  });
+  y = drawTableHeader(y);
+
+  demandeCaisse.items.forEach((item) => {
+    const rowData = [
+      new Date(item.dateCaisse).toLocaleDateString('fr-FR'),
+      item.designation || '-',
+      item.imputation || '-',
+      item.montant
+        .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        .replace(/[\u00A0\u202F]/g, ' '),
+    ];
+
+    const rowHeight = getRowHeight(rowData);
+    y = ensureSpace(y, rowHeight + headerHeight, () => {
+      const startY = drawHeaderAndInfo();
+      return drawTableHeader(startY);
+    });
+
+    drawRow(y, rowData, rowHeight);
     y += rowHeight;
+  });
+
+  const totalBlockH = 30;
+  y = ensureSpace(y, totalBlockH, () => {
+    const startY = drawHeaderAndInfo();
+    return startY;
   });
 
   doc
@@ -1016,25 +1085,7 @@ export const generateDemandeCaissePDFBuffer = async (demandeCaisseId) => {
       { align: 'right', width: tableWidth }
     );
 
-  doc.rect(0, footerY, PAGE_WIDTH, FOOTER_HEIGHT).fill(COLORS.PRIMARY);
-  doc
-    .font(FONTS.REGULAR)
-    .fontSize(SIZES.SMALL)
-    .fillColor(COLORS.WHITE)
-    .text(
-      '82, angle Bd Abdelmoumen et rue Soumaya Imm. Shahrazad III, 2ème étage Casablanca',
-      0,
-      footerY + 20,
-      { align: 'center', width: PAGE_WIDTH }
-    )
-    .text(
-      'Tél: 0522-23-39-70 | Fax: 0522-23-42-60 | Capital: 18 500 000 DH | ICE: 001526422000063',
-      0,
-      footerY + 35,
-      { align: 'center', width: PAGE_WIDTH }
-    );
-
-  doc.restore();
+  drawFooter();
   doc.end();
 
   await finished;

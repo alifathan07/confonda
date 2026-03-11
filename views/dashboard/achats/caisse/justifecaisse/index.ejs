@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -24,38 +25,48 @@
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
       text-transform: uppercase;
     }
+
     .custom-btn i {
       font-size: 14px;
     }
+
     .custom-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
+
     .btn-success.custom-btn {
       background-color: #28a745;
       color: white;
     }
+
     .btn-success.custom-btn:hover {
       background-color: #218838;
     }
+
     .btn-primary.custom-btn {
       background-color: #007bff;
       color: white;
     }
+
     .btn-primary.custom-btn:hover {
       background-color: #0056b3;
     }
+
     .btn-danger.custom-btn {
       background-color: #dc3545;
       color: white;
     }
+
     .btn-danger.custom-btn:hover {
       background-color: #bd2130;
     }
+
     .excel-table {
       width: 100%;
       border-collapse: collapse;
     }
+
     .excel-table th,
     .excel-table td {
       border: 1px solid #dee2e6;
@@ -63,60 +74,114 @@
       text-align: center;
       vertical-align: middle;
     }
+
     .excel-table thead th {
       background-color: #f8f9fa;
       font-weight: bold;
     }
+
     .excel-table tbody tr:nth-child(even) {
       background-color: #f2f2f2;
     }
+
     .excel-table tbody tr:hover {
       background-color: #e9ecef;
     }
+
     .excel-dirty-row {
       background-color: #fff3cd !important;
     }
+
     .invalid-input {
       border: 2px solid red !important;
     }
+
     .loading::after {
       content: '\f110';
       font-family: 'Font Awesome 5 Free';
       animation: spin 1s linear infinite;
       margin-left: 8px;
     }
+
     @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .jc-actions {
+      display: flex;
+      gap: 4px;
+      flex-wrap: nowrap;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .jc-actions .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 6px;
+      font-weight: 600;
+      padding: 5px 8px;
+      border: 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+      transition: transform 120ms ease, box-shadow 120ms ease;
+      white-space: nowrap;
+    }
+
+    .jc-actions .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    }
+
+    .jc-actions .btn i {
+      font-size: 12px;
+    }
+
+    @media (max-width: 576px) {
+      .jc-actions {
+        gap: 6px;
+      }
+
+      .jc-actions .btn {
+        width: 100%;
+        justify-content: center;
+      }
     }
   </style>
 </head>
+
 <body id="page-top">
   <div id="wrapper">
     <%- include('../../../../layouts/sidebar') %>
-    <div id="content-wrapper" class="d-flex flex-column">
-      <div id="content">
-        <%- include('../../../../layouts/topbar') %>
-        <div class="container-fluid">
-          <div class="card shadow mb-4">
-            <div class="card-header py-3">
-              <h6 class="m-0 font-weight-bold text-primary">Liste des Justificatifs de Caisse</h6>
-            </div>
-            <div class="card-body">
-              <div class="d-flex justify-content-end mb-3">
-                <button id="downloadPdfBtn" class="btn btn-primary custom-btn mr-2" hidden>
-                </button>
-                <input type="hidden" id="chantierInput" value="<%= chantier %>">
-                <button id="downloadExcelBtn" class="btn btn-success custom-btn mr-2" hidden>
-                 </button>
-                 <input type="hidden" id="userId" value="<%= userId %>">
-
-
-                 
-                  <% if (!lastDesignation) { %>
-                    <button  class="btn btn-danger custom-btn" style="border-radius: 0" onclick="addJustifeFirst()">
-                      <i class="fas fa-exclamation-triangle"></i> Ajouter 
+      <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+          <%- include('../../../../layouts/topbar') %>
+            <div class="container-fluid">
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Liste des Justificatifs de Caisse</h6>
+                </div>
+                <div class="card-body">
+                  <div class="d-flex justify-content-end mb-3">
+                    <button id="downloadPdfBtn" class="btn btn-primary custom-btn mr-2" hidden>
                     </button>
+                    <input type="hidden" id="chantierInput" value="<%= chantier %>">
+                    <button id="downloadExcelBtn" class="btn btn-success custom-btn mr-2" hidden>
+                    </button>
+                    <input type="hidden" id="userId" value="<%= userId %>">
+
+
+
+                    <% if (!lastDesignation) { %>
+                      <button class="btn btn-danger custom-btn" style="border-radius: 0" onclick="addJustifeFirst()">
+                        <i class="fas fa-exclamation-triangle"></i> Ajouter
+                      </button>
                       <div class="form-group">
                         <label for="monthSelect">Mois</label>
                         <select class="form-control" id="monthSelect">
@@ -135,499 +200,490 @@
                         </select>
                       </div>
 
-                  <% } else { %>
-                    <a class="btn btn-primary custom-btn" onclick="addJustife(<%= chantier %>)">
-                      <i class="fas fa-save"></i> Mois Suivant
-                    </a>
-                    <input type="text" name="designation" id="latestDesignation" value="<%= lastDesignation?.designation || `Mois ${new Date().getMonth() + 1} ${new Date().getFullYear()}` %>" hidden>
-                  <% } %>
+                      <% } else { %>
+                        <a class="btn btn-primary custom-btn" onclick="addJustife(<%= chantier %>)">
+                          <i class="fas fa-save"></i> Mois Suivant
+                        </a>
+                        <input type="text" name="designation" id="latestDesignation"
+                          value="<%= lastDesignation?.designation || `Mois ${new Date().getMonth() + 1} ${new Date().getFullYear()}` %>"
+                          hidden>
+                        <% } %>
 
-              </div>
-              <div class="table-responsive">
-                <table id="editableTable" class="excel-table">
-                  <thead>
-                    <tr style="position: sticky; top: 0; background-color: white; z-index: 1;">
-                      <th draggable="true">Mois</th>
-                      <th draggable="true">Année</th>
-                      <th draggable="true">Désignation</th>
-                      <th draggable="true">Solde Précédent</th>
-                      <th draggable="true">Total Recettes</th>
-                      <th draggable="true">Total Dépenses</th>
-                      <th draggable="true">Solde Final</th>
-                      <th style="width: 120px;">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% if (!justifCaisse || justifCaisse.length === 0) { %>
-                      <tr>
-                        <td colspan="6" style="text-align: center;">Aucune justificatif de caisse disponible.</td>
-                      </tr>
-                    <% } else { %>
-                      <% justifCaisse.forEach(d => { %>
-                        <tr data-id="<%= d.id %>">
-                          <td contenteditable="true" data-name="mois"><%= d.mois || '' %></td>
-                          <td contenteditable="true" data-name="annee"><%= d.annee || '' %></td>
-                          <td contenteditable="true" data-name="designation"><%= d.designation || '' %></td>
-                          <td contenteditable="true" data-name="soldePrecedent">
-                            <%= Number(d.soldePrecedent || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
-                          </td>
-                          <td contenteditable="true" data-name="totalRecettes">
-                            <%= Number(d.totalRecettes || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
-                          </td>
-                        
-                         
-                          <td contenteditable="true" data-name="totalDepenses">
-                            <%= Number(d.totalDepenses || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
-                          </td>
-                          <td contenteditable="true" data-name="soldeFinal">
-                            <%= Number(d.soldeFinal || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
-                          </td>
-                              <td>
-                            <div class="btn-group" role="group">
-                              <a href="/achats/caisse/justifecaisse/<%= d.id %>" class="btn btn-info btn-sm">
-                                <i class="fas fa-eye"></i> Détails
-                              </a>
-                             <button type="button" class="btn btn-danger btn-sm" onclick="generatepdf(<%= d.id %>, '<%= d.designation %>')">
-                               <i class="fas fa-file-pdf"></i> PDF
-                             </button>
-                              <button type="button" class="btn btn-danger btn-sm" onclick="supprimerjustifCaisse(<%= d.id %>)">
-                                <i class="fas fa-trash"></i> Supprimer
-                              </button>
-                            
-                            </div>
-                          </td>
+                  </div>
+                  <div class="table-responsive">
+                    <table id="editableTable" class="excel-table">
+                      <thead>
+                        <tr style="position: sticky; top: 0; background-color: white; z-index: 1;">
+                          <th draggable="true">Mois</th>
+                          <th draggable="true">Année</th>
+                          <th draggable="true">Désignation</th>
+                          <th draggable="true">Solde Précédent</th>
+                          <th draggable="true">Total Recettes</th>
+                          <th draggable="true">Total Dépenses</th>
+                          <th draggable="true">Solde Final</th>
+                          <th style="width: auto;">Actions</th>
                         </tr>
-                      <% }); %>
-                    <% } %>
-                  </tbody>
-                 
-                </table>
+                      </thead>
+                      <tbody>
+                        <% if (!justifCaisse || justifCaisse.length===0) { %>
+                          <tr>
+                            <td colspan="6" style="text-align: center;">Aucune justificatif de caisse disponible.</td>
+                          </tr>
+                          <% } else { %>
+                            <% justifCaisse.forEach(d=> { %>
+                              <tr data-id="<%= d.id %>">
+                                <td contenteditable="true" data-name="mois">
+                                  <%= d.mois || '' %>
+                                </td>
+                                <td contenteditable="true" data-name="annee">
+                                  <%= d.annee || '' %>
+                                </td>
+                                <td contenteditable="true" data-name="designation">
+                                  <%= d.designation || '' %>
+                                </td>
+                                <td contenteditable="true" data-name="soldePrecedent">
+                                  <%= Number(d.soldePrecedent || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2 }) %>
+                                </td>
+                                <td contenteditable="true" data-name="totalRecettes">
+                                  <%= Number(d.totalRecettes || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2 }) %>
+                                </td>
+
+
+                                <td contenteditable="true" data-name="totalDepenses">
+                                  <%= Number(d.totalDepenses || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2 }) %>
+                                </td>
+                                <td contenteditable="true" data-name="soldeFinal">
+                                  <%= Number(d.soldeFinal || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2 }) %>
+                                </td>
+                                <td>
+                                  <div class="jc-actions">
+                                    <a href="/achats/caisse/justifecaisse/<%= d.id %>" class="btn btn-primary btn-sm"
+                                      title="Remplir">
+                                      <i class="fas fa-edit"></i> Remplir
+                                    </a>
+                                    <button type="button" class="btn btn-success btn-sm"
+                                      onclick="generatepdf(<%= d.id %>, '<%= d.designation %>')" title="PDF">
+                                      <i class="fas fa-file-pdf"></i> PDF
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-sm"
+                                      onclick="supprimerjustifCaisse(<%= d.id %>)" title="Supprimer">
+                                      <i class="fas fa-trash"></i>
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                              <% }); %>
+                                <% } %>
+                      </tbody>
+
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
         </div>
-      </div>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-      <script>
-        const { jsPDF } = window.jspdf;
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script
+          src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+        <script>
+          const { jsPDF } = window.jspdf;
 
-        // Debounce function to limit rapid PATCH requests
-        function debounce(func, wait) {
-          let timeout;
-          return function (...args) {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), wait);
-          };
-        }
-
-        // Sanitize input to prevent XSS
-        function sanitizeInput(input) {
-          return DOMPurify.sanitize(input);
-        }
-
-        // Update total soldeFinal
-        function updateTotal() {
-          const rows = document.querySelectorAll("#editableTable tbody tr");
-          let total = 0;
-          rows.forEach(row => {
-            if (row.style.display !== "none") {
-              const soldeFinalCell = row.querySelector("td[data-name='soldeFinal']");
-              if (soldeFinalCell) {
-                const value = parseFloat(soldeFinalCell.innerText.replace(/\s/g, '').replace(',', '.'));
-                if (!isNaN(value)) total += value;
-              }
-            }
-          });
-          const totalCell = document.getElementById("total");
-          if (totalCell) {
-            totalCell.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-          }
-        }
-        
-
-        // Delete justifCaisse
-        async function supprimerjustifCaisse(id) {
-          try {
-            if (confirm('Êtes-vous sûr de vouloir supprimer ce justificatif de caisse ?')) {
-              const res = await fetch(`/achats/caisse/justifecaisse/${id}`, {
-                method: 'DELETE'
-              });
-              if (res.ok) {
-                alert('Justificatif de caisse supprimé avec succès.');
-                location.reload();
-              } else {
-                alert('Erreur lors de la suppression du justificatif de caisse.');
-              }
-            }
-          } catch (error) {
-            console.error(error);
-            alert('Erreur réseau lors de la suppression.');
-          }
-        }
-
-        // Auto-update row
-        const debouncedAutoUpdateRow = debounce(async (row) => {
-          const success = await autoUpdateRow(row);
-          if (success) {
-            updateTotal();
-          }
-        }, 1000);
-
-        async function autoUpdateRow(row) {
-          if (!row.getAttribute("data-dirty")) return true;
-          const cells = Array.from(row.querySelectorAll("td[data-name]"));
-          const data = {};
-          const id = row.getAttribute("data-id");
-
-          cells.forEach(cell => {
-            const key = cell.getAttribute("data-name");
-            let value = sanitizeInput(cell.innerText.trim());
-            if (['soldePrecedent', 'soldeFinal'].includes(key)) {
-              value = parseFloat(value.replace(/\s/g, '').replace(',', '.'));
-              if (isNaN(value)) return;
-              data[key] = value;
-            } else if (['mois', 'annee'].includes(key)) {
-              const num = parseInt(value, 10);
-              if (isNaN(num)) return;
-              data[key] = num;
-            } else if (value !== '') {
-              data[key] = value;
-            }
-          });
-
-          if (!id) {
-            alert(`Erreur : Aucun ID de justificatif trouvé pour la ligne.`);
-            return false;
+          // Debounce function to limit rapid PATCH requests
+          function debounce(func, wait) {
+            let timeout;
+            return function (...args) {
+              clearTimeout(timeout);
+              timeout = setTimeout(() => func.apply(this, args), wait);
+            };
           }
 
-          try {
-            const saveButton = document.getElementById('saveAllChanges');
-            saveButton.disabled = true;
-            saveButton.classList.add('loading');
-            const response = await fetch(`/tresorerie/justifCaisses/update/${id}`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(data)
-            });
-            const result = await response.json();
+          // Sanitize input to prevent XSS
+          function sanitizeInput(input) {
+            return DOMPurify.sanitize(input);
+          }
 
-            if (response.ok) {
-              row.removeAttribute("data-dirty");
-              row.classList.remove("excel-dirty-row");
-              const updatedjustifCaisse = result.justifCaisse || {};
-
-              cells.forEach(cell => {
-                const key = cell.getAttribute("data-name");
-                if (!(key in updatedjustifCaisse) || updatedjustifCaisse[key] === null || updatedjustifCaisse[key] === undefined) return;
-
-                if (['soldePrecedent', 'soldeFinal'].includes(key)) {
-                  cell.innerText = Number(updatedjustifCaisse[key]).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                } else {
-                  cell.innerText = updatedjustifCaisse[key].toString().trim();
+          // Update total soldeFinal
+          function updateTotal() {
+            const rows = document.querySelectorAll("#editableTable tbody tr");
+            let total = 0;
+            rows.forEach(row => {
+              if (row.style.display !== "none") {
+                const soldeFinalCell = row.querySelector("td[data-name='soldeFinal']");
+                if (soldeFinalCell) {
+                  const value = parseFloat(soldeFinalCell.innerText.replace(/\s/g, '').replace(',', '.'));
+                  if (!isNaN(value)) total += value;
                 }
-              });
+              }
+            });
+            const totalCell = document.getElementById("total");
+            if (totalCell) {
+              totalCell.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+          }
 
-              return true;
-            } else {
-              alert(`Erreur lors de la mise à jour de la ligne ${id}: ${result.message || 'Erreur inconnue'}`);
+
+          // Delete justifCaisse
+          async function supprimerjustifCaisse(id) {
+            try {
+              if (confirm('Êtes-vous sûr de vouloir supprimer ce justificatif de caisse ?')) {
+                const res = await fetch(`/achats/caisse/justifecaisse/${id}`, {
+                  method: 'DELETE'
+                });
+                if (res.ok) {
+                  alert('Justificatif de caisse supprimé avec succès.');
+                  location.reload();
+                } else {
+                  alert('Erreur lors de la suppression du justificatif de caisse.');
+                }
+              }
+            } catch (error) {
+              console.error(error);
+              alert('Erreur réseau lors de la suppression.');
+            }
+          }
+
+          // Auto-update row
+          const debouncedAutoUpdateRow = debounce(async (row) => {
+            const success = await autoUpdateRow(row);
+            if (success) {
+              updateTotal();
+            }
+          }, 1000);
+
+          async function autoUpdateRow(row) {
+            if (!row.getAttribute("data-dirty")) return true;
+            const cells = Array.from(row.querySelectorAll("td[data-name]"));
+            const data = {};
+            const id = row.getAttribute("data-id");
+
+            cells.forEach(cell => {
+              const key = cell.getAttribute("data-name");
+              let value = sanitizeInput(cell.innerText.trim());
+              if (['soldePrecedent', 'soldeFinal'].includes(key)) {
+                value = parseFloat(value.replace(/\s/g, '').replace(',', '.'));
+                if (isNaN(value)) return;
+                data[key] = value;
+              } else if (['mois', 'annee'].includes(key)) {
+                const num = parseInt(value, 10);
+                if (isNaN(num)) return;
+                data[key] = num;
+              } else if (value !== '') {
+                data[key] = value;
+              }
+            });
+
+            if (!id) {
+              alert(`Erreur : Aucun ID de justificatif trouvé pour la ligne.`);
               return false;
             }
-          } catch (err) {
-            console.error("Error updating row", id, ":", err.message);
-            alert(`Erreur réseau lors de la mise à jour de la ligne ${id}: ${err.message}`);
-            return false;
-          } finally {
-            saveButton.disabled = false;
-            saveButton.classList.remove('loading');
-          }
-        }
-
-    async function addJustife(chantierId) {
-
-  const chantierIdInt = parseInt(chantierId);
-  if (!chantierIdInt || Number.isNaN(chantierIdInt)) {
-    alert('Chantier invalide.');
-    return;
-  }
-
-  try {
-    const response = await fetch('/achats/add/justifeAuto', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chantierId: chantierIdInt })
-    });
-
-    const result = await response.json().catch(() => null);
-    if (!response.ok || !result || result.success === false) {
-      const msg = (result && (result.error || result.message)) || `Erreur (${response.status})`;
-      alert(msg);
-      return;
-    }
-
-    // New justif created: refresh list
-    window.location.reload();
-  } catch (error) {
-    console.error('Error adding justifCaisse:', error);
-    alert('Erreur réseau lors de l\'ajout du justificatif de caisse.');
-  }
-}
-        // Drag and drop columns
-        function swapColumns(table, fromIdx, toIdx) {
-          const headerRow = table.tHead.rows[0];
-          if (fromIdx === toIdx || fromIdx >= headerRow.cells.length - 1 || toIdx >= headerRow.cells.length - 1) return;
-          headerRow.insertBefore(headerRow.children[fromIdx], headerRow.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
-          Array.from(table.tBodies[0].rows).forEach(row => {
-            row.insertBefore(row.children[fromIdx], row.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
-          });
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-          const table = document.getElementById("editableTable");
-          const saveAllButton = document.getElementById('saveAllChanges');
-
-          // Drag-and-drop event listeners
-          Array.from(table.tHead.rows[0].cells).forEach((th, idx) => {
-            if (idx < table.tHead.rows[0].cells.length - 1) {
-              th.draggable = true;
-              th.addEventListener('dragstart', function (e) {
-                dragSrcIdx = idx;
-                e.dataTransfer.effectAllowed = 'move';
-                th.classList.add('dragging');
-              });
-              th.addEventListener('dragend', function () {
-                dragSrcIdx = null;
-                th.classList.remove('dragging');
-                Array.from(table.tHead.rows[0].cells).forEach(cell => cell.classList.remove('drag-over'));
-              });
-              th.addEventListener('dragover', function (e) {
-                e.preventDefault();
-                th.classList.add('drag-over');
-              });
-              th.addEventListener('dragleave', function () {
-                th.classList.remove('drag-over');
-              });
-              th.addEventListener('drop', function (e) {
-                e.preventDefault();
-                th.classList.remove('drag-over');
-                if (dragSrcIdx !== null && dragSrcIdx !== idx) {
-                  swapColumns(table, dragSrcIdx, idx);
-                }
-              });
-            }
-          });
-
-          // Mark row as dirty on edit
-          table.addEventListener("input", function(e) {
-            const cell = e.target.closest("td[data-name]");
-            if (cell) {
-              const row = cell.parentElement;
-              row.setAttribute("data-dirty", "true");
-              row.classList.add("excel-dirty-row");
-              if (cell.getAttribute("data-name") === "soldeFinal") updateTotal();
-            }
-          });
-
-          // Auto-save on blur
-          document.addEventListener("click", async function(e) {
-            if (!table.contains(e.target)) {
-              const dirtyRows = table.querySelectorAll("tbody tr[data-dirty='true']");
-              for (const row of dirtyRows) {
-                await debouncedAutoUpdateRow(row);
-              }
-            }
-          });
-
-          // Save all changes
-          saveAllButton.addEventListener('click', async function () {
-            const dirtyRows = document.querySelectorAll("#editableTable tbody tr[data-dirty='true']");
-            if (dirtyRows.length === 0) {
-              alert("Aucune modification à enregistrer.");
-              return;
-            }
-
-            saveAllButton.disabled = true;
-            saveAllButton.classList.add('loading');
-            let allSuccessful = true;
-            for (const row of dirtyRows) {
-              const success = await autoUpdateRow(row);
-              if (!success) {
-                allSuccessful = false;
-              }
-            }
-
-            if (allSuccessful) {
-              updateTotal();
-              alert("Toutes les modifications ont été enregistrées avec succès.");
-            } else {
-              alert("Certaines modifications n'ont pas pu être enregistrées. Veuillez vérifier les erreurs.");
-            }
-            saveAllButton.disabled = false;
-            saveAllButton.classList.remove('loading');
-          });
-
-          // PDF Download
-          document.getElementById("downloadPdfBtn").addEventListener("click", function () {
-            const table = document.getElementById("editableTable");
-            const rows = table.querySelectorAll("tbody tr:not(:last-child)");
-            if (rows.length === 0) {
-              alert("Aucune donnée à exporter en PDF.");
-              return;
-            }
 
             try {
-              const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-              const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
-              const title = document.querySelector(".card-header h6").innerText;
-
-              doc.setFont("helvetica", "bold");
-              doc.setFontSize(18);
-              doc.setTextColor(40, 40, 40);
-              doc.text(title, 10, 20);
-
-              const tableData = [];
-              rows.forEach(row => {
-                if (row.style.display !== "none") {
-                  const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => cell.innerText.trim() || "");
-                  tableData.push(rowData);
-                }
+              const saveButton = document.getElementById('saveAllChanges');
+              saveButton.disabled = true;
+              saveButton.classList.add('loading');
+              const response = await fetch(`/tresorerie/justifCaisses/update/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
               });
+              const result = await response.json();
 
-              doc.autoTable({
-                head: [headers],
-                body: tableData,
-                startY: 30,
-                theme: 'grid',
-                styles: {
-                  font: 'helvetica',
-                  fontSize: 8,
-                  textColor: [40, 40, 40],
-                  cellPadding: 2,
-                  lineColor: [200, 200, 200],
-                  lineWidth: 0.1,
-                },
-                headStyles: {
-                  fillColor: [22, 160, 133],
-                  textColor: [255, 255, 255],
-                  fontSize: 7,
-                  fontStyle: 'bold',
-                  halign: 'center',
-                },
-                bodyStyles: {
-                  fillColor: [255, 255, 255],
-                },
-                alternateRowStyles: {
-                  fillColor: [245, 245, 245],
-                },
-                columnStyles: {
-                  0: { cellWidth: 20, halign: 'center' },
-                  1: { cellWidth: 20, halign: 'center' },
-                  2: { cellWidth: 50, halign: 'left' },
-                  3: { cellWidth: 30, halign: 'right' },
-                  4: { cellWidth: 30, halign: 'right' },
-                },
-                margin: { top: 30, left: 10, right: 10 },
-              });
+              if (response.ok) {
+                row.removeAttribute("data-dirty");
+                row.classList.remove("excel-dirty-row");
+                const updatedjustifCaisse = result.justifCaisse || {};
 
-              const pageCount = doc.internal.getNumberOfPages();
-              for (let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setFontSize(8);
-                doc.setTextColor(100);
-                doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
-              }
+                cells.forEach(cell => {
+                  const key = cell.getAttribute("data-name");
+                  if (!(key in updatedjustifCaisse) || updatedjustifCaisse[key] === null || updatedjustifCaisse[key] === undefined) return;
 
-              const total = document.getElementById("total").innerText || "0";
-              const finalY = doc.lastAutoTable.finalY || 30;
-              doc.setFont("helvetica", "bold");
-              doc.setFontSize(12);
-              doc.setTextColor(22, 160, 133);
-              doc.text(`Total: ${total} MAD`, 10, finalY + 15);
-
-              doc.save("liste_justifCaisse.pdf");
-            } catch (err) {
-              console.error("PDF generation error:", err);
-              alert("Erreur lors de la génération du PDF.");
-            }
-          });
-
-          // Excel Download
-          document.getElementById("downloadExcelBtn").addEventListener("click", function () {
-            const table = document.getElementById("editableTable");
-            const rows = table.querySelectorAll("tbody tr:not(:last-child)");
-            let visibleRows = Array.from(rows).filter(row => row.style.display !== "none");
-
-            if (visibleRows.length === 0) {
-              alert("Aucune donnée visible à exporter en Excel.");
-              return;
-            }
-
-            try {
-              const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
-              const tableData = [];
-
-              visibleRows.forEach((row) => {
-                const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
-                  let value = cell.innerText.trim();
-                  if (['soldePrecedent', 'soldeFinal'].includes(cell.dataset.name)) {
-                    const cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-                    const number = parseFloat(cleaned);
-                    return isNaN(number) ? value : number;
+                  if (['soldePrecedent', 'soldeFinal'].includes(key)) {
+                    cell.innerText = Number(updatedjustifCaisse[key]).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                  } else {
+                    cell.innerText = updatedjustifCaisse[key].toString().trim();
                   }
-                  return value || "";
                 });
-                tableData.push(rowData);
+
+                return true;
+              } else {
+                alert(`Erreur lors de la mise à jour de la ligne ${id}: ${result.message || 'Erreur inconnue'}`);
+                return false;
+              }
+            } catch (err) {
+              console.error("Error updating row", id, ":", err.message);
+              alert(`Erreur réseau lors de la mise à jour de la ligne ${id}: ${err.message}`);
+              return false;
+            } finally {
+              saveButton.disabled = false;
+              saveButton.classList.remove('loading');
+            }
+          }
+
+          async function addJustife(chantierId) {
+
+            const chantierIdInt = parseInt(chantierId);
+            if (!chantierIdInt || Number.isNaN(chantierIdInt)) {
+              alert('Chantier invalide.');
+              return;
+            }
+
+            try {
+              const response = await fetch('/achats/add/justifeAuto', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chantierId: chantierIdInt })
               });
 
-              const total = document.getElementById("total")?.innerText || "0";
-              const totalRow = ["", "", "Total", "", total];
-              tableData.push(totalRow);
+              const result = await response.json().catch(() => null);
+              if (!response.ok || !result || result.success === false) {
+                const msg = (result && (result.error || result.message)) || `Erreur (${response.status})`;
+                alert(msg);
+                return;
+              }
 
-              const wb = XLSX.utils.book_new();
-              const ws = XLSX.utils.aoa_to_sheet([headers, ...tableData], { skipHeader: false });
+              // New justif created: refresh list
+              window.location.reload();
+            } catch (error) {
+              console.error('Error adding justifCaisse:', error);
+              alert('Erreur réseau lors de l\'ajout du justificatif de caisse.');
+            }
+          }
+          // Drag and drop columns
+          function swapColumns(table, fromIdx, toIdx) {
+            const headerRow = table.tHead.rows[0];
+            if (fromIdx === toIdx || fromIdx >= headerRow.cells.length - 1 || toIdx >= headerRow.cells.length - 1) return;
+            headerRow.insertBefore(headerRow.children[fromIdx], headerRow.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
+            Array.from(table.tBodies[0].rows).forEach(row => {
+              row.insertBefore(row.children[fromIdx], row.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
+            });
+          }
 
-              ws['!cols'] = [
-                { wch: 10 },
-                { wch: 10 },
-                { wch: 30 },
-                { wch: 15 },
-                { wch: 15 },
-              ];
+          document.addEventListener("DOMContentLoaded", function () {
+            const table = document.getElementById("editableTable");
+            const saveAllButton = document.getElementById('saveAllChanges');
 
-              headers.forEach((_, i) => {
-                const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
-                if (!ws[cellRef]) ws[cellRef] = { v: headers[i], t: 's' };
-                ws[cellRef].s = {
-                  font: { bold: true },
-                  fill: { fgColor: { rgb: "16A085" } },
-                  alignment: { horizontal: i === 3 || i === 4 ? 'right' : 'center' },
-                  border: {
-                    top: { style: 'thin' },
-                    bottom: { style: 'thin' },
-                    left: { style: 'thin' },
-                    right: { style: 'thin' },
-                  },
-                };
-              });
-
-              tableData.forEach((row, rowIndex) => {
-                row.forEach((value, colIndex) => {
-                  const cellRef = XLSX.utils.encode_cell({ r: rowIndex + 1, c: colIndex });
-                  const isNumericColumn = colIndex === 3 || colIndex === 4;
-
-                  if (!ws[cellRef]) {
-                    ws[cellRef] = { 
-                      v: value || "", 
-                      t: isNumericColumn && typeof value === 'number' ? 'n' : 's' 
-                    };
+            // Drag-and-drop event listeners
+            Array.from(table.tHead.rows[0].cells).forEach((th, idx) => {
+              if (idx < table.tHead.rows[0].cells.length - 1) {
+                th.draggable = true;
+                th.addEventListener('dragstart', function (e) {
+                  dragSrcIdx = idx;
+                  e.dataTransfer.effectAllowed = 'move';
+                  th.classList.add('dragging');
+                });
+                th.addEventListener('dragend', function () {
+                  dragSrcIdx = null;
+                  th.classList.remove('dragging');
+                  Array.from(table.tHead.rows[0].cells).forEach(cell => cell.classList.remove('drag-over'));
+                });
+                th.addEventListener('dragover', function (e) {
+                  e.preventDefault();
+                  th.classList.add('drag-over');
+                });
+                th.addEventListener('dragleave', function () {
+                  th.classList.remove('drag-over');
+                });
+                th.addEventListener('drop', function (e) {
+                  e.preventDefault();
+                  th.classList.remove('drag-over');
+                  if (dragSrcIdx !== null && dragSrcIdx !== idx) {
+                    swapColumns(table, dragSrcIdx, idx);
                   }
+                });
+              }
+            });
 
+            // Mark row as dirty on edit
+            table.addEventListener("input", function (e) {
+              const cell = e.target.closest("td[data-name]");
+              if (cell) {
+                const row = cell.parentElement;
+                row.setAttribute("data-dirty", "true");
+                row.classList.add("excel-dirty-row");
+                if (cell.getAttribute("data-name") === "soldeFinal") updateTotal();
+              }
+            });
+
+            // Auto-save on blur
+            document.addEventListener("click", async function (e) {
+              if (!table.contains(e.target)) {
+                const dirtyRows = table.querySelectorAll("tbody tr[data-dirty='true']");
+                for (const row of dirtyRows) {
+                  await debouncedAutoUpdateRow(row);
+                }
+              }
+            });
+
+            // Save all changes
+            saveAllButton.addEventListener('click', async function () {
+              const dirtyRows = document.querySelectorAll("#editableTable tbody tr[data-dirty='true']");
+              if (dirtyRows.length === 0) {
+                alert("Aucune modification à enregistrer.");
+                return;
+              }
+
+              saveAllButton.disabled = true;
+              saveAllButton.classList.add('loading');
+              let allSuccessful = true;
+              for (const row of dirtyRows) {
+                const success = await autoUpdateRow(row);
+                if (!success) {
+                  allSuccessful = false;
+                }
+              }
+
+              if (allSuccessful) {
+                updateTotal();
+                alert("Toutes les modifications ont été enregistrées avec succès.");
+              } else {
+                alert("Certaines modifications n'ont pas pu être enregistrées. Veuillez vérifier les erreurs.");
+              }
+              saveAllButton.disabled = false;
+              saveAllButton.classList.remove('loading');
+            });
+
+            // PDF Download
+            document.getElementById("downloadPdfBtn").addEventListener("click", function () {
+              const table = document.getElementById("editableTable");
+              const rows = table.querySelectorAll("tbody tr:not(:last-child)");
+              if (rows.length === 0) {
+                alert("Aucune donnée à exporter en PDF.");
+                return;
+              }
+
+              try {
+                const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+                const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
+                const title = document.querySelector(".card-header h6").innerText;
+
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(18);
+                doc.setTextColor(40, 40, 40);
+                doc.text(title, 10, 20);
+
+                const tableData = [];
+                rows.forEach(row => {
+                  if (row.style.display !== "none") {
+                    const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => cell.innerText.trim() || "");
+                    tableData.push(rowData);
+                  }
+                });
+
+                doc.autoTable({
+                  head: [headers],
+                  body: tableData,
+                  startY: 30,
+                  theme: 'grid',
+                  styles: {
+                    font: 'helvetica',
+                    fontSize: 8,
+                    textColor: [40, 40, 40],
+                    cellPadding: 2,
+                    lineColor: [200, 200, 200],
+                    lineWidth: 0.1,
+                  },
+                  headStyles: {
+                    fillColor: [22, 160, 133],
+                    textColor: [255, 255, 255],
+                    fontSize: 7,
+                    fontStyle: 'bold',
+                    halign: 'center',
+                  },
+                  bodyStyles: {
+                    fillColor: [255, 255, 255],
+                  },
+                  alternateRowStyles: {
+                    fillColor: [245, 245, 245],
+                  },
+                  columnStyles: {
+                    0: { cellWidth: 20, halign: 'center' },
+                    1: { cellWidth: 20, halign: 'center' },
+                    2: { cellWidth: 50, halign: 'left' },
+                    3: { cellWidth: 30, halign: 'right' },
+                    4: { cellWidth: 30, halign: 'right' },
+                  },
+                  margin: { top: 30, left: 10, right: 10 },
+                });
+
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                  doc.setPage(i);
+                  doc.setFontSize(8);
+                  doc.setTextColor(100);
+                  doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
+                }
+
+                const total = document.getElementById("total").innerText || "0";
+                const finalY = doc.lastAutoTable.finalY || 30;
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(12);
+                doc.setTextColor(22, 160, 133);
+                doc.text(`Total: ${total} MAD`, 10, finalY + 15);
+
+                doc.save("liste_justifCaisse.pdf");
+              } catch (err) {
+                console.error("PDF generation error:", err);
+                alert("Erreur lors de la génération du PDF.");
+              }
+            });
+
+            // Excel Download
+            document.getElementById("downloadExcelBtn").addEventListener("click", function () {
+              const table = document.getElementById("editableTable");
+              const rows = table.querySelectorAll("tbody tr:not(:last-child)");
+              let visibleRows = Array.from(rows).filter(row => row.style.display !== "none");
+
+              if (visibleRows.length === 0) {
+                alert("Aucune donnée visible à exporter en Excel.");
+                return;
+              }
+
+              try {
+                const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
+                const tableData = [];
+
+                visibleRows.forEach((row) => {
+                  const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
+                    let value = cell.innerText.trim();
+                    if (['soldePrecedent', 'soldeFinal'].includes(cell.dataset.name)) {
+                      const cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+                      const number = parseFloat(cleaned);
+                      return isNaN(number) ? value : number;
+                    }
+                    return value || "";
+                  });
+                  tableData.push(rowData);
+                });
+
+                const total = document.getElementById("total")?.innerText || "0";
+                const totalRow = ["", "", "Total", "", total];
+                tableData.push(totalRow);
+
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet([headers, ...tableData], { skipHeader: false });
+
+                ws['!cols'] = [
+                  { wch: 10 },
+                  { wch: 10 },
+                  { wch: 30 },
+                  { wch: 15 },
+                  { wch: 15 },
+                ];
+
+                headers.forEach((_, i) => {
+                  const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
+                  if (!ws[cellRef]) ws[cellRef] = { v: headers[i], t: 's' };
                   ws[cellRef].s = {
-                    fill: { fgColor: { rgb: rowIndex % 2 === 0 ? "FFFFFF" : "F5F5F5" } },
-                    alignment: { horizontal: isNumericColumn ? 'right' : 'center' },
+                    font: { bold: true },
+                    fill: { fgColor: { rgb: "16A085" } },
+                    alignment: { horizontal: i === 3 || i === 4 ? 'right' : 'center' },
                     border: {
                       top: { style: 'thin' },
                       bottom: { style: 'thin' },
@@ -635,25 +691,49 @@
                       right: { style: 'thin' },
                     },
                   };
-
-                  if (rowIndex === tableData.length - 1 && (colIndex === 2 || colIndex === 4)) {
-                    ws[cellRef].s.font = { bold: true };
-                  }
                 });
-              });
 
-              XLSX.utils.book_append_sheet(wb, ws, "justifCaisses");
-              XLSX.writeFile(wb, "liste_justifCaisse.xlsx");
-            } catch (err) {
-              console.error("Excel generation error:", err);
-              alert(`Erreur lors de la génération du fichier Excel : ${err.message}`);
-            }
+                tableData.forEach((row, rowIndex) => {
+                  row.forEach((value, colIndex) => {
+                    const cellRef = XLSX.utils.encode_cell({ r: rowIndex + 1, c: colIndex });
+                    const isNumericColumn = colIndex === 3 || colIndex === 4;
+
+                    if (!ws[cellRef]) {
+                      ws[cellRef] = {
+                        v: value || "",
+                        t: isNumericColumn && typeof value === 'number' ? 'n' : 's'
+                      };
+                    }
+
+                    ws[cellRef].s = {
+                      fill: { fgColor: { rgb: rowIndex % 2 === 0 ? "FFFFFF" : "F5F5F5" } },
+                      alignment: { horizontal: isNumericColumn ? 'right' : 'center' },
+                      border: {
+                        top: { style: 'thin' },
+                        bottom: { style: 'thin' },
+                        left: { style: 'thin' },
+                        right: { style: 'thin' },
+                      },
+                    };
+
+                    if (rowIndex === tableData.length - 1 && (colIndex === 2 || colIndex === 4)) {
+                      ws[cellRef].s.font = { bold: true };
+                    }
+                  });
+                });
+
+                XLSX.utils.book_append_sheet(wb, ws, "justifCaisses");
+                XLSX.writeFile(wb, "liste_justifCaisse.xlsx");
+              } catch (err) {
+                console.error("Excel generation error:", err);
+                alert(`Erreur lors de la génération du fichier Excel : ${err.message}`);
+              }
+            });
+
+            // Initialize total
+            updateTotal();
           });
-
-          // Initialize total
-          updateTotal();
-        });
-        const addJustifeFirst = async() => {
+          const addJustifeFirst = async () => {
             const userIdEl = document.getElementById("userId");
             const chantierIdEl = document.getElementById("chantierInput");
             const moisSelect = document.getElementById("monthSelect");
@@ -684,33 +764,34 @@
             }
 
 
-        }
-     
-    async function generatepdf(id, designation) {
-      try {
-        const res = await fetch(`/achats/caisse/justification/recettes/${id}/pdf`);
-        if (!res.ok) throw new Error('Erreur lors du téléchargement');
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        const date = new Date().getFullYear();
-        link.download = `justifCaisse_${designation.replace(/\s+/g, '_')}_${date}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
-      } catch (err) {
-        console.error(err);
-        alert('Erreur lors du téléchargement du PDF');
-      }
-    }
-     </script>
-      <script src="/vendor/jquery/jquery.min.js"></script>
-      <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-      <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
-      <script src="/js/sb-admin-2.min.js"></script>
-    </div>
+          }
+
+          async function generatepdf(id, designation) {
+            try {
+              const res = await fetch(`/achats/caisse/justification/recettes/${id}/pdf`);
+              if (!res.ok) throw new Error('Erreur lors du téléchargement');
+              const blob = await res.blob();
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = url;
+              const date = new Date().getFullYear();
+              link.download = `justifCaisse_${designation.replace(/\s+/g, '_')}_${date}.pdf`;
+              document.body.appendChild(link);
+              link.click();
+              link.remove();
+              URL.revokeObjectURL(url);
+            } catch (err) {
+              console.error(err);
+              alert('Erreur lors du téléchargement du PDF');
+            }
+          }
+        </script>
+        <script src="/vendor/jquery/jquery.min.js"></script>
+        <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+        <script src="/js/sb-admin-2.min.js"></script>
+      </div>
   </div>
 </body>
+
 </html>
