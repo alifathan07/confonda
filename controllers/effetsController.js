@@ -35,6 +35,46 @@ const parseExcelDate = (value) => {
   return isNaN(d.getTime()) ? null : d;
 };
 
+export const updateEffetAllocations = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const effetId = Number(id);
+    const allocations = Array.isArray(req.body.allocations) ? req.body.allocations : [];
+
+    await prisma.$transaction(async (tx) => {
+      await tx.effetAllocation.deleteMany({ where: { effetId } });
+
+      const data = allocations
+        .filter((a) => a && a.chantierId && a.montant !== undefined && a.montant !== null)
+        .map((a) => ({
+          effetId,
+          chantierId: Number(a.chantierId),
+          montant: Number(a.montant),
+        }))
+        .filter((a) => !Number.isNaN(a.chantierId) && !Number.isNaN(a.montant));
+
+      if (data.length) {
+        await tx.effetAllocation.createMany({ data });
+      }
+    }, { timeout: 20000 });
+
+    const updated = await prisma.effet.findUnique({
+      where: { id: effetId },
+      include: {
+        fournisseur: true,
+        banque: true,
+        chantier: true,
+        allocations: { include: { chantier: true } },
+      },
+    });
+
+    res.json({ success: true, effet: updated });
+  } catch (error) {
+    console.error('❌ Error updateEffetAllocations:', error);
+    res.status(500).json({ success: false, error: 'Erreur serveur.' });
+  }
+};
+
   export const importExelEffets = async (req, res) => {
     console.log('🚀 Starting Excel import for effets...');
     
@@ -372,10 +412,10 @@ export const showEffets = async (req, res) => {
     const effets = await prisma.effet.findMany({
       orderBy: { id: 'desc' },
       include: {
-        
         fournisseur: true,
         banque: true,
-        chantier: true
+        chantier: true,
+        allocations: { include: { chantier: true } },
       },
     });
     console.log(`✅ Found ${effets.length} effets`);
@@ -448,6 +488,8 @@ export const showEffetsForbanque = async (req, res) => {
       fournisseur: {
         select: { name: true },
       },
+      chantier: true,
+      allocations: { include: { chantier: true } },
     },
   });
   const banqueName = await prisma.banque.findUnique({where:{id:Number(id)}})
@@ -516,7 +558,8 @@ export const createEffet = async (req, res) => {
       montantPaye,
       reste,
       banque,
-      chantier
+      chantier,
+      allocations
     } = req.body;
 
     // Find or create fournisseur
@@ -579,24 +622,50 @@ export const createEffet = async (req, res) => {
     }
 
     // --- Create effet ---
-    const chantierData = await prisma.chantier.findFirst({
-      where : {nom : chantier}
-    })
-    const effet = await prisma.effet.create({
-      data: {
-        numero: nextNumero,
-        montant: parseFloat(montant),
-        beneficiaire,
-        dateEcheance: new Date(dateEcheance),
-        dateEtablissement: new Date(),
-        statut: 'En circulation',
-        ville : "",
-        obs,
-        chantier : { connect: { id: parseInt(chantierData.id) } },
-        fournisseur: { connect: { id: fournisseur.id } },
-        banque: { connect: { id: findBanque.id } },
+    let dataAllocations = [];
+    let firstChantierId = null;
 
-      },
+    if (Array.isArray(allocations) && allocations.length > 0) {
+      firstChantierId = Number(allocations[0].chantierId);
+      dataAllocations = allocations.map(a => ({
+        chantierId: Number(a.chantierId),
+        montant: parseFloat(a.montant)
+      }));
+    } else if (chantier) {
+      const chantierData = await prisma.chantier.findFirst({
+        where : {nom : chantier}
+      });
+      if (chantierData) {
+        firstChantierId = parseInt(chantierData.id);
+        dataAllocations = [{
+          chantierId: firstChantierId,
+          montant: parseFloat(montant)
+        }];
+      }
+    }
+
+    const effetData = {
+      numero: nextNumero,
+      montant: parseFloat(montant),
+      beneficiaire,
+      dateEcheance: new Date(dateEcheance),
+      dateEtablissement: new Date(),
+      statut: 'En circulation',
+      ville : "",
+      obs,
+      fournisseur: { connect: { id: fournisseur.id } },
+      banque: { connect: { id: findBanque.id } },
+      ...(firstChantierId ? { chantier : { connect: { id: firstChantierId } } } : {})
+    };
+
+    if (dataAllocations.length > 0) {
+      effetData.allocations = {
+        create: dataAllocations
+      };
+    }
+
+    const effet = await prisma.effet.create({
+      data: effetData
     });
     console.log(`✅ Effet created successfully: ${effet.id}`);
     res.json(effet);
@@ -612,8 +681,39 @@ export const createEffet = async (req, res) => {
 
 export const etablirEffet = async (req, res) => {
   try {
-    const { numero, montant, beneficiaire, dateEcheance, ville, obs, chantier } = req.body;
+    const { numero, montant, beneficiaire, dateEcheance, ville, obs, chantier, allocations } = req.body;
     const { id } = req.params; // banque id
+    const banqueId = parseInt(id);
+
+    // Parse allocations safely (same approach as cheques)
+    let parsedAllocations = [];
+    try {
+      parsedAllocations = allocations ? JSON.parse(allocations) : [];
+    } catch (e) {
+      return res.status(400).json({ error: "Format allocations invalide" });
+    }
+
+    const parsedMontant = parseFloat(String(montant || '').replace(',', '.'));
+    if (Number.isNaN(parsedMontant) || parsedMontant <= 0) {
+      return res.status(400).json({ error: "Montant invalide" });
+    }
+
+    const hasAllocations = Array.isArray(parsedAllocations) && parsedAllocations.length > 0;
+    if (hasAllocations) {
+      const totalAllocated = parsedAllocations
+        .map(a => Number(a && a.amount !== undefined ? a.amount : 0))
+        .filter(v => !Number.isNaN(v))
+        .reduce((acc, v) => acc + v, 0);
+
+      if (totalAllocated <= 0) {
+        return res.status(400).json({ error: "Allocations invalides: ajoute au moins un chantier avec un montant > 0." });
+      }
+
+      // enforce sum = montant (with small epsilon)
+      if (Math.abs(totalAllocated - parsedMontant) > 0.01) {
+        return res.status(400).json({ error: "Allocations invalides: la somme doit être égale au montant." });
+      }
+    }
     
     // --- Check or create fournisseur ---
     let fournisseur = await prisma.fournisseur.findFirst({ where: { name: beneficiaire } });
@@ -624,7 +724,7 @@ export const etablirEffet = async (req, res) => {
     }
 
     // --- Check or create banque ---
-    let findBanque = await prisma.banque.findFirst({ where: { id: parseInt(id) } });
+    let findBanque = await prisma.banque.findFirst({ where: { id: banqueId } });
     if (!findBanque) {
       findBanque = await prisma.banque.create({
         data: { name: ' ', rib: 0, agence: ' ', solde: 0, dateSolde: new Date(), positive: 0, negative: 0, dmlt: 0 },
@@ -651,22 +751,48 @@ export const etablirEffet = async (req, res) => {
     }
 
     // --- Create effet ---
+    const firstChantierId = hasAllocations
+      ? Number(parsedAllocations[0] && parsedAllocations[0].chantierId)
+      : (chantier ? Number(chantier) : null);
+
+    const hasValidFirstChantierId = firstChantierId !== null && !Number.isNaN(firstChantierId);
+
     const effet = await prisma.effet.create({
       data: {
         numero: nextNumero,
-        montant: parseFloat(montant),
+        montant: parsedMontant,
         beneficiaire,
         dateEcheance: new Date(dateEcheance),
         dateEtablissement: new Date(),
         statut: 'En circulation',
         ville,
         obs,
-        chantier : { connect: { id: parseInt(chantier) } },
+        ...(hasValidFirstChantierId ? { chantier: { connect: { id: firstChantierId } } } : {}),
         fournisseur: { connect: { id: fournisseur.id } },
         banque: { connect: { id: findBanque.id } },
-
       },
     });
+
+    // --- Create allocations ---
+    if (hasAllocations) {
+      for (const alloc of parsedAllocations) {
+        await prisma.effetAllocation.create({
+          data: {
+            effetId: effet.id,
+            chantierId: parseInt(alloc.chantierId),
+            montant: parseFloat(alloc.amount),
+          },
+        });
+      }
+    } else if (hasValidFirstChantierId) {
+      await prisma.effetAllocation.create({
+        data: {
+          effetId: effet.id,
+          chantierId: firstChantierId,
+          montant: parsedMontant,
+        },
+      });
+    }
 
     console.log(`✅ Effet created successfully: ${effet.id}`);
     res.redirect(`/tresorerie/effets`);
@@ -753,8 +879,10 @@ export const updateEffet = async (req, res) => {
     const data = {};
 
     if (numero !== undefined) data.numero = numero;
+    let parsedMontant;
     if (montant !== undefined) {
-      data.montant = parseFloat(montant.replace(/[^0-9,.]/g, '').replace(',', '.'));
+      parsedMontant = parseFloat(montant.replace(/[^0-9,.]/g, '').replace(',', '.'));
+      data.montant = parsedMontant;
     }
     if (beneficiaire !== undefined) data.beneficiaire = beneficiaire;
     if (dateEcheance !== undefined) data.dateEcheance = new Date(dateEcheance);
@@ -765,7 +893,40 @@ export const updateEffet = async (req, res) => {
     if (obs !== undefined) data.obs = obs;
     if (fournisseur) data.fournisseur = { connect: { id: fournisseur.id } };
     if (findBanque) data.banque = { connect: { id: findBanque.id } };
-    if (findChantier) data.chantier = { connect: { id: findChantier.id } };
+
+    // Keep legacy chantier select working, but also sync allocations to 1 full allocation
+    // - if chantier provided: set chantierId + allocations = [{ chantierId, montant: full montant }]
+    // - if chantier cleared: disconnect chantier + clear allocations
+    const chantierWasProvided = chantier !== undefined;
+    if (chantierWasProvided) {
+      if (findChantier) {
+        data.chantier = { connect: { id: findChantier.id } };
+
+        const montantForAlloc = parsedMontant !== undefined ? parsedMontant : undefined;
+        if (montantForAlloc !== undefined && !Number.isNaN(montantForAlloc)) {
+          data.allocations = {
+            deleteMany: {},
+            create: [{ chantierId: findChantier.id, montant: montantForAlloc }],
+          };
+        }
+      } else {
+        data.chantier = { disconnect: true };
+        data.allocations = { deleteMany: {} };
+      }
+    } else if (parsedMontant !== undefined && !Number.isNaN(parsedMontant)) {
+      // If only montant changed, keep allocations consistent with existing chantierId when possible
+      const existing = await prisma.effet.findUnique({
+        where: { id: parseInt(id) },
+        select: { chantierId: true },
+      });
+
+      if (existing && existing.chantierId) {
+        data.allocations = {
+          deleteMany: {},
+          create: [{ chantierId: existing.chantierId, montant: parsedMontant }],
+        };
+      }
+    }
 
     // 🛠️ Update effet
     const effet = await prisma.effet.update({

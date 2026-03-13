@@ -11,6 +11,7 @@
   <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
   <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <style>
     .effet-table td,
     .effet-table th {
@@ -35,7 +36,7 @@
     }
 
     .badge-statut:hover {
-      box-shadow: 0 2px 8px rgba(0,0,0,.18);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .18);
     }
 
     .badge-statut.en-circulation {
@@ -61,6 +62,33 @@
     .badge-statut.treso {
       background: #d1ecf1;
       color: #0c5460;
+    }
+
+    .allocations {
+      display: grid;
+      gap: 6px;
+    }
+
+    .alloc-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 6px 10px;
+      border: 1px solid #e9ecef;
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .alloc-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .alloc-amount {
+      white-space: nowrap;
+      font-weight: 700;
     }
 
     .statut-select {
@@ -138,218 +166,340 @@
 <body id="page-top">
   <div id="wrapper">
     <%- include('../../../../layouts/sidebar') %>
-    <div id="content-wrapper" class="d-flex flex-column">
-      <div id="content">
-        <%- include('../../../../layouts/topbar') %>
+      <div id="content-wrapper" class="d-flex flex-column">
+        <div id="content">
+          <%- include('../../../../layouts/topbar') %>
 
-        <div class="container-fluid">
-          <!-- Page header -->
-          <div class="d-flex align-items-center justify-content-between mb-3">
-            <div>
-              <h1 class="h3 mb-0 text-gray-800">
-                <% if (typeof id !== 'undefined' && id && typeof banqueName !== 'undefined' && banqueName) { %>
-                  Effets — <%= banqueName.name %>
-                <% } else { %>
-                  Liste des Effets
-                <% } %>
-              </h1>
-              <div class="small text-muted" id="effetCount">
-                <% if (typeof effets !== 'undefined') { %><%= effets.length %> résultat(s)<% } %>
-              </div>
-            </div>
-            <div class="d-flex" style="gap: 10px;">
-              <button id="btnExportPdf" type="button" class="btn btn-outline-danger">
-                <i class="fas fa-file-pdf mr-2"></i>PDF
-              </button>
-              <button id="btnExportExcel" type="button" class="btn btn-outline-success">
-                <i class="fas fa-file-excel mr-2"></i>Excel
-              </button>
-              <button id="addRowBtn" type="button" class="btn btn-secondary">
-                <i class="fas fa-plus mr-2"></i>Ajouter
-              </button>
-              <button id="saveTableBtn" type="button" class="btn btn-warning">
-                <i class="fas fa-save mr-2"></i>Enregistrer
-              </button>
-              <% if (typeof id !== 'undefined' && id && typeof banqueName !== 'undefined' && banqueName) {
-                const supportedBanks = (banques || []).map(b => b.name.toLowerCase());
-                const bankKey = banqueName.name.toLowerCase();
-                const bankRoute = bankKey === 'credit agricole' ? 'credit_agricole' : bankKey;
-                if (supportedBanks.includes(bankKey)) { %>
-                  <a href="/tresorerie/effets/create/format/<%= bankRoute %>/<%= id %>" class="btn btn-primary">
-                    <i class="fas fa-file-invoice-dollar mr-2"></i>Établir effet
-                  </a>
-              <% } } %>
-            </div>
-          </div>
-
-          <div class="card shadow mb-4">
-            <div class="card-body">
-              <!-- Filters row -->
-              <div class="row mb-3">
-                <div class="col-md-3 mb-2">
-                  <label class="small text-muted mb-1">Filtre</label>
-                  <div class="dropdown" id="filterTypeDropdown">
-                    <button class="btn btn-success dropdown-toggle w-100" type="button" id="filterTypeBtn"
-                      data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      Filtrer Par
-                    </button>
-                    <div class="dropdown-menu w-100" id="filterTypeMenu" aria-labelledby="filterTypeBtn">
-                      <button class="dropdown-item" type="button" data-filter-type="beneficiaire">Bénéficiaire</button>
-                      <button class="dropdown-item" type="button" data-filter-type="banque">Banque</button>
-                      <button class="dropdown-item" type="button" data-filter-type="statut">Statut</button>
-                      <button class="dropdown-item" type="button" data-filter-type="chantier">Chantier</button>
-                      <button class="dropdown-item" type="button" data-filter-type="montant">Montant</button>
-                      <button class="dropdown-item" type="button" data-filter-type="numero">N° Effet</button>
-                    </div>
-                  </div>
-
-                  <div id="filterDynamicContainer" class="mt-2">
-                    <div id="filterBoxBeneficiaire" style="display:none;">
-                      <input id="filterBeneficiaire" class="form-control" placeholder="Bénéficiaire..." />
-                    </div>
-                    <div id="filterBoxBanque" style="display:none;">
-                      <select id="filterBanque" class="form-control">
-                        <option value="">Tous</option>
-                        <% (banques || []).forEach(b => { %>
-                          <option value="<%= b.name %>"><%= b.name %></option>
-                        <% }) %>
-                      </select>
-                    </div>
-                    <div id="filterBoxStatut" style="display:none;">
-                      <select id="filterStatut" class="form-control">
-                        <option value="">Tous</option>
-                        <option value="En Circulation">En Circulation</option>
-                        <option value="PAYÉ">Payé</option>
-                        <option value="Impayé">Impayé</option>
-                        <option value="Annulé">Annulé</option>
-                        <option value="Treso">Treso</option>
-                      </select>
-                    </div>
-                    <div id="filterBoxChantier" style="display:none;">
-                      <select id="filterChantier" class="form-control">
-                        <option value="">Tous</option>
-                        <% (chantiers || []).forEach(c => { %>
-                          <option value="<%= c.nom %>"><%= c.nom %></option>
-                        <% }) %>
-                      </select>
-                    </div>
-                    <div id="filterBoxMontant" style="display:none;">
-                      <input id="filterMontant" class="form-control" placeholder="ex: 1200" />
-                    </div>
-                    <div id="filterBoxNumero" style="display:none;">
-                      <input id="filterNumero" class="form-control" placeholder="N° effet..." />
-                    </div>
+            <div class="container-fluid">
+              <!-- Page header -->
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <div>
+                  <h1 class="h3 mb-0 text-gray-800">
+                    <% if (typeof id !=='undefined' && id && typeof banqueName !=='undefined' && banqueName) { %>
+                      Effets — <%= banqueName.name %>
+                        <% } else { %>
+                          Liste des Effets
+                          <% } %>
+                  </h1>
+                  <div class="small text-muted" id="effetCount">
+                    <% if (typeof effets !=='undefined' ) { %>
+                      <%= effets.length %> résultat(s)<% } %>
                   </div>
                 </div>
-
-                <div class="col-md-2 mb-2 d-flex align-items-end">
-                  <button id="btnClearFilters" type="button" class="btn btn-danger w-100" style="display:none;">
-                    <i class="fas fa-times mr-1"></i>Annuler filtre
+                <div class="d-flex" style="gap: 10px;">
+                  <button id="btnExportPdf" type="button" class="btn btn-outline-danger">
+                    <i class="fas fa-file-pdf mr-2"></i>PDF
                   </button>
-                </div>
-
-                <div class="col-md-2 mb-2">
-                  <label class="small text-muted mb-1">Échéance du</label>
-                  <input id="filterDateFrom" type="date" class="form-control" />
-                </div>
-                <div class="col-md-2 mb-2">
-                  <label class="small text-muted mb-1">Échéance au</label>
-                  <input id="filterDateTo" type="date" class="form-control" />
+                  <button id="btnExportExcel" type="button" class="btn btn-outline-success">
+                    <i class="fas fa-file-excel mr-2"></i>Excel
+                  </button>
+                  <button id="addRowBtn" type="button" class="btn btn-secondary">
+                    <i class="fas fa-plus mr-2"></i>Ajouter
+                  </button>
+                  <button id="saveTableBtn" type="button" class="btn btn-warning">
+                    <i class="fas fa-save mr-2"></i>Enregistrer
+                  </button>
+                  <% if (typeof id !=='undefined' && id && typeof banqueName !=='undefined' && banqueName) { const
+                    supportedBanks=(banques || []).map(b=> b.name.toLowerCase());
+                    const bankKey = banqueName.name.toLowerCase();
+                    const bankRoute = bankKey === 'credit agricole' ? 'credit_agricole' : bankKey;
+                    if (supportedBanks.includes(bankKey)) { %>
+                    <a href="/tresorerie/effets/create/format/<%= bankRoute %>/<%= id %>" class="btn btn-primary">
+                      <i class="fas fa-file-invoice-dollar mr-2"></i>Établir effet
+                    </a>
+                    <% } } %>
                 </div>
               </div>
 
-              <!-- Table -->
-              <div class="table-responsive" id="effetsTableResponsive">
-                <%
-                  function fmtDate(d) {
-                    if (!d) return '';
-                    const dt = new Date(d);
-                    if (isNaN(dt)) return '';
-                    return String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0') + '/' + dt.getFullYear();
-                  }
-                  function statutClass(s) {
-                    return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-');
-                  }
-                %>
-                <table class="table table-sm table-hover table-bordered effet-table" style="min-width: 1200px;" id="editableTable">
-                  <thead class="thead-light">
-                    <tr>
-                      <th>Date</th>
-                      <th>N° Effet</th>
-                      <th>Banque</th>
-                      <th>Bénéficiaire</th>
-                      <th class="text-right">Montant</th>
-                      <th>Échéance</th>
-                      <th>Statut</th>
-                      <th>Date Règlement</th>
-                      <th>Chantier</th>
-                      <th>Observation</th>
-                      <th class="text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="effetTbody">
-                    <% if (typeof effets === 'undefined' || !effets.length) { %>
-                      <tr><td colspan="11" class="text-center text-muted">Aucun effet disponible.</td></tr>
-                    <% } else { %>
-                      <% effets.forEach(e => { %>
-                        <tr data-id="<%= e.id %>">
-                          <td class="cell-edit" contenteditable="true" data-name="dateEtablissement"><%= fmtDate(e.dateEtablissement) %></td>
-                          <td class="cell-edit" contenteditable="true" data-name="numero"><%= e.numero || '' %></td>
-                          <td class="cell-edit" contenteditable="true" data-name="banque"><%= e.banque ? e.banque.name : '' %></td>
-                          <td class="cell-edit" contenteditable="true" data-name="beneficiaire"><%= e.beneficiaire || '' %></td>
-                          <td class="text-right cell-edit" contenteditable="true" data-name="montant"><%= e.montant ? Number(e.montant).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '' %></td>
-                          <td class="cell-edit" contenteditable="true" data-name="dateEcheance"><%= e.dateEcheance ? fmtDate(e.dateEcheance) : '' %></td>
-                          <td data-name="statut" class="text-center">
-                            <span class="badge-statut <%= statutClass(e.statut) %>" onclick="toggleStatutSelect(this)">
-                              <%= e.statut %>
-                            </span>
-                          </td>
-                          <td class="cell-edit" contenteditable="true" data-name="dateReglement"><%= fmtDate(e.dateReglement) %></td>
-                          <td data-name="chantier">
-                            <select class="form-control form-control-sm chantier-select">
-                              <option value="">-- Aucun --</option>
-                              <% (chantiers || []).forEach(c => { %>
-                                <option value="<%= c.nom %>" <%= (e.chantier && e.chantier.nom === c.nom) ? 'selected' : '' %>><%= c.nom %></option>
+              <div class="card shadow mb-4">
+                <div class="card-body">
+                  <!-- Filters row -->
+                  <div class="row mb-3">
+                    <div class="col-md-3 mb-2">
+                      <label class="small text-muted mb-1">Filtre</label>
+                      <div class="dropdown" id="filterTypeDropdown">
+                        <button class="btn btn-success dropdown-toggle w-100" type="button" id="filterTypeBtn"
+                          data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          Filtrer Par
+                        </button>
+                        <div class="dropdown-menu w-100" id="filterTypeMenu" aria-labelledby="filterTypeBtn">
+                          <button class="dropdown-item" type="button"
+                            data-filter-type="beneficiaire">Bénéficiaire</button>
+                          <button class="dropdown-item" type="button" data-filter-type="banque">Banque</button>
+                          <button class="dropdown-item" type="button" data-filter-type="statut">Statut</button>
+                          <button class="dropdown-item" type="button" data-filter-type="chantier">Chantier</button>
+                          <button class="dropdown-item" type="button" data-filter-type="montant">Montant</button>
+                          <button class="dropdown-item" type="button" data-filter-type="numero">N° Effet</button>
+                        </div>
+                      </div>
+
+                      <div id="filterDynamicContainer" class="mt-2">
+                        <div id="filterBoxBeneficiaire" style="display:none;">
+                          <select id="filterBeneficiaire" class="form-control">
+                            <option value="">Tous</option>
+                            <% (fournisseurs || []).forEach(f=> { %>
+                              <option value="<%= f.name %>">
+                                <%= f.name %>
+                              </option>
                               <% }) %>
-                            </select>
-                          </td>
-                          <td class="cell-edit obs-cell" contenteditable="true" data-name="obs"><%= e.obs || '' %></td>
-                          <td class="text-right">
-                            <div class="table-actions">
-                              <button class="btn btn-sm btn-outline-danger btn-delete-effet" title="Supprimer" data-id="<%= e.id %>">
-                                <i class="fas fa-trash"></i>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      <% }) %>
-                    <% } %>
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <th colspan="4" class="text-right">Total</th>
-                      <th class="text-right" id="totalMontantCell">
-                        <%= (typeof effets !== 'undefined' && effets.length) ? effets.reduce((s, e2) => s + Number(e2.montant || 0), 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00' %>
-                      </th>
-                      <th colspan="6"></th>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
+                          </select>
+                        </div>
+                        <div id="filterBoxBanque" style="display:none;">
+                          <select id="filterBanque" class="form-control">
+                            <option value="">Tous</option>
+                            <% (banques || []).forEach(b=> { %>
+                              <option value="<%= b.name %>">
+                                <%= b.name %>
+                              </option>
+                              <% }) %>
+                          </select>
+                        </div>
+                        <div id="filterBoxStatut" style="display:none;">
+                          <select id="filterStatut" class="form-control">
+                            <option value="">Tous</option>
+                            <option value="En Circulation">En Circulation</option>
+                            <option value="PAYÉ">Payé</option>
+                            <option value="Impayé">Impayé</option>
+                            <option value="Annulé">Annulé</option>
+                            <option value="Treso">Treso</option>
+                          </select>
+                        </div>
+                        <div id="filterBoxChantier" style="display:none;">
+                          <select id="filterChantier" class="form-control">
+                            <option value="">Tous</option>
+                            <% (chantiers || []).forEach(c=> { %>
+                              <option value="<%= c.nom %>">
+                                <%= c.nom %>
+                              </option>
+                              <% }) %>
+                          </select>
+                        </div>
+                        <div id="filterBoxMontant" style="display:none;">
+                          <input id="filterMontant" class="form-control" placeholder="ex: 1200" />
+                        </div>
+                        <div id="filterBoxNumero" style="display:none;">
+                          <input id="filterNumero" class="form-control" placeholder="N° effet..." />
+                        </div>
+                      </div>
+                    </div>
 
-              <!-- Fixed bottom scrollbar -->
-              <div id="effetsBottomHScroll" class="bottom-hscroll" aria-hidden="true">
-                <div id="effetsBottomHScrollInner" class="bottom-hscroll-inner"></div>
-              </div>
+                    <div class="col-md-2 mb-2 d-flex align-items-end">
+                      <button id="btnClearFilters" type="button" class="btn btn-danger w-100" style="display:none;">
+                        <i class="fas fa-times mr-1"></i>Annuler filtre
+                      </button>
+                    </div>
 
-              <!-- Results info -->
-              <div class="mt-3">
-                <div class="small text-muted" id="effetInfo">
-                  <% if (typeof effets !== 'undefined') { %><%= effets.length %> résultat(s)<% } %>
+                    <div class="col-md-2 mb-2">
+                      <label class="small text-muted mb-1">Échéance du</label>
+                      <input id="filterDateFrom" type="date" class="form-control" />
+                    </div>
+                    <div class="col-md-2 mb-2">
+                      <label class="small text-muted mb-1">Échéance au</label>
+                      <input id="filterDateTo" type="date" class="form-control" />
+                    </div>
+                  </div>
+
+                  <!-- Table -->
+                  <div class="table-responsive" id="effetsTableResponsive">
+                    <% function fmtDate(d) { if (!d) return '' ; const dt=new Date(d); if (isNaN(dt)) return '' ; return
+                      String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0') + '/' +
+                      dt.getFullYear(); } function statutClass(s) { return
+                      String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-'); }
+                      %>
+                      <table class="table table-sm table-hover table-bordered effet-table" style="min-width: 1200px;"
+                        id="editableTable">
+                        <thead class="thead-light">
+                          <tr>
+                            <th>Date</th>
+                            <th>N° Effet</th>
+                            <th>Banque</th>
+                            <th>Bénéficiaire</th>
+                            <th class="text-right">Montant</th>
+                            <th>Échéance</th>
+                            <th>Statut</th>
+                            <th>Date Règlement</th>
+                            <th>Chantier</th>
+                            <th>Montant chantier</th>
+                            <th>Observation</th>
+                            <th class="text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody id="effetTbody">
+                          <% if (typeof effets==='undefined' || !effets.length) { %>
+                            <tr>
+                              <td colspan="12" class="text-center text-muted">Aucun effet disponible.</td>
+                            </tr>
+                            <% } else { %>
+                              <% effets.forEach(e=> { %>
+                                <tr data-id="<%= e.id %>">
+                                  <td class="cell-edit" contenteditable="true" data-name="dateEtablissement">
+                                    <%= fmtDate(e.dateEtablissement) %>
+                                  </td>
+                                  <td class="cell-edit" contenteditable="true" data-name="numero">
+                                    <%= e.numero || '' %>
+                                  </td>
+                                  <td class="cell-edit" contenteditable="true" data-name="banque">
+                                    <%= e.banque ? e.banque.name : '' %>
+                                  </td>
+                                  <td class="cell-edit" contenteditable="true" data-name="beneficiaire">
+                                    <%= e.beneficiaire || '' %>
+                                  </td>
+                                  <td class="text-right cell-edit" contenteditable="true" data-name="montant">
+                                    <%= e.montant ? Number(e.montant).toLocaleString('fr-FR', { minimumFractionDigits:
+                                      2, maximumFractionDigits: 2 }) : '' %>
+                                  </td>
+                                  <td class="cell-edit" contenteditable="true" data-name="dateEcheance">
+                                    <%= e.dateEcheance ? fmtDate(e.dateEcheance) : '' %>
+                                  </td>
+                                  <td data-name="statut" class="text-center">
+                                    <span class="badge-statut <%= statutClass(e.statut) %>"
+                                      onclick="toggleStatutSelect(this)">
+                                      <%= e.statut %>
+                                    </span>
+                                  </td>
+                                  <td class="cell-edit" contenteditable="true" data-name="dateReglement">
+                                    <%= fmtDate(e.dateReglement) %>
+                                  </td>
+                                  <td data-name="chantier">
+                                    <div class="allocations">
+                                      <% const _displayAllocs=(e.allocations && e.allocations.length) ? e.allocations :
+                                        []; %>
+                                        <% if (_displayAllocs.length) { %>
+                                          <% _displayAllocs.forEach(a=> { %>
+                                            <div class="alloc-line">
+                                              <div class="alloc-name">
+                                                <%= a.chantier ? a.chantier.nom : '' %>
+                                              </div>
+                                            </div>
+                                            <% }) %>
+                                              <% } else if (e.chantier) { %>
+                                                <div class="alloc-line">
+                                                  <div class="alloc-name">
+                                                    <%= e.chantier.nom %>
+                                                  </div>
+                                                </div>
+                                                <% } %>
+                                    </div>
+                                  </td>
+                                  <td>
+                                    <div class="allocations">
+                                      <% const _displayAllocs2=(e.allocations && e.allocations.length) ? e.allocations :
+                                        []; %>
+                                        <% if (_displayAllocs2.length) { %>
+                                          <% _displayAllocs2.forEach(a=> { %>
+                                            <div class="alloc-line">
+                                              <div class="alloc-name">&nbsp;</div>
+                                              <div class="alloc-amount">
+                                                <%= (a.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
+                                                  maximumFractionDigits: 2 }) %>
+                                              </div>
+                                            </div>
+                                            <% }) %>
+                                              <% } else if (e.chantier) { %>
+                                                <div class="alloc-line">
+                                                  <div class="alloc-name">&nbsp;</div>
+                                                  <div class="alloc-amount">
+                                                    <%= (e.montant || 0).toLocaleString('fr-FR', {
+                                                      minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                                                  </div>
+                                                </div>
+                                                <% } %>
+                                    </div>
+                                  </td>
+                                  <td class="cell-edit obs-cell" contenteditable="true" data-name="obs">
+                                    <%= e.obs || '' %>
+                                  </td>
+                                  <td class="text-right">
+                                    <div class="table-actions">
+                                      <button class="btn btn-sm btn-outline-danger btn-delete-effet" title="Supprimer"
+                                        data-id="<%= e.id %>">
+                                        <i class="fas fa-trash"></i>
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                                <% }) %>
+                                  <% } %>
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <th colspan="4" class="text-right">Total</th>
+                            <th class="text-right" id="totalMontantCell">
+                              <%= (typeof effets !=='undefined' && effets.length) ? effets.reduce((s, e2)=> s +
+                                Number(e2.montant || 0), 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
+                                maximumFractionDigits: 2 }) : '0,00' %>
+                            </th>
+                            <th colspan="7"></th>
+                          </tr>
+                        </tfoot>
+                      </table>
+                  </div>
+
+                  <!-- Fixed bottom scrollbar -->
+                  <div id="effetsBottomHScroll" class="bottom-hscroll" aria-hidden="true">
+                    <div id="effetsBottomHScrollInner" class="bottom-hscroll-inner"></div>
+                  </div>
+
+                  <!-- Results info -->
+                  <div class="mt-3">
+                    <div class="small text-muted" id="effetInfo">
+                      <% if (typeof effets !=='undefined' ) { %>
+                        <%= effets.length %> résultat(s)<% } %>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
+        </div>
+      </div>
+  </div>
+
+  <div class="modal fade" id="createEffetModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Créer un effet</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="small text-muted mb-1">Bénéficiaire (Fournisseur)</label>
+              <select id="createFournisseur" class="form-control"></select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="small text-muted mb-1">Banque</label>
+              <select id="createBanque" class="form-control"></select>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="small text-muted mb-1">Date d'échéance</label>
+              <input id="createDateEcheance" type="date" class="form-control" />
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="small text-muted mb-1">Montant (auto)</label>
+              <input id="createMontant" class="form-control" readonly />
+            </div>
+            <div class="col-12 mb-2">
+              <label class="small text-muted mb-1">Observation</label>
+              <input id="createObs" class="form-control" />
+            </div>
           </div>
+
+          <div class="d-flex align-items-center justify-content-between mt-2 mb-2">
+            <div class="small text-muted">Affectations chantiers</div>
+            <button id="btnCreateAddAlloc" class="btn btn-sm btn-outline-primary" type="button">
+              <i class="fas fa-plus mr-2"></i>Ajouter chantier
+            </button>
+          </div>
+
+          <div id="createAllocList" class="d-grid" style="gap: 10px;"></div>
+          <div class="small text-muted mt-2" id="createAllocTotals"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-primary" id="btnCreateEffetConfirm">Créer</button>
         </div>
       </div>
     </div>
@@ -362,10 +512,11 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
   <script>
     /* ── chantier data for add-row ── */
-    const CHANTIERS_DATA = <%- JSON.stringify((chantiers || []).map(c => ({ nom: c.nom }))) %>;
+    const CHANTIERS_DATA = <%- JSON.stringify((chantiers || []).map(c => ({ id: c.id, nom: c.nom }))) %>;
 
     /* ── helpers ── */
     function fmtFr(d) {
@@ -383,7 +534,10 @@
     }
 
     function parseMoney(v) {
-      const s = String(v || '').trim().replace(/\s/g, '').replace(/[^\d,.-]/g, '').replace(',', '.');
+      const raw = String(v ?? '').trim();
+      if (!raw) return null;
+      const s = raw.replace(/\s/g, '').replace(/[^\d,.-]/g, '').replace(',', '.');
+      if (!s) return null;
       const n = Number(s);
       return isNaN(n) ? null : n;
     }
@@ -420,6 +574,16 @@
 
     let activeFilterType = '';
 
+    /* ── select2 init (beneficiaire) ── */
+    (function initBeneficiaireSelect() {
+      if (!window.jQuery || !$filterBeneficiaire) return;
+      window.jQuery($filterBeneficiaire).select2({
+        width: '100%',
+        placeholder: 'Tous',
+        allowClear: true
+      });
+    })();
+
     /* ── filter dropdown ── */
     function setFilterType(type) {
       const t = String(type || '').trim();
@@ -433,15 +597,21 @@
 
       $filterTypeBtn.textContent =
         t === 'beneficiaire' ? 'Bénéficiaire' :
-        t === 'banque' ? 'Banque' :
-        t === 'statut' ? 'Statut' :
-        t === 'chantier' ? 'Chantier' :
-        t === 'montant' ? 'Montant' :
-        t === 'numero' ? 'N° Effet' :
-        'Filtrer Par';
+          t === 'banque' ? 'Banque' :
+            t === 'statut' ? 'Statut' :
+              t === 'chantier' ? 'Chantier' :
+                t === 'montant' ? 'Montant' :
+                  t === 'numero' ? 'N° Effet' :
+                    'Filtrer Par';
 
       updateClearBtn();
-      applyFilters();
+      try {
+        applyFilters();
+      } catch (err) {
+        console.error('applyFilters failed', err);
+        const rows = $tbody ? $tbody.querySelectorAll('tr[data-id]') : [];
+        rows.forEach(tr => { tr.style.display = ''; });
+      }
     }
 
     function updateClearBtn() {
@@ -460,6 +630,7 @@
     function clearFilters() {
       activeFilterType = '';
       [$filterBeneficiaire, $filterBanque, $filterStatut, $filterChantier, $filterMontant, $filterNumero, $filterDateFrom, $filterDateTo].forEach(el => { if (el) el.value = ''; });
+      if (window.jQuery && $filterBeneficiaire) window.jQuery($filterBeneficiaire).val('').trigger('change');
       setFilterType('');
     }
 
@@ -485,11 +656,16 @@
       const benVal = ($filterBeneficiaire && $filterBeneficiaire.value || '').toLowerCase().trim();
       const banVal = $filterBanque && $filterBanque.value || '';
       const stVal = ($filterStatut && $filterStatut.value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-      const chVal = $filterChantier && $filterChantier.value || '';
+      const chVal = String($filterChantier && $filterChantier.value || '');
       const mtVal = parseMoney($filterMontant && $filterMontant.value);
       const numVal = ($filterNumero && $filterNumero.value || '').toLowerCase().trim();
       const dateFrom = $filterDateFrom && $filterDateFrom.value;
       const dateTo = $filterDateTo && $filterDateTo.value;
+
+      const hasAnyFilter = !!(
+        benVal || banVal || stVal || chVal || numVal ||
+        (mtVal !== null) || dateFrom || dateTo
+      );
 
       const rows = $tbody ? $tbody.querySelectorAll('tr[data-id]') : [];
       let total = 0;
@@ -497,6 +673,15 @@
 
       rows.forEach(tr => {
         let show = true;
+
+        if (!hasAnyFilter) {
+          tr.style.display = '';
+          const mc = tr.querySelector('td[data-name="montant"]');
+          const v = parseMoney(mc ? mc.textContent : '');
+          if (v !== null) total += v;
+          shown++;
+          return;
+        }
 
         if (benVal) {
           const c = tr.querySelector('td[data-name="beneficiaire"]');
@@ -513,8 +698,9 @@
           show = show && raw === stVal;
         }
         if (chVal) {
-          const sel = tr.querySelector('select.chantier-select');
-          show = show && sel && sel.value === chVal;
+          const c = tr.querySelector('td[data-name="chantier"]');
+          const txt = c && c.textContent ? String(c.textContent) : '';
+          show = show && txt.includes(chVal);
         }
         if (mtVal !== null) {
           const c = tr.querySelector('td[data-name="montant"]');
@@ -549,11 +735,18 @@
       if ($totalCell) $totalCell.textContent = moneyFr(total);
       const info = document.getElementById('effetInfo');
       if (info) info.textContent = `${shown} résultat(s)`;
+
+      if (!hasAnyFilter && shown === 0) {
+        rows.forEach(tr => { tr.style.display = ''; });
+      }
     }
 
-    [$filterBeneficiaire, $filterMontant, $filterNumero].forEach(el => {
+    [$filterMontant, $filterNumero].forEach(el => {
       if (el) el.addEventListener('input', () => { updateClearBtn(); applyFilters(); });
     });
+    if ($filterBeneficiaire) {
+      $filterBeneficiaire.addEventListener('change', () => { updateClearBtn(); applyFilters(); });
+    }
     [$filterBanque, $filterStatut, $filterChantier, $filterDateFrom, $filterDateTo].forEach(el => {
       if (el) el.addEventListener('change', () => { updateClearBtn(); applyFilters(); });
     });
@@ -635,10 +828,7 @@
       });
 
       $tbody.addEventListener('change', e => {
-        const sel = e.target.closest('select.chantier-select');
-        if (!sel) return;
-        const tr = sel.closest('tr[data-id]');
-        if (tr) { dirtyRows.add(tr); saveRow(tr); }
+        return;
       });
 
       $tbody.addEventListener('focusout', async e => {
@@ -656,8 +846,8 @@
       const data = {};
       tr.querySelectorAll('[data-name]').forEach(el => {
         const key = el.getAttribute('data-name');
-        if (el.tagName === 'SELECT' && el.classList.contains('chantier-select')) {
-          data[key] = el.value || null;
+        if (key === 'chantier') {
+          return;
         } else if (el.tagName === 'TD' && el.contentEditable === 'true') {
           let val = el.textContent.trim();
           if (key === 'montant') {
@@ -708,96 +898,200 @@
       });
     }
 
-    /* ── add row ── */
+    /* ── add row via modal ── */
+    const $createEffetModal = $('#createEffetModal');
+    const $createFournisseur = document.getElementById('createFournisseur');
+    const $createBanque = document.getElementById('createBanque');
+    const $createDateEcheance = document.getElementById('createDateEcheance');
+    const $createMontant = document.getElementById('createMontant');
+    const $createObs = document.getElementById('createObs');
+    const $createAllocList = document.getElementById('createAllocList');
+    const $createAllocTotals = document.getElementById('createAllocTotals');
+    const $btnCreateAddAlloc = document.getElementById('btnCreateAddAlloc');
+    const $btnCreateEffetConfirm = document.getElementById('btnCreateEffetConfirm');
+
+    let createAllocations = [];
+
     document.getElementById('addRowBtn').addEventListener('click', () => {
-      const tr = document.createElement('tr');
-      tr.setAttribute('data-dirty', 'true');
+      openCreateModal();
+    });
 
-      const dateFields = ['dateEtablissement', 'numero', 'banque', 'beneficiaire'];
-      [
-        { key: 'dateEtablissement', label: 'Date', editable: true },
-        { key: 'numero', label: 'N° Effet', editable: true },
-        { key: 'banque', label: 'Banque', editable: true },
-        { key: 'beneficiaire', label: 'Bénéficiaire', editable: true },
-        { key: 'montant', label: 'Montant', editable: true, cls: 'text-right' },
-        { key: 'dateEcheance', label: 'Échéance', editable: true },
-        { key: 'statut', label: 'Statut', editable: false },
-        { key: 'dateReglement', label: 'Date Règlement', editable: true },
-        { key: 'chantier', label: 'Chantier', editable: false },
-        { key: 'obs', label: 'Observation', editable: true, cls: 'obs-cell' },
-      ].forEach(col => {
-        const td = document.createElement('td');
-        td.setAttribute('data-name', col.key);
-        if (col.cls) td.className = col.cls;
-
-        if (col.key === 'statut') {
-          const sel = document.createElement('select');
-          sel.className = 'form-control form-control-sm statut-select';
-          ['En Circulation', 'PAYÉ', 'Impayé', 'Annulé', 'Treso'].forEach(o => {
-            const opt = document.createElement('option');
-            opt.value = o; opt.textContent = o;
-            sel.appendChild(opt);
-          });
-          td.appendChild(sel);
-        } else if (col.key === 'chantier') {
-          const sel = document.createElement('select');
-          sel.className = 'form-control form-control-sm chantier-select';
-          const defOpt = document.createElement('option');
-          defOpt.value = ''; defOpt.textContent = '-- Aucun --';
-          sel.appendChild(defOpt);
-          CHANTIERS_DATA.forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.nom; opt.textContent = c.nom;
-            sel.appendChild(opt);
-          });
-          td.appendChild(sel);
-        } else {
-          td.contentEditable = 'true';
-          td.className = (td.className ? td.className + ' ' : '') + 'cell-edit';
-        }
-
-        tr.appendChild(td);
+    if ($btnCreateAddAlloc) {
+      $btnCreateAddAlloc.addEventListener('click', () => {
+        createAllocations.push({ chantierId: '', montant: '' });
+        renderCreateAllocEditor();
       });
+    }
 
-      const tdAct = document.createElement('td');
-      tdAct.className = 'text-right';
-      tdAct.innerHTML = `<div class="table-actions"><button class="btn btn-sm btn-success btn-save-new" title="Enregistrer"><i class="fas fa-save"></i></button></div>`;
-      tr.appendChild(tdAct);
-
-      $tbody.prepend(tr);
-
-      /* save new row */
-      tdAct.querySelector('.btn-save-new').addEventListener('click', async () => {
-        const data = {};
-        tr.querySelectorAll('[data-name]').forEach(el => {
-          const key = el.getAttribute('data-name');
-          if (el.tagName === 'SELECT') {
-            data[key] = el.value || null;
-          } else {
-            let val = el.textContent.trim();
-            if (['dateEtablissement', 'dateEcheance', 'dateReglement'].includes(key)) val = dateToISO(val);
-            else if (key === 'montant') { const n = parseMoney(val); val = n; }
-            data[key] = val;
-          }
-        });
+    if ($btnCreateEffetConfirm) {
+      $btnCreateEffetConfirm.addEventListener('click', async () => {
         try {
-          const res = await fetch('/tresorerie/effets/', {
+          const beneficiaire = $createFournisseur ? $createFournisseur.options[$createFournisseur.selectedIndex]?.text : '';
+          const banque = $createBanque ? $createBanque.options[$createBanque.selectedIndex]?.text : '';
+          const echeance = $createDateEcheance ? String($createDateEcheance.value || '').trim() : '';
+          const obs = $createObs ? String($createObs.value || '').trim() : '';
+
+          if (!banque || banque.includes('--')) return alert('Banque requise');
+          if (!beneficiaire || beneficiaire.includes('--')) return alert('Fournisseur requis');
+          if (!echeance) return alert("Date d'échéance requise");
+
+          const payloadAllocs = (Array.isArray(createAllocations) ? createAllocations : [])
+            .map(a => ({
+              chantierId: String(a.chantierId || '').trim(),
+              montant: parseMoney(a.montant),
+            }))
+            .filter(a => a.chantierId && a.montant !== null && a.montant > 0)
+            .map(a => ({ chantierId: Number(a.chantierId), montant: Number(a.montant) }));
+
+          if (!payloadAllocs.length) {
+            return alert('Ajoute au moins un chantier avec un montant > 0');
+          }
+
+          const totalMontant = payloadAllocs.reduce((sum, a) => sum + a.montant, 0);
+
+          const res = await fetch('/tresorerie/effets/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify({
+              banque: banque,
+              beneficiaire: beneficiaire,
+              dateEcheance: echeance,
+              montant: totalMontant,
+              obs: obs,
+              allocations: payloadAllocs
+            })
           });
           const json = await res.json().catch(() => ({}));
-          if (res.ok && json.id) {
-            tr.setAttribute('data-id', json.id);
-            tr.removeAttribute('data-dirty');
-            tdAct.innerHTML = `<div class="table-actions"><button class="btn btn-sm btn-outline-danger btn-delete-effet" data-id="${json.id}" title="Supprimer"><i class="fas fa-trash"></i></button></div>`;
-            applyFilters();
-          } else {
-            alert(json.message || 'Erreur création effet');
+          if (!res.ok) {
+            return alert(json && json.error ? json.error : 'Erreur création');
           }
-        } catch (err) { alert(err.message || 'Erreur réseau'); }
+
+          $createEffetModal.modal('hide');
+          location.reload();
+        } catch (err) {
+          alert(err.message || 'Erreur');
+        }
       });
-    });
+    }
+
+    function openCreateModal() {
+      if (!$createFournisseur || !$createBanque) return;
+
+      $createFournisseur.innerHTML = '';
+      const optF0 = document.createElement('option');
+      optF0.value = '';
+      optF0.textContent = '-- Fournisseur --';
+      $createFournisseur.appendChild(optF0);
+      const fournisseursNames = [];
+      document.querySelectorAll('#filterBeneficiaire option').forEach(opt => {
+        if (opt.value) fournisseursNames.push(opt.value);
+      });
+      for (const fn of fournisseursNames) {
+        const o = document.createElement('option');
+        o.value = fn; o.textContent = fn;
+        $createFournisseur.appendChild(o);
+      }
+
+      $createBanque.innerHTML = '';
+      const optB0 = document.createElement('option');
+      optB0.value = '';
+      optB0.textContent = '-- Banque --';
+      $createBanque.appendChild(optB0);
+      const banquesNames = [];
+      document.querySelectorAll('#filterBanque option').forEach(opt => {
+        if (opt.value) banquesNames.push(opt.value);
+      });
+      for (const bn of banquesNames) {
+        const o = document.createElement('option');
+        o.value = bn; o.textContent = bn;
+        $createBanque.appendChild(o);
+      }
+
+      if ($createDateEcheance) $createDateEcheance.value = new Date().toISOString().slice(0, 10);
+      if ($createObs) $createObs.value = '';
+
+      createAllocations = [{ chantierId: '', montant: '' }];
+      renderCreateAllocEditor();
+      $createEffetModal.modal('show');
+    }
+
+    function setCreateMontantFromAllocs() {
+      const amounts = (Array.isArray(createAllocations) ? createAllocations : [])
+        .map(a => parseMoney(a.montant))
+        .filter(v => v !== null);
+      const sum = amounts.reduce((acc, v) => acc + Number(v || 0), 0);
+      if ($createMontant) $createMontant.value = moneyFr(sum);
+      if ($createAllocTotals) $createAllocTotals.textContent = `Total affectations: ${moneyFr(sum)}`;
+    }
+
+    function renderCreateAllocEditor() {
+      if (!$createAllocList) return;
+      $createAllocList.innerHTML = '';
+
+      for (let i = 0; i < createAllocations.length; i++) {
+        const line = createAllocations[i];
+        const wrap = document.createElement('div');
+        wrap.className = 'd-flex align-items-center';
+        wrap.style.gap = '10px';
+
+        const sel = document.createElement('select');
+        sel.className = 'form-control';
+        sel.style.flex = '1';
+        const optEmpty = document.createElement('option');
+        optEmpty.value = '';
+        optEmpty.textContent = '-- Chantier --';
+        sel.appendChild(optEmpty);
+
+        // Use chantiers object from PHP data
+        const dropdownChantiers = [];
+        document.querySelectorAll('#filterChantier option').forEach(opt => {
+          if (opt.value) {
+            const cData = CHANTIERS_DATA.find(c => c.nom === opt.value);
+            if (cData && cData.id) {
+              dropdownChantiers.push({ id: cData.id, nom: cData.nom });
+            } else {
+              dropdownChantiers.push({ id: opt.value, nom: opt.value });
+            }
+          }
+        });
+
+        // Populate options
+        for (const c of dropdownChantiers) {
+          const o = document.createElement('option');
+          o.value = c.id; // use id as value!
+          o.textContent = c.nom;
+          if (String(line.chantierId) === String(c.id)) o.selected = true;
+          sel.appendChild(o);
+        }
+
+        const input = document.createElement('input');
+        input.className = 'form-control';
+        input.placeholder = 'Montant';
+        input.style.width = '200px';
+        input.value = line.montant !== undefined && line.montant !== null ? String(line.montant) : '';
+
+        const btnRemove = document.createElement('button');
+        btnRemove.type = 'button';
+        btnRemove.className = 'btn btn-outline-danger';
+        btnRemove.innerHTML = '<i class="fas fa-times"></i>';
+
+        sel.addEventListener('change', () => { createAllocations[i].chantierId = sel.value; });
+        input.addEventListener('input', () => { createAllocations[i].montant = input.value; setCreateMontantFromAllocs(); });
+        btnRemove.addEventListener('click', () => {
+          createAllocations.splice(i, 1);
+          if (!createAllocations.length) createAllocations.push({ chantierId: '', montant: '' });
+          renderCreateAllocEditor();
+        });
+
+        wrap.appendChild(sel);
+        wrap.appendChild(input);
+        wrap.appendChild(btnRemove);
+        $createAllocList.appendChild(wrap);
+      }
+
+      setCreateMontantFromAllocs();
+    }
+
 
     /* ── bulk PDF export ── */
     document.getElementById('btnExportPdf').addEventListener('click', () => {

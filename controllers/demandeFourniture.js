@@ -256,11 +256,13 @@ export const storeDemandeFourniture = async (req, res) => {
               reference: item.lot,
             },
           },
-          update: {}, // do nothing if exists
+          update: {
+            prixUnitaire: item.prixUnitaire ?? null,
+          },
           create: {
             designation: item.designation,
             reference: item.lot,
-            prixUnitaire: item.prixUnitaire || null,
+            prixUnitaire: item.prixUnitaire ?? null,
           },
         });
       }
@@ -414,11 +416,13 @@ export const updateDemandeFourniture = async (req, res) => {
               reference: item.lot,
             },
           },
-          update: {}, // do nothing if exists
+          update: {
+            prixUnitaire: item.prixUnitaire ?? null,
+          },
           create: {
             designation: item.designation,
             reference: item.lot,
-            prixUnitaire: item.prixUnitaire || null,
+            prixUnitaire: item.prixUnitaire ?? null,
           },
         });
       }
@@ -1310,7 +1314,7 @@ export const addpricingforDemande = async (req, res) => {
     // -------------------------------------------------//
     const existingItems = await prisma.itemFourniture.findMany({
       where: { demandeFournitureId: parseInt(id, 10) },
-      select: { id: true, quantité: true },
+      select: { id: true, quantité: true, designation: true, lot: true },
     });
 
     const existingMap = new Map(existingItems.map(item => [item.id, item]));
@@ -1319,7 +1323,7 @@ export const addpricingforDemande = async (req, res) => {
     // 5. Prepare updates and calculate totals
     // -------------------------------------------------
     let totalHtDemande = 0;
-    const updatePromises = parsedItems.map(it => {
+    const updateActions = parsedItems.map(it => {
       const itemId = parseInt(it.id);
       const existing = existingMap.get(itemId);
       if (!existing) {
@@ -1329,14 +1333,7 @@ export const addpricingforDemande = async (req, res) => {
       const totalHt = qty * it.prixU;
       totalHtDemande += totalHt;
 
-      return prisma.itemFourniture.update({
-        where: { id: itemId },
-        data: {
-          prixU: it.prixU,
-          totalHt,
-          delaisPaiement: it.delaisPaiement ?? delaispaiement
-        },
-      });
+      return { itemId, existing, totalHt, prixU: it.prixU, delaisPaiement: it.delaisPaiement ?? delaispaiement };
     });
 
     // -------------------------------------------------
@@ -1348,17 +1345,46 @@ export const addpricingforDemande = async (req, res) => {
     // -------------------------------------------------
     // 7. Execute transaction
     // -------------------------------------------------
-    await prisma.$transaction([
-      ...updatePromises,
-      prisma.demandeFourniture.update({
+    await prisma.$transaction(async (tx) => {
+      for (const a of updateActions) {
+        await tx.itemFourniture.update({
+          where: { id: a.itemId },
+          data: {
+            prixU: a.prixU,
+            totalHt: a.totalHt,
+            delaisPaiement: a.delaisPaiement,
+          },
+        });
+
+        if (a.existing?.designation && a.existing?.lot) {
+          await tx.fourniture_list.upsert({
+            where: {
+              designation_reference: {
+                designation: a.existing.designation,
+                reference: a.existing.lot,
+              },
+            },
+            update: {
+              prixUnitaire: a.prixU ?? null,
+            },
+            create: {
+              designation: a.existing.designation,
+              reference: a.existing.lot,
+              prixUnitaire: a.prixU ?? null,
+            },
+          });
+        }
+      }
+
+      await tx.demandeFourniture.update({
         where: { id: parseInt(id, 10) },
         data: {
           totalHt: totalHtDemande,
           Tva: montantTva,
           totalTTC: totalTtc,
         },
-      }),
-    ]);
+      });
+    });
 
     res.json({ success: true, message: 'Pricing mis à jour avec succès' });
 

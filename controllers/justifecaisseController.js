@@ -3,6 +3,8 @@ import PDFDocument from "pdfkit";
 import fs from "fs";
 import path, { parse } from 'path';
 import { fileURLToPath } from 'url';
+import { PassThrough } from "stream";
+import { whatsappService } from "../services/whatssapservice.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import ExcelJS from 'exceljs';
@@ -452,37 +454,59 @@ export const createOrUpdateDepenses = async (req, res) => {
   try {
     const { responsable, chantier, designation, items } = req.body;
     const user = req.session.user;
-    console.log('Received depenses:', { responsable, chantier, designation, items });
 
     if (!user || user.name !== responsable) {
-      console.error('Unauthorized user:', { sessionUser: user?.name, responsable });
-      return res.status(403).json({ success: false, error: 'Utilisateur non autorisé' });
+      return res.status(403).json({
+        success: false,
+        error: "Utilisateur non autorisé",
+      });
     }
 
-    const chantierRecord = await prisma.chantier.findFirst({ where: { nom: chantier } });
+    const chantierRecord = await prisma.chantier.findFirst({
+      where: { nom: chantier },
+    });
+
     if (!chantierRecord) {
-      console.error('Invalid chantier:', chantier);
-      return res.status(400).json({ success: false, error: 'Chantier invalide' });
+      return res.status(400).json({
+        success: false,
+        error: "Chantier invalide",
+      });
     }
 
-    const [moisStr, anneeStr] = designation.split('-');
+    const [moisStr, anneeStr] = designation.split("-");
+
     const moisIndex = [
-      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+      "Janvier","Février","Mars","Avril","Mai","Juin",
+      "Juillet","Août","Septembre","Octobre","Novembre","Décembre"
     ].indexOf(moisStr);
+
     if (moisIndex === -1) {
-      console.error('Invalid month:', designation);
-      return res.status(400).json({ success: false, error: 'Mois invalide' });
+      return res.status(400).json({
+        success: false,
+        error: "Mois invalide",
+      });
     }
+
     const mois = moisIndex + 1;
     const annee = parseInt(anneeStr);
 
     let justifCaisse = await prisma.justifCaisse.findFirst({
-      where: { userId: user.id, chantierId: chantierRecord.id, mois, annee },
+      where: {
+        userId: user.id,
+        chantierId: chantierRecord.id,
+        mois,
+        annee,
+      },
     });
 
     if (!justifCaisse) {
-      const soldePrecedent = await getPreviousSolde(user.id, chantierRecord.id, mois, annee);
+      const soldePrecedent = await getPreviousSolde(
+        user.id,
+        chantierRecord.id,
+        mois,
+        annee
+      );
+
       justifCaisse = await prisma.justifCaisse.create({
         data: {
           mois,
@@ -495,8 +519,10 @@ export const createOrUpdateDepenses = async (req, res) => {
       });
     }
 
-    // Create or update depenses
+    const changeLogs = [];
+
     for (const item of items) {
+
       const data = {
         dateDepense: new Date(item.date),
         numeroPiece: item.numeroPiece,
@@ -504,37 +530,136 @@ export const createOrUpdateDepenses = async (req, res) => {
         natureDepense: item.natureDepense,
         montantJustifie: parseFloat(item.montantJustifie) || 0,
         montantNonJustifie: parseFloat(item.montantNonJustifie) || 0,
-        validation: true, // Default to true as per your logic
+        validation: true,
         justifCaisseId: justifCaisse.id,
       };
-      console.log('Processing depense:', data);
+
       if (item._id) {
+
+        const existing = await prisma.depenseCaisse.findUnique({
+          where: { id: parseInt(item._id) },
+        });
+
+        const changes = [];
+
+        if (existing.numeroPiece !== data.numeroPiece)
+          changes.push(
+            `NumeroPiece: ${existing.numeroPiece} → ${data.numeroPiece}`
+          );
+
+        if (existing.imputation !== data.imputation)
+          changes.push(
+            `Imputation: ${existing.imputation} → ${data.imputation}`
+          );
+
+        if (existing.natureDepense !== data.natureDepense)
+          changes.push(
+            `Nature: ${existing.natureDepense} → ${data.natureDepense}`
+          );
+
+        if (existing.montantJustifie !== data.montantJustifie)
+          changes.push(
+            `MontantJustifie: ${existing.montantJustifie} → ${data.montantJustifie}`
+          );
+
+        if (existing.montantNonJustifie !== data.montantNonJustifie)
+          changes.push(
+            `MontantNonJustifie: ${existing.montantNonJustifie} → ${data.montantNonJustifie}`
+          );
+
         await prisma.depenseCaisse.update({
           where: { id: parseInt(item._id) },
           data,
         });
+
+        if (changes.length > 0) {
+          changeLogs.push(
+            `✏️ Modification ligne ${item._id}\n${changes.join("\n")}`
+          );
+        }
+
       } else {
-        await prisma.depenseCaisse.create({ data });
+
+        const created = await prisma.depenseCaisse.create({ data });
+
+        changeLogs.push(
+          `➕ Nouvelle dépense ajoutée\nNumeroPiece: ${created.numeroPiece}\nMontantJustifie: ${created.montantJustifie}`
+        );
       }
     }
 
-    // Recalculate totals using helper
-    const { totalRecettes, totalDepenses, soldeFinal } = await recalculateAndUpdateTotals(justifCaisse.id);
+    const { totalRecettes, totalDepenses, soldeFinal } =
+      await recalculateAndUpdateTotals(justifCaisse.id);
 
-    console.log('Totals:', {
-      totalRecettes,
-      totalDepenses,
-      soldePrecedent: justifCaisse.soldePrecedent,
-      soldeFinal,
-    });
+    /*
+      SEND NOTIFICATION ONLY ONCE
+    */
+
+    if (changeLogs.length > 0) {
+      (async () => {
+        try {
+
+          const recipients =
+            await prisma.whatsAppNotificationRecipient.findMany({
+              where: {
+                active: true,
+                notifyJustiffecaisse: true,
+              },
+              select: { phone: true },
+            });
+
+          const numbers = recipients.map((r) => r.phone).filter(Boolean);
+          if (!numbers.length) return;
+
+          const message = `
+📢 Justification de caisse mise à jour
+
+Utilisateur: ${user.name}
+Chantier: ${chantierRecord.nom}
+Date: ${new Date().toLocaleDateString("fr-FR")}
+
+Changements:
+${changeLogs.join("\n\n")}
+`;
+
+          const pdfBuffer = await generateJustifCaissePDFBuffer(
+            justifCaisse.id
+          );
+
+          const filename = `JustifCaisse_${justifCaisse.id}.pdf`;
+
+          await Promise.allSettled(
+            numbers.map((number) =>
+              whatsappService.sendMessage(number, message, {
+                data: pdfBuffer,
+                filename,
+                mimetype: "application/pdf",
+              })
+            )
+          );
+
+        } catch (err) {
+          console.error("WhatsApp notification failed:", err);
+        }
+      })();
+    }
 
     res.json({
       success: true,
-      totals: { totalRecettes, totalDepenses, soldeFinal }
+      totals: {
+        totalRecettes,
+        totalDepenses,
+        soldeFinal,
+      },
     });
+
   } catch (error) {
-    console.error('Error in createOrUpdateDepenses:', error);
-    res.status(500).json({ success: false, error: error.message });
+    console.error("Error in createOrUpdateDepenses:", error);
+
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
   }
 };
 
@@ -1413,8 +1538,6 @@ export const addJustifCaisseAdminAuto = async (req, res) => {
 
 
 
-
-
 export const addJustifCaisseUserFirstTime = async (req, res) => {
   try {
     const userId = parseInt(req.body.userId);
@@ -1701,17 +1824,15 @@ export const generateJustifCaissePDF = async (req, res) => {
       let x = tableX;
       doc.font(bold ? "Helvetica-Bold" : "Helvetica").fontSize(9);
 
-      // Calculate required height for each cell
       let maxHeight = minRowH;
       cols.forEach((c, i) => {
         const textHeight = doc.heightOfString(values[i] || "", {
           width: c.w - 8,
           align: i === 2 ? "right" : "left",
         });
-        maxHeight = Math.max(maxHeight, textHeight + 12); // 12 = padding
+        maxHeight = Math.max(maxHeight, textHeight + 12);
       });
 
-      // Draw cells with calculated height
       cols.forEach((c, i) => {
         doc.rect(x, yy, c.w, maxHeight).stroke();
         doc.text(values[i], x + 4, yy + 6, {
@@ -1724,19 +1845,16 @@ export const generateJustifCaissePDF = async (req, res) => {
       return maxHeight;
     };
 
-    // Section title
     doc.font("Helvetica-Bold").fontSize(12).fillColor("#000")
       .text("RECETTES", MARGIN, yPosition);
     yPosition += 25;
 
-    // Header
     const headerValues = cols.map(c => c.label);
     const headerHeightMeasured = getRowHeight(headerValues);
     yPosition = ensureSpace(yPosition, headerHeightMeasured, () => (MARGIN + 80));
     const headerHeight = drawRow(yPosition, headerValues, true);
     yPosition += headerHeight;
 
-    // Data
     let totalRecettes = 0;
     justif.recettes.forEach(r => {
       totalRecettes += Number(r.montant ?? 0);
@@ -1756,7 +1874,6 @@ export const generateJustifCaissePDF = async (req, res) => {
       yPosition += rowHeight;
     });
 
-    // Total
     const totalValues = ["TOTAL", "", totalRecettes.toFixed(2)];
     const totalHeightMeasured = getRowHeight(totalValues);
     yPosition = ensureSpace(yPosition, totalHeightMeasured, () => {
@@ -1788,17 +1905,15 @@ export const generateJustifCaissePDF = async (req, res) => {
       let x = tableX;
       doc.font(bold ? "Helvetica-Bold" : "Helvetica").fontSize(9);
 
-      // Calculate required height for each cell
       let maxHeight = minRowH;
       cols.forEach((c, i) => {
         const textHeight = doc.heightOfString(values[i] || "", {
           width: c.w - 8,
           align: i >= 4 ? "right" : "left",
         });
-        maxHeight = Math.max(maxHeight, textHeight + 12); // 12 = padding
+        maxHeight = Math.max(maxHeight, textHeight + 12);
       });
 
-      // Draw cells with calculated height
       cols.forEach((c, i) => {
         doc.rect(x, yy, c.w, maxHeight).stroke();
         doc.text(values[i], x + 4, yy + 6, {
@@ -1825,12 +1940,10 @@ export const generateJustifCaissePDF = async (req, res) => {
       return maxHeight;
     };
 
-    // Section title
     doc.font("Helvetica-Bold").fontSize(12).fillColor("#000")
       .text("DÉPENSES", MARGIN, yPosition);
     yPosition += 25;
 
-    // Header
     const headerHeight = drawRow(yPosition, cols.map(c => c.label), true);
     yPosition += headerHeight;
 
@@ -1900,6 +2013,330 @@ export const generateJustifCaissePDF = async (req, res) => {
 
   drawFooter();
   doc.end();
+};
+
+const generateJustifCaissePDFBuffer = async (id) => {
+  const justif = await prisma.justifCaisse.findUnique({
+    where: { id: Number(id) },
+    include: {
+      recettes: true,
+      depenses: true,
+      user: { select: { name: true } },
+      chantier: { select: { nom: true } },
+    },
+  });
+
+  if (!justif) throw new Error('Justification non trouvée');
+
+  const chunks = [];
+  const pass = new PassThrough();
+  pass.on('data', (c) => chunks.push(c));
+  const finished = new Promise((resolve, reject) => {
+    pass.on('end', resolve);
+    pass.on('error', reject);
+  });
+
+  const doc = new PDFDocument({ size: "A4", margin: 40, bufferPages: true });
+  doc.pipe(pass);
+
+  const PAGE_WIDTH = 595.28;
+  const PAGE_HEIGHT = 841.89;
+  const MARGIN = 40;
+  const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
+  const FOOTER_HEIGHT = 70;
+
+  const getPageBottomY = () => PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT;
+
+  const ensureSpace = (currentY, neededHeight, onNewPage) => {
+    if (currentY + neededHeight <= getPageBottomY()) return currentY;
+    doc.addPage();
+    drawHeader();
+    return onNewPage();
+  };
+
+  const drawHeader = () => {
+    const logo = path.join(process.cwd(), "public/img/logo-4.png");
+    if (fs.existsSync(logo)) doc.image(logo, MARGIN, 30, { width: 90 });
+
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(16)
+      .fillColor("#000")
+      .text("JUSTIFICATIFS DE CAISSE", 0, 40, { align: "center" });
+
+    doc
+      .fontSize(9)
+      .fillColor("#000")
+      .text(`N° : J-${justif.id}`, PAGE_WIDTH - 160, 40)
+      .text(`Date : ${new Date().toLocaleDateString("fr-FR")}`, PAGE_WIDTH - 160, 55);
+  };
+
+  const drawInfoBox = (yPosition) => {
+    let y = yPosition || 110;
+    doc.rect(MARGIN, y, CONTENT_WIDTH, 90).stroke();
+
+    doc.font("Helvetica-Bold").text("Informations", MARGIN + 5, y + 5);
+    doc.font("Helvetica").fontSize(10);
+
+    doc.text(`Responsable : ${justif.user?.name ?? "-"}`, MARGIN + 10, y + 25);
+    doc.text(`Chantier : ${justif.chantier?.nom ?? "-"}`, MARGIN + 10, y + 40);
+    doc.text(`Mois : ${justif.designation ?? "-"}`, PAGE_WIDTH / 2, y + 25);
+    doc.text(
+      `Solde Précédent : ${Number(justif.soldePrecedent).toFixed(2)} MAD`,
+      MARGIN + 10,
+      y + 55
+    );
+    doc.text(
+      `Solde Final : ${Number(justif.soldeFinal).toFixed(2)} MAD`,
+      PAGE_WIDTH / 2,
+      y + 55
+    );
+    return y + 105;
+  };
+
+  const drawFooter = (yPosition) => {
+    const fy = yPosition || (PAGE_HEIGHT - MARGIN - FOOTER_HEIGHT);
+    doc.rect(0, fy, PAGE_WIDTH, FOOTER_HEIGHT).fill("#8B0000");
+
+    doc
+      .fillColor("#fff")
+      .fontSize(8)
+      .text(
+        "82, angle Bd Abdelmoumen et rue Soumaya, Casablanca — Tél 0522-23-39-70",
+        0,
+        fy + 20,
+        { align: "center", width: PAGE_WIDTH }
+      );
+    doc.text(
+      "Fax: 0522-23-42-60 | Capital: 18 500 000 DH | ICE: 001526422000063",
+      0,
+      fy + 35,
+      { align: "center", width: PAGE_WIDTH }
+    );
+  };
+
+  const drawRecettesTable = (yPosition) => {
+    if (!justif.recettes || justif.recettes.length === 0) return yPosition;
+
+    const cols = [
+      { label: "Date", w: 100 },
+      { label: "Source", w: 250 },
+      { label: "Montant", w: 100 },
+    ];
+
+    const minRowH = 22;
+    const tableX = MARGIN;
+
+    const getRowHeight = (values) => {
+      doc.font("Helvetica").fontSize(9);
+      let maxHeight = minRowH;
+      cols.forEach((c, i) => {
+        const text = values[i] ?? "";
+        const textHeight = doc.heightOfString(String(text), {
+          width: c.w - 8,
+          align: i === 2 ? "right" : "left",
+        });
+        maxHeight = Math.max(maxHeight, textHeight + 12);
+      });
+      return maxHeight;
+    };
+
+    const drawRow = (yy, values, bold = false) => {
+      let x = tableX;
+      doc.font(bold ? "Helvetica-Bold" : "Helvetica").fontSize(9);
+
+      let maxHeight = minRowH;
+      cols.forEach((c, i) => {
+        const textHeight = doc.heightOfString(values[i] || "", {
+          width: c.w - 8,
+          align: i === 2 ? "right" : "left",
+        });
+        maxHeight = Math.max(maxHeight, textHeight + 12);
+      });
+
+      cols.forEach((c, i) => {
+        doc.rect(x, yy, c.w, maxHeight).stroke();
+        doc.text(values[i], x + 4, yy + 6, {
+          width: c.w - 8,
+          align: i === 2 ? "right" : "left",
+        });
+        x += c.w;
+      });
+
+      return maxHeight;
+    };
+
+    doc.font("Helvetica-Bold").fontSize(12).fillColor("#000")
+      .text("RECETTES", MARGIN, yPosition);
+    yPosition += 25;
+
+    const headerValues = cols.map(c => c.label);
+    const headerHeightMeasured = getRowHeight(headerValues);
+    yPosition = ensureSpace(yPosition, headerHeightMeasured, () => (MARGIN + 80));
+    const headerHeight = drawRow(yPosition, headerValues, true);
+    yPosition += headerHeight;
+
+    let totalRecettes = 0;
+    justif.recettes.forEach(r => {
+      totalRecettes += Number(r.montant ?? 0);
+      const rowValues = [
+        new Date(r.dateRecette).toLocaleDateString("fr-FR"),
+        r.source ?? "",
+        Number(r.montant ?? 0).toFixed(2),
+      ];
+      const rowHeightMeasured = getRowHeight(rowValues);
+      yPosition = ensureSpace(yPosition, rowHeightMeasured, () => {
+        const startY = MARGIN + 80;
+        doc.font("Helvetica-Bold").fontSize(12).fillColor("#000")
+          .text("RECETTES", MARGIN, startY);
+        return startY + 25;
+      });
+      const rowHeight = drawRow(yPosition, rowValues);
+      yPosition += rowHeight;
+    });
+
+    const totalValues = ["TOTAL", "", totalRecettes.toFixed(2)];
+    const totalHeightMeasured = getRowHeight(totalValues);
+    yPosition = ensureSpace(yPosition, totalHeightMeasured, () => {
+      const startY = MARGIN + 80;
+      doc.font("Helvetica-Bold").fontSize(12).fillColor("#000")
+        .text("RECETTES", MARGIN, startY);
+      return startY + 25;
+    });
+    const totalHeight = drawRow(yPosition, totalValues, true);
+    yPosition += totalHeight + 20;
+
+    return yPosition;
+  };
+
+  const drawDepensesTable = (yPosition) => {
+    const cols = [
+      { label: "Date", w: 70 },
+      { label: "N° Pièce", w: 60 },
+      { label: "Nature Dépense", w: 170 },
+      { label: "Imputation", w: 70 },
+      { label: "Justifié", w: 70 },
+      { label: "Non Justifié", w: 70 },
+    ];
+
+    const minRowH = 22;
+    const tableX = MARGIN;
+
+    const drawRow = (yy, values, bold = false) => {
+      let x = tableX;
+      doc.font(bold ? "Helvetica-Bold" : "Helvetica").fontSize(9);
+
+      let maxHeight = minRowH;
+      cols.forEach((c, i) => {
+        const textHeight = doc.heightOfString(values[i] || "", {
+          width: c.w - 8,
+          align: i >= 4 ? "right" : "left",
+        });
+        maxHeight = Math.max(maxHeight, textHeight + 12);
+      });
+
+      cols.forEach((c, i) => {
+        doc.rect(x, yy, c.w, maxHeight).stroke();
+        doc.text(values[i], x + 4, yy + 6, {
+          width: c.w - 8,
+          align: i >= 4 ? "right" : "left",
+        });
+        x += c.w;
+      });
+
+      return maxHeight;
+    };
+
+    const getRowHeight = (values) => {
+      doc.font("Helvetica").fontSize(9);
+      let maxHeight = minRowH;
+      cols.forEach((c, i) => {
+        const text = values[i] ?? "";
+        const textHeight = doc.heightOfString(String(text), {
+          width: c.w - 8,
+          align: i >= 4 ? "right" : "left",
+        });
+        maxHeight = Math.max(maxHeight, textHeight + 12);
+      });
+      return maxHeight;
+    };
+
+    doc.font("Helvetica-Bold").fontSize(12).fillColor("#000")
+      .text("DÉPENSES", MARGIN, yPosition);
+    yPosition += 25;
+
+    const headerHeight = drawRow(yPosition, cols.map(c => c.label), true);
+    yPosition += headerHeight;
+
+    return { yPosition, drawRow, cols, minRowH, getRowHeight };
+  };
+
+  // Main logic
+  drawHeader();
+  let currentY = drawInfoBox(110);
+
+  // Recettes - Add recettes table if data exists
+  if (justif.recettes && justif.recettes.length > 0) {
+    currentY = drawRecettesTable(currentY);
+  }
+
+  // Depenses
+  const depensesTable = drawDepensesTable(currentY);
+  currentY = depensesTable.yPosition;
+
+  let totalJ = 0;
+  let totalNJ = 0;
+
+  for (const d of justif.depenses) {
+    totalJ += Number(d.montantJustifie ?? 0);
+    totalNJ += Number(d.montantNonJustifie ?? 0);
+
+    const rowValues = [
+      new Date(d.dateDepense).toLocaleDateString("fr-FR"),
+      d.numeroPiece ?? "",
+      d.natureDepense ?? "",
+      d.imputation ?? "",
+      Number(d.montantJustifie ?? 0).toFixed(2),
+      Number(d.montantNonJustifie ?? 0).toFixed(2),
+    ];
+
+    const measured = depensesTable.getRowHeight(rowValues);
+    currentY = ensureSpace(currentY, measured, () => {
+      const startY = MARGIN + 80;
+      return drawDepensesTable(startY).yPosition - 25;
+    });
+
+    const rowHeight = depensesTable.drawRow(currentY, rowValues);
+    currentY += rowHeight;
+  }
+
+  // Empty rows
+  for (let i = 0; i < 8; i++) {
+    currentY = ensureSpace(currentY, depensesTable.minRowH, () => {
+      const startY = MARGIN + 80;
+      return drawDepensesTable(startY).yPosition - 25;
+    });
+    const rowHeight = depensesTable.drawRow(currentY, ["", "", "", "", "", ""]);
+    currentY += rowHeight;
+  }
+
+  // Totals - ensure we have space for both rows
+  const totalRowValues = ["TOTAL", "", "", "", totalJ.toFixed(2), totalNJ.toFixed(2)];
+  const totalGeneralRowValues = ["TOTAL GÉNÉRAL", "", "", "", "", (totalJ + totalNJ).toFixed(2)];
+  const totalsBlockHeight = depensesTable.getRowHeight(totalRowValues) + depensesTable.getRowHeight(totalGeneralRowValues);
+  currentY = ensureSpace(currentY, totalsBlockHeight, () => (MARGIN + 80));
+
+  const totalRowHeight = depensesTable.drawRow(currentY, totalRowValues, true);
+  currentY += totalRowHeight;
+
+  // General Total
+  depensesTable.drawRow(currentY, totalGeneralRowValues, true);
+
+  drawFooter();
+  doc.end();
+
+  await finished;
+  return Buffer.concat(chunks);
 };
 
 export const generateJustifCaisseExcel = async (req, res) => {

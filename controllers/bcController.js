@@ -593,7 +593,8 @@ export const updateBc = async (req, res) => {
     const montantTva = totalHt * (tvaRate > 0 ? tvaRate : 0) / 100;
     const totalTtc = totalHt + montantTva;
     await prisma.$transaction(async (tx) => {
-      for (const item of toCreate) {
+      for (const item of allLines) {
+        if (!item?.designation || !item?.reference) continue;
         await tx.fourniture_list.upsert({
           where: {
             designation_reference: {
@@ -601,11 +602,13 @@ export const updateBc = async (req, res) => {
               reference: item.reference,
             },
           },
-          update: {}, // do nothing if exists
+          update: {
+            prixUnitaire: item.prixUnitaire ?? null,
+          },
           create: {
             designation: item.designation,
             reference: item.reference,
-            prixUnitaire: item.prixUnitaire || null,
+            prixUnitaire: item.prixUnitaire ?? null,
           },
         });
       }
@@ -713,6 +716,7 @@ export const updateBc = async (req, res) => {
         fournisseur: true,
       },
     });
+     console.log('im updatebc sir ')
 
     return res.json({
       success: true,
@@ -957,7 +961,7 @@ export const updateBcItem = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Item ID invalide' });
     }
 
-    const { designation, unite, quantite, prixUnitaire, tauxRemise } = req.body || {};
+    const { designation, unite, reference, quantite, prixUnitaire, tauxRemise } = req.body || {};
 
     // Ensure item exists
     const item = await prisma.commandesItems.findUnique({ where: { id: itemId } });
@@ -979,6 +983,7 @@ export const updateBcItem = async (req, res) => {
       data: {
         designation: designation !== undefined ? designation : item.designation,
         unite: unite !== undefined ? unite : item.unite,
+        reference: reference !== undefined ? reference : item.reference,
         quantite: safeQty,
         prixUnitaire: safePu,
         tauxRemise: safeRate,
@@ -987,7 +992,27 @@ export const updateBcItem = async (req, res) => {
       }
     });
 
+    if (updatedItem?.designation && updatedItem?.reference && updatedItem?.prixUnitaire !== undefined) {
+      await prisma.fourniture_list.upsert({
+        where: {
+          designation_reference: {
+            designation: updatedItem.designation,
+            reference: updatedItem.reference,
+          },
+        },
+        update: {
+          prixUnitaire: updatedItem.prixUnitaire,
+        },
+        create: {
+          designation: updatedItem.designation,
+          reference: updatedItem.reference,
+          prixUnitaire: updatedItem.prixUnitaire,
+        },
+      });
+    }
+
     return res.json({ success: true, item: updatedItem });
+    console.log('im updateBcItem sir ')
   } catch (error) {
     console.error('Erreur mise à jour article BC:', error);
     return res.status(500).json({ success: false, error: 'Erreur serveur' });

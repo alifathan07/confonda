@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
   <meta name="description" content="Client Dashboard" />
-  <title><%= user.name %> - Détails Client</title>
+  <title>
+    <%= user.name %> - Détails Client
+  </title>
 
   <!-- Fonts & Icons -->
   <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
@@ -13,186 +16,237 @@
 
   <!-- Theme CSS -->
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <style>
-    .card-header { font-weight: 600; font-size: 1.1rem; }
-    .client-info p { margin-bottom: 0.4rem; }
-    .badge { font-size: 0.85rem; padding: 0.4em 0.7em; }
-    .table th { background: #f8f9fc; }
-    .page-title { font-weight: 700; color: #4e73df; }
+    .card-header {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .client-info p {
+      margin-bottom: 0.4rem;
+    }
+
+    .badge {
+      font-size: 0.85rem;
+      padding: 0.4em 0.7em;
+    }
+
+    .table th {
+      background: #f8f9fc;
+    }
+
+    .page-title {
+      font-weight: 700;
+      color: #4e73df;
+    }
   </style>
 </head>
+
 <body id="page-top">
-    <div id="wrapper">
-  
-      <!-- Sidebar -->
-      <%- include('../../../../layouts/sidebar') %>
-  
+  <div id="wrapper">
+
+    <!-- Sidebar -->
+    <%- include('../../../../layouts/sidebar') %>
+
       <!-- Content Wrapper -->
       <div id="content-wrapper" class="d-flex flex-column">
         <div id="content">
-  
+
           <!-- Topbar -->
           <%- include('../../../../layouts/topbar') %>
-  
-          <div class="container-fluid">
-  
-            <!-- Page Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-              <h1 class="h3 page-title"><i class="fas fa-cash-register"></i> Demande Caisse</h1>
-              <div>
-                <a href="/achats/demandeCaisse" class="btn btn-primary btn-sm">
-                  <i class="fas fa-arrow-left"></i> Retour
-                </a>
+
+            <div class="container-fluid">
+
+              <!-- Page Header -->
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 page-title"><i class="fas fa-cash-register"></i> Demande Caisse</h1>
+                <div>
+                  <a href="/achats/demandeCaisse" class="btn btn-primary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Retour
+                  </a>
+                </div>
               </div>
-            </div>
-  
-            <!-- Demande Info -->
-            <div class="row">
-              <div class="col-lg-12">
-                <div class="card shadow mb-4">
-                  <div class="card-body demande-info" style="display: flex; align-items: center; gap: 20px; padding: 20px;">
-                    <p style="margin: 0;"><strong>Demandeur :</strong> <%= user.name %></p>
-                    
-                    <input type="hidden" name="demandeur" value="<%= user.name %>" />
-                    <div class="form-group" style="margin: 0;">
-                      <label for="chantier" style="margin-right: 10px;"><strong>Chantier :</strong></label>
-                      <select name="chantier" id="chantier" class="form-control" style="width: 200px; display: inline-block; background-color: #17A673; color : white">
-                        <option value="">Sélectionner un chantier</option>
-                        <% chantiers.forEach(chantier => { %>
-                          <option value="<%= chantier.id %>"><%= chantier.nom %></option>
-                        <% }) %>
-                      </select>
-                    </div>
-                    
-                    
-                    <div class="form-group" style="margin: 0;">
-                      <label for="mois" style="margin-right: 10px;"><strong>Mois :</strong></label>
-                      <select name="designation" id="mois" class="form-control" style="width: 200px; display: inline-block; background-color: #17A673; color : white">
-                        <option value="">Sélectionner un mois</option>
-                        <% const year = new Date().getFullYear(); %>
-                        <% const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']; %>
-                        <% months.forEach((m, i) => { %>
-                          <option value="<%= `${m}-${year}` %>"><%= `${m}-${year}` %></option>
-                        <% }); %>
-                      </select>
+
+              <!-- Demande Info -->
+              <div class="row">
+                <div class="col-lg-12">
+                  <div class="card shadow mb-4">
+                    <div class="card-body demande-info"
+                      style="display: flex; align-items: center; gap: 20px; padding: 20px;">
+                      <p style="margin: 0;"><strong>Demandeur :</strong>
+                        <%= user.name %>
+                      </p>
+
+                      <input type="hidden" name="demandeur" value="<%= user.name %>" />
+                      <div class="form-group" style="margin: 0;">
+                        <label for="chantier" style="margin-right: 10px;"><strong>Chantier :</strong></label>
+                        <select name="chantier" id="chantier" class="form-control"
+                          style="width: 200px; display: inline-block; background-color: #17A673; color : white">
+                          <option value="">Sélectionner un chantier</option>
+                          <% chantiers.forEach(chantier=> { %>
+                            <option value="<%= chantier.id %>">
+                              <%= chantier.nom %>
+                            </option>
+                            <% }) %>
+                        </select>
+                      </div>
+
+
+                      <div class="form-group" style="margin: 0;">
+                        <label for="mois" style="margin-right: 10px;"><strong>Mois :</strong></label>
+                        <select name="designation" id="mois" class="form-control"
+                          style="width: 200px; display: inline-block; background-color: #17A673; color : white">
+                          <option value="">Sélectionner un mois</option>
+                          <% const year=new Date().getFullYear(); %>
+                            <% const months=['Janvier', 'Février' , 'Mars' , 'Avril' , 'Mai' , 'Juin' , 'Juillet'
+                              , 'Août' , 'Septembre' , 'Octobre' , 'Novembre' , 'Décembre' ]; %>
+                              <% months.forEach((m, i)=> { %>
+                                <option value="<%= `${m}-${year}` %>">
+                                  <%= `${m}-${year}` %>
+                                </option>
+                                <% }); %>
+                        </select>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-  
-            <!-- Demandes -->
-            <div id="demandes" class="card shadow mb-4">
-              <div class="card-header d-flex justify-content-between align-items-center">
-               
-                
-              </div>
-              <div class="card-body">
-                <table class="table table-hover" id="demandeTable">
-                  <thead>
-                    <tr>
-                      <th>Date Caisse</th>
-                      <th>Désignation</th>
-                      <th>Montant</th>
-                      <th>Imputation</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% if (user.demandes && user.demandes.length > 0) { %>
-                      <% user.demandes.forEach(d => { %>
-                        <tr>
-                          <td><%= d.dateCaisse ? new Date(d.dateCaisse).toLocaleDateString('fr-FR') : '' %></td>
-                          <td><%= d.designation %></td>
-                          <td><%= d.montant ? d.montant.toFixed(2) : '' %> DH</td>
-                          <td><%= d.imputation %></td>
-                          <td>
-                            <a href="/ventes/user/<%= user.id %>/demandes/<%= d.id %>" class="btn btn-primary btn-sm">
-                              <i class="fas fa-eye"></i>
-                            </a>
-                            <a class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#updateDemandeModal-<%= d.id %>">
-                              <i class="fas fa-edit"></i>
-                            </a>
-                            <form action="/ventes/user/<%= user.id %>/demandes/<%= d.id %>?_method=DELETE" method="POST" style="display:inline;">
-                              <button class="btn btn-danger btn-sm" onclick="return confirm('Supprimer cette demande ?')">
-                                <i class="fas fa-trash"></i>
-                              </button>
-                            </form>
-                          </td>
-                        </tr>
-                        <!-- Update Modal -->
-                        <div class="modal fade" id="updateDemandeModal-<%= d.id %>" tabindex="-1" role="dialog" aria-labelledby="updateDemandeModalLabel-<%= d.id %>" aria-hidden="true">
-                          <div class="modal-dialog modal-lg" role="document">
-                            <div class="modal-content">
-                              <form id="updateDemandeForm-<%= d.id %>" action="/ventes/user/<%= user.id %>/demandes/<%= d.id %>?_method=PUT" method="POST">
-                                <div class="modal-header">
-                                  <h5 class="modal-title" id="updateDemandeModalLabel-<%= d.id %>">Modifier Demande</h5>
-                                  <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
-                                    <span aria-hidden="true">&times;</span>
-                                  </button>
-                                </div>
-                                <div class="modal-body">
-                                  <div class="form-group">
-                                    <label for="dateCaisse-<%= d.id %>">Date Caisse</label>
-                                    <input type="date" name="dateCaisse" id="dateCaisse-<%= d.id %>" class="form-control" value="<%= d.dateCaisse ? new Date(d.dateCaisse).toISOString().split('T')[0] : '' %>" />
-                                  </div>
-                                  <div class="form-group">
-                                    <label for="designation-<%= d.id %>">Désignation</label>
-                                    <input type="text" name="designation" id="designation-<%= d.id %>" class="form-control" value="<%= d.designation %>" />
-                                  </div>
-                                  <div class="form-group">
-                                    <label for="montant-<%= d.id %>">Montant</label>
-                                    <input type="number" step="0.01" name="montant" id="montant-<%= d.id %>" class="form-control" value="<%= d.montant %>" />
-                                  </div>
-                                  <div class="form-group">
-                                    <label for="imputation-<%= d.id %>">Imputation</label>
-                                    <input type="text" name="imputation" id="imputation-<%= d.id %>" class="form-control" value="<%= d.imputation %>" />
-                                  </div>
-                                </div>
-                                <div class="modal-footer">
-                                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
-                                  <button type="submit" class="btn btn-primary">Modifier</button>
-                                </div>
+
+              <!-- Demandes -->
+              <div id="demandes" class="card shadow mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+
+
+                </div>
+                <div class="card-body">
+                  <table class="table table-hover" id="demandeTable">
+                    <thead>
+                      <tr>
+                        <th>Date Caisse</th>
+                        <th>Désignation</th>
+                        <th>Montant</th>
+                        <th>Imputation</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% if (user.demandes && user.demandes.length> 0) { %>
+                        <% user.demandes.forEach(d=> { %>
+                          <tr>
+                            <td>
+                              <%= d.dateCaisse ? new Date(d.dateCaisse).toLocaleDateString('fr-FR') : '' %>
+                            </td>
+                            <td>
+                              <%= d.designation %>
+                            </td>
+                            <td>
+                              <%= d.montant ? d.montant.toFixed(2) : '' %> DH
+                            </td>
+                            <td>
+                              <%= d.imputation %>
+                            </td>
+                            <td>
+                              <a href="/ventes/user/<%= user.id %>/demandes/<%= d.id %>" class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye"></i>
+                              </a>
+                              <a class="btn btn-secondary btn-sm" data-toggle="modal"
+                                data-target="#updateDemandeModal-<%= d.id %>">
+                                <i class="fas fa-edit"></i>
+                              </a>
+                              <form action="/ventes/user/<%= user.id %>/demandes/<%= d.id %>?_method=DELETE"
+                                method="POST" style="display:inline;">
+                                <button class="btn btn-danger btn-sm"
+                                  onclick="return confirm('Supprimer cette demande ?')">
+                                  <i class="fas fa-trash"></i>
+                                </button>
                               </form>
+                            </td>
+                          </tr>
+                          <!-- Update Modal -->
+                          <div class="modal fade" id="updateDemandeModal-<%= d.id %>" tabindex="-1" role="dialog"
+                            aria-labelledby="updateDemandeModalLabel-<%= d.id %>" aria-hidden="true">
+                            <div class="modal-dialog modal-lg" role="document">
+                              <div class="modal-content">
+                                <form id="updateDemandeForm-<%= d.id %>"
+                                  action="/ventes/user/<%= user.id %>/demandes/<%= d.id %>?_method=PUT" method="POST">
+                                  <div class="modal-header">
+                                    <h5 class="modal-title" id="updateDemandeModalLabel-<%= d.id %>">Modifier Demande
+                                    </h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
+                                      <span aria-hidden="true">&times;</span>
+                                    </button>
+                                  </div>
+                                  <div class="modal-body">
+                                    <div class="form-group">
+                                      <label for="dateCaisse-<%= d.id %>">Date Caisse</label>
+                                      <input type="date" name="dateCaisse" id="dateCaisse-<%= d.id %>"
+                                        class="form-control"
+                                        value="<%= d.dateCaisse ? new Date(d.dateCaisse).toISOString().split('T')[0] : '' %>" />
+                                    </div>
+                                    <div class="form-group">
+                                      <label for="designation-<%= d.id %>">Désignation</label>
+                                      <input type="text" name="designation" id="designation-<%= d.id %>"
+                                        class="form-control" value="<%= d.designation %>" />
+                                    </div>
+                                    <div class="form-group">
+                                      <label for="montant-<%= d.id %>">Montant</label>
+                                      <input type="number" step="0.01" name="montant" id="montant-<%= d.id %>"
+                                        class="form-control" value="<%= d.montant %>" />
+                                    </div>
+                                    <div class="form-group">
+                                      <label for="imputation-<%= d.id %>">Imputation</label>
+                                      <input type="text" name="imputation" id="imputation-<%= d.id %>"
+                                        class="form-control" value="<%= d.imputation %>" />
+                                    </div>
+                                  </div>
+                                  <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                      data-dismiss="modal">Annuler</button>
+                                    <button type="submit" class="btn btn-primary">Modifier</button>
+                                  </div>
+                                </form>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      <% }) %>
+                          <% }) %>
 
-                      
-                    
-                    <% } %>
-                    <td><input type="date" name="dateCaisse" value="<%= today %>" class="form-control" required /></td>
-                    <td><input type="text" class="form-control" name="designationItem" required /></td>
-                    <td><input type="number" step="0.01" class="form-control" name="montant" required /></td>
-                    <td><input type="text" class="form-control" name="imputation" placeholder="Optionnel" /></td>
-                    <td>
-                      <button class="btn btn-primary btn-sm" onclick="addNewRow()">
-                        <i class="fas fa-plus"></i>
-                      </button>
-                      <button class="btn btn-primary btn-sm" onclick="saveAllItems()">
-                        <i class="fas fa-save"></i>
-                        Enregistrer
-                      </button>
-                      <button class="btn btn-danger btn-sm" onclick="removeRow(this)">
-                        <i class="fas fa-trash"></i>
-                      </button>
-                    </td>
-                  </tbody>
-                </table>
+
+
+                            <% } %>
+                              <td><input type="date" name="dateCaisse" value="<%= today %>" class="form-control"
+                                  required /></td>
+                              <td><input type="text" class="form-control" name="designationItem" required /></td>
+                              <td><input type="number" step="0.01" class="form-control" name="montant" required /></td>
+                              <td><input type="text" class="form-control" name="imputation" placeholder="Optionnel" />
+                              </td>
+                              <td>
+                                <button class="btn btn-primary btn-sm" onclick="addNewRow()">
+                                  <i class="fas fa-plus"></i>
+                                </button>
+                                <button class="btn btn-primary btn-sm" onclick="saveAllItems()">
+                                  <i class="fas fa-save"></i>
+                                  Enregistrer
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="removeRow(this)">
+                                  <i class="fas fa-trash"></i>
+                                </button>
+                              </td>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-          </div>
         </div>
       </div>
-    </div>
-  
-    <script>
-      function addNewRow() {
-        const tableBody = document.querySelector('#demandeTable tbody');
-        const newRow = document.createElement('tr');
-        newRow.innerHTML = `
+  </div>
+
+  <script>
+    function addNewRow() {
+      const tableBody = document.querySelector('#demandeTable tbody');
+      const newRow = document.createElement('tr');
+      newRow.innerHTML = `
           <td><input type="date" name="dateCaisse" value="${new Date().toISOString().split('T')[0]}" class="form-control" required /></td>
           <td><input type="text" class="form-control" name="designationItem" required /></td>
           <td><input type="number" step="0.01" class="form-control" name="montant" required /></td>
@@ -210,106 +264,153 @@
             </button>
           </td>
         `;
-        tableBody.appendChild(newRow);
+      tableBody.appendChild(newRow);
+    }
+
+    function saveNewRow(button) {
+      const row = button.closest('tr');
+      const dateCaisse = row.querySelector('input[name="dateCaisse"]').value;
+      const designationItem = row.querySelector('input[name="designationItem"]').value;
+      const montant = row.querySelector('input[name="montant"]').value;
+      const imputation = row.querySelector('input[name="imputation"]').value.trim();
+
+      if (!dateCaisse || !designationItem || !montant) {
+        alert('Veuillez remplir les champs obligatoires : date, désignation et montant.');
+        return;
       }
-    
-      function saveNewRow(button) {
-        const row = button.closest('tr');
-        const dateCaisse = row.querySelector('input[name="dateCaisse"]').value;
-        const designationItem = row.querySelector('input[name="designationItem"]').value;
-        const montant = row.querySelector('input[name="montant"]').value;
-        const imputation = row.querySelector('input[name="imputation"]').value.trim();
-    
-        if (!dateCaisse || !designationItem || !montant) {
-          alert('Veuillez remplir les champs obligatoires : date, désignation et montant.');
-          return;
-        }
-    
-        if (parseFloat(montant) <= 0) {
-          alert('Le montant doit être un nombre positif.');
-          return;
-        }
-    
-        alert('Ligne enregistrée localement. Cliquez sur "Enregistrer Demande" pour soumettre toutes les lignes.');
+
+      if (parseFloat(montant) <= 0) {
+        alert('Le montant doit être un nombre positif.');
+        return;
       }
-    
-      function saveAllItems() {
-        const rows = document.querySelectorAll('#demandeTable tbody tr');
-        const items = [];
-    
-        rows.forEach(row => {
-          const dateCaisseInput = row.querySelector('input[name="dateCaisse"]');
-          const designationInput = row.querySelector('input[name="designationItem"]');
-          const montantInput = row.querySelector('input[name="montant"]');
-          const imputationInput = row.querySelector('input[name="imputation"]');
-    
-          if (dateCaisseInput && designationInput && montantInput && imputationInput) {
-            const dateCaisse = dateCaisseInput.value;
-            const designationItem = designationInput.value;
-            const montant = parseFloat(montantInput.value);
-            const imputation = imputationInput.value.trim();
-    
-            if (!dateCaisse || !designationItem || isNaN(montant) || montant <= 0) {
-              alert('Erreur dans une ligne : Veuillez remplir les champs obligatoires (date, désignation, montant positif).');
-              return; // Arrête la soumission si une ligne est invalide
-            }
-    
-            const item = {
-              dateCaisse,
-              designation: designationItem,
-              montant
-            };
-    
-            if (imputation !== '') {
-              item.imputation = imputation;
-            }
-    
-            items.push(item);
+
+      alert('Ligne enregistrée localement. Cliquez sur "Enregistrer Demande" pour soumettre toutes les lignes.');
+    }
+
+    function saveAllItems() {
+      const rows = document.querySelectorAll('#demandeTable tbody tr');
+      const items = [];
+
+      rows.forEach(row => {
+        const dateCaisseInput = row.querySelector('input[name="dateCaisse"]');
+        const designationInput = row.querySelector('input[name="designationItem"]');
+        const montantInput = row.querySelector('input[name="montant"]');
+        const imputationInput = row.querySelector('input[name="imputation"]');
+
+        if (dateCaisseInput && designationInput && montantInput && imputationInput) {
+          const dateCaisse = dateCaisseInput.value;
+          const designationItem = designationInput.value;
+          const montant = parseFloat(montantInput.value);
+          const imputation = imputationInput.value.trim();
+
+          if (!dateCaisse || !designationItem || isNaN(montant) || montant <= 0) {
+            alert('Erreur dans une ligne : Veuillez remplir les champs obligatoires (date, désignation, montant positif).');
+            return; // Arrête la soumission si une ligne est invalide
           }
-        });
-    
-        const demandeur = document.querySelector('input[name="demandeur"]').value;
-        const chantier = document.querySelector('select[name="chantier"]').value;
-        const designationMois = document.querySelector('#mois').value;
-    
-        if (!demandeur || !chantier) {
-          alert('Erreur : Demandeur ou chantier manquant.');
-          return;
+
+          const item = {
+            dateCaisse,
+            designation: designationItem,
+            montant
+          };
+
+          if (imputation !== '') {
+            item.imputation = imputation;
+          }
+
+          items.push(item);
         }
-    
-        if (!designationMois) {
-          alert('Veuillez sélectionner un mois.');
-          return;
-        }
-    
-        if (items.length === 0) {
-          alert('Veuillez ajouter au moins une ligne valide.');
-          return;
-        }
-    
-        fetch('/achat/demandes/caisse', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ demandeur, chantier, designation: designationMois, items })
+      });
+
+      const demandeur = document.querySelector('input[name="demandeur"]').value;
+      const chantier = document.querySelector('select[name="chantier"]').value;
+      const designationMois = document.querySelector('#mois').value;
+
+      if (!chantier || !designationMois) {
+        // Redundant check: the capture-phase listener on #demandes already handles alerting the user
+        return;
+      }
+
+      if (!demandeur) {
+        alert('Erreur : Demandeur manquant.');
+        return;
+      }
+
+      if (items.length === 0) {
+        alert('Veuillez ajouter au moins une ligne valide.');
+        return;
+      }
+
+      fetch('/achat/demandes/caisse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ demandeur, chantier, designation: designationMois, items })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            const id = data.id;
+            window.location.href = `/achats/demandes/caisse/${id}`;
+          } else {
+            alert('Erreur : ' + (data.error || 'Erreur inconnue lors de l\'enregistrement.'));
+          }
         })
-          .then(res => res.json())
-          .then(data => {
-            if (data.success) {
-              const id = data.id;
-              window.location.href = `/achats/demandes/caisse/${id}`;
+        .catch(err => {
+          console.error('Fetch error:', err);
+          alert('Erreur réseau : ' + err.message);
+        });
+    }
+
+    function removeRow(button) {
+      button.closest('tr').remove();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const tableContainer = document.querySelector('#demandes');
+      
+      function checkSelection(e) {
+        if (Swal.isVisible()) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (e.target && typeof e.target.blur === 'function') e.target.blur();
+          return;
+        }
+
+        // Only trigger on interactive elements inside the table body/actions
+        const isInteractive = e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.closest('button');
+        if (!isInteractive) return;
+
+        const chantier = document.querySelector('select[name="chantier"]').value;
+        const mois = document.querySelector('#mois').value;
+        
+        if (!chantier || !mois) {
+          e.preventDefault();
+          e.stopPropagation();
+          Swal.fire({
+            icon: 'warning',
+            title: 'Attention',
+            text: 'Veuillez sélectionner un chantier et un mois avant d\'interagir avec le tableau.',
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'D\'accord',
+            returnFocus: false
+          }).then(() => {
+            if (!chantier) {
+              document.querySelector('select[name="chantier"]').focus();
             } else {
-              alert('Erreur : ' + (data.error || 'Erreur inconnue lors de l\'enregistrement.'));
+              document.querySelector('#mois').focus();
             }
-          })
-          .catch(err => {
-            console.error('Fetch error:', err);
-            alert('Erreur réseau : ' + err.message);
           });
+          
+          if(e.target && typeof e.target.blur === 'function') {
+            e.target.blur();
+          }
+        }
       }
-    
-      function removeRow(button) {
-        button.closest('tr').remove();
-      }
-    </script>
-  </body>
+
+      tableContainer.addEventListener('click', checkSelection, true);
+      tableContainer.addEventListener('focusin', checkSelection, true);
+    });
+  </script>
+</body>
+
 </html>

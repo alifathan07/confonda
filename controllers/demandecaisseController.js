@@ -597,27 +597,36 @@ export const generateDemandePdf = async (req, res) => {
       `attachment; filename=DemandeCaisse_${demandeCaisse.id}.pdf`
     );
 
-    const doc = new PDFDocument({ margin: MARGIN, size: 'A4' });
+    const doc = new PDFDocument({ margin: MARGIN, size: 'A4', bufferPages: true });
     doc.pipe(res);
 
-    const drawFooter = () => {
-      doc.rect(0, footerY, PAGE_WIDTH, FOOTER_HEIGHT).fill(COLORS.PRIMARY);
-      doc
-        .font(FONTS.REGULAR)
-        .fontSize(SIZES.SMALL)
-        .fillColor(COLORS.WHITE)
-        .text(
-          '82, angle Bd Abdelmoumen et rue Soumaya Imm. Shahrazad III, 2ème étage Casablanca',
-          0,
-          footerY + 20,
-          { align: 'center', width: PAGE_WIDTH }
-        )
-        .text(
-          'Tél: 0522-23-39-70 | Fax: 0522-23-42-60 | Capital: 18 500 000 DH | ICE: 001526422000063',
-          0,
-          footerY + 35,
-          { align: 'center', width: PAGE_WIDTH }
-        );
+    // BC-style footer with red bar
+    const drawFooter = (yPosition) => {
+      const footerHeight = 55;
+      const footerY = yPosition || (PAGE_HEIGHT - MARGIN - footerHeight);
+
+      // Red footer bar
+      doc.rect(0, footerY, PAGE_WIDTH, footerHeight).fill('#AB3029').stroke();
+
+      const textMargin = 6;
+      const textY = footerY + 6;
+      const text2Y = textY + 14;
+
+      doc.font('Helvetica').fontSize(6.5).fillColor('#FFFFFF');
+
+      doc.text(
+        '82, angle Bd abdelmoumen et rue Soumaya Imm.Shahrazad III 2ème étage Casablanca Tél : 0522-23-39-70',
+        50,
+        textY + textMargin,
+        { width: PAGE_WIDTH - 100, align: 'center', lineBreak: false }
+      );
+
+      doc.text(
+        'Fax : 0522-23-42-60  Capital : 18 500 000.00 DH  CNSS : 7167788 - R.C. : 145619 – I.F. : 1602714 – Patente : 37900708- I.C.E : 001526422000063',
+        50,
+        text2Y + textMargin,
+        { width: PAGE_WIDTH - 100, align: 'center', lineBreak: false }
+      );
     };
 
     const drawHeaderAndInfo = () => {
@@ -630,7 +639,7 @@ export const generateDemandePdf = async (req, res) => {
         .font(FONTS.BOLD)
         .fontSize(SIZES.TITLE)
         .fillColor(COLORS.PRIMARY)
-        .text('DEMANDE DE CAISSE', 0, 40, { align: 'center' });
+        .text('DEMANDE DE CAISSE', 0, 40, { align: 'center', width: PAGE_WIDTH });
 
       doc
         .font(FONTS.REGULAR)
@@ -672,13 +681,6 @@ export const generateDemandePdf = async (req, res) => {
 
       doc.moveDown(5);
       return doc.y + 10;
-    };
-
-    const ensureSpace = (currentY, neededHeight, onNewPage) => {
-      if (currentY + neededHeight <= getPageBottomY()) return currentY;
-      drawFooter();
-      doc.addPage();
-      return onNewPage();
     };
 
     const startX = MARGIN;
@@ -749,6 +751,7 @@ export const generateDemandePdf = async (req, res) => {
       rowData.forEach((data, i) => {
         doc.text(data ?? '', x, rowY + cellPaddingY, {
           width: colWidths[i] - 10,
+          height: rowHeight - cellPaddingY * 2,
           align: i === 3 ? 'right' : 'left',
         });
         x += colWidths[i];
@@ -762,53 +765,120 @@ export const generateDemandePdf = async (req, res) => {
       doc.moveTo(colX, rowY).lineTo(colX, rowY + rowHeight).stroke();
     };
 
-    let y = drawHeaderAndInfo();
-    y = ensureSpace(y, headerHeight, () => {
-      const startY = drawHeaderAndInfo();
-      return startY;
-    });
-    y = drawTableHeader(y);
+    const rows = demandeCaisse.items.map((item) => [
+      new Date(item.dateCaisse).toLocaleDateString('fr-FR'),
+      item.designation || '-',
+      item.imputation || '-',
+      item.montant
+        .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        .replace(/[\u00A0\u202F]/g, ' '),
+    ]);
 
-    demandeCaisse.items.forEach((item) => {
-      const rowData = [
-        new Date(item.dateCaisse).toLocaleDateString('fr-FR'),
-        item.designation || '-',
-        item.imputation || '-',
-        item.montant
-          .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-          .replace(/[\u00A0\u202F]/g, ' '),
-      ];
-
-      const rowHeight = getRowHeight(rowData);
-      y = ensureSpace(y, rowHeight + headerHeight, () => {
-        const startY = drawHeaderAndInfo();
-        return drawTableHeader(startY);
-      });
-
-      drawRow(y, rowData, rowHeight);
-      y += rowHeight;
-    });
-
+    const rowHeights = rows.map((r) => getRowHeight(r));
     const totalBlockH = 30;
-    y = ensureSpace(y, totalBlockH, () => {
-      const startY = drawHeaderAndInfo();
-      return startY;
-    });
 
-    doc
-      .font(FONTS.BOLD)
-      .fontSize(SIZES.SUBTITLE)
-      .fillColor(COLORS.PRIMARY)
-      .text(
-        `Total : ${demandeCaisse.montantTotal
-          .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-          .replace(/[\u00A0\u202F]/g, ' ')}`,
-        startX,
-        y + 10,
-        { align: 'right', width: tableWidth }
-      );
+    const drawTotalBlock = (y, isLastPage = true) => {
+      const totalText = isLastPage
+        ? demandeCaisse.montantTotal
+            .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            .replace(/[\u00A0\u202F]/g, ' ')
+        : 'X';
+      doc
+        .font(FONTS.BOLD)
+        .fontSize(SIZES.SUBTITLE)
+        .fillColor(COLORS.PRIMARY)
+        .text(`Total : ${totalText}`, startX, y + 10, { align: 'right', width: tableWidth });
+      return y + totalBlockH;
+    };
 
-    drawFooter();
+    // Footer space calculation (only red bar)
+    const footerHeight = 55;
+    const footerTotalHeight = footerHeight + 10;
+    const headerInfoHeight = 220; // Approximate height of header + info section
+
+    // Draw page 1: Header + Info + Table start
+    let currentY = drawHeaderAndInfo();
+    currentY = drawTableHeader(currentY);
+
+    let idx = 0;
+    const pageBottomLimit = PAGE_HEIGHT - MARGIN - footerTotalHeight;
+
+    // Page 1: fill table until footer limit
+    while (idx < rows.length) {
+      const rh = rowHeights[idx];
+      if (currentY + rh > pageBottomLimit) break;
+      drawRow(currentY, rows[idx], rh);
+      currentY += rh;
+      idx++;
+    }
+
+    // Check if all items fit on page 1
+    const allItemsOnPage1 = idx >= rows.length;
+
+    // Draw footer at bottom of page 1 (with X for total if not last page)
+    drawFooter(PAGE_HEIGHT - MARGIN - footerHeight);
+
+    // Subsequent pages for remaining items
+    while (idx < rows.length) {
+      doc.addPage();
+      let py = MARGIN;
+      py = drawTableHeader(py);
+
+      const pageBottom = PAGE_HEIGHT - MARGIN - footerTotalHeight;
+      while (idx < rows.length) {
+        const rh = rowHeights[idx];
+        if (py + rh > pageBottom) break;
+        drawRow(py, rows[idx], rh);
+        py += rh;
+        idx++;
+      }
+
+      const isLastPage = idx >= rows.length;
+
+      // If last page and total fits, draw it; otherwise just footer
+      if (isLastPage && py + totalBlockH <= pageBottom) {
+        drawTotalBlock(py, true);
+      } else {
+        // Not last page or total doesn't fit - draw X
+        if (isLastPage) {
+          // Last page but total doesn't fit, need new page
+          drawFooter(PAGE_HEIGHT - MARGIN - footerHeight);
+          doc.addPage();
+          py = MARGIN;
+          py = drawTableHeader(py);
+          drawTotalBlock(py, true);
+        }
+      }
+
+      // Draw footer at bottom of each page
+      drawFooter(PAGE_HEIGHT - MARGIN - footerHeight);
+    }
+
+    // If all items on page 1, draw total there
+    if (allItemsOnPage1) {
+      if (currentY + totalBlockH <= pageBottomLimit) {
+        drawTotalBlock(currentY, true);
+      } else {
+        // Total doesn't fit on page 1, add new page
+        drawFooter(PAGE_HEIGHT - MARGIN - footerHeight);
+        doc.addPage();
+        let py = MARGIN;
+        py = drawTableHeader(py);
+        drawTotalBlock(py, true);
+        drawFooter(PAGE_HEIGHT - MARGIN - footerHeight);
+      }
+    }
+
+    const range = doc.bufferedPageRange();
+    for (let p = range.start; p < range.start + range.count; p++) {
+      doc.switchToPage(p);
+      doc
+        .font(FONTS.REGULAR)
+        .fontSize(SIZES.SMALL)
+        .fillColor(COLORS.SECONDARY)
+        .text(`Page ${p + 1} / ${range.count}`, PAGE_WIDTH - MARGIN - 90, 18, { width: 90, align: 'right' });
+    }
+
     doc.end();
   } catch (error) {
     console.error('Erreur lors de la génération du PDF :', error);
@@ -867,35 +937,13 @@ export const generateDemandeCaissePDFBuffer = async (demandeCaisseId) => {
     MARGIN: 50,
     PAGE_WIDTH: 595,
     PAGE_HEIGHT: 842,
-    FOOTER_HEIGHT: 70,
   };
 
-  const { PAGE_WIDTH, PAGE_HEIGHT, FOOTER_HEIGHT, MARGIN } = SIZES;
-  const footerY = PAGE_HEIGHT - FOOTER_HEIGHT;
-  const getPageBottomY = () => PAGE_HEIGHT - FOOTER_HEIGHT - MARGIN;
+  const { PAGE_WIDTH, PAGE_HEIGHT, MARGIN } = SIZES;
+  const getPageBottomY = () => PAGE_HEIGHT - MARGIN;
 
-  const doc = new PDFDocument({ margin: MARGIN, size: 'A4' });
+  const doc = new PDFDocument({ margin: MARGIN, size: 'A4', bufferPages: true });
   doc.pipe(pass);
-
-  const drawFooter = () => {
-    doc.rect(0, footerY, PAGE_WIDTH, FOOTER_HEIGHT).fill(COLORS.PRIMARY);
-    doc
-      .font(FONTS.REGULAR)
-      .fontSize(SIZES.SMALL)
-      .fillColor(COLORS.WHITE)
-      .text(
-        '82, angle Bd Abdelmoumen et rue Soumaya Imm. Shahrazad III, 2ème étage Casablanca',
-        0,
-        footerY + 20,
-        { align: 'center', width: PAGE_WIDTH }
-      )
-      .text(
-        'Tél: 0522-23-39-70 | Fax: 0522-23-42-60 | Capital: 18 500 000 DH | ICE: 001526422000063',
-        0,
-        footerY + 35,
-        { align: 'center', width: PAGE_WIDTH }
-      );
-  };
 
   const drawHeaderAndInfo = () => {
     const logoPath = path.join(__dirname, '../public/img/logo-4.png');
@@ -907,7 +955,7 @@ export const generateDemandeCaissePDFBuffer = async (demandeCaisseId) => {
       .font(FONTS.BOLD)
       .fontSize(SIZES.TITLE)
       .fillColor(COLORS.PRIMARY)
-      .text('DEMANDE DE CAISSE', 0, 40, { align: 'center' });
+      .text('DEMANDE DE CAISSE', 0, 40, { align: 'center', width: PAGE_WIDTH });
 
     doc
       .font(FONTS.REGULAR)
@@ -949,13 +997,6 @@ export const generateDemandeCaissePDFBuffer = async (demandeCaisseId) => {
 
     doc.moveDown(5);
     return doc.y + 10;
-  };
-
-  const ensureSpace = (currentY, neededHeight, onNewPage) => {
-    if (currentY + neededHeight <= getPageBottomY()) return currentY;
-    drawFooter();
-    doc.addPage();
-    return onNewPage();
   };
 
   const startX = MARGIN;
@@ -1026,6 +1067,7 @@ export const generateDemandeCaissePDFBuffer = async (demandeCaisseId) => {
     rowData.forEach((data, i) => {
       doc.text(data ?? '', x, rowY + cellPaddingY, {
         width: colWidths[i] - 10,
+        height: rowHeight - cellPaddingY * 2,
         align: i === 3 ? 'right' : 'left',
       });
       x += colWidths[i];
@@ -1039,53 +1081,147 @@ export const generateDemandeCaissePDFBuffer = async (demandeCaisseId) => {
     doc.moveTo(colX, rowY).lineTo(colX, rowY + rowHeight).stroke();
   };
 
-  let y = drawHeaderAndInfo();
-  y = ensureSpace(y, headerHeight, () => {
-    const startY = drawHeaderAndInfo();
-    return startY;
-  });
-  y = drawTableHeader(y);
+  const rows = demandeCaisse.items.map((item) => [
+    new Date(item.dateCaisse).toLocaleDateString('fr-FR'),
+    item.designation || '-',
+    item.imputation || '-',
+    item.montant
+      .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      .replace(/[\u00A0\u202F]/g, ' '),
+  ]);
 
-  demandeCaisse.items.forEach((item) => {
-    const rowData = [
-      new Date(item.dateCaisse).toLocaleDateString('fr-FR'),
-      item.designation || '-',
-      item.imputation || '-',
-      item.montant
-        .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        .replace(/[\u00A0\u202F]/g, ' '),
-    ];
-
-    const rowHeight = getRowHeight(rowData);
-    y = ensureSpace(y, rowHeight + headerHeight, () => {
-      const startY = drawHeaderAndInfo();
-      return drawTableHeader(startY);
-    });
-
-    drawRow(y, rowData, rowHeight);
-    y += rowHeight;
-  });
-
+  const rowHeights = rows.map((r) => getRowHeight(r));
   const totalBlockH = 30;
-  y = ensureSpace(y, totalBlockH, () => {
-    const startY = drawHeaderAndInfo();
-    return startY;
-  });
 
-  doc
-    .font(FONTS.BOLD)
-    .fontSize(SIZES.SUBTITLE)
-    .fillColor(COLORS.PRIMARY)
-    .text(
-      `Total : ${demandeCaisse.montantTotal
-        .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-        .replace(/[\u00A0\u202F]/g, ' ')}`,
-      startX,
-      y + 10,
-      { align: 'right', width: tableWidth }
+  const drawTotalBlock = (y, isLastPage = true) => {
+    const totalText = isLastPage
+      ? demandeCaisse.montantTotal
+          .toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          .replace(/[\u00A0\u202F]/g, ' ')
+      : 'X';
+    doc
+      .font(FONTS.BOLD)
+      .fontSize(SIZES.SUBTITLE)
+      .fillColor(COLORS.PRIMARY)
+      .text(`Total : ${totalText}`, startX, y + 10, { align: 'right', width: tableWidth });
+    return y + totalBlockH;
+  };
+
+  const drawFooter = (yPosition) => {
+    const footerHeight = 55;
+    const footerY = yPosition || (PAGE_HEIGHT - MARGIN - footerHeight);
+
+    // Red footer bar
+    doc.rect(0, footerY, PAGE_WIDTH, footerHeight).fill('#AB3029').stroke();
+
+    const textMargin = 6;
+    const textY = footerY + 6;
+    const text2Y = textY + 14;
+
+    doc.font('Helvetica').fontSize(6.5).fillColor('#FFFFFF');
+
+    doc.text(
+      '82, angle Bd abdelmoumen et rue Soumaya Imm.Shahrazad III 2ème étage Casablanca Tél : 0522-23-39-70',
+      50,
+      textY + textMargin,
+      { width: PAGE_WIDTH - 100, align: 'center', lineBreak: false }
     );
 
-  drawFooter();
+    doc.text(
+      'Fax : 0522-23-42-60  Capital : 18 500 000.00 DH  CNSS : 7167788 - R.C. : 145619 – I.F. : 1602714 – Patente : 37900708- I.C.E : 001526422000063',
+      50,
+      text2Y + textMargin,
+      { width: PAGE_WIDTH - 100, align: 'center', lineBreak: false }
+    );
+  };
+
+  // Footer space calculation (only red bar)
+  const footerHeight = 55;
+  const footerTotalHeight = footerHeight + 10;
+
+  // Draw page 1: Header + Info + Table start
+  let currentY = drawHeaderAndInfo();
+  currentY = drawTableHeader(currentY);
+
+  let idx = 0;
+  const pageBottomLimit = PAGE_HEIGHT - MARGIN - footerTotalHeight;
+
+  // Page 1: fill table until footer limit
+  while (idx < rows.length) {
+    const rh = rowHeights[idx];
+    if (currentY + rh > pageBottomLimit) break;
+    drawRow(currentY, rows[idx], rh);
+    currentY += rh;
+    idx++;
+  }
+
+  // Check if all items fit on page 1
+  const allItemsOnPage1 = idx >= rows.length;
+
+  // Draw footer at bottom of page 1 (with X for total if not last page)
+  drawFooter(PAGE_HEIGHT - MARGIN - footerHeight);
+
+  // Subsequent pages for remaining items
+  while (idx < rows.length) {
+    doc.addPage();
+    let py = MARGIN;
+    py = drawTableHeader(py);
+
+    const pageBottom = PAGE_HEIGHT - MARGIN - footerTotalHeight;
+    while (idx < rows.length) {
+      const rh = rowHeights[idx];
+      if (py + rh > pageBottom) break;
+      drawRow(py, rows[idx], rh);
+      py += rh;
+      idx++;
+    }
+
+    const isLastPage = idx >= rows.length;
+
+    // If last page and total fits, draw it; otherwise just footer
+    if (isLastPage && py + totalBlockH <= pageBottom) {
+      drawTotalBlock(py, true);
+    } else {
+      // Not last page or total doesn't fit - draw X
+      if (isLastPage) {
+        // Last page but total doesn't fit, need new page
+        drawFooter(PAGE_HEIGHT - MARGIN - footerHeight);
+        doc.addPage();
+        py = MARGIN;
+        py = drawTableHeader(py);
+        drawTotalBlock(py, true);
+      }
+    }
+
+    // Draw footer at bottom of each page
+    drawFooter(PAGE_HEIGHT - MARGIN - footerHeight);
+  }
+
+  // If all items on page 1, draw total there
+  if (allItemsOnPage1) {
+    if (currentY + totalBlockH <= pageBottomLimit) {
+      drawTotalBlock(currentY, true);
+    } else {
+      // Total doesn't fit on page 1, add new page
+      drawFooter(PAGE_HEIGHT - MARGIN - footerHeight);
+      doc.addPage();
+      let py = MARGIN;
+      py = drawTableHeader(py);
+      drawTotalBlock(py, true);
+      drawFooter(PAGE_HEIGHT - MARGIN - footerHeight);
+    }
+  }
+
+  const range = doc.bufferedPageRange();
+  for (let p = range.start; p < range.start + range.count; p++) {
+    doc.switchToPage(p);
+    doc
+      .font(FONTS.REGULAR)
+      .fontSize(SIZES.SMALL)
+      .fillColor(COLORS.SECONDARY)
+      .text(`Page ${p + 1} / ${range.count}`, PAGE_WIDTH - MARGIN - 90, 18, { width: 90, align: 'right' });
+  }
+
   doc.end();
 
   await finished;

@@ -980,6 +980,16 @@
         <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
         <script>
+          function getVisibleTableRows(table) {
+            if (!table) return [];
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+            return rows.filter((row) => {
+              if (row.hidden) return false;
+              const style = window.getComputedStyle(row);
+              return style.display !== 'none' && style.visibility !== 'hidden';
+            });
+          }
+
           function downloadExcel(tableId) {
             const table = document.getElementById(tableId);
             if (!table) return;
@@ -996,7 +1006,8 @@
 
             // Build data rows with proper handling of Chantier + Montant chantier
             const data = [];
-            table.querySelectorAll('tbody tr').forEach((row, rowIdx) => {
+            const visibleRows = getVisibleTableRows(table);
+            visibleRows.forEach((row, rowIdx) => {
               const rowData = [];
               const cells = row.querySelectorAll('td');
 
@@ -1173,7 +1184,8 @@
             });
 
             const body = [];
-            table.querySelectorAll('tbody tr').forEach(row => {
+            const visibleRows = getVisibleTableRows(table);
+            visibleRows.forEach(row => {
               const rowData = [];
               const cells = row.querySelectorAll('td');
 

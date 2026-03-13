@@ -290,12 +290,25 @@ model Effet {
   dateaujou      DateTime?
   montantLettres String?
   ville          String?
+  allocations    EffetAllocation[]
   // facture             Facture? @relation(fields: [factureId], references: [id])
   // factureId           Int?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
   @@unique([banqueId, numero]) // ✅ compound unique constraint
+}
+
+model EffetAllocation {
+  id         Int      @id @default(autoincrement())
+  effet      Effet    @relation(fields: [effetId], references: [id], onDelete: Cascade)
+  effetId    Int
+  chantier   Chantier @relation(fields: [chantierId], references: [id])
+  chantierId Int
+  montant    Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Prelevement {
@@ -607,6 +620,7 @@ model Chantier {
   items               ChantierItem[] // 🔥 chantier has many invoice-like items
   chequeAllocations   ChequeAllocation[] // Add this line
   virementAllocations VirementAllocation[] // Add this line
+  effetAllocations     EffetAllocation[]
 
   cheques   Cheque[]    @relation("ChequesChantier")
   effets    Effet[]     @relation("EffetsChantier")
@@ -689,7 +703,9 @@ model WhatsAppNotificationRecipient {
   id              Int      @id @default(autoincrement())
   phone           String   @unique
   notifyCaisse    Boolean  @default(true)
+  notifyJustiffecaisse Boolean  @default(true)
   notifyFourniture Boolean @default(true)
+
   active          Boolean  @default(true)
 
   createdAt DateTime @default(now())

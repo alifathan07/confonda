@@ -7,6 +7,7 @@
     <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
     <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
     <style>
         /* Screen styles */
         body {
@@ -401,15 +402,6 @@
                     <input id="cause" type="text" name="obs">
                 </div>
                 <div class="form-group">
-                    <label for="chantier">Chantier:</label>
-                    <select id="chantier" name="chantier" class="form-control">
-                        <option value="">Sélectionnez un chantier</option>
-                        <% chantiers.forEach(chant => { %>
-                            <option value="<%= chant.id %>"><%= chant.nom %></option>
-                        <% }) %>
-                    </select>
-                </div>
-                <div class="form-group">
                     <label for="city">À (Ville):</label>
                     <input id="city" type="text" placeholder="Casablanca" name="ville">
                 </div>
@@ -423,12 +415,47 @@
                 </div>
             </div>
 
+            <div class="form-group" style="flex: 2;">
+                <label>Répartition par Chantier:</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <div style="flex-grow: 5;">
+                        <select id="allocChantierSelect" class="form-control custom-select">
+                            <option value="">Sélectionnez un chantier</option>
+                            <% chantiers.forEach(chant=> { %>
+                            <option value="<%= chant.id %>" data-name="<%= chant.nom %>">
+                                <%= chant.nom %>
+                            </option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div style="flex-grow: 2;">
+                        <input type="number" id="allocAmountInput" class="form-control" placeholder="Montant">
+                    </div>
+                    <div style="flex-grow: 1;">
+                        <button type="button" class="btn btn-info" onclick="addAllocation()">+</button>
+                    </div>
+                </div>
+
+                <table class="table table-sm table-bordered" style="font-size: 12px;">
+                    <thead>
+                        <tr>
+                            <th>Chantier</th>
+                            <th>Montant</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allocationTableBody"></tbody>
+                </table>
+                <div style="font-size: 12px; font-weight: bold;">
+                    Reste à allouer: <span id="remainingAmountDisplay" class="text-danger">0.00</span> DH
+                </div>
+                <input type="hidden" name="allocations" id="allocationsInput">
+            </div>
+
             <div class="footer-row">
                 <div>Signature:</div>
                 <div class="signature-line"></div>
                 <button type="button" class="btn btn-primary" id="printBtn">Imprimer effet</button>
-                <!-- <button type="submit" class="btn btn-secondary">Enregistrer</button>* -->
-                <!-- <button type="submit" class="btn btn-secondary" >Enregistrer</button> -->
                 <button type="submit" class="btn btn-success" >Enregistrer</button>
             </div>
         </form>
@@ -447,6 +474,7 @@
         <div class="print-cheque-number" id="print-cheque-number" hidden></div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
     <script>
         // French number-to-words conversion function
        function numberToFrenchWords(number) {
@@ -616,7 +644,8 @@ function updatePrintFields() {
         });
 
         // Test alignment button
-        document.getElementById("testBtn").addEventListener("click", function () {
+        const testBtn = document.getElementById("testBtn");
+        if (testBtn) testBtn.addEventListener("click", function () {
             // Fill with test data
             document.getElementById('payee').value = "milimar";
             document.getElementById('amount').value = "1250.75";
@@ -630,8 +659,79 @@ function updatePrintFields() {
             
         });
 
-        // Initialize print fields
-        updatePrintFields();
+        let allocations = [];
+
+        (function initChantierChoices() {
+            const select = document.getElementById('allocChantierSelect');
+            if (!select || typeof Choices === 'undefined') return;
+            new Choices(select, {
+                searchEnabled: true,
+                shouldSort: false,
+                itemSelectText: '',
+                searchPlaceholderValue: 'Rechercher...'
+            });
+        })();
+
+        function updateAllocationUI() {
+            const tbody = document.getElementById('allocationTableBody');
+            tbody.innerHTML = '';
+
+            let totalAllocated = 0;
+
+            allocations.forEach((alloc, index) => {
+                totalAllocated += parseFloat(alloc.amount);
+                const row = `
+                <tr>
+                    <td>${alloc.chantierName}</td>
+                    <td>${parseFloat(alloc.amount).toFixed(2)}</td>
+                    <td><button type="button" class="btn btn-danger btn-sm" onclick="removeAllocation(${index})">X</button></td>
+                </tr>
+            `;
+                tbody.innerHTML += row;
+            });
+
+            const amountInput = document.getElementById('amount').value;
+            const totalEffet = parseFloat(amountInput.replace(',', '.') || 0);
+            const remaining = totalEffet - totalAllocated;
+
+            const remainingDisplay = document.getElementById('remainingAmountDisplay');
+            remainingDisplay.textContent = remaining.toFixed(2);
+
+            if (Math.abs(remaining) < 0.01) {
+                remainingDisplay.className = 'text-success';
+                remainingDisplay.textContent = "0.00";
+            } else {
+                remainingDisplay.className = 'text-danger';
+            }
+            document.getElementById('allocationsInput').value = JSON.stringify(allocations);
+        }
+
+        function addAllocation() {
+            const select = document.getElementById('allocChantierSelect');
+            const amountInput = document.getElementById('allocAmountInput');
+
+            const chantierId = select.value;
+            const selectedOption = select.options[select.selectedIndex];
+            const chantierName = selectedOption ? selectedOption.dataset.name : '';
+
+            const amount = parseFloat(amountInput.value);
+            if (!chantierId || !amount || amount <= 0) {
+                alert('Veuillez sélectionner un chantier et entrer un montant valide.');
+                return;
+            }
+            allocations.push({ chantierId, chantierName, amount });
+            updateAllocationUI();
+
+            select.value = '';
+            amountInput.value = '';
+        }
+
+        function removeAllocation(index) {
+            allocations.splice(index, 1);
+            updateAllocationUI();
+        }
+
+        document.getElementById('amount').addEventListener('input', updateAllocationUI);
     </script>
 </body>
 </html>

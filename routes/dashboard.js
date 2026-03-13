@@ -8,7 +8,7 @@ import fs from 'fs';
 import prisma from '../db.js';
 import { createBanque, deleteBanque, displayBanques, displayBanquesForcheques, getSituationBancaire, showCreate, updateChequeInStituation, updateChequeValidation, updateEffetInStituation, updateEffetValidation, updatePayValidation, updateSituationBancaire, showEditBanque, updateBanque, listBanques } from '../controllers/banquesController.js';
 import { awb, bmce, bmci, bp, cam, cdm, createCheque, deleteCheque, etablirCheque, exportChequesExcel, exportChequesPdf, importExelCheques, listBanquesCheques, listChequesApi, showCheques, showChequesForbanque, updateCheque, updateChequeAllocations, updateChequeStatut } from '../controllers/chequesController.js';
-import { createEffet, deleteEffet, Eawb, Ebmce, Ebmci, Ebp, Ecam, Ecdm, etablirEffet, importExelEffets, listBanquesEffets, showEffets, showEffetsForbanque, updateEffet, updateEffetStatut } from '../controllers/effetsController.js';
+import { createEffet, deleteEffet, Eawb, Ebmce, Ebmci, Ebp, Ecam, Ecdm, etablirEffet, importExelEffets, listBanquesEffets, showEffets, showEffetsForbanque, updateEffet, updateEffetAllocations, updateEffetStatut } from '../controllers/effetsController.js';
 import { createPayavenir, deletePayavenir, showPayavenir, updatePayavenir, updatePayavenirChantier, updatePayavenirStatut } from '../controllers/payavenirController.js';
 import { createRecavenir, deleteRecavenir, showRecavenir, updateRecavenir, updateRecavenirStatut } from '../controllers/recavenirController.js';
 import { createVirement, deleteVirement, generateVirementPDF, index, listBanquesVirements, postVirement, showUpdateVirement, suppliersList, updateVire, updateVirementAllocations } from '../controllers/virementController.js';
@@ -217,6 +217,7 @@ dashboardRouter.post('/tresorerie/effets/import', upload.single('excelFile'), im
 dashboardRouter.get('/tresorerie/effets/banque/:id', showEffetsForbanque);
 dashboardRouter.post('/tresorerie/effets/create', createEffet);
 dashboardRouter.patch('/tresorerie/effets/:id', updateEffet);
+dashboardRouter.patch('/tresorerie/effets/:id/allocations', updateEffetAllocations);
 dashboardRouter.put('/tresorerie/effets/:id/update-statut', updateEffetStatut);
 dashboardRouter.patch('/tresorerie/effets/situation/:id', updateEffetInStituation);
 dashboardRouter.patch('/tresorerie/effets/:id/validation', updateEffetValidation);
