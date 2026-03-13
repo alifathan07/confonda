@@ -58,6 +58,10 @@
                         <label class="form-check-label" for="notifyCaisse">Demande Caisse</label>
                       </div>
                       <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="notifyJustiffecaisse" name="notifyJustiffecaisse" checked>
+                        <label class="form-check-label" for="notifyJustiffecaisse">Justif Caisse</label>
+                      </div>
+                      <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="notifyFourniture" name="notifyFourniture" checked>
                         <label class="form-check-label" for="notifyFourniture">Demande Fourniture</label>
                       </div>
@@ -112,6 +116,7 @@
                         <tr>
                           <th class="px-4">Numéro</th>
                           <th class="text-center">Caisse</th>
+                          <th class="text-center">Justif Caisse</th>
                           <th class="text-center">Fourniture</th>
                           <th class="text-center">Actif</th>
                           <th class="text-end px-4">Actions</th>
@@ -120,7 +125,7 @@
                       <tbody>
                         <% if (!recipients || recipients.length === 0) { %>
                           <tr>
-                            <td colspan="5" class="text-center text-muted py-5">
+                            <td colspan="6" class="text-center text-muted py-5">
                               Aucun numéro configuré.
                             </td>
                           </tr>
@@ -142,6 +147,7 @@
 
                             <td class="text-center">
                               <form method="POST" action="/settings/whatsapp-recipients/<%= r.id %>">
+                                <input type="hidden" name="notifyJustiffecaisse" value="<%= r.notifyJustiffecaisse ? 'on' : '' %>">
                                 <input type="hidden" name="notifyFourniture" value="<%= r.notifyFourniture ? 'on' : '' %>">
                                 <input type="hidden" name="active" value="<%= r.active ? 'on' : '' %>">
                                 <div class="form-check form-switch d-inline-flex align-items-center">
@@ -153,6 +159,18 @@
                             <td class="text-center">
                               <form method="POST" action="/settings/whatsapp-recipients/<%= r.id %>">
                                 <input type="hidden" name="notifyCaisse" value="<%= r.notifyCaisse ? 'on' : '' %>">
+                                <input type="hidden" name="notifyFourniture" value="<%= r.notifyFourniture ? 'on' : '' %>">
+                                <input type="hidden" name="active" value="<%= r.active ? 'on' : '' %>">
+                                <div class="form-check form-switch d-inline-flex align-items-center">
+                                  <input class="form-check-input" type="checkbox" role="switch" id="justifcaisse_<%= r.id %>" name="notifyJustiffecaisse" <%= r.notifyJustiffecaisse ? 'checked' : '' %> onchange="this.form.submit()">
+                                </div>
+                              </form>
+                            </td>
+
+                            <td class="text-center">
+                              <form method="POST" action="/settings/whatsapp-recipients/<%= r.id %>">
+                                <input type="hidden" name="notifyCaisse" value="<%= r.notifyCaisse ? 'on' : '' %>">
+                                <input type="hidden" name="notifyJustiffecaisse" value="<%= r.notifyJustiffecaisse ? 'on' : '' %>">
                                 <input type="hidden" name="active" value="<%= r.active ? 'on' : '' %>">
                                 <div class="form-check form-switch d-inline-flex align-items-center">
                                   <input class="form-check-input" type="checkbox" role="switch" id="fourniture_<%= r.id %>" name="notifyFourniture" <%= r.notifyFourniture ? 'checked' : '' %> onchange="this.form.submit()">
@@ -163,6 +181,7 @@
                             <td class="text-center">
                               <form method="POST" action="/settings/whatsapp-recipients/<%= r.id %>">
                                 <input type="hidden" name="notifyCaisse" value="<%= r.notifyCaisse ? 'on' : '' %>">
+                                <input type="hidden" name="notifyJustiffecaisse" value="<%= r.notifyJustiffecaisse ? 'on' : '' %>">
                                 <input type="hidden" name="notifyFourniture" value="<%= r.notifyFourniture ? 'on' : '' %>">
                                 <div class="form-check form-switch d-inline-flex align-items-center">
                                   <input class="form-check-input" type="checkbox" role="switch" id="active_<%= r.id %>" name="active" <%= r.active ? 'checked' : '' %> onchange="this.form.submit()">

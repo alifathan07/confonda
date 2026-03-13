@@ -40,6 +40,7 @@ export const addNumbers = async (req, res) => {
     }
 
     const notifyCaisse = req.body.notifyCaisse === 'on' || req.body.notifyCaisse === 'true' || req.body.notifyCaisse === true;
+    const notifyJustiffecaisse = req.body.notifyJustiffecaisse === 'on' || req.body.notifyJustiffecaisse === 'true' || req.body.notifyJustiffecaisse === true;
     const notifyFourniture = req.body.notifyFourniture === 'on' || req.body.notifyFourniture === 'true' || req.body.notifyFourniture === true;
     const active = req.body.active === 'on' || req.body.active === 'true' || req.body.active === true;
 
@@ -48,6 +49,7 @@ export const addNumbers = async (req, res) => {
        
         phone,
         notifyCaisse,
+        notifyJustiffecaisse,
         notifyFourniture,
         active,
       },
@@ -68,6 +70,7 @@ export const editSettingNum = async (req, res) => {
     }
 
     const notifyCaisse = req.body.notifyCaisse === 'on' || req.body.notifyCaisse === 'true' || req.body.notifyCaisse === true;
+    const notifyJustiffecaisse = req.body.notifyJustiffecaisse === 'on' || req.body.notifyJustiffecaisse === 'true' || req.body.notifyJustiffecaisse === true;
     const notifyFourniture = req.body.notifyFourniture === 'on' || req.body.notifyFourniture === 'true' || req.body.notifyFourniture === true;
     const active = req.body.active === 'on' || req.body.active === 'true' || req.body.active === true;
 
@@ -75,6 +78,7 @@ export const editSettingNum = async (req, res) => {
       where: { id },
       data: {
         notifyCaisse,
+        notifyJustiffecaisse,
         notifyFourniture,
         active,
       },

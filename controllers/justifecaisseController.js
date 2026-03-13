@@ -542,30 +542,43 @@ export const createOrUpdateDepenses = async (req, res) => {
 
         const changes = [];
 
-        if (existing.numeroPiece !== data.numeroPiece)
+        if (
+          existing.dateDepense.getTime() !== data.dateDepense.getTime()
+        ) {
+          changes.push(
+            `Date: ${existing.dateDepense.toLocaleDateString("fr-FR")} → ${data.dateDepense.toLocaleDateString("fr-FR")}`
+          );
+        }
+
+        if (existing.numeroPiece !== data.numeroPiece) {
           changes.push(
             `NumeroPiece: ${existing.numeroPiece} → ${data.numeroPiece}`
           );
+        }
 
-        if (existing.imputation !== data.imputation)
+        if (existing.imputation !== data.imputation) {
           changes.push(
             `Imputation: ${existing.imputation} → ${data.imputation}`
           );
+        }
 
-        if (existing.natureDepense !== data.natureDepense)
+        if (existing.natureDepense !== data.natureDepense) {
           changes.push(
             `Nature: ${existing.natureDepense} → ${data.natureDepense}`
           );
+        }
 
-        if (existing.montantJustifie !== data.montantJustifie)
+        if (existing.montantJustifie !== data.montantJustifie) {
           changes.push(
             `MontantJustifie: ${existing.montantJustifie} → ${data.montantJustifie}`
           );
+        }
 
-        if (existing.montantNonJustifie !== data.montantNonJustifie)
+        if (existing.montantNonJustifie !== data.montantNonJustifie) {
           changes.push(
             `MontantNonJustifie: ${existing.montantNonJustifie} → ${data.montantNonJustifie}`
           );
+        }
 
         await prisma.depenseCaisse.update({
           where: { id: parseInt(item._id) },
@@ -580,10 +593,16 @@ export const createOrUpdateDepenses = async (req, res) => {
 
       } else {
 
-        const created = await prisma.depenseCaisse.create({ data });
+        const created = await prisma.depenseCaisse.create({
+          data,
+        });
 
         changeLogs.push(
-          `➕ Nouvelle dépense ajoutée\nNumeroPiece: ${created.numeroPiece}\nMontantJustifie: ${created.montantJustifie}`
+          `➕ Nouvelle dépense ajoutée
+NumeroPiece: ${created.numeroPiece}
+Date: ${created.dateDepense.toLocaleDateString("fr-FR")}
+MontantJustifie: ${created.montantJustifie}
+MontantNonJustifie: ${created.montantNonJustifie}`
         );
       }
     }
@@ -592,10 +611,11 @@ export const createOrUpdateDepenses = async (req, res) => {
       await recalculateAndUpdateTotals(justifCaisse.id);
 
     /*
-      SEND NOTIFICATION ONLY ONCE
+      SEND ONE WHATSAPP NOTIFICATION
     */
 
     if (changeLogs.length > 0) {
+
       (async () => {
         try {
 
@@ -608,11 +628,13 @@ export const createOrUpdateDepenses = async (req, res) => {
               select: { phone: true },
             });
 
-          const numbers = recipients.map((r) => r.phone).filter(Boolean);
+          const numbers = recipients
+            .map((r) => r.phone)
+            .filter(Boolean);
+
           if (!numbers.length) return;
 
-          const message = `
-📢 Justification de caisse mise à jour
+          const message = `📢 Justification de caisse mise à jour
 
 Utilisateur: ${user.name}
 Chantier: ${chantierRecord.nom}
@@ -622,9 +644,10 @@ Changements:
 ${changeLogs.join("\n\n")}
 `;
 
-          const pdfBuffer = await generateJustifCaissePDFBuffer(
-            justifCaisse.id
-          );
+          const pdfBuffer =
+            await generateJustifCaissePDFBuffer(
+              justifCaisse.id
+            );
 
           const filename = `JustifCaisse_${justifCaisse.id}.pdf`;
 
@@ -639,7 +662,10 @@ ${changeLogs.join("\n\n")}
           );
 
         } catch (err) {
-          console.error("WhatsApp notification failed:", err);
+          console.error(
+            "WhatsApp notification failed:",
+            err
+          );
         }
       })();
     }
@@ -654,7 +680,11 @@ ${changeLogs.join("\n\n")}
     });
 
   } catch (error) {
-    console.error("Error in createOrUpdateDepenses:", error);
+
+    console.error(
+      "Error in createOrUpdateDepenses:",
+      error
+    );
 
     res.status(500).json({
       success: false,
@@ -662,7 +692,6 @@ ${changeLogs.join("\n\n")}
     });
   }
 };
-
 // Delete depense
 export const deleteDepense = async (req, res) => {
   try {
