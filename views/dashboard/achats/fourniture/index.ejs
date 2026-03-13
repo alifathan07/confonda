@@ -65,9 +65,7 @@
 
                   <!-- FILTERS (admin / grandadmin only) -->
                   <% if (user.role !=='user' ) { %>
-                    <% // Ensure delaisPaiementOptions is always defined const delaisOptions=typeof
-                      delaisPaiementOptions !=='undefined' ? delaisPaiementOptions : []; const
-                      currentDelaisFilter=typeof currentFilter !=='undefined' ? currentFilter : '' ; %>
+                    <% const delaisOptions = (typeof delaisPaiementOptions !== 'undefined') ? delaisPaiementOptions : []; const currentDelaisFilter = (typeof currentFilter !== 'undefined') ? currentFilter : ''; %>
                       <div class="form-group mt-3">
                         <div class="d-flex" style="gap:10px; align-items:flex-end;">
                           <div class="flex-grow-1">
