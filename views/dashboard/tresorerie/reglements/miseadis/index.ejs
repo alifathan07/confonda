@@ -11,94 +11,77 @@
   <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet">
   <link href="/css/sb-admin-2.min.css" rel="stylesheet">
   <style>
-    /* General Button Style */
-    .custom-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 600;
-      font-size: 15px;
-      padding: 10px 20px;
-      border-radius: 8px;
-      border: none;
-      transition: all 0.2s ease-in-out;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      text-transform: uppercase;
-    }
-    .custom-btn i {
-      font-size: 14px;
-    }
-    .custom-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-    .btn-success.custom-btn {
-      background-color: #28a745;
-      color: white;
-    }
-    .btn-success.custom-btn:hover {
-      background-color: #218838;
-    }
-    .btn-outline-success.custom-btn {
-      background-color: white;
-      color: #28a745;
-      border: 2px solid #28a745;
-    }
-    .btn-outline-success.custom-btn:hover {
-      background-color: #28a745;
-      color: white;
-    }
-    .btn-secondary.custom-btn {
-      background-color: #6c757d;
-      color: white;
-    }
-    .btn-secondary.custom-btn:hover {
-      background-color: #5a6268;
-    }
-    .btn-primary.custom-btn {
-      background-color: #007bff;
-      color: white;
-    }
-    .btn-primary.custom-btn:hover {
-      background-color: #0056b3;
-    }
-    .btn-warning.excel-save-btn {
-      font-size: 13px;
-      padding: 6px 10px;
-      border-radius: 6px;
-    }
-    .excel-delete-btn {
-      background-color: transparent;
-      color: #dc3545;
-      border: none;
-      padding: 6px;
-      font-size: 15px;
-      cursor: pointer;
-    }
-    .excel-delete-btn:hover {
-      color: #bd2130;
-    }
-    .excel-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .excel-table th,
-    .excel-table td {
-      border: 1px solid #dee2e6;
-      padding: 8px;
-      text-align: center;
+    .miseadis-table td,
+    .miseadis-table th {
       vertical-align: middle;
     }
-    .excel-table thead th {
-      background-color: #f8f9fa;
-      font-weight: bold;
+
+    .miseadis-table.table-bordered td,
+    .miseadis-table.table-bordered th {
+      border-color: #e6e8f0;
     }
-    .excel-table tbody tr:nth-child(even) {
-      background-color: #f2f2f2;
+
+    .allocations {
+      display: grid;
+      gap: 6px;
     }
-    .excel-table tbody tr:hover {
-      background-color: #e9ecef;
+
+    .alloc-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 6px 10px;
+      border: 1px solid #e9ecef;
+      border-radius: 10px;
+      background: #fff;
     }
+
+    .alloc-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .alloc-amount {
+      white-space: nowrap;
+      font-weight: 700;
+    }
+
+    .table-actions {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .cell-edit {
+      min-width: 120px;
+    }
+
+    .cell-edit[contenteditable="true"] {
+      outline: none;
+    }
+
+    .cell-edit[contenteditable="true"]:focus {
+      box-shadow: inset 0 0 0 2px rgba(78, 115, 223, .25);
+      border-radius: 6px;
+    }
+
+    .obs-cell {
+      min-width: 320px;
+      max-width: 520px;
+      white-space: normal;
+      line-height: 1.25;
+    }
+
+    .obs-cell[contenteditable="true"] {
+      padding: 8px 10px;
+    }
+
+    #filterTypeDropdown .dropdown-menu {
+      z-index: 2000;
+    }
+  
     .statut-cell {
       text-align: center !important;
       vertical-align: middle !important;
@@ -108,76 +91,31 @@
       display: inline-block;
       padding: 6px 12px;
       font-weight: bold;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-radius: 20px;
-      border: 2px solid transparent;
+    }
+
+    .btn {
+      border-radius: 4px;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 400;
+      border: none;
       cursor: pointer;
-      transition: all 0.3s ease;
-      min-width: 100px;
-      text-align: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    .statut-badge:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-    .statut-badge.en-circulation {
-      background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-      color: #856404;
-      border-color: #ffc107;
-    }
-    .statut-badge.paye {
-      background: linear-gradient(135deg, #d4edda, #00b894);
-      color: #155724;
-      border-color: #28a745;
-    }
-    .statut-badge.impaye {
-      background: linear-gradient(135deg, #fff3e0, #e17055);
-      color: #8a2e05;
-      border-color: #fd7e14;
-    }
-    .statut-badge.annule {
-      background: linear-gradient(135deg, #f8d7da, #d63031);
-      color: #721c24;
-      border-color: #dc3545;
-    }
-    .statut-select {
-      display: block;
-      margin: 0 auto;
-      font-weight: bold;
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-radius: 20px;
-      padding: 8px 16px;
-      border: 2px solid #007bff;
-      background: linear-gradient(135deg, #ffffff, #f8f9fa);
-      cursor: pointer;
-      min-width: 120px;
-      text-align: center;
-      box-shadow: 0 2px 6px rgba(0,123,255,0.2);
-      transition: all 0.3s ease;
-      outline: none;
-    }
-    .statut-select:focus {
-      border-color: #0056b3;
-      box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
-      transform: scale(1.02);
-    }
-    .statut-select option {
-      padding: 8px;
-      font-weight: bold;
-      text-transform: uppercase;
-    }
-    @keyframes statusChange {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
-    }
-    .status-updating {
-      animation: statusChange 0.3s ease;
+
+    .btn-clear-filters {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      white-space: nowrap !important;
+      overflow: visible !important;
+      min-width: max-content;
+      flex-shrink: 0;
+      width: auto !important;
+      height: auto !important;
+      padding: 0.5rem 1rem !important;
+      border-radius: 4px !important;
+      line-height: 1.2;
     }
   </style>
 </head>
@@ -188,64 +126,100 @@
       <div id="content">
         <%- include('../../../../layouts/topbar') %>
         <div class="container-fluid">
-          <div class="card shadow mb-4">
-            <div class="card-header py-3">
-              <h6 class="m-0 font-weight-bold text-primary">Liste des Mises à Disposition</h6>
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div>
+              <h1 class="h3 mb-0 text-gray-800">Mises à disposition</h1>
+              <div class="small text-muted" id="miseadisInfo"><%= (miseadis || []).length %> résultat(s)</div>
             </div>
-            <div class="card-body">
-              <div class="mb-4" style="display: flex; align-items: center; gap: 20px;">
-                <!-- <form id="excelUploadForm" enctype="multipart/form-data" method="POST" action="/tresorerie/miseadis/import" style="margin: 0;">
-                  <input type="file" id="excelFile" name="excelFile" accept=".xlsx,.xls" style="display:none;" hidden>
-                  <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('excelFile').click();" style="font-weight:600; font-size:15px; height: 42px;">
-                    <i class="fas fa-file-upload mr-2"></i> Importer Excel
-                  </button>
-                </form> -->
-                <button id="saveAllChanges" class="btn btn-primary custom-btn" title="Enregistrer toutes les modifications">
-                  <i class="fas fa-save mr-2"></i> Enregistrer
-                </button>
-                
-                <button id="downloadPdfBtn" class="btn btn-success d-flex align-items-center" type="button">
-                  <i class="fas fa-file-pdf mr-2"></i> Télécharger PDF
-                </button>
-                <button id="downloadExcelBtn" class="btn btn-success d-flex align-items-center" type="button">
-                  <i class="fas fa-file-download mr-2"></i> Télécharger Excel
-                </button>
-                <span id="excelUploadMsg" style="font-size:15px; margin-left:10px;"></span>
-              </div>
-              <div class="mb-3" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-                <select id="chantierFilter" class="form-control" style="font-size: 15px; width: 200px;">
-                  <option value="">-- Tous les chantiers --</option>
-                  <option value="none">-- Aucun --</option>
-                  <% chantiers.forEach(chantier => { %>
-                    <% if (chantier.nom) { %>
-                      <option value="<%= chantier.nom %>"><%= chantier.nom %></option>
-                    <% } %>
-                  <% }) %>
-                </select>
-                <div class="form-group">
-                  <label for="dateFromFilter" class="mr-2">Date du :</label>
-                  <input type="date" id="dateFromFilter" class="form-control" style="font-size: 15px; width: 160px;">
-                </div>
-                <div class="form-group">
-                  <label for="dateToFilter" class="mr-2">au :</label>
-                  <input type="date" id="dateToFilter" class="form-control" style="font-size: 15px; width: 160px;">
-                </div>
-                <input type="text" id="supplierSearch" class="form-control" placeholder="Rechercher (bénéficiaire, banque, obs, chantier)" style="font-size: 15px; width: 300px;">
-                <button id="resetFilters" class="btn btn-secondary custom-btn">
-                  <i class="fas fa-undo mr-2"></i> Réinitialiser
-                </button>
-                <span id="filterLoading" style="display: none; font-size: 15px; color: #1976d2;">
-                  <i class="fas fa-spinner fa-spin mr-2"></i> Filtrage...
-                </span>
-              </div>
-             
+            <div class="d-flex" style="gap: 10px;">
+              <button id="downloadPdfBtn" type="button" class="btn btn-outline-danger">
+                <i class="fas fa-file-pdf mr-2"></i>PDF
+              </button>
+              <button id="downloadExcelBtn" type="button" class="btn btn-outline-success">
+                <i class="fas fa-file-excel mr-2"></i>Excel
+              </button>
+              <button id="saveAllChanges" type="button" class="btn btn-warning">
+                <i class="fas fa-save mr-2"></i>Enregistrer
+              </button>
+              <a href="<%= (typeof banqueId !== 'undefined' && banqueId) ? ('/tresorerie/miseadis/banque/' + banqueId + '/create') : '/tresorerie/miseadis/banques' %>" class="btn btn-primary">
+                <i class="fas fa-plus mr-2"></i>Nouveau
+              </a>
+            </div>
+          </div>
 
-              <div class="table-responsive">
+          <div class="card shadow mb-4">
+            <div class="card-body">
+              <div class="row mb-3">
+                <div class="col-md-3 mb-2">
+                  <label class="small text-muted mb-1">Filtre</label>
+                  <div class="dropdown" id="filterTypeDropdown">
+                    <button class="btn btn-success dropdown-toggle w-100" type="button" id="filterTypeBtn"
+                      data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      Filtrer Par
+                    </button>
+                    <div class="dropdown-menu w-100" id="filterTypeMenu" aria-labelledby="filterTypeBtn">
+                      <button class="dropdown-item" type="button" data-filter-type="beneficiaire">Bénéficiaire</button>
+                      <button class="dropdown-item" type="button" data-filter-type="banque">Banque</button>
+                      <button class="dropdown-item" type="button" data-filter-type="chantier">Chantier</button>
+                      <button class="dropdown-item" type="button" data-filter-type="montant">Montant</button>
+                    </div>
+                  </div>
+
+                  <div id="filterDynamicContainer" class="mt-2">
+                    <div id="filterBoxBeneficiaire" style="display:none;">
+                      <% const _benefList = Array.from(new Set((miseadis || []).map(m => (m && m.beneficiaire) ? String(m.beneficiaire).trim() : '').filter(Boolean))); %>
+                      <select id="filterBeneficiaire" class="form-control">
+                        <option value="">Tous</option>
+                        <% _benefList.forEach(n => { %>
+                          <option value="<%= n %>"><%= n %></option>
+                        <% }) %>
+                      </select>
+                    </div>
+                    <div id="filterBoxBanque" style="display:none;">
+                      <select id="filterBanque" class="form-control">
+                        <option value="">Tous</option>
+                        <% (banques || []).forEach(b => { %>
+                          <option value="<%= b.name %>"><%= b.name %></option>
+                        <% }) %>
+                      </select>
+                    </div>
+                    <div id="filterBoxChantier" style="display:none;">
+                      <select id="filterChantier" class="form-control">
+                        <option value="">Tous</option>
+                        <% (chantiers || []).forEach(c => { %>
+                          <option value="<%= c.nom %>"><%= c.nom %></option>
+                        <% }) %>
+                      </select>
+                    </div>
+                    <div id="filterBoxMontant" style="display:none;">
+                      <input id="filterMontant" class="form-control" placeholder="ex: 1200" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-2 mb-2 d-flex align-items-end">
+                  <button id="btnClearFilters" type="button" class="btn btn-danger w-100 btn-clear-filters" style="display:none;">
+                    <i class="fas fa-times mr-1"></i>Annuler filtre
+                  </button>
+                </div>
+
+                <div class="col-md-2 mb-2">
+                  <label class="small text-muted mb-1">Date du</label>
+                  <input id="filterDateFrom" type="date" class="form-control" />
+                </div>
+                <div class="col-md-2 mb-2">
+                  <label class="small text-muted mb-1">Date au</label>
+                  <input id="filterDateTo" type="date" class="form-control" />
+                </div>
+              </div>
+
+              <div class="table-responsive" id="miseadisTableResponsive">
                 <% 
                   function formatDateToDDMMYYYY(dateInput) {
                     if (!dateInput) return '';
                     const date = new Date(dateInput);
                     if (isNaN(date)) return dateInput;
+
                     const day = String(date.getDate()).padStart(2, '0');
                     const month = String(date.getMonth() + 1).padStart(2, '0');
                     const year = date.getFullYear();
@@ -253,49 +227,61 @@
                   }
                 %>
 
-                <table id="editableTable" class="excel-table">
-                  <thead>
-                    <tr style="position: sticky; top: 0; background-color: white; z-index: 1;">
-                      <th draggable="true">Bénéficiaire</th>
-                      <th draggable="true">Banque</th>
-                      <th draggable="true">Montant</th>
-                      <th draggable="true">Date d'échéance</th>
-                      <th draggable="true">Observation</th>
-                      <th draggable="true">Chantier</th>
-                      <th style="width: 180px;">Actions</th>
+                <table class="table table-sm table-hover table-bordered miseadis-table" style="min-width: 1200px;" id="editableTable">
+                  <thead class="thead-light">
+                    <tr>
+                      <th>Bénéficiaire</th>
+                      <th>Banque</th>
+                      <th class="text-right">Montant</th>
+                      <th>Date</th>
+                      <th>Observation</th>
+                      <th>Chantier</th>
+                      <th>Montant chantier</th>
+                      <th class="text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody id="miseadisTbody">
                     <% if (typeof miseadis === 'undefined' || !miseadis.length) { %>
                       <tr>
-                        <td colspan="7" style="text-align: center;">Aucune mise à disposition disponible.</td>
+                        <td colspan="8" style="text-align: center;">Aucune mise à disposition disponible.</td>
                       </tr>
                     <% } else { %>
                       <% miseadis.forEach(miseadispo => { %>
-                        <tr data-id="<%= miseadispo.id %>">
-                          <td contenteditable="true" data-name="beneficiaire"><%= miseadispo.beneficiaire || '' %></td>
-                          <td contenteditable="true" data-name="banque"><%= miseadispo.banque?.name || '' %></td>
-                          <td contenteditable="true" data-name="montant"><%= Number(miseadispo.montant).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
-                          <td contenteditable="true" data-name="dateEcheance"><%= formatDateToDDMMYYYY(miseadispo.date) %></td>
-                          <td contenteditable="true" data-name="obs"><%= miseadispo.obs || '' %></td>
+                        <tr data-id="<%= miseadispo.id %>" data-chantier="<%= (miseadispo.chantierNames && miseadispo.chantierNames.length) ? miseadispo.chantierNames.join('|') : (miseadispo.chantier ? miseadispo.chantier.nom : '') %>">
+                          <td class="cell-edit" contenteditable="true" data-name="beneficiaire"><%= miseadispo.beneficiaire || '' %></td>
+                          <td class="cell-edit" contenteditable="true" data-name="banque"><%= miseadispo.banque?.name || '' %></td>
+                          <td class="text-right cell-edit" contenteditable="true" data-name="montant"><%= Number(miseadispo.montant).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                          <td class="cell-edit" contenteditable="true" data-name="dateEcheance"><%= formatDateToDDMMYYYY(miseadispo.date) %></td>
+                          <td class="cell-edit obs-cell" contenteditable="true" data-name="obs"><%= miseadispo.obs || '' %></td>
                           <td data-name="chantier">
-                            <select data-name="chantier" class="form-control">
-                              <% if (miseadispo.chantier) { %>
-                                <option value="<%= miseadispo.chantier.id %>"><%= miseadispo.chantier.nom %></option>
-                              <% } else { %>
-                                <option value="">-- Aucun --</option>
-                              <% } %>
-                              <% chantiers.forEach(chantier => { %>
-                                <% if (!miseadispo.chantier || miseadispo.chantier.id !== chantier.id) { %>
-                                  <option value="<%= chantier.id %>"><%= chantier.nom %></option>
-                                <% } %>
-                              <% }) %>
-                            </select>
+                            <% if (miseadispo.chantierLines && miseadispo.chantierLines.length) { %>
+                              <div class="allocations">
+                                <% miseadispo.chantierLines.forEach(l=> { %>
+                                  <div class="alloc-line" data-chantier="<%= l.nom %>">
+                                    <div class="alloc-name"><%= l.nom %></div>
+                                  </div>
+                                <% }) %>
+                              </div>
+                            <% } else { %>
+                              <%= miseadispo.chantier ? miseadispo.chantier.nom : "-- Aucun --" %>
+                            <% } %>
                           </td>
-                          <td>
-                            <div class="btn-group" role="group">
-                              
-                              <button class="btn btn-danger btn-sm excel-delete-btn" title="Supprimer" onclick="supprimerMiseadispo(<%= miseadispo.id %>)">
+                          <td data-name="montantChantier">
+                            <% if (miseadispo.chantierLines && miseadispo.chantierLines.length) { %>
+                              <div class="allocations">
+                                <% miseadispo.chantierLines.forEach(l=> { %>
+                                  <div class="alloc-line" data-chantier="<%= l.nom %>">
+                                    <div class="alloc-amount"><%= Number(l.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></div>
+                                  </div>
+                                <% }) %>
+                              </div>
+                            <% } else { %>
+                              <%= Number(miseadispo.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                            <% } %>
+                          </td>
+                          <td class="text-right">
+                            <div class="table-actions">
+                              <button class="btn btn-danger btn-sm" title="Supprimer" onclick="supprimerMiseadispo(<%= miseadispo.id %>)">
                                 <i class="fas fa-trash-alt"></i>
                               </button>
                               <button type="button" class="btn btn-secondary btn-sm" onclick="downloadPDF(<%= miseadispo.id %>)">
@@ -309,9 +295,14 @@
                   </tbody>
                   <tfoot>
                     <tr>
-                      <td colspan="2" style="text-align: right; font-weight: bold;">Total:</td>
-                      <td id="total" style="font-weight: bold;"></td>
-                      <td colspan="4"></td>
+                      <th colspan="2" class="text-right">Total</th>
+                      <th class="text-right" id="totalMontantCell">0,00</th>
+                      <th colspan="5"></th>
+                    </tr>
+                    <tr id="totalChantierRow" style="display:none;">
+                      <th colspan="6" class="text-right">Total chantier</th>
+                      <th class="text-right" id="totalMontantChantierCell">0,00</th>
+                      <th></th>
                     </tr>
                   </tfoot>
                 </table>
@@ -369,576 +360,300 @@
       }
     
       document.addEventListener("DOMContentLoaded", function () {
-        const uploadForm = document.getElementById('excelUploadForm');
-        const fileInput = document.getElementById('excelFile');
-        const msg = document.getElementById('excelUploadMsg');
         const table = document.getElementById("editableTable");
         const saveAllButton = document.getElementById('saveAllChanges');
-        const chantierFilter = document.getElementById('chantierFilter');
-        const dateFromFilter = document.getElementById('dateFromFilter');
-        const dateToFilter = document.getElementById('dateToFilter');
-        const supplierSearch = document.getElementById('supplierSearch');
-        const resetFilters = document.getElementById('resetFilters');
-        const noResults = document.getElementById('noResults');
-        const filterLoading = document.getElementById('filterLoading');
-    
+
+        const $tbody = document.getElementById('miseadisTbody');
+        const $totalCell = document.getElementById('totalMontantCell');
+        const $totalChantierCell = document.getElementById('totalMontantChantierCell');
+        const $totalChantierRow = document.getElementById('totalChantierRow');
+        const $filterTypeBtn = document.getElementById('filterTypeBtn');
+        const $filterTypeDropdown = document.getElementById('filterTypeDropdown');
+        const $filterTypeMenu = document.getElementById('filterTypeMenu');
+        const $btnClearFilters = document.getElementById('btnClearFilters');
+        const $filterBeneficiaire = document.getElementById('filterBeneficiaire');
+        const $filterBanque = document.getElementById('filterBanque');
+        const $filterChantier = document.getElementById('filterChantier');
+        const $filterMontant = document.getElementById('filterMontant');
+        const $filterDateFrom = document.getElementById('filterDateFrom');
+        const $filterDateTo = document.getElementById('filterDateTo');
+
+        let activeFilterType = '';
+
         function formatDateToDDMMYYYY(dateInput) {
           if (!dateInput) return '';
           const date = new Date(dateInput);
           if (isNaN(date)) return dateInput;
+
           const day = String(date.getDate()).padStart(2, '0');
           const month = String(date.getMonth() + 1).padStart(2, '0');
           const year = date.getFullYear();
           return `${day}/${month}/${year}`;
         }
-    
-        const montantWordsCache = new Map();
-        function numberToFrenchWords(n) {
-          if (montantWordsCache.has(n)) return montantWordsCache.get(n);
-          let input = n;
-          if (typeof n === "string") n = n.replace(/\s/g, '').replace(',', '.');
-          n = Math.floor(Number(n));
-    
-          if (n === 0) {
-            montantWordsCache.set(input, "ZÉRO");
-            return "ZÉRO";
-          }
-    
-          const ones = ["", "UN", "DEUX", "TROIS", "QUATRE", "CINQ", "SIX", "SEPT", "HUIT", "NEUF"];
-          const teens = ["DIX", "ONZE", "DOUZE", "TREIZE", "QUATORZE", "QUINZE", "SEIZE", "DIX-SEPT", "DIX-HUIT", "DIX-NEUF"];
-          const tens = ["", "DIX", "VINGT", "TRENTE", "QUARANTE", "CINQUANTE", "SOIXANTE", "SOIXANTE", "QUATRE-VINGT", "QUATRE-VINGT"];
-          const scales = ["", "MILLE", "MILLION", "MILLIARD", "BILLION", "BILLIARD", "TRILLION"];
-    
-          function chunkNumber(num) {
-            let chunks = [];
-            while (num > 0) {
-              chunks.push(num % 1000);
-              num = Math.floor(num / 1000);
-            }
-            return chunks;
-          }
-    
-          function chunkToWords(chunk) {
-            let h = Math.floor(chunk / 100);
-            let t = Math.floor((chunk % 100) / 10);
-            let o = chunk % 10;
-            let str = "";
-    
-            if (h > 0) {
-              str += (h === 1 ? "CENT" : ones[h] + " CENT");
-              if (t !== 0 || o !== 0) str += " ";
-            }
-    
-            let num2 = t * 10 + o;
-            if (num2 > 0) {
-              if (num2 < 10) {
-                str += ones[num2];
-              } else if (num2 < 20) {
-                str += teens[num2 - 10];
-              } else {
-                let tenVal = t;
-                let oneVal = o;
-                if (tenVal === 7 || tenVal === 9) {
-                  str += tens[tenVal] + "-" + teens[oneVal];
-                } else if (tenVal === 8) {
-                  str += "QUATRE-VINGT" + (oneVal === 0 ? "S" : "-" + ones[oneVal]);
-                } else if (oneVal === 1 && tenVal !== 8) {
-                  str += tens[tenVal] + "-ET-UN";
-                } else if (oneVal > 0) {
-                  str += tens[tenVal] + "-" + ones[oneVal];
-                } else {
-                  str += tens[tenVal];
-                }
-              }
-            }
-    
-            return str.trim();
-          }
-    
-          let chunks = chunkNumber(n);
-          let words = [];
-    
-          for (let i = chunks.length - 1; i >= 0; i--) {
-            let chunk = chunks[i];
-            if (chunk === 0) continue;
-            let chunkWord = chunkToWords(chunk);
-            if (i > 0) {
-              if (i === 1 && chunk === 1) chunkWord = scales[i];
-              else chunkWord += " " + scales[i];
-              if (chunk > 1 && i > 1) chunkWord += "S";
-            }
-            words.push(chunkWord);
-          }
-    
-          let result = words.join(" ").replace(/\s+/g, ' ').trim();
-          montantWordsCache.set(input, result);
-          return result;
+
+        function moneyFr(v) {
+          return Number(v || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
-    
-        function convertMontantToLettre(montant) {
-          if (!montant || isNaN(montant)) return null;
-          let parts = String(montant).split(".");
-          let integerPart = parts[0];
-          let decimalPart = parts[1] || "";
-          let text = numberToFrenchWords(integerPart) + " DIRHAMS";
-          if (decimalPart && parseInt(decimalPart, 10) > 0) {
-            decimalPart = decimalPart.padEnd(2, "0").slice(0, 2);
-            text += " " + numberToFrenchWords(decimalPart) + " CENTIMES";
-          }
-          return text;
+
+        function parseMoney(v) {
+          const raw = String(v ?? '').trim();
+          if (!raw) return null;
+          const s = raw.replace(/\s/g, '').replace(/[^\d,.-]/g, '').replace(',', '.');
+          if (!s) return null;
+          const n = Number(s);
+          return isNaN(n) ? null : n;
         }
-    
-        function convertDateToISO(dateStr) {
-          if (!dateStr || dateStr.trim() === '') return null;
-          const parts = dateStr.split('/');
+
+        function dateToISO(str) {
+          if (!str) return null;
+          const parts = String(str).trim().split('/');
           if (parts.length !== 3) return null;
-          const [day, month, year] = parts.map(part => part.trim());
-          if (!day || !month || !year || 
-              isNaN(day) || isNaN(month) || isNaN(year) ||
-              parseInt(day) < 1 || parseInt(day) > 31 ||
-              parseInt(month) < 1 || parseInt(month) > 12 ||
-              parseInt(year) < 1900) {
-            return null;
-          }
-          const yearPadded = year.padStart(4, '0');
-          const monthPadded = month.padStart(2, '0');
-          const dayPadded = day.padStart(2, '0');
-          const dateString = `${yearPadded}-${monthPadded}-${dayPadded}`;
-          const parsedDate = new Date(dateString);
-          if (isNaN(parsedDate)) return null;
-          if (parsedDate.getFullYear() !== parseInt(year) ||
-              parsedDate.getMonth() !== parseInt(month) - 1 ||
-              parsedDate.getDate() !== parseInt(day)) {
-            return null;
-          }
-          return dateString;
+          const [dd, mm, yyyy] = parts.map(p => p.trim());
+          if (!dd || !mm || !yyyy) return null;
+          const val = `${yyyy.padStart(4, '0')}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+          return isNaN(new Date(val)) ? null : val;
         }
-    
-        function sanitizeInput(input) {
-          return input.replace(/[<>&'"]/g, (char) => ({
-            '<': '&lt;',
-            '>': '&gt;',
-            '&': '&amp;',
-            "'": '&#39;',
-            '"': '&quot;'
-          }[char])).trim();
+
+        function setFilterType(type) {
+          const t = String(type || '').trim();
+          activeFilterType = t;
+          document.getElementById('filterBoxBeneficiaire').style.display = t === 'beneficiaire' ? '' : 'none';
+          document.getElementById('filterBoxBanque').style.display = t === 'banque' ? '' : 'none';
+          document.getElementById('filterBoxChantier').style.display = t === 'chantier' ? '' : 'none';
+          document.getElementById('filterBoxMontant').style.display = t === 'montant' ? '' : 'none';
+
+          $filterTypeBtn.textContent =
+            t === 'beneficiaire' ? 'Bénéficiaire' :
+              t === 'banque' ? 'Banque' :
+                t === 'chantier' ? 'Chantier' :
+                  t === 'montant' ? 'Montant' :
+                    'Filtrer Par';
+
+          updateClearBtn();
+          applyFilters();
         }
-    
-        function updateTotal() {
-          const rows = table.querySelectorAll("tbody tr"); // Fixed: removed :not(:last-child)
-          let total = 0;
-          let visibleCount = 0;
-          rows.forEach(row => {
-            if (row.style.display !== "none") {
-              const montantCell = row.querySelector("td[data-name='montant']");
-              if (montantCell) {
-                const value = parseFloat(montantCell.innerText.replace(/\s/g, '').replace(',', '.'));
-                if (!isNaN(value)) total += value;
-              }
-              visibleCount++;
-            }
+
+        function updateClearBtn() {
+          const active = !!(activeFilterType ||
+            ($filterBeneficiaire && $filterBeneficiaire.value) ||
+            ($filterBanque && $filterBanque.value) ||
+            ($filterChantier && $filterChantier.value) ||
+            ($filterMontant && $filterMontant.value) ||
+            ($filterDateFrom && $filterDateFrom.value) ||
+            ($filterDateTo && $filterDateTo.value));
+          if ($btnClearFilters) $btnClearFilters.style.display = active ? '' : 'none';
+        }
+
+        function clearFilters() {
+          activeFilterType = '';
+          [$filterBeneficiaire, $filterBanque, $filterChantier, $filterMontant, $filterDateFrom, $filterDateTo].forEach(el => { if (el) el.value = ''; });
+          setFilterType('');
+        }
+
+        function toggleMenu(forceOpen) {
+          const open = typeof forceOpen === 'boolean' ? forceOpen : !$filterTypeMenu.classList.contains('show');
+          $filterTypeDropdown.classList.toggle('show', open);
+          $filterTypeMenu.classList.toggle('show', open);
+          $filterTypeBtn.setAttribute('aria-expanded', String(open));
+        }
+
+        if ($filterTypeBtn) {
+          $filterTypeBtn.addEventListener('click', e => { e.preventDefault(); toggleMenu(); });
+        }
+        document.addEventListener('click', e => { if ($filterTypeDropdown && !$filterTypeDropdown.contains(e.target)) toggleMenu(false); });
+        if ($filterTypeDropdown) {
+          $filterTypeDropdown.addEventListener('click', e => {
+            const btn = e.target && e.target.closest ? e.target.closest('[data-filter-type]') : null;
+            if (!btn) return;
+            setFilterType(btn.getAttribute('data-filter-type'));
+            toggleMenu(false);
           });
-          const totalCell = document.getElementById("total");
-          if (totalCell) {
-            totalCell.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-          }
-          if (noResults) noResults.style.display = visibleCount === 0 && rows.length > 0 ? 'block' : 'none';
         }
-    
-        function debounce(func, wait) {
-          let timeout;
-          return function (...args) {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => {
-              filterLoading.style.display = 'inline';
-              func.apply(this, args);
-              setTimeout(() => filterLoading.style.display = 'none', 100);
-            }, wait);
-          };
-        }
-    
+        if ($btnClearFilters) $btnClearFilters.addEventListener('click', clearFilters);
+
         function applyFilters() {
-          const chantierValue = chantierFilter.value;
-          const dateFromValue = dateFromFilter.value;
-          const dateToValue = dateToFilter.value;
-          const searchValue = supplierSearch.value.toLowerCase().trim().replace(/[^\w\s]/g, '');
-          const rows = table.querySelectorAll("tbody tr");
-          let visibleCount = 0;
-    
-          if (dateFromValue && dateToValue && dateFromValue > dateToValue) {
-            alert('Erreur : La date de début doit être antérieure ou égale à la date de fin.');
-            dateFromFilter.value = '';
-            dateToFilter.value = '';
-            return;
-          }
-    
-          rows.forEach(row => {
-            let showRow = true;
-            const isNoDataRow = row.querySelector("td[colspan='7']") !== null;
-    
-            if (isNoDataRow) {
-              if (chantierValue || dateFromValue || dateToValue || searchValue) {
-                showRow = false;
-              }
-            } else {
-              if (chantierValue && showRow) {
-                const chantierCell = row.querySelector("td[data-name='chantier'] select");
-                if (chantierCell) {
-                  const selectedOption = chantierCell.options[chantierCell.selectedIndex];
-                  const chantierText = selectedOption.text.trim();
-                  if (chantierValue === "none") {
-                    showRow = (chantierText === "-- Aucun --" || selectedOption.value === "");
-                  } else {
-                    showRow = (chantierText === chantierValue);
-                  }
-                } else {
-                  showRow = false;
-                }
-              }
-    
-              if ((dateFromValue || dateToValue) && showRow) {
-                const dateEcheanceCell = row.querySelector("td[data-name='dateEcheance']");
-                if (dateEcheanceCell) {
-                  const dateEcheance = dateEcheanceCell.innerText.trim();
-                  if (dateEcheance) {
-                    let dateEcheanceISO = null;
-                    if (dateEcheance.includes('/')) {
-                      dateEcheanceISO = convertDateToISO(dateEcheance);
-                    } else if (dateEcheance.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                      dateEcheanceISO = dateEcheance;
-                    } else {
-                      const parsedDate = new Date(dateEcheance);
-                      if (!isNaN(parsedDate)) {
-                        dateEcheanceISO = parsedDate.toISOString().split('T')[0];
-                      }
-                    }
-                    if (dateEcheanceISO) {
-                      if (dateFromValue && dateEcheanceISO < dateFromValue) showRow = false;
-                      if (dateToValue && dateEcheanceISO > dateToValue) showRow = false;
-                    } else {
-                      showRow = false;
-                    }
-                  } else {
-                    showRow = false;
-                  }
-                } else {
-                  showRow = false;
-                }
-              }
-    
-              if (searchValue && showRow) {
-                const beneficiaireCell = row.querySelector("td[data-name='beneficiaire']");
-                const banqueCell = row.querySelector("td[data-name='banque']");
-                const obsCell = row.querySelector("td[data-name='obs']");
-                const chantierCell = row.querySelector("td[data-name='chantier'] select");
-                const texts = [
-                  beneficiaireCell ? beneficiaireCell.innerText.toLowerCase().replace(/[^\w\s]/g, '') : '',
-                  banqueCell ? banqueCell.innerText.toLowerCase().replace(/[^\w\s]/g, '') : '',
-                  obsCell ? obsCell.innerText.toLowerCase().replace(/[^\w\s]/g, '') : '',
-                  chantierCell ? chantierCell.options[chantierCell.selectedIndex].text.toLowerCase().replace(/[^\w\s]/g, '') : ''
-                ];
-                showRow = texts.some(text => text.includes(searchValue));
+          const benVal = ($filterBeneficiaire && $filterBeneficiaire.value || '').toLowerCase().trim();
+          const banVal = $filterBanque && $filterBanque.value || '';
+          const chVal = String($filterChantier && $filterChantier.value || '');
+          const mtVal = parseMoney($filterMontant && $filterMontant.value);
+
+          const dateFrom = $filterDateFrom && $filterDateFrom.value;
+          const dateTo = $filterDateTo && $filterDateTo.value;
+
+          const hasAnyFilter = !!(benVal || banVal || chVal || (mtVal !== null) || dateFrom || dateTo);
+          const rows = $tbody ? $tbody.querySelectorAll('tr[data-id]') : [];
+          let total = 0;
+          let totalChantier = 0;
+          let shown = 0;
+
+          rows.forEach(tr => {
+            let show = true;
+
+            if (benVal) {
+              const c = tr.querySelector('td[data-name="beneficiaire"]');
+              show = show && c && c.textContent.toLowerCase().includes(benVal);
+            }
+            if (banVal) {
+              const c = tr.querySelector('td[data-name="banque"]');
+              show = show && c && c.textContent.trim() === banVal;
+            }
+            if (chVal) {
+              const rowChantier = (tr.getAttribute('data-chantier') || '');
+              show = show && rowChantier.includes(chVal);
+            }
+            if (mtVal !== null) {
+              const c = tr.querySelector('td[data-name="montant"]');
+              const v = parseMoney(c ? c.textContent : '');
+              show = show && v !== null && Math.abs(v - mtVal) < 0.01;
+            }
+            if (dateFrom || dateTo) {
+              const c = tr.querySelector('td[data-name="dateEcheance"]');
+              const iso = dateToISO(c ? c.textContent.trim() : '');
+              if (iso) {
+                const d = new Date(iso);
+                if (dateFrom && d < new Date(dateFrom)) show = false;
+                if (dateTo && d > new Date(dateTo)) show = false;
+              } else {
+                show = false;
               }
             }
-    
-            row.style.display = showRow ? '' : 'none';
-            if (showRow && !isNoDataRow) visibleCount++;
-          });
-    
-          if (noResults) noResults.style.display = visibleCount === 0 && rows.length > 0 ? 'block' : 'none';
-          updateTotal();
-        }
-    
-        const debouncedApplyFilters = debounce(applyFilters, 300);
-    
-        if (uploadForm && fileInput) {
-          fileInput.addEventListener('change', function () {
-            if (fileInput.files.length) {
-              uploadForm.requestSubmit();
-            }
-          });
-    
-          uploadForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            if (!fileInput.files.length) {
-              msg.textContent = 'Veuillez sélectionner un fichier Excel.';
-              msg.style.color = 'red';
-              return;
-            }
-            const formData = new FormData(uploadForm);
-            msg.textContent = 'Importation en cours...';
-            msg.style.color = '#1976d2';
-            fetch('/tresorerie/miseadis/import', {
-              method: 'POST',
-              body: formData
-            })
-            .then(res => res.text())
-            .then(text => {
-              msg.textContent = text;
-              msg.style.color = 'green';
-              setTimeout(() => window.location.reload(), 1200);
-            })
-            .catch(() => {
-              msg.textContent = "Erreur lors de l'importation du fichier.";
-              msg.style.color = 'red';
-            });
-          });
-        }
-    
-        let dragSrcIdx = null;
-        function swapColumns(table, fromIdx, toIdx) {
-          const headerRow = table.tHead.rows[0];
-          if (fromIdx === toIdx || fromIdx >= headerRow.cells.length - 1 || toIdx >= headerRow.cells.length - 1) return;
-          headerRow.insertBefore(headerRow.children[fromIdx], headerRow.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
-          Array.from(table.tBodies[0].rows).forEach(row => {
-            row.insertBefore(row.children[fromIdx], row.children[toIdx + (fromIdx < toIdx ? 1 : 0)]);
-          });
-        }
-    
-        Array.from(table.tHead.rows[0].cells).forEach((th, idx) => {
-          if (idx < table.tHead.rows[0].cells.length - 1) {
-            th.addEventListener('dragstart', function (e) {
-              dragSrcIdx = idx;
-              e.dataTransfer.effectAllowed = 'move';
-              th.classList.add('dragging');
-            });
-            th.addEventListener('dragend', function () {
-              dragSrcIdx = null;
-              th.classList.remove('dragging');
-              Array.from(table.tHead.rows[0].cells).forEach(cell => cell.classList.remove('drag-over'));
-            });
-            th.addEventListener('dragover', function (e) {
-              e.preventDefault();
-              th.classList.add('drag-over');
-            });
-            th.addEventListener('dragleave', function () {
-              th.classList.remove('drag-over');
-            });
-            th.addEventListener('drop', function (e) {
-              e.preventDefault();
-              th.classList.remove('drag-over');
-              if (dragSrcIdx !== null && dragSrcIdx !== idx) {
-                swapColumns(table, dragSrcIdx, idx);
-              }
-            });
-          }
-        });
-    
-        table.addEventListener("input", function (e) {
-          const target = e.target;
-          const cell = target.closest("td[data-name]");
-          if (cell) {
-            const row = cell.parentElement;
-            row.setAttribute("data-dirty", "true");
-            row.classList.add("excel-dirty-row");
-            if (cell.getAttribute("data-name") === "montant") {
-              updateTotal();
-            }
-          }
-        });
-    
-        table.addEventListener("change", function (e) {
-          if (e.target.tagName === "SELECT" && e.target.getAttribute("data-name") === "chantier") {
-            const row = e.target.closest("tr");
-            row.setAttribute("data-dirty", "true");
-            row.classList.add("excel-dirty-row");
-          }
-        });
-    
-        async function autoUpdateRow(row) {
-          if (!row.getAttribute("data-dirty")) return true;
-          const cells = Array.from(row.querySelectorAll("td[data-name]"));
-          const data = {
-            rib: null,
-            cin: null,
-            objet: null,
-            dateReglement: null
-          };
-          const id = row.getAttribute("data-id");
-    
-          let hasInvalidDate = false;
-          let hasInvalidMontant = false;
-    
-          cells.forEach(cell => {
-            const key = cell.getAttribute("data-name");
-            if (key === "chantier") {
-              const select = cell.querySelector("select[data-name='chantier']");
-              const value = select.value;
-              data[key] = value || null;
-            } else {
-              let value = sanitizeInput(cell.innerText.trim());
-              if (key === "montant") {
-                value = parseFloat(value.replace(/\s/g, '').replace(',', '.'));
-                if (isNaN(value) || value < 0) { // Added: basic validation
-                  hasInvalidMontant = true;
+
+            tr.style.display = (!hasAnyFilter || show) ? '' : 'none';
+
+            const chantierFilterActive = Boolean(chVal);
+            const selectedChantier = chantierFilterActive ? chVal.toLowerCase() : '';
+            const lines = tr.querySelectorAll('.alloc-line');
+            if (lines && lines.length) {
+              lines.forEach((l) => {
+                if (!selectedChantier) {
+                  l.style.display = '';
                   return;
                 }
-                data[key] = value;
-                data.montantLettre = convertMontantToLettre(value);
-              } else if (key === "dateEcheance") {
-                value = convertDateToISO(value);
-                if (!value) {
-                  hasInvalidDate = true;
-                  return;
-                }
-                data.date = value;
-              } else if (value !== '') {
-                data[key] = value;
-              }
+                const n = (l.getAttribute('data-chantier') || '').toLowerCase();
+                l.style.display = (n === selectedChantier) ? '' : 'none';
+              });
             }
-          });
-    
-          if (hasInvalidDate) {
-            alert(`Erreur : La date d'échéance est invalide ou vide pour la ligne avec ID ${id}. Veuillez entrer une date au format JJ/MM/AAAA.`);
-            return false;
-          }
-          if (hasInvalidMontant) {
-            alert(`Erreur : Le montant est invalide (doit être un nombre positif) pour la ligne avec ID ${id}.`);
-            return false;
-          }
-    
-          if (!id) {
-            alert(`Erreur : Aucun ID de mise à disposition trouvé pour la ligne.`);
-            return false;
-          }
-    
-          try {
-            const response = await fetch(`/tresorerie/miseadis/update/${id}`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(data)
-            });
-    
-            if (response.ok) {
-              const result = await response.json();
-              row.removeAttribute("data-dirty");
-              row.classList.remove("excel-dirty-row");
-              const updatedMiseadispo = result.miseadispo;
-              if (updatedMiseadispo) {
-                cells.forEach(cell => {
-                  const key = cell.getAttribute("data-name");
-                  if (key === "chantier") {
-                    const select = cell.querySelector("select[data-name='chantier']");
-                    select.value = updatedMiseadispo[key]?.id || '';
-                  } else if (key === "montant") {
-                    cell.innerText = Number(updatedMiseadispo[key]).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                  } else if (key === "dateEcheance") {
-                    cell.innerText = updatedMiseadispo.date ? formatDateToDDMMYYYY(updatedMiseadispo.date) : '';
-                  } else {
-                    cell.innerText = updatedMiseadispo[key] || '';
-                  }
+
+            if (tr.style.display !== 'none') {
+              const mc = tr.querySelector('td[data-name="montant"]');
+              const v = parseMoney(mc ? mc.textContent : '');
+              if (v !== null) total += v;
+              shown++;
+
+              if (chantierFilterActive) {
+                const visibleAllocLines = Array.from(tr.querySelectorAll("td[data-name='montantChantier'] .alloc-line")).filter((l) => {
+                  const style = window.getComputedStyle(l);
+                  return style.display !== 'none' && style.visibility !== 'hidden';
                 });
+                totalChantier += visibleAllocLines.reduce((acc, l) => {
+                  const amountEl = l.querySelector('.alloc-amount');
+                  const amountText = (amountEl && amountEl.textContent) ? amountEl.textContent : '';
+                  const val = parseMoney(amountText);
+                  return acc + (val === null ? 0 : val);
+                }, 0);
               }
-              return true;
-            } else {
-              const error = await response.json();
-              alert(error.error || 'Erreur lors de la mise à jour de la ligne.');
-              return false;
             }
-          } catch (err) {
-            console.error("Erreur mise à jour ligne", id, ":", err.message);
-            window.location.reload();
-            return false;
+          });
+
+          if ($totalCell) $totalCell.textContent = moneyFr(total);
+
+          if ($totalChantierRow) {
+            $totalChantierRow.style.display = chVal ? '' : 'none';
           }
+          if ($totalChantierCell) {
+            $totalChantierCell.textContent = chVal ? moneyFr(totalChantier) : '0,00';
+          }
+
+          const info = document.getElementById('miseadisInfo');
+          if (info) info.textContent = `${shown} résultat(s)`;
+
+          updateClearBtn();
         }
-    
-        saveAllButton.addEventListener('click', async function () {
-          const dirtyRows = document.querySelectorAll("#editableTable tbody tr[data-dirty='true']");
-          if (dirtyRows.length === 0) {
-            alert("Aucune modification à enregistrer.");
-            return;
-          }
-    
-          let allSuccessful = true;
-          for (const row of dirtyRows) {
-            const success = await autoUpdateRow(row);
-            if (!success) allSuccessful = false;
-          }
-    
-          if (allSuccessful) {
-            alert("Toutes les modifications ont été enregistrées avec succès.");
-            window.location.reload();
-          } else {
-            window.location.reload();
-    
-          }
-          updateTotal();
+
+        // Wire filters to applyFilters (same behavior as cheques/effets pages)
+        [$filterBeneficiaire, $filterBanque, $filterChantier, $filterDateFrom, $filterDateTo].forEach((el) => {
+          if (!el) return;
+          el.addEventListener('change', () => {
+            updateClearBtn();
+            applyFilters();
+          });
         });
-    
-        chantierFilter.addEventListener('change', debouncedApplyFilters);
-        dateFromFilter.addEventListener('change', debouncedApplyFilters);
-        dateToFilter.addEventListener('change', debouncedApplyFilters);
-        supplierSearch.addEventListener('input', debouncedApplyFilters);
-    
-        resetFilters.addEventListener('click', function () {
-          chantierFilter.value = '';
-          dateFromFilter.value = '';
-          dateToFilter.value = '';
-          supplierSearch.value = '';
-          debouncedApplyFilters();
-        });
-    
+        if ($filterMontant) {
+          $filterMontant.addEventListener('input', () => {
+            updateClearBtn();
+            applyFilters();
+          });
+        }
+
         document.getElementById("downloadPdfBtn").addEventListener("click", function () {
           const table = document.getElementById("editableTable");
-          const rows = table.querySelectorAll("tbody tr"); // Fixed: removed :not(:last-child)
-          if (rows.length === 0) {
+          const rows = table.querySelectorAll("tbody tr");
+          if (!rows || rows.length === 0) {
             alert("Aucune donnée à exporter en PDF.");
             return;
           }
-    
+
           try {
             const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
             const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
-            const title = document.querySelector(".card-header h6").innerText;
-    
+            const h1 = document.querySelector('h1.h3');
+            const title = (h1 && h1.innerText) ? h1.innerText : (document.title || 'Mises à disposition');
+
             doc.setFont("helvetica", "bold");
             doc.setFontSize(18);
             doc.setTextColor(40, 40, 40);
             doc.text(title, 10, 20);
-    
+
             const tableData = [];
-            rows.forEach(row => {
-              if (row.style.display !== "none") {
-                const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
-                  let value = "";
-                  const select = cell.querySelector("select");
-                  if (select) {
-                    value = select.options[select.selectedIndex].text.trim();
-                  } else if (cell.innerText) {
-                    value = cell.innerText.trim();
+            Array.from(rows).forEach(row => {
+              if (row.style.display === 'none') return;
+              const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map(cell => {
+                let value = '';
+                if (cell.dataset.name === 'chantier' || cell.dataset.name === 'montantChantier') {
+                  const lines = Array.from(cell.querySelectorAll('.alloc-line')).filter((l) => {
+                    const style = window.getComputedStyle(l);
+                    return style.display !== 'none' && style.visibility !== 'hidden';
+                  });
+
+                  if (lines.length) {
+                    if (cell.dataset.name === 'chantier') {
+                      value = lines.map(l => {
+                        const n = l.querySelector('.alloc-name');
+                        return (n && n.textContent) ? n.textContent.trim() : '';
+                      }).filter(Boolean).join('\n');
+                    } else {
+                      value = lines.map(l => {
+                        const a = l.querySelector('.alloc-amount');
+                        return (a && a.textContent) ? a.textContent.trim() : '';
+                      }).filter(Boolean).join('\n');
+                    }
+                  } else {
+                    value = cell.innerText ? cell.innerText.trim() : '';
                   }
-    
-                  if (cell.dataset.name === "dateEcheance" && value) {
-                    if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                      const [year, month, day] = value.split('-');
+                } else {
+                  value = cell.innerText ? cell.innerText.trim() : '';
+                }
+
+                if (cell.dataset.name === "dateEcheance" && value) {
+                  if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    const parts = value.split('-');
+                    value = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                  } else if (!value.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                    const d = new Date(value);
+                    if (!isNaN(d)) {
+                      const day = String(d.getDate()).padStart(2, '0');
+                      const month = String(d.getMonth() + 1).padStart(2, '0');
+                      const year = d.getFullYear();
                       value = `${day}/${month}/${year}`;
-                    } else if (!value.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-                      const date = new Date(value);
-                      if (!isNaN(date.getTime())) {
-                        const day = String(date.getDate()).padStart(2, '0');
-                        const month = String(date.getMonth() + 1).padStart(2, '0');
-                        const year = date.getFullYear();
-                        value = `${day}/${month}/${year}`;
-                      }
                     }
                   }
-    
-                  if (cell.dataset.name === "montant" && value) {
-                    let cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-                    const number = parseFloat(cleaned);
-                    if (!isNaN(number)) {
-                      const parts = number.toFixed(2).split('.');
-                      const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-                      value = `${integerPart},${parts[1]}`;
-                    }
-                  }
-    
-                  return value || "";
-                });
-                tableData.push(rowData);
-              }
+                }
+
+                return value || '';
+              });
+              tableData.push(rowData);
             });
-    
+
             doc.autoTable({
               head: [headers],
               body: tableData,
@@ -951,7 +666,6 @@
                 cellPadding: 2,
                 lineColor: [200, 200, 200],
                 lineWidth: 0.1,
-                minCellHeight: 10,
                 overflow: 'linebreak'
               },
               headStyles: {
@@ -962,33 +676,13 @@
                 halign: 'center',
                 cellPadding: 2
               },
-              bodyStyles: {
-                fillColor: [255, 255, 255]
-              },
-              alternateRowStyles: {
-                fillColor: [245, 245, 245]
-              },
-              columnStyles: {
-                0: { cellWidth: 30, halign: 'center' },
-                1: { cellWidth: 30, halign: 'left' },
-                2: { cellWidth: 30, halign: 'right' },
-                3: { cellWidth: 30, halign: 'center' },
-                4: { cellWidth: 30, halign: 'left' },
-                5: { cellWidth: 30, halign: 'left' }
-              },
+              alternateRowStyles: { fillColor: [245, 245, 245] },
               margin: { top: 30, left: 10, right: 10 },
               tableWidth: 'wrap'
             });
-    
-            const pageCount = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= pageCount; i++) {
-              doc.setPage(i);
-              doc.setFontSize(8);
-              doc.setTextColor(100);
-              doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() - 20, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
-            }
-    
-            let total = document.getElementById("total").innerText || "0";
+
+            const totalEl = document.getElementById("totalMontantCell");
+            let total = (totalEl && totalEl.innerText) ? totalEl.innerText : '0';
             total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
             const totalNumber = parseFloat(total);
             if (!isNaN(totalNumber)) {
@@ -996,146 +690,177 @@
               const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
               total = `${integerPart},${parts[1]}`;
             }
-    
-            const finalY = doc.lastAutoTable.finalY || 30;
+
+            const finalY = (doc.lastAutoTable && doc.lastAutoTable.finalY) ? doc.lastAutoTable.finalY : 30;
             doc.setFont("helvetica", "bold");
             doc.setFontSize(12);
             doc.setTextColor(22, 160, 133);
             doc.text(`Total: ${total} MAD`, 10, finalY + 15);
-    
+
+            const chantierTotalRow = document.getElementById('totalChantierRow');
+            const totalChantierEl = document.getElementById('totalMontantChantierCell');
+            const totalChantier = (totalChantierEl && totalChantierEl.innerText) ? totalChantierEl.innerText : '';
+            if (chantierTotalRow && chantierTotalRow.style.display !== 'none' && totalChantier) {
+              doc.text(`Total chantier: ${totalChantier.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.')} MAD`, 10, finalY + 22);
+            }
+
             doc.save("liste_mises_a_disposition.pdf");
           } catch (err) {
             console.error("Erreur génération PDF:", err);
             alert("Erreur lors de la génération du PDF. Veuillez vérifier la console.");
           }
         });
-    
+
         document.getElementById("downloadExcelBtn").addEventListener("click", function () {
-  const table = document.getElementById("editableTable");
-  const rows = table.querySelectorAll("tbody tr");
-  let visibleRows = Array.from(rows).filter(row => row.style.display !== "none");
+          const table = document.getElementById("editableTable");
+          const rows = table.querySelectorAll("tbody tr");
+          const visibleRows = Array.from(rows).filter(row => row.style.display !== "none");
 
-  if (visibleRows.length === 0) {
-    alert("Aucune donnée visible à exporter en Excel. Veuillez vérifier les filtres.");
-    return;
-  }
-
-  try {
-    const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
-    const tableData = [];
-    let invalidData = null;
-
-    visibleRows.forEach((row, rowIndex) => {
-      const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map((cell, colIndex) => {
-        let value = "";
-        const select = cell.querySelector("select");
-        if (select) {
-          value = select.options[select.selectedIndex].text.trim();
-        } else if (cell.innerText) {
-          value = cell.innerText.trim();
-        }
-
-        // Montant as number
-        if (cell.dataset.name === "montant" && value) {
-          const cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-          const number = parseFloat(cleaned);
-          if (!isNaN(number)) {
-            value = number; // keep numeric
-          } else {
-            invalidData = `Montant non numérique à la ligne ${rowIndex + 1}: "${value}"`;
+          if (visibleRows.length === 0) {
+            alert("Aucune donnée visible à exporter en Excel. Veuillez vérifier les filtres.");
+            return;
           }
-        }
 
-        // Date validation
-        if (cell.dataset.name === "dateEcheance" && value) {
-          if (!/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
-            invalidData = `Format de date invalide à la ligne ${rowIndex + 1}, colonne ${cell.dataset.name}: "${value}"`;
+          try {
+            const headers = Array.from(table.querySelectorAll("thead th")).slice(0, -1).map(th => th.innerText);
+            const tableData = [];
+            let invalidData = null;
+
+            visibleRows.forEach((row, rowIndex) => {
+              const rowData = Array.from(row.querySelectorAll("td:not(:last-child)")).map((cell) => {
+                let value = "";
+                if (cell.dataset.name === 'chantier' || cell.dataset.name === 'montantChantier') {
+                  const lines = Array.from(cell.querySelectorAll('.alloc-line')).filter((l) => {
+                    const style = window.getComputedStyle(l);
+                    return style.display !== 'none' && style.visibility !== 'hidden';
+                  });
+
+                  if (lines.length) {
+                    if (cell.dataset.name === 'chantier') {
+                      value = lines.map(l => {
+                        const n = l.querySelector('.alloc-name');
+                        return (n && n.textContent) ? n.textContent.trim() : '';
+                      }).filter(Boolean).join('\n');
+                    } else {
+                      value = lines.map(l => {
+                        const a = l.querySelector('.alloc-amount');
+                        return (a && a.textContent) ? a.textContent.trim() : '';
+                      }).filter(Boolean).join('\n');
+                    }
+                  } else {
+                    value = cell.innerText ? cell.innerText.trim() : '';
+                  }
+                } else {
+                  value = cell.innerText ? cell.innerText.trim() : '';
+                }
+
+                if (cell.dataset.name === "montant" && value) {
+                  const cleaned = value.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+                  const number = parseFloat(cleaned);
+                  if (!isNaN(number)) {
+                    value = number;
+                  } else {
+                    invalidData = `Montant non numérique à la ligne ${rowIndex + 1}: "${value}"`;
+                  }
+                }
+
+                if (cell.dataset.name === "dateEcheance" && value) {
+                  if (!/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+                    invalidData = `Format de date invalide à la ligne ${rowIndex + 1}, colonne ${cell.dataset.name}: "${value}"`;
+                  }
+                }
+
+                return value || "";
+              });
+
+              while (rowData.length < headers.length) rowData.push("");
+              tableData.push(rowData);
+            });
+
+            if (invalidData) throw new Error(invalidData);
+
+            const totalEl = document.getElementById("totalMontantCell");
+            let total = (totalEl && totalEl.innerText) ? totalEl.innerText : "0";
+            total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+            const totalNumber = parseFloat(total);
+            tableData.push(["Total", "", !isNaN(totalNumber) ? totalNumber : 0, "", "", "", ""]);
+
+            const chantierTotalRowEl = document.getElementById('totalChantierRow');
+            const chantierTotalCell = document.getElementById('totalMontantChantierCell');
+            let totalChantierStr = (chantierTotalRowEl && chantierTotalRowEl.style.display !== 'none' && chantierTotalCell && chantierTotalCell.innerText)
+              ? chantierTotalCell.innerText
+              : "";
+            if (totalChantierStr) {
+              totalChantierStr = totalChantierStr.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
+              const totalChantierNumber = parseFloat(totalChantierStr);
+              tableData.push(["", "", "", "", "", "Total chantier", !isNaN(totalChantierNumber) ? totalChantierNumber : 0]);
+            }
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet([headers, ...tableData], { skipHeader: false });
+
+            ws['!cols'] = [
+              { wch: 18 },
+              { wch: 18 },
+              { wch: 15 },
+              { wch: 25 },
+              { wch: 25 },
+              { wch: 23 },
+              { wch: 18 }
+            ];
+
+            headers.forEach((_, i) => {
+              const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
+              if (!ws[cellRef]) ws[cellRef] = { v: headers[i], t: 's' };
+              ws[cellRef].s = {
+                font: { bold: true },
+                fill: { fgColor: { rgb: "16A085" } },
+                alignment: { horizontal: i === 2 ? 'right' : i === 3 ? 'center' : 'left' },
+                border: {
+                  top: { style: 'thin' },
+                  bottom: { style: 'thin' },
+                  left: { style: 'thin' },
+                  right: { style: 'thin' }
+                }
+              };
+            });
+
+            tableData.forEach((row, rowIndex) => {
+              row.forEach((value, colIndex) => {
+                const cellRef = XLSX.utils.encode_cell({ r: rowIndex + 1, c: colIndex });
+                const isMontantColumn = colIndex === 2;
+
+                if (!ws[cellRef]) {
+                  ws[cellRef] = {
+                    v: value || "",
+                    t: isMontantColumn && typeof value === 'number' ? 'n' : 's'
+                  };
+                }
+
+                ws[cellRef].s = {
+                  fill: { fgColor: { rgb: rowIndex % 2 === 0 ? "FFFFFF" : "F5F5F5" } },
+                  alignment: { horizontal: isMontantColumn ? 'right' : colIndex === 3 ? 'center' : 'left' },
+                  border: {
+                    top: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    left: { style: 'thin' },
+                    right: { style: 'thin' }
+                  }
+                };
+
+                if (rowIndex === tableData.length - 1 && (colIndex === 0 || isMontantColumn)) {
+                  ws[cellRef].s.font = { bold: true };
+                }
+              });
+            });
+
+            XLSX.utils.book_append_sheet(wb, ws, "MisesADisposition");
+            XLSX.writeFile(wb, "liste_mises_a_disposition.xlsx");
+          } catch (err) {
+            console.error("Erreur génération Excel:", err);
+            alert(`Erreur lors de la génération du fichier Excel : ${err.message}`);
           }
-        }
-
-        return value || "";
-      });
-
-      while (rowData.length < headers.length) rowData.push("");
-      tableData.push(rowData);
-    });
-
-    if (invalidData) throw new Error(invalidData);
-
-    // Total row as number
-    let total = document.getElementById("total").innerText || "0";
-    total = total.replace(/[^\d.,-]/g, '').replace(/\s/g, '').replace(',', '.');
-    const totalNumber = parseFloat(total);
-    const totalRow = ["Total", "", !isNaN(totalNumber) ? totalNumber : 0, "", "", ""];
-    tableData.push(totalRow);
-
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet([headers, ...tableData], { skipHeader: false });
-
-    ws['!cols'] = [
-      { wch: 18 },
-      { wch: 18 },
-      { wch: 15 },
-      { wch: 25 },
-      { wch: 25 },
-      { wch: 23 }
-    ];
-
-    // Header styling
-    headers.forEach((_, i) => {
-      const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
-      if (!ws[cellRef]) ws[cellRef] = { v: headers[i], t: 's' };
-      ws[cellRef].s = {
-        font: { bold: true },
-        fill: { fgColor: { rgb: "16A085" } },
-        alignment: { horizontal: i === 2 ? 'right' : i === 3 ? 'center' : 'left' },
-        border: {
-          top: { style: 'thin' },
-          bottom: { style: 'thin' },
-          left: { style: 'thin' },
-          right: { style: 'thin' }
-        }
-      };
-    });
-
-    // Row styling
-    tableData.forEach((row, rowIndex) => {
-      row.forEach((value, colIndex) => {
-        const cellRef = XLSX.utils.encode_cell({ r: rowIndex + 1, c: colIndex });
-        const isMontantColumn = colIndex === 2;
-
-        if (!ws[cellRef]) {
-          ws[cellRef] = { 
-            v: value || "", 
-            t: isMontantColumn && typeof value === 'number' ? 'n' : 's' 
-          };
-        }
-
-        ws[cellRef].s = {
-          fill: { fgColor: { rgb: rowIndex % 2 === 0 ? "FFFFFF" : "F5F5F5" } },
-          alignment: { horizontal: isMontantColumn ? 'right' : colIndex === 3 ? 'center' : 'left' },
-          border: {
-            top: { style: 'thin' },
-            bottom: { style: 'thin' },
-            left: { style: 'thin' },
-            right: { style: 'thin' }
-          }
-        };
-
-        if (rowIndex === tableData.length - 1 && (colIndex === 0 || isMontantColumn)) {
-          ws[cellRef].s.font = { bold: true };
-        }
-      });
-    });
-
-    XLSX.utils.book_append_sheet(wb, ws, "MisesADisposition");
-    XLSX.writeFile(wb, "liste_mises_a_disposition.xlsx");
-
-  } catch (err) {
-    console.error("Erreur génération Excel:", err);
-    alert(`Erreur lors de la génération du fichier Excel : ${err.message}`);
-  }
-});
+        });
 
         applyFilters();
       });

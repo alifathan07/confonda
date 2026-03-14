@@ -90,6 +90,22 @@
 .btn-primary:hover { background: #2d218a; }
 .btn-info:hover    { background: #5746d6; }
 
+    .btn-clear-filters {
+      display: inline-flex;
+      align-items: center !important;
+      justify-content: center;
+      gap: 0.35rem;
+      white-space: nowrap !important;
+      overflow: visible !important;
+      min-width: max-content;
+      flex-shrink: 0;
+      width: auto !important;
+      height: auto !important;
+      padding: 0.5rem 1rem !important;
+      border-radius: 4px !important;
+      line-height: 1.2;
+    }
+
     .container-fluid {
       padding: 1rem;
       max-width: 1400px;
@@ -104,7 +120,7 @@
     }
 
     .card-header {
-      background: var(--primary-color);
+      background: var(--primary-color) !important;
       color: white;
       border-bottom: 1px solid #dee2e6;
       padding: 0.75rem;
@@ -475,7 +491,7 @@
 
               <!-- Annuler filtre (red, hidden by default) -->
               <div class="col-auto mb-2 d-flex align-items-end">
-                <button id="situationClearFilters" type="button" class="btn btn-danger" style="display:none;">
+                <button id="situationClearFilters" type="button" class="btn btn-danger btn-clear-filters" style="display:none;">
                   <i class="fas fa-times mr-1"></i>Annuler filtre
                 </button>
               </div>

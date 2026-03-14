@@ -10,10 +10,42 @@ export const indexDis = async(req , res) => {
     const banqueId = req.params.banqueId;
     const miseadis  = await prisma.miseadis.findMany({
         orderBy: { id: 'desc' },
-        include: {  banque: true, chantier : true },
+        include: {  banque: true, chantier : true, allocations: { include: { chantier: true } } },
     });
     const chantiers = await prisma.chantier.findMany()
-    res.render('dashboard/tresorerie/reglements/miseadis/index' , { miseadis, chantiers } )
+    const banques = await prisma.banque.findMany();
+    const miseadisWithSplit = (miseadis || []).map((m) => {
+        const allocs = Array.isArray(m.allocations) ? m.allocations : [];
+
+        const chantierLines = (() => {
+            const map = new Map();
+            for (const a of allocs) {
+                const nom = (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '';
+                if (!nom) continue;
+                const prev = map.get(nom) || 0;
+                map.set(nom, prev + Number(a.montant || 0));
+            }
+            const lines = Array.from(map.entries()).map(([nom, montant]) => ({ nom, montant }));
+            if (lines.length) return lines;
+            if (m.chantier?.nom) {
+                return [{ nom: m.chantier.nom, montant: Number(m.montant || 0) }];
+            }
+            return [];
+        })();
+
+        const chantierNames = (() => {
+            const names = allocs
+                .map(a => (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '')
+                .filter(Boolean);
+            if (names.length) return Array.from(new Set(names));
+            if (m.chantier?.nom) return [String(m.chantier.nom)];
+            return [];
+        })();
+
+        return { ...m, chantierLines, chantierNames };
+    });
+
+    res.render('dashboard/tresorerie/reglements/miseadis/index' , { miseadis: miseadisWithSplit, chantiers, banques } )
 }
 
 export const createMiseadis = async(req , res) => {
@@ -25,7 +57,7 @@ export const createMiseadis = async(req , res) => {
 }
 export const postMiseadis = async (req, res) => {
     try {
-        const { beneficiaire, date, dateReglement, montant, obs, montantLettre, cin, objet, chantier} = req.body;
+        const { beneficiaire, date, dateReglement, montant, obs, montantLettre, cin, objet, chantier, allocations } = req.body;
         const banqueId = parseInt(req.params.id);
 
         if (isNaN(banqueId)) {
@@ -40,6 +72,19 @@ export const postMiseadis = async (req, res) => {
             return res.status(404).json({ error: "Banque non trouvée." });
         }
 
+        let parsedAllocations = [];
+        try {
+            parsedAllocations = allocations ? JSON.parse(allocations) : [];
+        } catch (e) {
+            return res.status(400).json({ error: "Format allocations invalide" });
+        }
+
+        const chantierIdParam = chantier ? parseInt(chantier) : null;
+        let chantierData = {};
+        if (!isNaN(chantierIdParam) && chantierIdParam !== null) {
+            chantierData = { connect: { id: chantierIdParam } };
+        }
+
         const miseadis = await prisma.miseadis.create({
             data: {
                 beneficiaire,
@@ -50,11 +95,25 @@ export const postMiseadis = async (req, res) => {
                 objet : objet,
                 montantLettres: montantLettre,
                 cin : cin,
-                chantier : {connect : {id : parseInt(chantier)}},
+                ...(chantierData.connect ? { chantier: chantierData } : {}),
                 banque: { connect: { id: banqueId } }
 
             }
         });
+
+        if (Array.isArray(parsedAllocations) && parsedAllocations.length > 0) {
+            for (const alloc of parsedAllocations) {
+                if (alloc.chantierId && alloc.amount) {
+                    await prisma.miseADispositionAllocation.create({
+                        data: {
+                            miseadisId: miseadis.id,
+                            chantierId: parseInt(alloc.chantierId),
+                            montant: parseFloat(alloc.amount),
+                        },
+                    });
+                }
+            }
+        }
 
         res.redirect('/tresorerie/miseadis');
 
@@ -71,8 +130,11 @@ export const showUpdateMiseadis = async (req, res) => {
     
 
     const miseadis = await prisma.miseadis.findUnique({
-        where: { id }
+        where: { id },
+        include: { chantier: true, allocations: { include: { chantier: true } } }
     });
+
+    const chantiers = await prisma.chantier.findMany();
 
     if (!miseadis) {
         return res.status(404).send("Miseadis non trouvé");
@@ -85,6 +147,7 @@ export const showUpdateMiseadis = async (req, res) => {
     res.render("dashboard/tresorerie/reglements/miseadis/update", {
         miseadis,
         banqueId,
+        chantiers,
         
     });
     console.log(miseadis);
@@ -95,31 +158,84 @@ export const updateMis = async (req, res) => {
 
     
 
-    // Extract form fields
-    const { beneficiaire, date, dateReglement, montant, obs, rib, objet, cin, chantier, banque } = req.body;
+    const wantsJson = (req.headers['content-type'] || '').includes('application/json');
 
-    // ✅ Update fournisseur (if exists or create new)
-    const findBanque = await prisma.banque.findFirst({
-        where: { name: banque }
-    }); 
-    const banqueId = findBanque.id;
+    // Extract form fields
+    const { beneficiaire, date, dateReglement, montant, obs, rib, objet, cin, chantier, banque, allocations } = req.body;
+
+    let banqueId = null;
+    if (banque) {
+        const findBanque = await prisma.banque.findFirst({
+            where: { name: banque }
+        });
+        banqueId = findBanque?.id || null;
+    }
 
 
     // ✅ Update virement
+    let parsedAllocations = [];
+    try {
+        parsedAllocations = allocations ? JSON.parse(allocations) : [];
+    } catch (e) {
+        if (allocations) {
+            return res.status(400).json({ error: "Format allocations invalide" });
+        }
+    }
+
+    const chantierIdParam = chantier ? parseInt(chantier) : null;
+    let chantierData = {};
+    if (!isNaN(chantierIdParam) && chantierIdParam !== null) {
+        chantierData = { connect: { id: chantierIdParam } };
+    }
+
+    const updateData = {};
+    if (beneficiaire !== undefined) updateData.beneficiaire = beneficiaire;
+    if (obs !== undefined) updateData.obs = obs;
+    if (cin !== undefined) updateData.cin = cin;
+    if (objet !== undefined) updateData.objet = objet;
+    if (montant !== undefined && montant !== null && montant !== '') updateData.montant = parseFloat(montant);
+
+    if (date !== undefined && date !== null && date !== '') updateData.date = new Date(date);
+    if (dateReglement !== undefined && dateReglement !== null && dateReglement !== '') {
+        updateData.dateReglement = new Date(dateReglement);
+    }
+
+    if (chantier !== undefined) {
+        if (chantierData.connect) updateData.chantier = chantierData;
+        else updateData.chantier = { disconnect: true };
+    }
+
+    if (banqueId) {
+        updateData.banque = { connect: { id: banqueId } };
+    }
+
     const updatedMiseadis = await prisma.miseadis.update({
         where: { id },
-        data: {
-            beneficiaire,
-            date: new Date(date),
-            dateReglement: new Date(dateReglement),
-            montant: parseFloat(montant),
-            obs,
-            cin,
-            objet,
-            chantier : {connect : {id : parseInt(chantier)}},
-            banque: { connect: { id: banqueId } }
-        }
+        data: updateData
     });
+
+    if (Array.isArray(parsedAllocations) && parsedAllocations.length > 0) {
+        await prisma.miseADispositionAllocation.deleteMany({ where: { miseadisId: id } });
+        for (const alloc of parsedAllocations) {
+            if (alloc.chantierId && alloc.amount) {
+                await prisma.miseADispositionAllocation.create({
+                    data: {
+                        miseadisId: id,
+                        chantierId: parseInt(alloc.chantierId),
+                        montant: parseFloat(alloc.amount),
+                    },
+                });
+            }
+        }
+    }
+
+    if (wantsJson) {
+        const miseadispo = await prisma.miseadis.findUnique({
+            where: { id },
+            include: { banque: true, chantier: true, allocations: { include: { chantier: true } } },
+        });
+        return res.json({ message: 'Miseadis mise à jour', miseadispo });
+    }
 
     res.redirect(`/tresorerie/miseadis`); // ✅ redirect to list
 };
@@ -129,10 +245,42 @@ export const showMiseadis = async(req , res) => {
     const banqueId = Number(req.params.id)
     const miseadis = await prisma.miseadis.findMany({
         where: { banqueId },
-        include: { banque: true }
+        include: { banque: true, chantier: true, allocations: { include: { chantier: true } } }
     })
     const chantiers = await prisma.chantier.findMany()
-    res.render('dashboard/tresorerie/reglements/miseadis/index' , { miseadis , banqueId, chantiers } )
+    const banques = await prisma.banque.findMany();
+    const miseadisWithSplit = (miseadis || []).map((m) => {
+        const allocs = Array.isArray(m.allocations) ? m.allocations : [];
+
+        const chantierLines = (() => {
+            const map = new Map();
+            for (const a of allocs) {
+                const nom = (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '';
+                if (!nom) continue;
+                const prev = map.get(nom) || 0;
+                map.set(nom, prev + Number(a.montant || 0));
+            }
+            const lines = Array.from(map.entries()).map(([nom, montant]) => ({ nom, montant }));
+            if (lines.length) return lines;
+            if (m.chantier?.nom) {
+                return [{ nom: m.chantier.nom, montant: Number(m.montant || 0) }];
+            }
+            return [];
+        })();
+
+        const chantierNames = (() => {
+            const names = allocs
+                .map(a => (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '')
+                .filter(Boolean);
+            if (names.length) return Array.from(new Set(names));
+            if (m.chantier?.nom) return [String(m.chantier.nom)];
+            return [];
+        })();
+
+        return { ...m, chantierLines, chantierNames };
+    });
+
+    res.render('dashboard/tresorerie/reglements/miseadis/index' , { miseadis: miseadisWithSplit , banqueId, chantiers, banques } )
 }
 
 

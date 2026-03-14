@@ -63,9 +63,21 @@
                                         <input type="text" class="form-control" id="beneficiaire" name="beneficiaire" required placeholder="Nom du bénéficiaire" value="<%= miseadis.beneficiaire %>">
                                     </div>
                                     <div class="form-group col-12 col-md-6">
+                                        <label for="chantier">Chantier</label>
+                                        <select class="form-control" id="chantier" name="chantier" placeholder="">
+                                            <option value="">-- Aucun --</option>
+                                            <% if (chantiers && chantiers.length) { %>
+                                                <% chantiers.forEach(chantier => { %>
+                                                    <option value="<%= chantier.id %>" <%= (miseadis.chantierId && miseadis.chantierId === chantier.id) ? 'selected' : '' %>><%= chantier.nom %></option>
+                                                <% }); %>
+                                            <% } %>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-12 col-md-6">
                                         <label for="cin">CIN</label>
                                         <input type="text" class="form-control" id="cin" name="cin" required value="<%= miseadis.cin %> ">
                                     </div>
+
                                     <div class="form-group col-12 col-md-6">
                                         <label for="montant">Montant</label>
                                         <div class="input-group">
@@ -80,6 +92,46 @@
 
                                         </div> 
                                     </div>
+
+                                    <div class="form-group col-12">
+                                        <label>Répartition par Chantier:</label>
+                                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                            <div style="flex-grow: 5;">
+                                                <select id="allocChantierSelect" class="form-control custom-select">
+                                                    <option value="" >Sélectionnez un chantier</option>
+                                                    <% if (chantiers && chantiers.length) { %>
+                                                        <% chantiers.forEach(chant=> { %>
+                                                        <option value="<%= chant.id %>" data-name="<%= chant.nom %>">
+                                                            <%= chant.nom %>
+                                                        </option>
+                                                        <% }) %>
+                                                    <% } %>
+                                                </select>
+                                            </div>
+                                            <div style="flex-grow: 2;">
+                                                <input type="number" id="allocAmountInput" class="form-control" placeholder="Montant">
+                                            </div>
+                                            <div style="flex-grow: 1;">
+                                                <button type="button" class="btn btn-info" onclick="addAllocation()">+</button>
+                                            </div>
+                                        </div>
+
+                                        <table class="table table-sm table-bordered" style="font-size: 12px;">
+                                            <thead>
+                                                <tr>
+                                                    <th>Chantier</th>
+                                                    <th>Montant</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="allocationTableBody"></tbody>
+                                        </table>
+                                        <div style="font-size: 12px; font-weight: bold;">
+                                            Reste à allouer: <span id="remainingAmountDisplay" class="text-danger">0.00</span> DH
+                                        </div>
+                                        <input type="hidden" name="allocations" id="allocationsInput">
+                                    </div>
+
                                     <div class="form-group col-12 col-md-6">
                                         <label for="dateReglement">Date débit</label>
                                         <input type="date" class="form-control" id="dateReglement" name="dateReglement" value="<%= formatted %>" required>
@@ -111,7 +163,100 @@
         </div>
     </div>
 
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<script>
+  const initialAllocations = <%- JSON.stringify((miseadis.allocations || []).map(a => ({ chantierId: a.chantierId, chantierName: (a.chantier && a.chantier.nom) ? a.chantier.nom : '', amount: a.montant }))) %>;
+  let allocations = Array.isArray(initialAllocations) ? initialAllocations : [];
 
+  (function initChantierChoices() {
+    const select = document.getElementById('allocChantierSelect');
+    if (!select || typeof Choices === 'undefined') return;
+    new Choices(select, {
+      searchEnabled: true,
+      shouldSort: false,
+      itemSelectText: '',
+      searchPlaceholderValue: 'Rechercher...'
+    });
+  })();
+
+  function updateAllocationUI() {
+    const tbody = document.getElementById('allocationTableBody');
+    tbody.innerHTML = '';
+
+    let totalAllocated = 0;
+    allocations.forEach((alloc, index) => {
+      totalAllocated += parseFloat(alloc.amount);
+      const row = `
+        <tr>
+          <td>${alloc.chantierName}</td>
+          <td>${parseFloat(alloc.amount).toFixed(2)}</td>
+          <td><button type="button" class="btn btn-danger btn-sm" onclick="removeAllocation(${index})">X</button></td>
+        </tr>
+      `;
+      tbody.innerHTML += row;
+    });
+
+    const amountInput = document.getElementById('montant').value;
+    const total = parseFloat((amountInput || '0').toString().replace(',', '.')) || 0;
+    const remaining = total - totalAllocated;
+    const remainingDisplay = document.getElementById('remainingAmountDisplay');
+    remainingDisplay.textContent = remaining.toFixed(2);
+
+    if (Math.abs(remaining) < 0.01) {
+      remainingDisplay.className = 'text-success';
+      remainingDisplay.textContent = "0.00";
+    } else {
+      remainingDisplay.className = 'text-danger';
+    }
+
+    document.getElementById('allocationsInput').value = JSON.stringify(allocations);
+  }
+
+  function addAllocation() {
+    const select = document.getElementById('allocChantierSelect');
+    const amountInput = document.getElementById('allocAmountInput');
+
+    const chantierId = select.value;
+    const selectedOption = select.options[select.selectedIndex];
+    const chantierName = selectedOption ? selectedOption.dataset.name : '';
+
+    const amount = parseFloat(amountInput.value);
+    if (!chantierId || !amount || amount <= 0) {
+      alert('Veuillez sélectionner un chantier et entrer un montant valide.');
+      return;
+    }
+
+    const montantEl = document.getElementById('montant');
+    const total = parseFloat((montantEl?.value || '0').toString().replace(',', '.')) || 0;
+    const totalAllocated = allocations.reduce((acc, a) => acc + (parseFloat(a.amount) || 0), 0);
+    const remaining = total - totalAllocated;
+
+    if (total <= 0) {
+      alert('Veuillez saisir le montant avant de faire la répartition.');
+      return;
+    }
+
+    if (amount > remaining + 0.000001) {
+      alert('Le montant dépasse le reste à allouer.');
+      return;
+    }
+
+    allocations.push({ chantierId, chantierName, amount });
+    updateAllocationUI();
+    select.value = '';
+    amountInput.value = '';
+  }
+
+  function removeAllocation(index) {
+    allocations.splice(index, 1);
+    updateAllocationUI();
+  }
+
+  document.getElementById('montant')?.addEventListener('input', updateAllocationUI);
+  document.addEventListener('DOMContentLoaded', updateAllocationUI);
+  updateAllocationUI();
+</script>
 
 <script src="/vendor/jquery/jquery.min.js"></script>
 <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>

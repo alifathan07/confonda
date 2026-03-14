@@ -419,8 +419,21 @@ model Miseadis {
   banqueId       Int
   chantier       Chantier? @relation("MiseadisChantier", fields: [chantierId], references: [id])
   chantierId     Int?
+  allocations    MiseADispositionAllocation[]
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+}
+
+model MiseADispositionAllocation {
+  id         Int      @id @default(autoincrement())
+  miseadis   Miseadis @relation(fields: [miseadisId], references: [id], onDelete: Cascade)
+  miseadisId Int
+  chantier   Chantier @relation(fields: [chantierId], references: [id])
+  chantierId Int
+  montant    Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Banque {
@@ -621,6 +634,7 @@ model Chantier {
   chequeAllocations   ChequeAllocation[] // Add this line
   virementAllocations VirementAllocation[] // Add this line
   effetAllocations     EffetAllocation[]
+  miseadisAllocations  MiseADispositionAllocation[]
 
   cheques   Cheque[]    @relation("ChequesChantier")
   effets    Effet[]     @relation("EffetsChantier")

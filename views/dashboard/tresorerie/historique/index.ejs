@@ -115,8 +115,8 @@
     }
 
     .card-header {
-      background: var(--primary-color);
-      color: white;
+      background: var(--primary-color) !important;
+      color: white !important;
       border-bottom: 1px solid #dee2e6;
       padding: 0.75rem;
       border-radius: var(--border-radius) var(--border-radius) 0 0;
@@ -224,6 +224,26 @@
       font-weight: 400;
       border: none;
       cursor: pointer;
+    }
+
+    .btn-clear-filters {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      white-space: nowrap;
+      overflow: visible;
+      min-width: max-content;
+      flex-shrink: 0;
+      font-size: 0.875rem;
+      line-height: 1.2;
+      width: auto;
+      height: auto;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      height: auto !important;
+      padding: 0.5rem 1rem !important;
+      border-radius: 4px !important;
     }
 
     .btn-primary {
@@ -505,7 +525,6 @@
     }
   </style>
 </head>
-
 <body id="page-top">
   <div id="wrapper" class="d-flex">
     <%- include('../../../layouts/sidebar') %>
@@ -579,7 +598,7 @@
 
                   <!-- Annuler filtre -->
                   <div class="col-auto mb-2 d-flex align-items-end">
-                    <button id="opsClearFilters" type="button" class="btn btn-danger" style="display:none;">
+                    <button id="opsClearFilters" type="button" class="btn btn-danger btn-clear-filters" style="display:none;">
                       <i class="fas fa-times mr-1"></i>Annuler filtre
                     </button>
                   </div>
@@ -598,7 +617,7 @@
               <!-- Operations List -->
               <div class="card mb-4 fade-in">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                  <h2 style="color: #111827;">Liste des réglements effectués</h2>
+                  <h2>Liste des réglements effectués</h2>
                   <div>
                     <button class="btn btn-info mr-2" onclick="downloadPDF('chequesTable')">Télécharger PDF</button>
                     <button class="btn btn-success" onclick="downloadExcel('chequesTable')">Télécharger Excel</button>
@@ -654,7 +673,7 @@
                                   <%= new Date(c.dateEcheance).toLocaleDateString('fr-FR') %>
                                 </td>
                                 <td>
-                                  <% if (c.type==='Chèque' && c.chantierLines && c.chantierLines.length) { %>
+                                  <% if ((c.type==='Chèque' || c.type==='Virement' || c.type==='Effet' || c.type==='Mise à disposition') && c.chantierLines && c.chantierLines.length) { %>
                                     <div class="allocations">
                                       <% c.chantierLines.forEach(l=> { %>
                                         <div class="alloc-line" data-chantier="<%= l.nom %>">
@@ -669,7 +688,7 @@
                                         <% } %>
                                 </td>
                                 <td>
-                                  <% if (c.type==='Chèque' && c.chantierLines && c.chantierLines.length) { %>
+                                  <% if ((c.type==='Chèque' || c.type==='Virement' || c.type==='Effet' || c.type==='Mise à disposition') && c.chantierLines && c.chantierLines.length) { %>
                                     <div class="allocations">
                                       <% c.chantierLines.forEach(l=> { %>
                                         <div class="alloc-line" data-chantier="<%= l.nom %>">
@@ -680,7 +699,7 @@
                                         </div>
                                         <% }) %>
                                     </div>
-                                    <% } else if (c.type==='Chèque' ) { %>
+                                    <% } else if (c.type==='Chèque' || c.type==='Virement' || c.type==='Effet' || c.type==='Mise à disposition' ) { %>
                                       <%= c.montant !=null ? c.montant.toLocaleString('fr-FR', { minimumFractionDigits:
                                         2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ' ) : '' %>
                                         <% } %>
@@ -701,6 +720,12 @@
                                   minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %>
                               </td>
                               <td colspan="4"></td>
+                            </tr>
+                            <tr id="chantierTotalRow" style="display:none;">
+                              <td colspan="7"></td>
+                              <td><strong>Total chantier</strong></td>
+                              <td class="text-right" id="displayTotalChantier"></td>
+                              <td></td>
                             </tr>
                           </tfoot>
                         </table>
@@ -787,7 +812,7 @@
 
                             <!-- Annuler filtre -->
                             <div class="col-auto mb-2 d-flex align-items-end">
-                              <button id="encClearFilters" type="button" class="btn btn-danger" style="display:none;">
+                              <button id="encClearFilters" type="button" class="btn btn-danger btn-clear-filters" style="display:none;">
                                 <i class="fas fa-times mr-1"></i>Annuler filtre
                               </button>
                             </div>
@@ -806,7 +831,7 @@
                         <!-- Les Encaissements Reçus -->
                         <div class="card mb-4 fade-in">
                           <div class="card-header d-flex justify-content-between align-items-center">
-                            <h2 style="color: #111827;">Encaissements Reçus</h2>
+                            <h2>Encaissements Reçus</h2>
                             <div>
                               <button class="btn btn-info mr-2" onclick="downloadPDF('encaissementsTable')">Télécharger
                                 PDF</button>
@@ -980,12 +1005,27 @@
         <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
         <script>
+          function parseFrenchNumber(value) {
+            if (!value) return 0;
+            const clean = value.toString().replace(/\s/g, '').replace(',', '.');
+            return parseFloat(clean) || 0;
+          }
+
           function getVisibleTableRows(table) {
             if (!table) return [];
             const rows = Array.from(table.querySelectorAll('tbody tr'));
             return rows.filter((row) => {
               if (row.hidden) return false;
               const style = window.getComputedStyle(row);
+              return style.display !== 'none' && style.visibility !== 'hidden';
+            });
+          }
+
+          function getVisibleAllocLines(cell) {
+            if (!cell) return [];
+            const lines = Array.from(cell.querySelectorAll('.alloc-line'));
+            return lines.filter((line) => {
+              const style = window.getComputedStyle(line);
               return style.display !== 'none' && style.visibility !== 'hidden';
             });
           }
@@ -1014,8 +1054,8 @@
               cells.forEach((cell, idx) => {
                 // Check if this is the Chantier column (index 7) or Montant chantier column (index 8)
                 if ((idx === 7 || idx === 8) && tableId === 'chequesTable') {
-                  // Get all alloc-line elements in this cell
-                  const allocLines = cell.querySelectorAll('.alloc-line');
+                  // Get only visible alloc-line elements in this cell (depends on chantier filter)
+                  const allocLines = getVisibleAllocLines(cell);
                   console.log(`Row ${rowIdx}, Col ${idx} (${idx === 7 ? 'Chantier' : 'Montant'}): Found ${allocLines.length} alloc-line elements`);
 
                   if (allocLines.length > 0) {
@@ -1056,6 +1096,22 @@
 
             // Calculate total for Montant column
             let totalMontant = 0;
+            let totalChantier = 0;
+            const selectedChantier = (document.getElementById('chantierFilterOperations')?.value || '').toLowerCase();
+            if (tableId === 'chequesTable' && selectedChantier) {
+              // Total chantier = sum visible allocation amounts
+              const tableRows = getVisibleTableRows(table);
+              tableRows.forEach((row) => {
+                const allocAmountEls = row.querySelectorAll('.alloc-amount');
+                allocAmountEls.forEach((el) => {
+                  const style = window.getComputedStyle(el.closest('.alloc-line'));
+                  if (style.display === 'none' || style.visibility === 'hidden') return;
+                  totalChantier += parseFrenchNumber(el.textContent);
+                });
+              });
+            }
+
+            // Total = sum of Montant column (always based on visible rows)
             data.forEach(row => {
               const montantStr = row[5]; // Montant column is index 5
               if (montantStr) {
@@ -1070,6 +1126,13 @@
             totalRow[4] = 'Total'; // Label in column 4 (Bénéficiaire)
             totalRow[5] = totalMontant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
             data.push(totalRow);
+
+            if (tableId === 'chequesTable' && selectedChantier) {
+              const totalChantierRow = new Array(headers.length).fill('');
+              totalChantierRow[7] = 'Total chantier';
+              totalChantierRow[8] = totalChantier.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
+              data.push(totalChantierRow);
+            }
 
             // Create worksheet
             const ws = window.XLSX.utils.aoa_to_sheet([headers, ...data]);
@@ -1192,7 +1255,7 @@
               cells.forEach((cell, idx) => {
                 // For Chantier (7) and Montant chantier (8) columns, preserve line breaks
                 if ((idx === 7 || idx === 8) && tableId === 'chequesTable') {
-                  const lines = cell.querySelectorAll('.alloc-line');
+                  const lines = getVisibleAllocLines(cell);
                   if (lines.length > 0) {
                     const values = [];
                     lines.forEach(line => {
@@ -1213,6 +1276,23 @@
 
             // Calculate total for Montant column
             let totalMontant = 0;
+            let totalChantier = 0;
+            const selectedChantier = (document.getElementById('chantierFilterOperations')?.value || '').toLowerCase();
+            if (tableId === 'chequesTable' && selectedChantier) {
+              // Total chantier = sum visible allocation amounts
+              visibleRows.forEach((row) => {
+                const allocAmountEls = row.querySelectorAll('.alloc-amount');
+                allocAmountEls.forEach((el) => {
+                  const line = el.closest('.alloc-line');
+                  if (!line) return;
+                  const style = window.getComputedStyle(line);
+                  if (style.display === 'none' || style.visibility === 'hidden') return;
+                  totalChantier += parseFrenchNumber(el.textContent);
+                });
+              });
+            }
+
+            // Total = sum of Montant column (always based on visible rows)
             body.forEach(row => {
               const montantStr = row[5]; // Montant column is index 5
               if (montantStr) {
@@ -1227,6 +1307,13 @@
             totalRow[4] = 'Total';
             totalRow[5] = totalMontant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
             body.push(totalRow);
+
+            if (tableId === 'chequesTable' && selectedChantier) {
+              const totalChantierRow = new Array(headers.length).fill('');
+              totalChantierRow[7] = 'Total chantier';
+              totalChantierRow[8] = totalChantier.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
+              body.push(totalChantierRow);
+            }
 
             // Column styles
             const columnStyles = {};
@@ -1303,6 +1390,7 @@
             // Filter state logic
             let activeOpsFilter = '';
             let activeEncFilter = '';
+            let lastSelectedOperationsChantier = '';
 
             const updateOpsClearBtnVis = () => {
               let show = false;
@@ -1635,7 +1723,7 @@
               const selectedChantier = selected.operations.chantier;
               rows.operations.forEach(row => {
                 const rowType = row.getAttribute('data-type')?.toLowerCase() || '';
-                if (rowType !== 'chèque') return;
+                if (rowType !== 'chèque' && rowType !== 'virement' && rowType !== 'effet') return;
                 const lines = row.querySelectorAll('.alloc-line');
                 if (!lines || !lines.length) return;
 
@@ -1656,6 +1744,7 @@
             // Update totals for visible rows
             const updateTotals = () => {
               let totalOperations = 0;
+              let totalChantier = 0;
               let totalEncaissements = 0;
               let totalVirements = 0;
 
@@ -1663,6 +1752,20 @@
                 if (row.dataset.filterVisible === '1') {
                   const montant = parseFrenchNumber(row.querySelector('.montant')?.textContent);
                   totalOperations += montant;
+
+                  if (lastSelectedOperationsChantier) {
+                    // Total chantier = sum visible allocation lines (non-selected are hidden in filterRows)
+                    const visibleAllocLines = Array.from(row.querySelectorAll('.alloc-line')).filter((l) => {
+                      const style = window.getComputedStyle(l);
+                      return style.display !== 'none' && style.visibility !== 'hidden';
+                    });
+                    if (visibleAllocLines.length) {
+                      totalChantier += visibleAllocLines.reduce((acc, l) => {
+                        const amountText = l.querySelector('.alloc-amount')?.textContent;
+                        return acc + parseFrenchNumber(amountText);
+                      }, 0);
+                    }
+                  }
                 }
               });
 
@@ -1684,6 +1787,15 @@
               if (totals.operations) totals.operations.textContent = formatFrenchNumber(totalOperations);
               if (totals.encaissements) totals.encaissements.textContent = formatFrenchNumber(totalEncaissements);
               if (totals.virements) totals.virements.textContent = formatFrenchNumber(totalVirements);
+
+              const chantierTotalRow = document.getElementById('chantierTotalRow');
+              const displayTotalChantier = document.getElementById('displayTotalChantier');
+              if (chantierTotalRow) {
+                chantierTotalRow.style.display = lastSelectedOperationsChantier ? '' : 'none';
+              }
+              if (displayTotalChantier) {
+                displayTotalChantier.textContent = lastSelectedOperationsChantier ? formatFrenchNumber(totalChantier) : '';
+              }
             };
 
             // Reset filters to default values
