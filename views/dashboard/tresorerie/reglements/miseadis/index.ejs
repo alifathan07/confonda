@@ -187,7 +187,7 @@
                       <select id="filterChantier" class="form-control">
                         <option value="">Tous</option>
                         <% (chantiers || []).forEach(c => { %>
-                          <option value="<%= c.nom %>"><%= c.nom %></option>
+                          <option value="<%= c.id %>"><%= c.nom %></option>
                         <% }) %>
                       </select>
                     </div>
@@ -247,7 +247,7 @@
                       </tr>
                     <% } else { %>
                       <% miseadis.forEach(miseadispo => { %>
-                        <tr data-id="<%= miseadispo.id %>" data-chantier="<%= (miseadispo.chantierNames && miseadispo.chantierNames.length) ? miseadispo.chantierNames.join('|') : (miseadispo.chantier ? miseadispo.chantier.nom : '') %>">
+                        <tr data-id="<%= miseadispo.id %>" data-chantier-ids="<%= (miseadispo.chantierLines && miseadispo.chantierLines.length) ? miseadispo.chantierLines.map(l => l.chantierId).filter(Boolean).join('|') : (miseadispo.chantier ? miseadispo.chantier.id : '') %>">
                           <td class="cell-edit" contenteditable="true" data-name="beneficiaire"><%= miseadispo.beneficiaire || '' %></td>
                           <td class="cell-edit" contenteditable="true" data-name="banque"><%= miseadispo.banque?.name || '' %></td>
                           <td class="text-right cell-edit" contenteditable="true" data-name="montant"><%= Number(miseadispo.montant).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
@@ -257,7 +257,7 @@
                             <% if (miseadispo.chantierLines && miseadispo.chantierLines.length) { %>
                               <div class="allocations">
                                 <% miseadispo.chantierLines.forEach(l=> { %>
-                                  <div class="alloc-line" data-chantier="<%= l.nom %>">
+                                  <div class="alloc-line" data-chantier-id="<%= l.chantierId %>">
                                     <div class="alloc-name"><%= l.nom %></div>
                                   </div>
                                 <% }) %>
@@ -270,7 +270,7 @@
                             <% if (miseadispo.chantierLines && miseadispo.chantierLines.length) { %>
                               <div class="allocations">
                                 <% miseadispo.chantierLines.forEach(l=> { %>
-                                  <div class="alloc-line" data-chantier="<%= l.nom %>">
+                                  <div class="alloc-line" data-chantier-id="<%= l.chantierId %>">
                                     <div class="alloc-amount"><%= Number(l.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></div>
                                   </div>
                                 <% }) %>
@@ -474,7 +474,7 @@
         function applyFilters() {
           const benVal = ($filterBeneficiaire && $filterBeneficiaire.value || '').toLowerCase().trim();
           const banVal = $filterBanque && $filterBanque.value || '';
-          const chVal = String($filterChantier && $filterChantier.value || '');
+          const chVal = String($filterChantier && $filterChantier.value || '').trim();
           const mtVal = parseMoney($filterMontant && $filterMontant.value);
 
           const dateFrom = $filterDateFrom && $filterDateFrom.value;
@@ -497,10 +497,21 @@
               const c = tr.querySelector('td[data-name="banque"]');
               show = show && c && c.textContent.trim() === banVal;
             }
-            if (chVal) {
-              const rowChantier = (tr.getAttribute('data-chantier') || '');
-              show = show && rowChantier.includes(chVal);
+            const chantierFilterActive = Boolean(chVal);
+            const selectedChantierId = chantierFilterActive ? chVal : '';
+
+            if (chantierFilterActive) {
+              const allLines = Array.from(tr.querySelectorAll('.alloc-line'));
+              if (allLines.length) {
+                const hasMatch = allLines.some((l) => String(l.getAttribute('data-chantier-id') || '') === selectedChantierId);
+                show = show && hasMatch;
+              } else {
+                const rowIdsRaw = String(tr.getAttribute('data-chantier-ids') || '');
+                const rowIds = rowIdsRaw.split('|').map(s => s.trim()).filter(Boolean);
+                show = show && rowIds.includes(selectedChantierId);
+              }
             }
+
             if (mtVal !== null) {
               const c = tr.querySelector('td[data-name="montant"]');
               const v = parseMoney(c ? c.textContent : '');
@@ -520,17 +531,15 @@
 
             tr.style.display = (!hasAnyFilter || show) ? '' : 'none';
 
-            const chantierFilterActive = Boolean(chVal);
-            const selectedChantier = chantierFilterActive ? chVal.toLowerCase() : '';
             const lines = tr.querySelectorAll('.alloc-line');
             if (lines && lines.length) {
               lines.forEach((l) => {
-                if (!selectedChantier) {
+                if (!selectedChantierId) {
                   l.style.display = '';
                   return;
                 }
-                const n = (l.getAttribute('data-chantier') || '').toLowerCase();
-                l.style.display = (n === selectedChantier) ? '' : 'none';
+                const n = String(l.getAttribute('data-chantier-id') || '').trim();
+                l.style.display = (n === selectedChantierId) ? '' : 'none';
               });
             }
 

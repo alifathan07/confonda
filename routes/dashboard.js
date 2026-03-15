@@ -18,7 +18,7 @@ import { addUser, deleteUser, editUser, listUsers } from '../controllers/usersCo
 // import { deleteClient, indexClients, postClient, updateClient } from '../controllers/clientController.js';
 import { destroyChantier, destroyChantierDetails, indexChantiers, postChantier, postChantierItems, showChantierDetails, updateChantier } from '../controllers/chantierController.js';
 import { createUi, destroyClient, indexClient, postClient, showClient, updateClient, updateUiClient } from '../controllers/clientController.js';
-import { deleteEncaissement, indexHis, saveEncaissement, updateHistoryBanque } from '../controllers/historiqueControlelr.js';
+import { deleteEncaissement, exportHistoriqueExcel, indexHis, saveEncaissement, updateHistoryBanque } from '../controllers/historiqueControlelr.js';
 import { deleteTelePai, indexTelePai, storeTelePai, updateTelePai } from '../controllers/telepay_prelevController.js';
 import { createEncaissement, indexEncaissement, updateEncaissement } from '../controllers/encaisementController.js';
 import { addCaisseItem, createDemandeCaisse, deleteDemandeCaisse, deleteDemandeCaisseItem, generateDemandeExcel, generateDemandePdf, indexDemandeCaisse, storeDemandeCaisse, updateDemandeCaisseItem, updateDemandeCaisseItemValidation, updateDemandeCaisseStatut, updateDemandeCaisseValidationAll, viewDemandeCaisse } from '../controllers/demandecaisseController.js';
@@ -322,6 +322,7 @@ dashboardRouter.delete('/ventes/clients/:id', destroyClient);
 dashboardRouter.get('/tresorerie/telpay_prelevement', indexTelePai);
 // Historique : 
 dashboardRouter.get('/tresorerie/historique', indexHis);
+dashboardRouter.get('/tresorerie/historique/export/excel', exportHistoriqueExcel);
 dashboardRouter.post('/tresorerie/historique/banque', updateHistoryBanque);
 dashboardRouter.post('/tresorerie/telePai/create', storeTelePai);
 dashboardRouter.patch('/tresorerie/telePai/:id', updateTelePai);

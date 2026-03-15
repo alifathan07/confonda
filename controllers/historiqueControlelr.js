@@ -1,4 +1,5 @@
 import prisma from "../db.js";
+import ExcelJS from 'exceljs';
 export const indexHis = async (req, res) => {
   try {
 
@@ -414,6 +415,490 @@ export const indexHis = async (req, res) => {
       clients,
       chantiers,
     });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Erreur serveur.');
+  }
+};
+
+const buildHistoriqueOperations = async () => {
+  // Fetch cheques
+  const cheques = await prisma.cheque.findMany({
+    where: {
+      statut: { notIn: ['Annulé', 'annulé', 'ANNULE'] },
+      dateEcheance: { not: null },
+    },
+    select: {
+      id: true,
+      numero: true,
+      dateEtablissement: true,
+      montant: true,
+      chantier: { select: { nom: true } },
+      allocations: {
+        select: {
+          montant: true,
+          chantierId: true,
+          chantier: { select: { nom: true } },
+        },
+      },
+      dateEcheance: true,
+      validation: true,
+      beneficiaire: true,
+      statut: true,
+      obs: true,
+      banque: { select: { name: true } },
+    },
+    orderBy: { dateEtablissement: 'desc' },
+  });
+
+  const effets = await prisma.effet.findMany({
+    where: {
+      statut: { notIn: ['Annulé', 'annulé', 'ANNULE'] },
+      dateEcheance: { not: null },
+    },
+    select: {
+      id: true,
+      numero: true,
+      dateEtablissement: true,
+      montant: true,
+      chantier: { select: { nom: true } },
+      allocations: {
+        select: {
+          montant: true,
+          chantierId: true,
+          chantier: { select: { nom: true } },
+        },
+      },
+      dateEcheance: true,
+      validation: true,
+      beneficiaire: true,
+      obs: true,
+      statut: true,
+      banque: { select: { name: true } },
+    },
+    orderBy: { dateEtablissement: 'desc' },
+  });
+
+  const virements = await prisma.virement.findMany({
+    select: {
+      id: true,
+      designation: true,
+      date: true,
+      montant: true,
+      chantier: { select: { nom: true } },
+      allocations: {
+        select: {
+          montant: true,
+          chantierId: true,
+          chantier: { select: { nom: true } },
+        },
+      },
+      dateReglement: true,
+      beneficiaire: true,
+      obs: true,
+      banque: { select: { name: true } },
+      objet: true,
+      cause: true,
+      rtgs: true,
+      srbm: true,
+      instantane: true,
+      montantLettres: true,
+    },
+    orderBy: { date: 'desc' },
+  });
+
+  const miseadis = await prisma.miseadis.findMany({
+    where: {
+      NOT: { date: null },
+    },
+    select: {
+      id: true,
+      beneficiaire: true,
+      montant: true,
+      date: true,
+      dateReglement: true,
+      chantier: { select: { nom: true } },
+      allocations: {
+        select: {
+          montant: true,
+          chantierId: true,
+          chantier: { select: { nom: true } },
+        },
+      },
+      obs: true,
+      cin: true,
+      objet: true,
+      cause: true,
+      banque: { select: { name: true } },
+    },
+    orderBy: { date: 'desc' },
+  });
+
+  const telepaimentPrelevement = await prisma.telepaimentPrelevement.findMany({
+    select: {
+      id: true,
+      dateEtablissement: true,
+      montant: true,
+      chantier: { select: { nom: true } },
+      banque: { select: { name: true } },
+      fournisseur: { select: { name: true } },
+      observation: true,
+      type: true,
+    },
+    orderBy: { dateEtablissement: 'desc' },
+  });
+
+  const historique = [
+    ...cheques.map(c => ({
+      id: c.id,
+      numero: c.numero,
+      dateEtablissement: c.dateEtablissement,
+      montant: c.montant,
+      chantier: (() => {
+        const allocs = Array.isArray(c.allocations) ? c.allocations : [];
+        const names = allocs
+          .map(a => (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '')
+          .filter(Boolean);
+        if (names.length) return Array.from(new Set(names)).join(', ');
+        return c.chantier?.nom || 'Aucun';
+      })(),
+      chantierLines: (() => {
+        const allocs = Array.isArray(c.allocations) ? c.allocations : [];
+        const map = new Map();
+        for (const a of allocs) {
+          const nom = (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '';
+          if (!nom) continue;
+          const prev = map.get(nom) || 0;
+          map.set(nom, prev + Number(a.montant || 0));
+        }
+        const lines = Array.from(map.entries()).map(([nom, montant]) => ({ nom, montant }));
+        if (lines.length) return lines;
+        if (c.chantier?.nom) return [{ nom: c.chantier.nom, montant: Number(c.montant || 0) }];
+        return [];
+      })(),
+      chantierNames: (() => {
+        const allocs = Array.isArray(c.allocations) ? c.allocations : [];
+        const names = allocs
+          .map(a => (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '')
+          .filter(Boolean);
+        if (names.length) return Array.from(new Set(names));
+        if (c.chantier?.nom) return [String(c.chantier.nom)];
+        return [];
+      })(),
+      dateEcheance: c.dateEcheance,
+      beneficiaire: c.beneficiaire,
+      obs: c.obs,
+      banque: c.banque?.name || 'Aucun',
+      type: 'Chèque',
+    })),
+    ...effets.map(e => ({
+      id: e.id,
+      numero: e.numero,
+      dateEtablissement: e.dateEtablissement,
+      montant: e.montant,
+      chantier: (() => {
+        const allocs = Array.isArray(e.allocations) ? e.allocations : [];
+        const names = allocs
+          .map(a => (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '')
+          .filter(Boolean);
+        if (names.length) return Array.from(new Set(names)).join(', ');
+        return e.chantier?.nom || 'Aucun';
+      })(),
+      chantierLines: (() => {
+        const allocs = Array.isArray(e.allocations) ? e.allocations : [];
+        const map = new Map();
+        for (const a of allocs) {
+          const nom = (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '';
+          if (!nom) continue;
+          const prev = map.get(nom) || 0;
+          map.set(nom, prev + Number(a.montant || 0));
+        }
+        const lines = Array.from(map.entries()).map(([nom, montant]) => ({ nom, montant }));
+        if (lines.length) return lines;
+        if (e.chantier?.nom) return [{ nom: e.chantier.nom, montant: Number(e.montant || 0) }];
+        return [];
+      })(),
+      chantierNames: (() => {
+        const allocs = Array.isArray(e.allocations) ? e.allocations : [];
+        const names = allocs
+          .map(a => (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '')
+          .filter(Boolean);
+        if (names.length) return Array.from(new Set(names));
+        if (e.chantier?.nom) return [String(e.chantier.nom)];
+        return [];
+      })(),
+      dateEcheance: e.dateEcheance,
+      beneficiaire: e.beneficiaire,
+      obs: e.obs,
+      banque: e.banque?.name || 'Aucun',
+      type: 'Effet',
+    })),
+    ...virements.map(v => ({
+      id: v.id,
+      numero: v.designation || 'Aucun',
+      dateEtablissement: v.date,
+      montant: v.montant,
+      chantier: (() => {
+        const allocs = Array.isArray(v.allocations) ? v.allocations : [];
+        const names = allocs
+          .map(a => (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '')
+          .filter(Boolean);
+        if (names.length) return Array.from(new Set(names)).join(', ');
+        return v.chantier?.nom || 'Aucun';
+      })(),
+      chantierLines: (() => {
+        const allocs = Array.isArray(v.allocations) ? v.allocations : [];
+        const map = new Map();
+        for (const a of allocs) {
+          const nom = (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '';
+          if (!nom) continue;
+          const prev = map.get(nom) || 0;
+          map.set(nom, prev + Number(a.montant || 0));
+        }
+        const lines = Array.from(map.entries()).map(([nom, montant]) => ({ nom, montant }));
+        if (lines.length) return lines;
+        if (v.chantier?.nom) return [{ nom: v.chantier.nom, montant: Number(v.montant || 0) }];
+        return [];
+      })(),
+      chantierNames: (() => {
+        const allocs = Array.isArray(v.allocations) ? v.allocations : [];
+        const names = allocs
+          .map(a => (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '')
+          .filter(Boolean);
+        if (names.length) return Array.from(new Set(names));
+        if (v.chantier?.nom) return [String(v.chantier.nom)];
+        return [];
+      })(),
+      dateEcheance: v.date,
+      beneficiaire: v.beneficiaire,
+      obs: v.obs,
+      banque: v.banque?.name || 'Aucun',
+      type: 'Virement',
+    })),
+    ...miseadis.map(m => ({
+      id: m.id,
+      numero: 'Aucun',
+      dateEtablissement: m.date,
+      montant: m.montant,
+      chantier: (() => {
+        const allocs = Array.isArray(m.allocations) ? m.allocations : [];
+        const names = allocs
+          .map(a => (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '')
+          .filter(Boolean);
+        if (names.length) return Array.from(new Set(names)).join(', ');
+        return m.chantier?.nom || 'Aucun';
+      })(),
+      chantierLines: (() => {
+        const allocs = Array.isArray(m.allocations) ? m.allocations : [];
+        const map = new Map();
+        for (const a of allocs) {
+          const nom = (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '';
+          if (!nom) continue;
+          const prev = map.get(nom) || 0;
+          map.set(nom, prev + Number(a.montant || 0));
+        }
+        const lines = Array.from(map.entries()).map(([nom, montant]) => ({ nom, montant }));
+        if (lines.length) return lines;
+        if (m.chantier?.nom) return [{ nom: m.chantier.nom, montant: Number(m.montant || 0) }];
+        return [];
+      })(),
+      chantierNames: (() => {
+        const allocs = Array.isArray(m.allocations) ? m.allocations : [];
+        const names = allocs
+          .map(a => (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '')
+          .filter(Boolean);
+        if (names.length) return Array.from(new Set(names));
+        if (m.chantier?.nom) return [String(m.chantier.nom)];
+        return [];
+      })(),
+      dateEcheance: m.date,
+      beneficiaire: m.beneficiaire,
+      obs: m.obs,
+      banque: m.banque?.name || 'Aucun',
+      type: 'Mise à disposition',
+    })),
+    ...telepaimentPrelevement.map(t => ({
+      id: t.id,
+      numero: 'Aucun',
+      dateEtablissement: t.dateEtablissement,
+      montant: t.montant,
+      chantier: t.chantier?.nom || 'Aucun',
+      chantierLines: [],
+      chantierNames: t.chantier?.nom ? [String(t.chantier.nom)] : [],
+      dateEcheance: null,
+      beneficiaire: t.fournisseur?.name || 'Aucun',
+      obs: t.observation,
+      banque: t.banque?.name || 'Aucun',
+      type: t.type || 'télépaiment',
+    })),
+  ];
+
+  historique.sort((a, b) => new Date(b.dateEtablissement) - new Date(a.dateEtablissement));
+  return historique;
+};
+
+const normalize = (v) => String(v || '').trim().toLowerCase();
+
+const EXCEL_NUMFMT_FR = '#\u00A0##0,00';
+
+export const exportHistoriqueExcel = async (req, res) => {
+  try {
+    const pageSize = Math.max(1, Math.min(500, Number(req.query.pageSize || 20)));
+    const filters = {
+      type: normalize(req.query.type),
+      fournisseur: normalize(req.query.fournisseur),
+      banque: normalize(req.query.banque),
+      chantier: normalize(req.query.chantier),
+      dateFrom: req.query.dateFrom ? new Date(String(req.query.dateFrom)) : null,
+      dateTo: req.query.dateTo ? new Date(String(req.query.dateTo)) : null,
+    };
+
+    const allOps = await buildHistoriqueOperations();
+
+    const filtered = allOps.filter(op => {
+      const rowType = normalize(op.type);
+      const rowFournisseur = normalize(op.beneficiaire);
+      const rowBanque = normalize(op.banque);
+      const rowChantiers = Array.isArray(op.chantierNames)
+        ? op.chantierNames.map(normalize)
+        : normalize(op.chantier).split('|').map(s => s.trim()).filter(Boolean);
+      const d = op.dateEtablissement ? new Date(op.dateEtablissement) : null;
+
+      const okType = !filters.type || rowType === filters.type;
+      const okFourn = !filters.fournisseur || rowFournisseur.includes(filters.fournisseur);
+      const okBanque = !filters.banque || rowBanque.includes(filters.banque);
+      const okChantier = !filters.chantier || rowChantiers.includes(filters.chantier);
+      const okFrom = !filters.dateFrom || (d && d >= filters.dateFrom);
+      const okTo = !filters.dateTo || (d && d <= filters.dateTo);
+      return okType && okFourn && okBanque && okChantier && okFrom && okTo;
+    });
+
+    const totalMontant = filtered.reduce((acc, op) => acc + Number(op.montant || 0), 0);
+    const totalChantier = filters.chantier
+      ? filtered.reduce((acc, op) => {
+        const lines = Array.isArray(op.chantierLines) ? op.chantierLines : [];
+        const match = lines.find(l => normalize(l.nom) === filters.chantier);
+        return acc + Number(match?.montant || 0);
+      }, 0)
+      : 0;
+
+    const headers = [
+      'Date',
+      'Type',
+      'Numéro',
+      'Banque',
+      'Bénéficiaire',
+      'Montant',
+      'Date Échéance',
+      'Chantier',
+      'Montant chantier',
+      'Observation'
+    ];
+
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'Confonda';
+    wb.created = new Date();
+
+    const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+    for (let p = 1; p <= pageCount; p++) {
+      const start = (p - 1) * pageSize;
+      const end = start + pageSize;
+      const pageRows = filtered.slice(start, end);
+
+      const sheet = wb.addWorksheet(`Page ${p}`);
+      sheet.addRow(headers);
+
+      // column widths
+      sheet.columns = [
+        { width: 15 },
+        { width: 16 },
+        { width: 16 },
+        { width: 18 },
+        { width: 30 },
+        { width: 14 },
+        { width: 15 },
+        { width: 30 },
+        { width: 16 },
+        { width: 35 },
+      ];
+
+      // header style
+      sheet.getRow(1).font = { bold: true };
+      sheet.getRow(1).alignment = { vertical: 'middle' };
+
+      for (const op of pageRows) {
+        const date = op.dateEtablissement ? new Date(op.dateEtablissement) : null;
+        const dateEch = op.dateEcheance ? new Date(op.dateEcheance) : null;
+        const chantierLines = Array.isArray(op.chantierLines) ? op.chantierLines : [];
+
+        let chantierCell = '';
+        let montantChantierCell = '';
+        if (filters.chantier) {
+          const match = chantierLines.find(l => normalize(l.nom) === filters.chantier);
+          if (match) {
+            chantierCell = match.nom;
+            montantChantierCell = Number(match.montant || 0);
+          } else {
+            chantierCell = '';
+            montantChantierCell = 0;
+          }
+        } else if (chantierLines.length) {
+          chantierCell = chantierLines.map(l => l.nom).join('\n');
+          montantChantierCell = chantierLines
+            .map(l => Number(l.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' '))
+            .join('\n');
+        } else {
+          chantierCell = op.chantier || '';
+          montantChantierCell = '';
+        }
+
+        const row = sheet.addRow([
+          date ? date.toLocaleDateString('fr-FR') : '',
+          op.type || '',
+          op.numero || '',
+          op.banque || '',
+          op.beneficiaire || '',
+          Number(op.montant || 0),
+          dateEch ? dateEch.toLocaleDateString('fr-FR') : '',
+          chantierCell,
+          montantChantierCell,
+          op.obs || '',
+        ]);
+
+        // numeric formatting
+        row.getCell(6).numFmt = EXCEL_NUMFMT_FR;
+        row.getCell(6).alignment = { horizontal: 'right' };
+        if (filters.chantier) {
+          row.getCell(9).numFmt = EXCEL_NUMFMT_FR;
+          row.getCell(9).alignment = { horizontal: 'right' };
+        } else {
+          row.getCell(9).alignment = { wrapText: true, vertical: 'top', horizontal: 'right' };
+        }
+        row.getCell(8).alignment = { wrapText: true, vertical: 'top' };
+      }
+
+      // totals only on last sheet
+      if (p === pageCount) {
+        sheet.addRow([]);
+        const totalRow = sheet.addRow(['', '', '', '', 'Total', totalMontant, '', '', '', '']);
+        totalRow.font = { bold: true };
+        totalRow.getCell(6).numFmt = EXCEL_NUMFMT_FR;
+        totalRow.getCell(6).alignment = { horizontal: 'right' };
+
+        if (filters.chantier) {
+          const totalChRow = sheet.addRow(['', '', '', '', '', '', '', 'Total chantier', totalChantier, '']);
+          totalChRow.font = { bold: true };
+          totalChRow.getCell(9).numFmt = EXCEL_NUMFMT_FR;
+          totalChRow.getCell(9).alignment = { horizontal: 'right' };
+        }
+      }
+    }
+
+    const filename = `historique_operations_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    await wb.xlsx.write(res);
+    res.end();
   } catch (error) {
     console.error(error);
     res.status(500).send('Erreur serveur.');

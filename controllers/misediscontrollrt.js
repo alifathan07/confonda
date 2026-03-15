@@ -20,15 +20,16 @@ export const indexDis = async(req , res) => {
         const chantierLines = (() => {
             const map = new Map();
             for (const a of allocs) {
+                const chantierId = a && a.chantierId != null ? Number(a.chantierId) : null;
+                if (!chantierId || Number.isNaN(chantierId)) continue;
                 const nom = (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '';
-                if (!nom) continue;
-                const prev = map.get(nom) || 0;
-                map.set(nom, prev + Number(a.montant || 0));
+                const prev = map.get(chantierId) || { chantierId, nom, montant: 0 };
+                map.set(chantierId, { chantierId, nom: prev.nom || nom, montant: Number(prev.montant || 0) + Number(a.montant || 0) });
             }
-            const lines = Array.from(map.entries()).map(([nom, montant]) => ({ nom, montant }));
+            const lines = Array.from(map.values()).map((x) => ({ chantierId: x.chantierId, nom: x.nom, montant: x.montant }));
             if (lines.length) return lines;
             if (m.chantier?.nom) {
-                return [{ nom: m.chantier.nom, montant: Number(m.montant || 0) }];
+                return [{ chantierId: m.chantier.id, nom: m.chantier.nom, montant: Number(m.montant || 0) }];
             }
             return [];
         })();
@@ -255,15 +256,16 @@ export const showMiseadis = async(req , res) => {
         const chantierLines = (() => {
             const map = new Map();
             for (const a of allocs) {
+                const chantierId = a && a.chantierId != null ? Number(a.chantierId) : null;
+                if (!chantierId || Number.isNaN(chantierId)) continue;
                 const nom = (a && a.chantier && a.chantier.nom) ? String(a.chantier.nom).trim() : '';
-                if (!nom) continue;
-                const prev = map.get(nom) || 0;
-                map.set(nom, prev + Number(a.montant || 0));
+                const prev = map.get(chantierId) || { chantierId, nom, montant: 0 };
+                map.set(chantierId, { chantierId, nom: prev.nom || nom, montant: Number(prev.montant || 0) + Number(a.montant || 0) });
             }
-            const lines = Array.from(map.entries()).map(([nom, montant]) => ({ nom, montant }));
+            const lines = Array.from(map.values()).map((x) => ({ chantierId: x.chantierId, nom: x.nom, montant: x.montant }));
             if (lines.length) return lines;
             if (m.chantier?.nom) {
-                return [{ nom: m.chantier.nom, montant: Number(m.montant || 0) }];
+                return [{ chantierId: m.chantier.id, nom: m.chantier.nom, montant: Number(m.montant || 0) }];
             }
             return [];
         })();

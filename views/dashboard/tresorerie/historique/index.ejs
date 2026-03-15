@@ -620,7 +620,7 @@
                   <h2>Liste des réglements effectués</h2>
                   <div>
                     <button class="btn btn-info mr-2" onclick="downloadPDF('chequesTable')">Télécharger PDF</button>
-                    <button class="btn btn-success" onclick="downloadExcel('chequesTable')">Télécharger Excel</button>
+                    <button class="btn btn-success" onclick="downloadExcelOperationsBackend()">Télécharger Excel</button>
                   </div>
                 </div>
                 <div class="card-body">
@@ -1030,9 +1030,23 @@
             });
           }
 
+          function getCellExportText(cell) {
+            if (!cell) return '';
+            const input = cell.querySelector('input, textarea');
+            if (input) return String(input.value || '').trim();
+            const select = cell.querySelector('select');
+            if (select) {
+              const opt = select.options && select.selectedIndex >= 0 ? select.options[select.selectedIndex] : null;
+              const v = opt ? (opt.textContent || opt.value) : select.value;
+              return String(v || '').trim();
+            }
+            return String(cell.textContent || '').trim();
+          }
+
           function downloadExcel(tableId) {
             const table = document.getElementById(tableId);
             if (!table) return;
+
             if (!window.XLSX || !window.XLSX.utils) {
               alert('Export Excel indisponible');
               return;
@@ -1052,12 +1066,15 @@
               const cells = row.querySelectorAll('td');
 
               cells.forEach((cell, idx) => {
+                // Montant column should be numeric in Excel
+                if (idx === 5) {
+                  rowData.push(parseFrenchNumber(getCellExportText(cell)));
+                  return;
+                }
                 // Check if this is the Chantier column (index 7) or Montant chantier column (index 8)
                 if ((idx === 7 || idx === 8) && tableId === 'chequesTable') {
                   // Get only visible alloc-line elements in this cell (depends on chantier filter)
                   const allocLines = getVisibleAllocLines(cell);
-                  console.log(`Row ${rowIdx}, Col ${idx} (${idx === 7 ? 'Chantier' : 'Montant'}): Found ${allocLines.length} alloc-line elements`);
-
                   if (allocLines.length > 0) {
                     const values = [];
                     allocLines.forEach((line, lineIdx) => {
@@ -1066,33 +1083,34 @@
                         // Chantier column - get from .alloc-name
                         const nameEl = line.querySelector('.alloc-name');
                         text = nameEl ? nameEl.textContent.trim() : '';
-                        console.log(`  Line ${lineIdx}: Chantier name = "${text}"`);
                       } else {
                         // Montant chantier column - get from .alloc-amount
                         const amountEl = line.querySelector('.alloc-amount');
                         text = amountEl ? amountEl.textContent.trim() : '';
-                        console.log(`  Line ${lineIdx}: Montant = "${text}"`);
                       }
                       if (text) values.push(text);
                     });
-                    const joinedValue = values.join('\n');
-                    console.log(`  Final joined value: "${joinedValue}"`);
-                    rowData.push(joinedValue);
+                    // If chantier filter is active, there should be 0/1 visible lines in montant chantier.
+                    // When it's a single value, export it as a number.
+                    if (idx === 8 && values.length === 1) {
+                      rowData.push(parseFrenchNumber(values[0]));
+                    } else {
+                      const joinedValue = values.join('\n');
+                      rowData.push(joinedValue);
+                    }
                   } else {
                     // No allocations - show fallback value (just the text content)
-                    const fallbackText = cell.textContent.trim();
-                    console.log(`Row ${rowIdx}, Col ${idx}: No alloc-lines, fallback = "${fallbackText}"`);
-                    rowData.push(fallbackText);
+                    const fallbackText = getCellExportText(cell);
+                    if (idx === 8) rowData.push(parseFrenchNumber(fallbackText));
+                    else rowData.push(fallbackText);
                   }
                 } else {
-                  rowData.push(cell.textContent.trim());
+                  rowData.push(getCellExportText(cell));
                 }
               });
 
               data.push(rowData);
             });
-
-            console.log('Final data for Excel:', data.slice(0, 3)); // Log first 3 rows
 
             // Calculate total for Montant column
             let totalMontant = 0;
@@ -1100,11 +1118,12 @@
             const selectedChantier = (document.getElementById('chantierFilterOperations')?.value || '').toLowerCase();
             if (tableId === 'chequesTable' && selectedChantier) {
               // Total chantier = sum visible allocation amounts
-              const tableRows = getVisibleTableRows(table);
-              tableRows.forEach((row) => {
+              visibleRows.forEach((row) => {
                 const allocAmountEls = row.querySelectorAll('.alloc-amount');
                 allocAmountEls.forEach((el) => {
-                  const style = window.getComputedStyle(el.closest('.alloc-line'));
+                  const line = el.closest('.alloc-line');
+                  if (!line) return;
+                  const style = window.getComputedStyle(line);
                   if (style.display === 'none' || style.visibility === 'hidden') return;
                   totalChantier += parseFrenchNumber(el.textContent);
                 });
@@ -1115,27 +1134,45 @@
             data.forEach(row => {
               const montantStr = row[5]; // Montant column is index 5
               if (montantStr) {
-                const clean = montantStr.replace(/\s/g, '').replace(',', '.');
-                const val = parseFloat(clean) || 0;
-                totalMontant += val;
+                if (typeof montantStr === 'number') {
+                  totalMontant += montantStr;
+                } else {
+                  const clean = String(montantStr).replace(/\s/g, '').replace(',', '.');
+                  const val = parseFloat(clean) || 0;
+                  totalMontant += val;
+                }
               }
             });
 
             // Add total row
             const totalRow = new Array(headers.length).fill('');
             totalRow[4] = 'Total'; // Label in column 4 (Bénéficiaire)
-            totalRow[5] = totalMontant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
+            totalRow[5] = totalMontant;
             data.push(totalRow);
 
             if (tableId === 'chequesTable' && selectedChantier) {
               const totalChantierRow = new Array(headers.length).fill('');
               totalChantierRow[7] = 'Total chantier';
-              totalChantierRow[8] = totalChantier.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
+              totalChantierRow[8] = totalChantier;
               data.push(totalChantierRow);
             }
 
             // Create worksheet
             const ws = window.XLSX.utils.aoa_to_sheet([headers, ...data]);
+
+            const setNumFmt = (r, c) => {
+              const ref = window.XLSX.utils.encode_cell({ r, c });
+              if (ws[ref] && typeof ws[ref].v === 'number') {
+                ws[ref].t = 'n';
+                ws[ref].z = '#\u00A0##0,00';
+              }
+            };
+
+            // Apply numeric formatting for amount columns
+            for (let r = 1; r <= data.length; r++) {
+              setNumFmt(r, 5); // Montant
+              setNumFmt(r, 8); // Montant chantier (numeric only when single value)
+            }
 
             // Set column widths
             ws['!cols'] = [
@@ -1161,10 +1198,10 @@
 
               // Count lines in either column
               let maxLines = 1;
-              if (chantierCellValue && chantierCellValue.includes('\n')) {
+              if (typeof chantierCellValue === 'string' && chantierCellValue.includes('\n')) {
                 maxLines = Math.max(maxLines, chantierCellValue.split('\n').length);
               }
-              if (montantChantierCellValue && montantChantierCellValue.includes('\n')) {
+              if (typeof montantChantierCellValue === 'string' && montantChantierCellValue.includes('\n')) {
                 maxLines = Math.max(maxLines, montantChantierCellValue.split('\n').length);
               }
 
@@ -1220,10 +1257,40 @@
               }
             }
 
+            // Ensure totals are formatted as French numbers when numeric
+            setNumFmt(lastRowIdx, 5);
+
+            // If Total chantier row exists (it is the last row), format it too
+            if (tableId === 'chequesTable' && selectedChantier) {
+              const totalChantierRowIdx = data.length;
+              setNumFmt(totalChantierRowIdx, 8);
+            }
+
             const wb = window.XLSX.utils.book_new();
             window.XLSX.utils.book_append_sheet(wb, ws, 'Export');
             const filename = `${tableId}_${new Date().toISOString().slice(0, 10)}.xlsx`;
             window.XLSX.writeFile(wb, filename);
+          }
+
+          function downloadExcelOperationsBackend() {
+            const type = document.getElementById('typeFilter')?.value || '';
+            const fournisseur = document.getElementById('fournisseurFilterCheques')?.value || '';
+            const banque = document.getElementById('banqueFilterCheques')?.value || '';
+            const chantier = document.getElementById('chantierFilterOperations')?.value || '';
+            const dateFrom = document.getElementById('dateFromFilter')?.value || '';
+            const dateTo = document.getElementById('dateToFilter')?.value || '';
+            const pageSize = document.getElementById('operationsPageSize')?.value || '20';
+
+            const params = new URLSearchParams();
+            if (type) params.set('type', type);
+            if (fournisseur) params.set('fournisseur', fournisseur);
+            if (banque) params.set('banque', banque);
+            if (chantier) params.set('chantier', chantier);
+            if (dateFrom) params.set('dateFrom', dateFrom);
+            if (dateTo) params.set('dateTo', dateTo);
+            if (pageSize) params.set('pageSize', pageSize);
+
+            window.location.href = `/tresorerie/historique/export/excel?${params.toString()}`;
           }
 
           function downloadPDF(tableId) {
@@ -1255,19 +1322,20 @@
               cells.forEach((cell, idx) => {
                 // For Chantier (7) and Montant chantier (8) columns, preserve line breaks
                 if ((idx === 7 || idx === 8) && tableId === 'chequesTable') {
-                  const lines = getVisibleAllocLines(cell);
-                  if (lines.length > 0) {
+                  // Get only visible alloc-line elements in this cell (depends on chantier filter)
+                  const allocLines = getVisibleAllocLines(cell);
+                  if (allocLines.length > 0) {
                     const values = [];
-                    lines.forEach(line => {
-                      const text = line.textContent.trim();
+                    allocLines.forEach(line => {
+                      const text = getCellExportText(line);
                       if (text) values.push(text);
                     });
                     rowData.push(values.join('\n'));
                   } else {
-                    rowData.push(cell.textContent.trim());
+                    rowData.push(getCellExportText(cell));
                   }
                 } else {
-                  rowData.push(cell.textContent.trim());
+                  rowData.push(getCellExportText(cell));
                 }
               });
 
@@ -1721,9 +1789,10 @@
 
               // For cheque rows: if chantier filter is selected, show only that chantier line
               const selectedChantier = selected.operations.chantier;
+              lastSelectedOperationsChantier = selectedChantier;
               rows.operations.forEach(row => {
                 const rowType = row.getAttribute('data-type')?.toLowerCase() || '';
-                if (rowType !== 'chèque' && rowType !== 'virement' && rowType !== 'effet') return;
+                if (rowType !== 'chèque' && rowType !== 'virement' && rowType !== 'effet' && rowType !== 'mise à disposition') return;
                 const lines = row.querySelectorAll('.alloc-line');
                 if (!lines || !lines.length) return;
 
