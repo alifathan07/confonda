@@ -1685,6 +1685,32 @@
               if (p.nextBtn) p.nextBtn.disabled = p.page >= totalPages;
             };
 
+            const attachPaginationHandlers = (tableKey) => {
+              const p = pagination[tableKey];
+              if (!p) return;
+
+              if (p.pageSizeEl) {
+                p.pageSizeEl.addEventListener('change', () => {
+                  p.page = 1;
+                  applyPagination(tableKey);
+                });
+              }
+
+              if (p.prevBtn) {
+                p.prevBtn.addEventListener('click', () => {
+                  p.page = Math.max(1, (p.page || 1) - 1);
+                  applyPagination(tableKey);
+                });
+              }
+
+              if (p.nextBtn) {
+                p.nextBtn.addEventListener('click', () => {
+                  p.page = (p.page || 1) + 1;
+                  applyPagination(tableKey);
+                });
+              }
+            };
+
             // Filter rows based on selected criteria
             const filterRows = () => {
               const selected = {
@@ -1927,6 +1953,9 @@
             attachEncListener(filters.encaissements.dateFrom);
             attachEncListener(filters.encaissements.dateTo);
             filters.encaissements.clearFiltersBtn?.addEventListener('click', () => resetFilters('encaissements'));
+
+            attachPaginationHandlers('operations');
+            attachPaginationHandlers('encaissements');
 
             filters.virements.banque?.addEventListener('change', filterRows);
             filters.virements.dateFrom?.addEventListener('change', filterRows);
