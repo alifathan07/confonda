@@ -619,7 +619,7 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                   <h2>Liste des réglements effectués</h2>
                   <div>
-                    <button class="btn btn-info mr-2" onclick="downloadPDF('chequesTable')">Télécharger PDF</button>
+                    <button class="btn btn-info mr-2" onclick="downloadPdfOperationsBackend()">Télécharger PDF</button>
                     <button class="btn btn-success" onclick="downloadExcelOperationsBackend()">Télécharger Excel</button>
                   </div>
                 </div>
@@ -1288,6 +1288,25 @@
             if (pageSize) params.set('pageSize', pageSize);
 
             window.location.href = `/tresorerie/historique/export/excel?${params.toString()}`;
+          }
+
+          function downloadPdfOperationsBackend() {
+            const type = document.getElementById('typeFilter')?.value || '';
+            const fournisseur = document.getElementById('fournisseurFilterCheques')?.value || '';
+            const banque = document.getElementById('banqueFilterCheques')?.value || '';
+            const chantier = document.getElementById('chantierFilterOperations')?.value || '';
+            const dateFrom = document.getElementById('dateFromFilter')?.value || '';
+            const dateTo = document.getElementById('dateToFilter')?.value || '';
+
+            const params = new URLSearchParams();
+            if (type) params.set('type', type);
+            if (fournisseur) params.set('fournisseur', fournisseur);
+            if (banque) params.set('banque', banque);
+            if (chantier) params.set('chantier', chantier);
+            if (dateFrom) params.set('dateFrom', dateFrom);
+            if (dateTo) params.set('dateTo', dateTo);
+
+            window.location.href = `/tresorerie/historique/export/pdf?${params.toString()}`;
           }
 
           function downloadPDF(tableId) {

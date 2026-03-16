@@ -1,5 +1,6 @@
 import prisma from "../db.js";
 import ExcelJS from 'exceljs';
+import puppeteer from 'puppeteer';
 export const indexHis = async (req, res) => {
   try {
 
@@ -741,6 +742,191 @@ const normalize = (v) => String(v || '').trim().toLowerCase();
 
 const EXCEL_NUMFMT_FR = '#\u00A0##0,00';
 
+const formatFrNumber = (n) => Number(n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
+
+export const exportHistoriquePdf = async (req, res) => {
+  let browser;
+  try {
+    const filters = {
+      type: normalize(req.query.type),
+      fournisseur: normalize(req.query.fournisseur),
+      banque: normalize(req.query.banque),
+      chantier: normalize(req.query.chantier),
+      dateFrom: req.query.dateFrom ? new Date(String(req.query.dateFrom)) : null,
+      dateTo: req.query.dateTo ? new Date(String(req.query.dateTo)) : null,
+    };
+
+    const allOps = await buildHistoriqueOperations();
+
+    const filtered = allOps.filter(op => {
+      const rowType = normalize(op.type);
+      const rowFournisseur = normalize(op.beneficiaire);
+      const rowBanque = normalize(op.banque);
+      const rowChantiers = Array.isArray(op.chantierNames)
+        ? op.chantierNames.map(normalize)
+        : normalize(op.chantier).split('|').map(s => s.trim()).filter(Boolean);
+      const d = op.dateEtablissement ? new Date(op.dateEtablissement) : null;
+
+      const okType = !filters.type || rowType === filters.type;
+      const okFourn = !filters.fournisseur || rowFournisseur.includes(filters.fournisseur);
+      const okBanque = !filters.banque || rowBanque.includes(filters.banque);
+      const okChantier = !filters.chantier || rowChantiers.includes(filters.chantier);
+      const okFrom = !filters.dateFrom || (d && d >= filters.dateFrom);
+      const okTo = !filters.dateTo || (d && d <= filters.dateTo);
+      return okType && okFourn && okBanque && okChantier && okFrom && okTo;
+    });
+
+    const totalMontant = filtered.reduce((acc, op) => acc + Number(op.montant || 0), 0);
+    const totalChantier = filters.chantier
+      ? filtered.reduce((acc, op) => {
+        const lines = Array.isArray(op.chantierLines) ? op.chantierLines : [];
+        const match = lines.find(l => normalize(l.nom) === filters.chantier);
+        return acc + Number(match?.montant || 0);
+      }, 0)
+      : 0;
+
+    const escapeHtml = (s) => String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+
+    const rowsHtml = filtered.map((op) => {
+      const date = op.dateEtablissement ? new Date(op.dateEtablissement) : null;
+      const dateEch = op.dateEcheance ? new Date(op.dateEcheance) : null;
+      const chantierLines = Array.isArray(op.chantierLines) ? op.chantierLines : [];
+
+      let chantierCell = '';
+      let montantChantierCell = '';
+      if (filters.chantier) {
+        const match = chantierLines.find(l => normalize(l.nom) === filters.chantier);
+        if (match) {
+          chantierCell = match.nom;
+          montantChantierCell = formatFrNumber(match.montant || 0);
+        } else {
+          chantierCell = '';
+          montantChantierCell = formatFrNumber(0);
+        }
+      } else if (chantierLines.length) {
+        chantierCell = chantierLines.map(l => l.nom).join('\n');
+        montantChantierCell = chantierLines.map(l => formatFrNumber(l.montant || 0)).join('\n');
+      } else {
+        chantierCell = op.chantier || '';
+        montantChantierCell = '';
+      }
+
+      return `
+        <tr>
+          <td>${escapeHtml(date ? date.toLocaleDateString('fr-FR') : '')}</td>
+          <td>${escapeHtml(op.type || '')}</td>
+          <td>${escapeHtml(op.numero || '')}</td>
+          <td>${escapeHtml(op.banque || '')}</td>
+          <td>${escapeHtml(op.beneficiaire || '')}</td>
+          <td class="num">${escapeHtml(formatFrNumber(op.montant || 0))}</td>
+          <td>${escapeHtml(dateEch ? dateEch.toLocaleDateString('fr-FR') : '')}</td>
+          <td class="wrap">${escapeHtml(chantierCell)}</td>
+          <td class="num wrap">${escapeHtml(montantChantierCell)}</td>
+          <td class="wrap">${escapeHtml(op.obs || '')}</td>
+        </tr>`;
+    }).join('\n');
+
+    const filtersLabel = [
+      filters.type ? `Type: ${filters.type}` : null,
+      filters.fournisseur ? `Fournisseur: ${filters.fournisseur}` : null,
+      filters.banque ? `Banque: ${filters.banque}` : null,
+      filters.chantier ? `Chantier: ${filters.chantier}` : null,
+      filters.dateFrom ? `Du: ${filters.dateFrom.toLocaleDateString('fr-FR')}` : null,
+      filters.dateTo ? `Au: ${filters.dateTo.toLocaleDateString('fr-FR')}` : null,
+    ].filter(Boolean).join(' | ');
+
+    const html = `
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <style>
+            @page { size: A4 landscape; margin: 14mm; }
+            body { font-family: Arial, Helvetica, sans-serif; font-size: 10px; color: #111; }
+            h1 { font-size: 14px; margin: 0 0 6px 0; }
+            .meta { font-size: 10px; color: #555; margin-bottom: 10px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #ddd; padding: 5px 6px; vertical-align: top; }
+            th { background: #f3f4f6; font-weight: 700; }
+            td.num { text-align: right; white-space: nowrap; }
+            td.wrap { white-space: pre-wrap; }
+            tfoot td { font-weight: 700; background: #fafafa; }
+          </style>
+        </head>
+        <body>
+          <h1>Historique des opérations</h1>
+          <div class="meta">
+            ${escapeHtml(filtersLabel || 'Aucun filtre')}
+            <br />
+            ${escapeHtml(`${filtered.length} résultat(s)`) }
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Numéro</th>
+                <th>Banque</th>
+                <th>Bénéficiaire</th>
+                <th>Montant</th>
+                <th>Date Échéance</th>
+                <th>Chantier</th>
+                <th>Montant chantier</th>
+                <th>Observation</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="5">Total</td>
+                <td class="num">${escapeHtml(formatFrNumber(totalMontant))}</td>
+                <td colspan="4"></td>
+              </tr>
+              ${filters.chantier ? `
+                <tr>
+                  <td colspan="7"></td>
+                  <td colspan="1">Total chantier</td>
+                  <td class="num">${escapeHtml(formatFrNumber(totalChantier))}</td>
+                  <td></td>
+                </tr>` : ''}
+            </tfoot>
+          </table>
+        </body>
+      </html>
+    `;
+
+    browser = await puppeteer.launch({ headless: 'new' });
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      landscape: true,
+      printBackground: true,
+      margin: { top: '14mm', right: '14mm', bottom: '14mm', left: '14mm' }
+    });
+
+    const filename = `historique_operations_${new Date().toISOString().slice(0, 10)}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Erreur serveur.');
+  } finally {
+    if (browser) {
+      try { await browser.close(); } catch { /* ignore */ }
+    }
+  }
+};
+
 export const exportHistoriqueExcel = async (req, res) => {
   try {
     // pageSize is kept for backward compatibility with the UI, but export is not paginated.
@@ -831,10 +1017,10 @@ export const exportHistoriqueExcel = async (req, res) => {
         const match = chantierLines.find(l => normalize(l.nom) === filters.chantier);
         if (match) {
           chantierCell = match.nom;
-          montantChantierCell = Number(match.montant || 0);
+          montantChantierCell = Number(match.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
         } else {
           chantierCell = '';
-          montantChantierCell = 0;
+          montantChantierCell = '0,00';
         }
       } else if (chantierLines.length) {
         chantierCell = chantierLines.map(l => l.nom).join('\n');
@@ -852,7 +1038,7 @@ export const exportHistoriqueExcel = async (req, res) => {
         op.numero || '',
         op.banque || '',
         op.beneficiaire || '',
-        Number(op.montant || 0),
+        Number(op.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' '),
         dateEch ? dateEch.toLocaleDateString('fr-FR') : '',
         chantierCell,
         montantChantierCell,
@@ -873,13 +1059,13 @@ export const exportHistoriqueExcel = async (req, res) => {
 
     // totals at the bottom
     sheet.addRow([]);
-    const totalRow = sheet.addRow(['', '', '', '', 'Total', totalMontant, '', '', '', '']);
+    const totalRow = sheet.addRow(['', '', '', '', 'Total', totalMontant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' '), '', '', '', '']);
     totalRow.font = { bold: true };
     totalRow.getCell(6).numFmt = EXCEL_NUMFMT_FR;
     totalRow.getCell(6).alignment = { horizontal: 'right' };
 
     if (filters.chantier) {
-      const totalChRow = sheet.addRow(['', '', '', '', '', '', '', 'Total chantier', totalChantier, '']);
+      const totalChRow = sheet.addRow(['', '', '', '', '', '', '', 'Total chantier', totalChantier.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' '), '']);
       totalChRow.font = { bold: true };
       totalChRow.getCell(9).numFmt = EXCEL_NUMFMT_FR;
       totalChRow.getCell(9).alignment = { horizontal: 'right' };
