@@ -740,7 +740,7 @@ const buildHistoriqueOperations = async () => {
 
 const normalize = (v) => String(v || '').trim().toLowerCase();
 
-const EXCEL_NUMFMT_FR = '[$-040C]#\u00A0##0,00';
+const EXCEL_NUMFMT_FR = '#,##0.00';
 
 const formatFrNumber = (n) => Number(n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
 
