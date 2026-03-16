@@ -1006,7 +1006,7 @@ export const exportHistoriqueExcel = async (req, res) => {
     sheet.getRow(1).font = { bold: true };
     sheet.getRow(1).alignment = { vertical: 'middle' };
 
-    // Apply monetary format at the column level so Excel consistently renders EU format.
+    // Apply monetary format at the column level.
     sheet.getColumn(6).numFmt = EXCEL_NUMFMT_FR;
     sheet.getColumn(6).alignment = { horizontal: 'right' };
     sheet.getColumn(9).numFmt = EXCEL_NUMFMT_FR;
@@ -1032,6 +1032,8 @@ export const exportHistoriqueExcel = async (req, res) => {
 
       exportLines.forEach((ln, idx) => {
         const isFirst = idx === 0;
+        const montantNum = isFirst ? Number(op.montant || 0) : null;
+        const montantChNum = (ln.montant === null || ln.montant === undefined) ? null : Number(ln.montant || 0);
 
         const row = sheet.addRow([
           isFirst ? (date ? date.toLocaleDateString('fr-FR') : '') : '',
@@ -1039,10 +1041,10 @@ export const exportHistoriqueExcel = async (req, res) => {
           isFirst ? (op.numero || '') : '',
           isFirst ? (op.banque || '') : '',
           isFirst ? (op.beneficiaire || '') : '',
-          isFirst ? Number(op.montant || 0) : null,
+          montantNum,
           isFirst ? (dateEch ? dateEch.toLocaleDateString('fr-FR') : '') : '',
           ln.nom || '',
-          ln.montant === null ? null : Number(ln.montant || 0),
+          montantChNum,
           isFirst ? (op.obs || '') : '',
         ]);
 
