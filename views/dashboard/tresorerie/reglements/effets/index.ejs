@@ -316,10 +316,24 @@
 
                   <!-- Table -->
                   <div class="table-responsive" id="effetsTableResponsive">
-                    <% function fmtDate(d) { if (!d) return '' ; const dt=new Date(d); if (isNaN(dt)) return '' ; return
-                      String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0') + '/' +
-                      dt.getFullYear(); } function statutClass(s) { return
-                      String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-'); }
+                    <% function fmtDate(d) { 
+  if (!d) return '';
+  const s = String(d).trim();
+  // Handle ISO date strings from Prisma (2024-03-15T00:00:00.000Z or 2024-03-15)
+  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    return `${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}`;
+  }
+  // Handle existing DD/MM/YYYY format
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
+  // Fallback to Date parsing for other formats
+  const dt = new Date(s);
+  if (isNaN(dt)) return '';
+  return String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0') + '/' + dt.getFullYear();
+} %>
+<% function statutClass(s) { 
+  return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-'); 
+} %>
                       %>
                       <table class="table table-sm table-hover table-bordered effet-table" style="min-width: 1200px;"
                         id="editableTable">
@@ -783,8 +797,18 @@
       const bar = document.getElementById('effetsBottomHScroll');
       if (!sc || !bar) return;
       let lock = false;
-      sc.addEventListener('scroll', () => { if (lock) return; lock = true; bar.scrollLeft = sc.scrollLeft; lock = false; }, { passive: true });
-      bar.addEventListener('scroll', () => { if (lock) return; lock = true; sc.scrollLeft = bar.scrollLeft; lock = false; }, { passive: true });
+      sc.addEventListener('scroll', () => {
+        if (lock) return;
+        lock = true;
+        bar.scrollLeft = sc.scrollLeft;
+        requestAnimationFrame(() => { lock = false; });
+      }, { passive: true });
+      bar.addEventListener('scroll', () => {
+        if (lock) return;
+        lock = true;
+        sc.scrollLeft = bar.scrollLeft;
+        requestAnimationFrame(() => { lock = false; });
+      }, { passive: true });
       window.addEventListener('resize', updateBottomHScroll);
       setTimeout(updateBottomHScroll, 0);
       window.addEventListener('load', () => { updateBottomHScroll(); setTimeout(updateBottomHScroll, 200); });

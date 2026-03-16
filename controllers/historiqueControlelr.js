@@ -1017,10 +1017,10 @@ export const exportHistoriqueExcel = async (req, res) => {
         const match = chantierLines.find(l => normalize(l.nom) === filters.chantier);
         if (match) {
           chantierCell = match.nom;
-          montantChantierCell = Number(match.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
+          montantChantierCell = Number(match.montant || 0);
         } else {
           chantierCell = '';
-          montantChantierCell = '0,00';
+          montantChantierCell = 0;
         }
       } else if (chantierLines.length) {
         chantierCell = chantierLines.map(l => l.nom).join('\n');
@@ -1038,7 +1038,7 @@ export const exportHistoriqueExcel = async (req, res) => {
         op.numero || '',
         op.banque || '',
         op.beneficiaire || '',
-        Number(op.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' '),
+        Number(op.montant || 0),
         dateEch ? dateEch.toLocaleDateString('fr-FR') : '',
         chantierCell,
         montantChantierCell,
@@ -1059,13 +1059,13 @@ export const exportHistoriqueExcel = async (req, res) => {
 
     // totals at the bottom
     sheet.addRow([]);
-    const totalRow = sheet.addRow(['', '', '', '', 'Total', totalMontant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' '), '', '', '', '']);
+    const totalRow = sheet.addRow(['', '', '', '', 'Total', totalMontant, '', '', '', '']);
     totalRow.font = { bold: true };
     totalRow.getCell(6).numFmt = EXCEL_NUMFMT_FR;
     totalRow.getCell(6).alignment = { horizontal: 'right' };
 
     if (filters.chantier) {
-      const totalChRow = sheet.addRow(['', '', '', '', '', '', '', 'Total chantier', totalChantier.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' '), '']);
+      const totalChRow = sheet.addRow(['', '', '', '', '', '', '', 'Total chantier', totalChantier, '']);
       totalChRow.font = { bold: true };
       totalChRow.getCell(9).numFmt = EXCEL_NUMFMT_FR;
       totalChRow.getCell(9).alignment = { horizontal: 'right' };

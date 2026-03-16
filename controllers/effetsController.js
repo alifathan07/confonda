@@ -411,7 +411,16 @@ export const showEffets = async (req, res) => {
     console.log('📋 Fetching effets list...');
     const effets = await prisma.effet.findMany({
       orderBy: { id: 'desc' },
-      include: {
+      select: {
+        id: true,
+        numero: true,
+        montant: true,
+        dateEtablissement: true,
+        dateEcheance: true,
+        dateReglement: true,
+        statut: true,
+        beneficiaire: true,
+        obs: true,
         fournisseur: true,
         banque: true,
         chantier: true,
@@ -481,7 +490,16 @@ export const showEffetsForbanque = async (req, res) => {
     where: {
       banqueId: Number(req.params.id)
     },
-    include: {
+    select: {
+      id: true,
+      numero: true,
+      montant: true,
+      dateEtablissement: true,
+      dateEcheance: true,
+      dateReglement: true,
+      statut: true,
+      beneficiaire: true,
+      obs: true,
       banque: {
         select: { name: true },
       },
