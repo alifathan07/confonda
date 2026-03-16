@@ -740,7 +740,7 @@ const buildHistoriqueOperations = async () => {
 
 const normalize = (v) => String(v || '').trim().toLowerCase();
 
-const EXCEL_NUMFMT_FR = '#\u00A0##0,00';
+const EXCEL_NUMFMT_FR = '[$-040C]#\u00A0##0,00';
 
 const formatFrNumber = (n) => Number(n || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ');
 
@@ -995,10 +995,10 @@ export const exportHistoriqueExcel = async (req, res) => {
       { width: 16 },
       { width: 18 },
       { width: 30 },
-      { width: 14 },
+      { width: 20 },
       { width: 15 },
       { width: 30 },
-      { width: 16 },
+      { width: 22 },
       { width: 35 },
     ];
 
@@ -1006,55 +1006,63 @@ export const exportHistoriqueExcel = async (req, res) => {
     sheet.getRow(1).font = { bold: true };
     sheet.getRow(1).alignment = { vertical: 'middle' };
 
+    // Apply monetary format at the column level so Excel consistently renders EU format.
+    sheet.getColumn(6).numFmt = EXCEL_NUMFMT_FR;
+    sheet.getColumn(6).alignment = { horizontal: 'right' };
+    sheet.getColumn(9).numFmt = EXCEL_NUMFMT_FR;
+    sheet.getColumn(9).alignment = { horizontal: 'right' };
+
     for (const op of filtered) {
       const date = op.dateEtablissement ? new Date(op.dateEtablissement) : null;
       const dateEch = op.dateEcheance ? new Date(op.dateEcheance) : null;
       const chantierLines = Array.isArray(op.chantierLines) ? op.chantierLines : [];
 
-      let chantierCell = '';
-      let montantChantierCell = '';
-      if (filters.chantier) {
-        const match = chantierLines.find(l => normalize(l.nom) === filters.chantier);
-        if (match) {
-          chantierCell = match.nom;
-          montantChantierCell = Number(match.montant || 0);
-        } else {
-          chantierCell = '';
-          montantChantierCell = 0;
+      // Keep Excel amounts as NUMBERS (not strings) in all cases.
+      // If there are multiple chantier allocations, export one row per chantier line.
+      const exportLines = (() => {
+        if (filters.chantier) {
+          const match = chantierLines.find(l => normalize(l.nom) === filters.chantier);
+          return [{ nom: match?.nom || '', montant: Number(match?.montant || 0) }];
         }
-      } else if (chantierLines.length) {
-        chantierCell = chantierLines.map(l => l.nom).join('\n');
-        montantChantierCell = chantierLines
-          .map(l => Number(l.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' '))
-          .join('\n');
-      } else {
-        chantierCell = op.chantier || '';
-        montantChantierCell = '';
-      }
+        if (chantierLines.length) {
+          return chantierLines.map(l => ({ nom: l.nom || '', montant: Number(l.montant || 0) }));
+        }
+        return [{ nom: op.chantier || '', montant: null }];
+      })();
 
-      const row = sheet.addRow([
-        date ? date.toLocaleDateString('fr-FR') : '',
-        op.type || '',
-        op.numero || '',
-        op.banque || '',
-        op.beneficiaire || '',
-        Number(op.montant || 0),
-        dateEch ? dateEch.toLocaleDateString('fr-FR') : '',
-        chantierCell,
-        montantChantierCell,
-        op.obs || '',
-      ]);
+      exportLines.forEach((ln, idx) => {
+        const isFirst = idx === 0;
 
-      // numeric formatting
-      row.getCell(6).numFmt = EXCEL_NUMFMT_FR;
-      row.getCell(6).alignment = { horizontal: 'right' };
-      if (filters.chantier) {
-        row.getCell(9).numFmt = EXCEL_NUMFMT_FR;
-        row.getCell(9).alignment = { horizontal: 'right' };
-      } else {
-        row.getCell(9).alignment = { wrapText: true, vertical: 'top', horizontal: 'right' };
-      }
-      row.getCell(8).alignment = { wrapText: true, vertical: 'top' };
+        const row = sheet.addRow([
+          isFirst ? (date ? date.toLocaleDateString('fr-FR') : '') : '',
+          isFirst ? (op.type || '') : '',
+          isFirst ? (op.numero || '') : '',
+          isFirst ? (op.banque || '') : '',
+          isFirst ? (op.beneficiaire || '') : '',
+          isFirst ? Number(op.montant || 0) : null,
+          isFirst ? (dateEch ? dateEch.toLocaleDateString('fr-FR') : '') : '',
+          ln.nom || '',
+          ln.montant === null ? null : Number(ln.montant || 0),
+          isFirst ? (op.obs || '') : '',
+        ]);
+
+        // numeric formatting
+        const montantCell = row.getCell(6);
+        if (montantCell && typeof montantCell.value === 'number') {
+          montantCell.numFmt = EXCEL_NUMFMT_FR;
+          montantCell.alignment = { horizontal: 'right' };
+        }
+
+        const montantChantierCell = row.getCell(9);
+        if (montantChantierCell && typeof montantChantierCell.value === 'number') {
+          montantChantierCell.numFmt = EXCEL_NUMFMT_FR;
+          montantChantierCell.alignment = { horizontal: 'right' };
+        } else {
+          montantChantierCell.alignment = { horizontal: 'right' };
+        }
+
+        row.getCell(8).alignment = { vertical: 'top' };
+      });
     }
 
     // totals at the bottom
