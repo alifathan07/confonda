@@ -5,10 +5,10 @@ export const indexHis = async (req, res) => {
   try {
 
     // Parse dates with fallback
-  
+
 
     // Validate parsed dates
-   
+
 
     // Fetch cheques
     const cheques = await prisma.cheque.findMany({
@@ -21,7 +21,7 @@ export const indexHis = async (req, res) => {
         numero: true,
         dateEtablissement: true,
         montant: true,
-        chantier : {select: {nom: true}},
+        chantier: { select: { nom: true } },
         allocations: {
           select: {
             montant: true,
@@ -50,7 +50,7 @@ export const indexHis = async (req, res) => {
         numero: true,
         dateEtablissement: true,
         montant: true,
-        chantier : {select: {nom: true}},
+        chantier: { select: { nom: true } },
         allocations: {
           select: {
             montant: true,
@@ -69,7 +69,7 @@ export const indexHis = async (req, res) => {
     });
 
     // Fetch telepaimentPrelevement
-   
+
 
     // Fetch virements (excluding confonda)
     const virements = await prisma.virement.findMany({
@@ -78,7 +78,7 @@ export const indexHis = async (req, res) => {
         designation: true,
         date: true,
         montant: true,
-        chantier : {select: {nom: true}},
+        chantier: { select: { nom: true } },
         allocations: {
           select: {
             montant: true,
@@ -111,7 +111,7 @@ export const indexHis = async (req, res) => {
         montant: true,
         date: true,
         dateReglement: true,
-        chantier : {select: {nom: true}},
+        chantier: { select: { nom: true } },
         allocations: {
           select: {
             montant: true,
@@ -133,7 +133,7 @@ export const indexHis = async (req, res) => {
         id: true,
         dateEtablissement: true,
         montant: true,
-        chantier : {select: {nom: true}},
+        chantier: { select: { nom: true } },
         banque: { select: { name: true } },
         fournisseur: { select: { name: true } },
         observation: true,
@@ -312,7 +312,7 @@ export const indexHis = async (req, res) => {
       })),
 
       // --- Virement de Fonds ---
-    
+
 
       // --- Mise à disposition ---
       ...miseadis.map(m => ({
@@ -359,7 +359,7 @@ export const indexHis = async (req, res) => {
           if (m.chantier?.nom) return [String(m.chantier.nom)];
           return [];
         })(),
-        
+
         dateEcheance: m.date,
         validation: false,
         beneficiaire: m.beneficiaire,
@@ -375,7 +375,7 @@ export const indexHis = async (req, res) => {
         numero: "Aucun",
         dateEtablissement: t.dateEtablissement,
         montant: t.montant,
-        chantier : t.chantier?.nom || 'Aucun',
+        chantier: t.chantier?.nom || 'Aucun',
         chantierLines: [],
         chantierNames: t.chantier?.nom ? [String(t.chantier.nom)] : [],
         dateEcheance: null,
@@ -393,7 +393,7 @@ export const indexHis = async (req, res) => {
       select: {
         id: true,
         dateEtablissement: true,
-        type : true,
+        type: true,
         montant: true,
         client: { select: { name: true } },
         chantier: { select: { nom: true } },
@@ -401,7 +401,7 @@ export const indexHis = async (req, res) => {
         observation: true,
       },
     });
-  
+
     const clients = await prisma.client.findMany();
     const chantiers = await prisma.chantier.findMany();
     // Render the template
@@ -863,7 +863,7 @@ export const exportHistoriquePdf = async (req, res) => {
           <div class="meta">
             ${escapeHtml(filtersLabel || 'Aucun filtre')}
             <br />
-            ${escapeHtml(`${filtered.length} résultat(s)`) }
+            ${escapeHtml(`${filtered.length} résultat(s)`)}
           </div>
 
           <table>
@@ -903,7 +903,7 @@ export const exportHistoriquePdf = async (req, res) => {
       </html>
     `;
 
-    browser = await puppeteer.launch({ headless: 'new' });
+    browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox'] });
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle0' });
     const pdfBuffer = await page.pdf({
