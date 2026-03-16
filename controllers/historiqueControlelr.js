@@ -743,7 +743,7 @@ const EXCEL_NUMFMT_FR = '#\u00A0##0,00';
 
 export const exportHistoriqueExcel = async (req, res) => {
   try {
-    const pageSize = Math.max(1, Math.min(500, Number(req.query.pageSize || 20)));
+    // pageSize is kept for backward compatibility with the UI, but export is not paginated.
     const filters = {
       type: normalize(req.query.type),
       fournisseur: normalize(req.query.fournisseur),
@@ -799,99 +799,90 @@ export const exportHistoriqueExcel = async (req, res) => {
     wb.creator = 'Confonda';
     wb.created = new Date();
 
-    const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
-    for (let p = 1; p <= pageCount; p++) {
-      const start = (p - 1) * pageSize;
-      const end = start + pageSize;
-      const pageRows = filtered.slice(start, end);
+    const sheet = wb.addWorksheet('Historique');
+    sheet.addRow(headers);
 
-      const sheet = wb.addWorksheet(`Page ${p}`);
-      sheet.addRow(headers);
+    // column widths
+    sheet.columns = [
+      { width: 15 },
+      { width: 16 },
+      { width: 16 },
+      { width: 18 },
+      { width: 30 },
+      { width: 14 },
+      { width: 15 },
+      { width: 30 },
+      { width: 16 },
+      { width: 35 },
+    ];
 
-      // column widths
-      sheet.columns = [
-        { width: 15 },
-        { width: 16 },
-        { width: 16 },
-        { width: 18 },
-        { width: 30 },
-        { width: 14 },
-        { width: 15 },
-        { width: 30 },
-        { width: 16 },
-        { width: 35 },
-      ];
+    // header style
+    sheet.getRow(1).font = { bold: true };
+    sheet.getRow(1).alignment = { vertical: 'middle' };
 
-      // header style
-      sheet.getRow(1).font = { bold: true };
-      sheet.getRow(1).alignment = { vertical: 'middle' };
+    for (const op of filtered) {
+      const date = op.dateEtablissement ? new Date(op.dateEtablissement) : null;
+      const dateEch = op.dateEcheance ? new Date(op.dateEcheance) : null;
+      const chantierLines = Array.isArray(op.chantierLines) ? op.chantierLines : [];
 
-      for (const op of pageRows) {
-        const date = op.dateEtablissement ? new Date(op.dateEtablissement) : null;
-        const dateEch = op.dateEcheance ? new Date(op.dateEcheance) : null;
-        const chantierLines = Array.isArray(op.chantierLines) ? op.chantierLines : [];
-
-        let chantierCell = '';
-        let montantChantierCell = '';
-        if (filters.chantier) {
-          const match = chantierLines.find(l => normalize(l.nom) === filters.chantier);
-          if (match) {
-            chantierCell = match.nom;
-            montantChantierCell = Number(match.montant || 0);
-          } else {
-            chantierCell = '';
-            montantChantierCell = 0;
-          }
-        } else if (chantierLines.length) {
-          chantierCell = chantierLines.map(l => l.nom).join('\n');
-          montantChantierCell = chantierLines
-            .map(l => Number(l.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' '))
-            .join('\n');
+      let chantierCell = '';
+      let montantChantierCell = '';
+      if (filters.chantier) {
+        const match = chantierLines.find(l => normalize(l.nom) === filters.chantier);
+        if (match) {
+          chantierCell = match.nom;
+          montantChantierCell = Number(match.montant || 0);
         } else {
-          chantierCell = op.chantier || '';
-          montantChantierCell = '';
+          chantierCell = '';
+          montantChantierCell = 0;
         }
-
-        const row = sheet.addRow([
-          date ? date.toLocaleDateString('fr-FR') : '',
-          op.type || '',
-          op.numero || '',
-          op.banque || '',
-          op.beneficiaire || '',
-          Number(op.montant || 0),
-          dateEch ? dateEch.toLocaleDateString('fr-FR') : '',
-          chantierCell,
-          montantChantierCell,
-          op.obs || '',
-        ]);
-
-        // numeric formatting
-        row.getCell(6).numFmt = EXCEL_NUMFMT_FR;
-        row.getCell(6).alignment = { horizontal: 'right' };
-        if (filters.chantier) {
-          row.getCell(9).numFmt = EXCEL_NUMFMT_FR;
-          row.getCell(9).alignment = { horizontal: 'right' };
-        } else {
-          row.getCell(9).alignment = { wrapText: true, vertical: 'top', horizontal: 'right' };
-        }
-        row.getCell(8).alignment = { wrapText: true, vertical: 'top' };
+      } else if (chantierLines.length) {
+        chantierCell = chantierLines.map(l => l.nom).join('\n');
+        montantChantierCell = chantierLines
+          .map(l => Number(l.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' '))
+          .join('\n');
+      } else {
+        chantierCell = op.chantier || '';
+        montantChantierCell = '';
       }
 
-      // totals only on last sheet
-      if (p === pageCount) {
-        sheet.addRow([]);
-        const totalRow = sheet.addRow(['', '', '', '', 'Total', totalMontant, '', '', '', '']);
-        totalRow.font = { bold: true };
-        totalRow.getCell(6).numFmt = EXCEL_NUMFMT_FR;
-        totalRow.getCell(6).alignment = { horizontal: 'right' };
+      const row = sheet.addRow([
+        date ? date.toLocaleDateString('fr-FR') : '',
+        op.type || '',
+        op.numero || '',
+        op.banque || '',
+        op.beneficiaire || '',
+        Number(op.montant || 0),
+        dateEch ? dateEch.toLocaleDateString('fr-FR') : '',
+        chantierCell,
+        montantChantierCell,
+        op.obs || '',
+      ]);
 
-        if (filters.chantier) {
-          const totalChRow = sheet.addRow(['', '', '', '', '', '', '', 'Total chantier', totalChantier, '']);
-          totalChRow.font = { bold: true };
-          totalChRow.getCell(9).numFmt = EXCEL_NUMFMT_FR;
-          totalChRow.getCell(9).alignment = { horizontal: 'right' };
-        }
+      // numeric formatting
+      row.getCell(6).numFmt = EXCEL_NUMFMT_FR;
+      row.getCell(6).alignment = { horizontal: 'right' };
+      if (filters.chantier) {
+        row.getCell(9).numFmt = EXCEL_NUMFMT_FR;
+        row.getCell(9).alignment = { horizontal: 'right' };
+      } else {
+        row.getCell(9).alignment = { wrapText: true, vertical: 'top', horizontal: 'right' };
       }
+      row.getCell(8).alignment = { wrapText: true, vertical: 'top' };
+    }
+
+    // totals at the bottom
+    sheet.addRow([]);
+    const totalRow = sheet.addRow(['', '', '', '', 'Total', totalMontant, '', '', '', '']);
+    totalRow.font = { bold: true };
+    totalRow.getCell(6).numFmt = EXCEL_NUMFMT_FR;
+    totalRow.getCell(6).alignment = { horizontal: 'right' };
+
+    if (filters.chantier) {
+      const totalChRow = sheet.addRow(['', '', '', '', '', '', '', 'Total chantier', totalChantier, '']);
+      totalChRow.font = { bold: true };
+      totalChRow.getCell(9).numFmt = EXCEL_NUMFMT_FR;
+      totalChRow.getCell(9).alignment = { horizontal: 'right' };
     }
 
     const filename = `historique_operations_${new Date().toISOString().slice(0, 10)}.xlsx`;

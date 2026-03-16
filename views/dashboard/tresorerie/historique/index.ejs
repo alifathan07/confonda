@@ -731,21 +731,19 @@
                         </table>
                       </div>
 
-                      <div class="d-flex align-items-center justify-content-between mt-2" id="operationsPagination"
-                        style="gap: 10px;">
-                        <div class="small text-muted" id="operationsPageInfo"></div>
-                        <div class="d-flex align-items-center" style="gap: 8px;">
-                          <select id="operationsPageSize" class="form-control" style="width: 110px;">
+                      <div class="d-flex align-items-center justify-content-between mt-3" id="operationsPagination">
+                        <div class="d-flex align-items-center" style="gap: 10px;">
+                          <div class="small text-muted" id="operationsPageInfo"></div>
+                          <select id="operationsPageSize" class="form-control form-control-sm" style="width: 110px;">
                             <option value="10">10</option>
                             <option value="20" selected>20</option>
                             <option value="50">50</option>
                             <option value="100">100</option>
                           </select>
-                          <button type="button" class="btn btn-secondary" id="operationsPrev"
-                            style="background-color: #6a5ae7;">Préc.</button>
-                          <button type="button" class="btn btn-secondary" id="operationsNext"
-                            style="background-color: #6a5ae7;">Suiv.</button>
                         </div>
+                        <nav aria-label="Pagination">
+                          <ul class="pagination pagination-sm mb-0" id="operationsPaginationControls"></ul>
+                        </nav>
                       </div>
                       <% } %>
                         <!-- Filter Section for Encaissements -->
@@ -903,21 +901,20 @@
                                   </table>
                                 </div>
 
-                                <div class="d-flex align-items-center justify-content-between mt-2"
-                                  id="encaissementsPagination" style="gap: 10px;">
-                                  <div class="small text-muted" id="encaissementsPageInfo"></div>
-                                  <div class="d-flex align-items-center" style="gap: 8px;">
-                                    <select id="encaissementsPageSize" class="form-control" style="width: 110px;">
+                                <div class="d-flex align-items-center justify-content-between mt-3"
+                                  id="encaissementsPagination">
+                                  <div class="d-flex align-items-center" style="gap: 10px;">
+                                    <div class="small text-muted" id="encaissementsPageInfo"></div>
+                                    <select id="encaissementsPageSize" class="form-control form-control-sm" style="width: 110px;">
                                       <option value="10">10</option>
                                       <option value="20" selected>20</option>
                                       <option value="50">50</option>
                                       <option value="100">100</option>
                                     </select>
-                                    <button type="button" class="btn btn-secondary" id="encaissementsPrev"
-                                      style="background-color: #6a5ae7;">Préc.</button>
-                                    <button type="button" class="btn btn-secondary" id="encaissementsNext"
-                                      style="background-color: #6a5ae7;">Suiv.</button>
                                   </div>
+                                  <nav aria-label="Pagination">
+                                    <ul class="pagination pagination-sm mb-0" id="encaissementsPaginationControls"></ul>
+                                  </nav>
                                 </div>
                                 <% } %>
                           </div>
@@ -1627,15 +1624,13 @@
                 page: 1,
                 pageSizeEl: document.getElementById('operationsPageSize'),
                 infoEl: document.getElementById('operationsPageInfo'),
-                prevBtn: document.getElementById('operationsPrev'),
-                nextBtn: document.getElementById('operationsNext')
+                controlsEl: document.getElementById('operationsPaginationControls')
               },
               encaissements: {
                 page: 1,
                 pageSizeEl: document.getElementById('encaissementsPageSize'),
                 infoEl: document.getElementById('encaissementsPageInfo'),
-                prevBtn: document.getElementById('encaissementsPrev'),
-                nextBtn: document.getElementById('encaissementsNext')
+                controlsEl: document.getElementById('encaissementsPaginationControls')
               }
             };
 
@@ -1681,8 +1676,34 @@
                 const shownTo = Math.min(end, total);
                 p.infoEl.textContent = `Affichage ${shownFrom}-${shownTo} / ${total}`;
               }
-              if (p.prevBtn) p.prevBtn.disabled = p.page <= 1;
-              if (p.nextBtn) p.nextBtn.disabled = p.page >= totalPages;
+
+              if (p.controlsEl) {
+                p.controlsEl.innerHTML = '';
+                const page = p.page;
+
+                const addItem = (label, targetPage, disabled, active) => {
+                  const li = document.createElement('li');
+                  li.className = `page-item${disabled ? ' disabled' : ''}${active ? ' active' : ''}`;
+                  const a = document.createElement('a');
+                  a.className = 'page-link';
+                  a.href = '#';
+                  a.textContent = label;
+                  a.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (disabled) return;
+                    p.page = targetPage;
+                    applyPagination(tableKey);
+                  });
+                  li.appendChild(a);
+                  p.controlsEl.appendChild(li);
+                };
+
+                addItem('Préc.', Math.max(1, page - 1), page <= 1, false);
+                const startPage = Math.max(1, page - 2);
+                const endPage = Math.min(totalPages, page + 2);
+                for (let i = startPage; i <= endPage; i++) addItem(String(i), i, false, i === page);
+                addItem('Suiv.', Math.min(totalPages, page + 1), page >= totalPages, false);
+              }
             };
 
             const attachPaginationHandlers = (tableKey) => {
@@ -1692,20 +1713,6 @@
               if (p.pageSizeEl) {
                 p.pageSizeEl.addEventListener('change', () => {
                   p.page = 1;
-                  applyPagination(tableKey);
-                });
-              }
-
-              if (p.prevBtn) {
-                p.prevBtn.addEventListener('click', () => {
-                  p.page = Math.max(1, (p.page || 1) - 1);
-                  applyPagination(tableKey);
-                });
-              }
-
-              if (p.nextBtn) {
-                p.nextBtn.addEventListener('click', () => {
-                  p.page = (p.page || 1) + 1;
                   applyPagination(tableKey);
                 });
               }
