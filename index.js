@@ -40,9 +40,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 const MySQLStore = expressMySQLSession(session);
 const sessionStore = new MySQLStore({
     host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'confonda_dev'
+    user: 'confonda_user',
+    password: 'Azertyui-2025',
+    database: 'confonda'
 });
 app.set('trust proxy', 1);
 
