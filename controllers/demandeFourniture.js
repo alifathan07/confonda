@@ -616,7 +616,7 @@ export const updateDemandeStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const admin = req.session?.user;
+    const admin = req.session?.user || res.locals?.user;
 
     // -------------------------------------------------
     // 1. Basic validation
@@ -690,7 +690,7 @@ export const updateValidationFourniture = async (req, res) => {
   try {
     const { id } = req.params;
     const { validation } = req.body;
-    const admin = req.session?.user;
+    const admin = req.session?.user || res.locals?.user;
 
     // -------------------------------------------------
     // 1. Basic validation
@@ -823,7 +823,7 @@ export const uploadImageFourniture = async (req, res) => {
       return res.status(400).json({ success: false, error: "ID invalide" });
     }
 
-    const sessionUser = req.session?.user;
+    const sessionUser = req.session?.user || res.locals?.user;
     if (!sessionUser) {
       return res.status(401).json({ success: false, error: "Non authentifié" });
     }
@@ -876,7 +876,7 @@ export const downloadImageFourniture = async (req, res) => {
       return res.status(400).json({ success: false, error: "ID invalide" });
     }
 
-    const sessionUser = req.session?.user;
+    const sessionUser = req.session?.user || res.locals?.user;
     if (!sessionUser) {
       return res.status(401).json({ success: false, error: "Non authentifié" });
     }
@@ -1399,7 +1399,7 @@ export const updateEtat = async (req, res) => {
   try {
     const { id } = req.params;
     const { etat } = req.body;
-    const admin = req.session?.user;
+    const admin = req.session?.user || res.locals?.user;
     if (id) {
       console.log('yup im here !');
       
@@ -1412,7 +1412,7 @@ export const updateEtat = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Utilisateur non authentifié' });
     }
 
-    if (!["admin", "grandadmin"].includes(admin.role)) {
+    if (!["admin", "grandadmin", "granduser"].includes(admin.role)) {
       return res.status(403).json({ success: false, error: 'Accès refusé' });
     }
 

@@ -16,6 +16,8 @@ import { authRouter } from './routes/auth.js';
 import PDFDocument from "pdfkit";
 import fs from "fs";
 import { generateBcPDF } from './controllers/bcController.js';
+import { postUser, userData } from './controllers/usersController.js';
+import { apiRouter } from './routes/api.js';
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -114,10 +116,14 @@ app.get('/public/bc/:id', async (req, res) => {
     }
 });
 
+
+// JWT API for React Native (separate from session-based web auth)
+app.use('/api', apiRouter);
+
 app.use(authRouter);
 app.use(dashboardRouter);
 
 // Start the server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(gradient(['cyan', 'pink'])(`Server is running on http://localhost:${PORT}`));
 });
