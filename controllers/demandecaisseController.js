@@ -326,9 +326,33 @@ export const updateDemandeCaisseStatut = async (req, res) => {
   const id = req.params.id;
   const { status } = req.body;
   try {
+    // Fetch demandeCaisse with its items to check validation status
+    const demandeWithItems = await prisma.demandeCaisse.findUnique({
+      where: { id: parseInt(id) },
+      include: { items: true }
+    });
+
+    if (!demandeWithItems) {
+      return res.status(404).json({ success: false, error: 'DemandeCaisse not found' });
+    }
+
+    // Check if any item has validation = 'Validée' or 'Refusée' (both are considered validated)
+    const hasValidatedItem = demandeWithItems.items.some(item => item.validation === 'Validée' || item.validation === 'Refusée');
+    const allItemsValidated = demandeWithItems.items.length > 0 && 
+                              demandeWithItems.items.every(item => item.validation === 'Validée' || item.validation === 'Refusée');
+
+    // Set color based on status and item validations
+    let color = 'gray';
+    if (status === 'En Attente') {
+      // If any item is validated (but not all), or all are validated = green
+      color = (hasValidatedItem || allItemsValidated) ? 'green' : 'blue';
+    } else if (status === 'Versée') {
+      color = 'gray';
+    }
+
     const demandeCaisse = await prisma.demandeCaisse.update({
       where: { id: parseInt(id) },
-      data: { status, color: "gray" },
+      data: { status, color },
     });
 
     if (status === 'Versée') {

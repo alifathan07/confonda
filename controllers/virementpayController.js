@@ -480,7 +480,7 @@ export const bmcePreview = (req, res) => {
     
     
    
-    return res.render('dashboard/virementpay/bmce/preview', {
+    return res.render('dashboard/virementpay/bmce/preview', {   
         file: {
             id: file.id,
             originalName: file.originalName,
@@ -537,6 +537,7 @@ export const bmceDownload = async (req, res) => {
     const wb = new ExcelJS.Workbook();
     wb.creator = 'Confonda';
     wb.created = new Date();
+
 
     // ─────────────────────────────
     // Create worksheets

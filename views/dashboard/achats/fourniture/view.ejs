@@ -321,12 +321,12 @@
 
                   <div class="card-body">
                     <div class="table-responsive">
-                      <% if (user.role==="user" ) { %>
+                      <% if (user.role==="user" || user.role==="granduser" ) { %>
 
 
                         <table class="table table-bordered text-center align-middle" id="productsTable">
                           <thead class="thead-light">
-                            <tr>
+                            <tr>  
                               <th rowspan="2">Code article</th>
                               <th rowspan="2">Désignations</th>
                               <th rowspan="2">Reference</th>

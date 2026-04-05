@@ -1,3 +1,4 @@
+import { log } from "console";
 import prisma from "../db.js";
 import bcrypt from "bcryptjs";
 
@@ -88,3 +89,33 @@ export const deleteUser = async (req, res) => {
     }
 }
 
+export const userData = async (req, res) => {
+  try {
+    const users = await prisma.user.findMany();
+    res.json(users);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
+}
+
+export const postUser = async (req, res) => {
+  try {
+    const { email, password, role, name } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role,
+      },
+    });
+    console.log('iwas created ');
+    
+    res.status(201).json(user);
+  } catch (error) {
+    console.error("Error creating user:", error);
+    res.status(500).json({ error: "Failed to create user" });
+  }
+};
