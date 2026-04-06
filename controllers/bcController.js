@@ -212,7 +212,6 @@ export const deleteBc = async (req, res) => {
   }
 };
 
-
 export const listBc = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -233,14 +232,31 @@ export const listBc = async (req, res) => {
         },
         fournisseur: true,
         chantier: true,
+        bondeLivraisons: {
+          where: { NOT: { status: 'Annulé' } },
+          include: { items: true }
+        }
       },
       orderBy: {
         createdAt: 'desc',
       },
     });
 
+    // Calculate status for each BC
+    const bcWithStatus = bc.map(bcItem => {
+      const statusInfo = calculateBCStatus(bcItem);
+      return {
+        ...bcItem,
+        statusLabel: statusInfo.label,
+        statusColor: statusInfo.color,
+        statusValue: statusInfo.status,
+        articlesRecus: statusInfo.articlesRecus,
+        articlesTotal: statusInfo.articlesTotal
+      };
+    });
+
     res.render('dashboard/achats/bc/list', {
-      bc,
+      bc: bcWithStatus,
       currentPage: page,
       totalPages,
       totalCount,
@@ -1315,3 +1331,282 @@ export const updateSupplier = async (req, res) => {
   }
 
 }
+
+// ==================== BC STATUS HELPERS ====================
+/**
+ * Helper function to calculate BC delivery status
+ * Returns status info AND article counts
+ */
+function calculateBCStatus(bc) {
+  if (!bc || !bc.commandesItems || bc.commandesItems.length === 0) {
+    return { 
+      status: 'en_attente_bl', 
+      label: 'Att. BL', 
+      color: 'secondary',
+      articlesRecus: 0,
+      articlesTotal: 0
+    };
+  }
+
+  let allFullyReceived = true;
+  let hasPartialReceipt = false;
+  let articlesRecus = 0;
+  const articlesTotal = bc.commandesItems.length;
+
+  for (const item of bc.commandesItems) {
+    const receivedQty = bc.bondeLivraisons?.reduce((sum, bl) => {
+      const blItems = (bl.items || []).filter(i => i.commandesItemsId === item.id);
+      const blQty = blItems.reduce((s, it) => s + (it?.quantite || 0), 0);
+      return sum + blQty;
+    }, 0) || 0;
+
+    if (receivedQty >= item.quantite && item.quantite > 0) {
+      articlesRecus++;
+    }
+
+    if (receivedQty < item.quantite) {
+      allFullyReceived = false;
+      if (receivedQty > 0) {
+        hasPartialReceipt = true;
+      }
+    } else if (receivedQty > 0) {
+      hasPartialReceipt = true;
+    }
+  }
+
+  // Determine status
+  let status, label, color;
+
+  // No BL linked
+  if (!bc.bondeLivraisons || bc.bondeLivraisons.length === 0) {
+    status = 'en_attente_bl';
+    label = 'Att. BL';
+    color = 'secondary';
+  } else if (allFullyReceived) {
+    // All items fully received
+    status = 'livre';
+    label = 'Livré ✓';
+    color = 'success';
+  } else if (hasPartialReceipt) {
+    // Partial receipt
+    status = 'partiel';
+    label = 'Partiel';
+    color = 'info';
+  } else {
+    // BL linked but no items received yet
+    status = 'partiel';
+    label = 'Partiel';
+    color = 'info';
+  }
+
+  return { 
+    status, 
+    label, 
+    color,
+    articlesRecus,
+    articlesTotal
+  };
+}
+
+/**
+ * Update BC status in database
+ */
+export async function updateBCStatusInDB(bcId) {
+  const bc = await prisma.bondeCommande.findUnique({
+    where: { id: bcId },
+    include: {
+      commandesItems: true,
+      bondeLivraisons: {
+        where: { NOT: { status: 'Annulé' } },
+        include: { items: true }
+      }
+    }
+  });
+
+  if (!bc) return null;
+
+  const statusInfo = calculateBCStatus(bc);
+  
+  // Update the statut column in DB
+  await prisma.bondeCommande.update({
+    where: { id: bcId },
+    data: { statut: statusInfo.status }
+  });
+
+  return statusInfo;
+}
+
+/**
+ * GET /api/bons-commande/:id/articles-remaining
+ * Returns articles from a BC with their received quantities
+ */
+export const getArticlesRemaining = async (req, res) => {
+  try {
+    const bcId = parseInt(req.params.id);
+    if (!bcId || isNaN(bcId)) {
+      return res.status(400).json({ success: false, error: 'ID invalide' });
+    }
+
+    // Get BC with its items
+    const bc = await prisma.bondeCommande.findUnique({
+      where: { id: bcId },
+      include: {
+        commandesItems: true,
+        bondeLivraisons: {
+          where: { NOT: { status: 'Annulé' } },
+          include: { items: true }
+        }
+      }
+    });
+
+    if (!bc) {
+      return res.status(404).json({ success: false, error: 'Bon de commande non trouvé' });
+    }
+
+    // Calculate received quantities per item
+    const articlesWithRemaining = bc.commandesItems.map(item => {
+      // Sum quantities from all linked BLs for this item
+      const qte_deja_recue = bc.bondeLivraisons.reduce((sum, bl) => {
+        const blItems = (bl.items || []).filter(i => i.commandesItemsId === item.id);
+        const blQty = blItems.reduce((s, it) => s + (it?.quantite || 0), 0);
+        return sum + blQty;
+      }, 0);
+
+      return {
+        id: item.id,
+        designation: item.designation,
+        reference: item.reference,
+        unite: item.unite,
+        qte_commandee: item.quantite,
+        qte_deja_recue: qte_deja_recue
+      };
+    });
+
+    return res.json(articlesWithRemaining);
+  } catch (error) {
+    console.error('Erreur getArticlesRemaining:', error);
+    return res.status(500).json({ success: false, error: 'Erreur serveur' });
+  }
+};
+
+/**
+ * POST /api/bons-livraison
+ * Create a new Bon de Livraison
+ */
+export const createBondeLivraison = async (req, res) => {
+  try {
+    const { bcId, numeroBL, dateReception, articles } = req.body;
+
+    if (!bcId || !numeroBL || !dateReception || !articles || !Array.isArray(articles) || articles.length === 0) {
+      return res.status(400).json({ success: false, error: 'Données incomplètes' });
+    }
+
+    const bcIdInt = parseInt(bcId);
+    const bc = await prisma.bondeCommande.findUnique({
+      where: { id: bcIdInt },
+      include: { commandesItems: true, fournisseur: true }
+    });
+
+    if (!bc) {
+      return res.status(404).json({ success: false, error: 'Bon de commande non trouvé' });
+    }
+
+    // Create BL with items
+    const bl = await prisma.bondeLivraison.create({
+      data: {
+        numero: numeroBL,
+        dateReception: new Date(dateReception),
+        fournisseurId: bc.fournisseurId,
+        bondeCommandeId: bcIdInt,
+        items: {
+          create: articles.map(art => {
+            const item = bc.commandesItems.find(i => i.id === parseInt(art.id));
+            return {
+              designation: item?.designation || '',
+              unite: item?.unite || '',
+              reference: item?.reference || '',
+              quantite: parseInt(art.qte),
+              commandesItemsId: parseInt(art.id)
+            };
+          })
+        }
+      },
+      include: { items: true }
+    });
+
+    // Update BC status in DB and get status info
+    const statusInfo = await updateBCStatusInDB(bcIdInt);
+
+    return res.json({ 
+      success: true, 
+      bl, 
+      bc_statut: statusInfo.status,
+      articles_recus: statusInfo.articlesRecus,
+      articles_total: statusInfo.articlesTotal,
+      status_label: statusInfo.label,
+      status_color: statusInfo.color
+    });
+  } catch (error) {
+    console.error('Erreur createBondeLivraison:', error);
+    return res.status(500).json({ success: false, error: 'Erreur serveur' });
+  }
+};
+
+/**
+ * PATCH /api/bons-commande/:bc_id/affecter-bl/:bl_id
+ * Link an existing BL to a BC (legacy simple link — kept for backward compatibility)
+ */
+export const affecterBL = async (req, res) => {
+  try {
+    const bcId = parseInt(req.params.bc_id);
+    const blId = parseInt(req.params.bl_id);
+
+    if (!bcId || !blId || isNaN(bcId) || isNaN(blId)) {
+      return res.status(400).json({ success: false, error: 'IDs invalides' });
+    }
+
+    // Check if BC exists
+    const bc = await prisma.bondeCommande.findUnique({
+      where: { id: bcId },
+      include: { commandesItems: true }
+    });
+
+    if (!bc) {
+      return res.status(404).json({ success: false, error: 'Bon de commande non trouvé' });
+    }
+
+    // Check if BL exists and is not already linked
+    const bl = await prisma.bondeLivraison.findUnique({
+      where: { id: blId }
+    });
+
+    if (!bl) {
+      return res.status(404).json({ success: false, error: 'Bon de livraison non trouvé' });
+    }
+
+    if (bl.bondeCommandeId && bl.bondeCommandeId !== bcId) {
+      return res.status(400).json({ success: false, error: 'Ce BL est déjà lié à un autre BC' });
+    }
+
+    // Link BL to BC
+    await prisma.bondeLivraison.update({
+      where: { id: blId },
+      data: { bondeCommandeId: bcId }
+    });
+
+    // Update BC status in DB and get status info
+    const statusInfo = await updateBCStatusInDB(bcId);
+
+    return res.json({ 
+      success: true, 
+      bc_statut: statusInfo.status,
+      articles_recus: statusInfo.articlesRecus,
+      articles_total: statusInfo.articlesTotal,
+      status_label: statusInfo.label,
+      status_color: statusInfo.color
+    });
+  } catch (error) {
+    console.error('Erreur affecterBL:', error);
+    return res.status(500).json({ success: false, error: 'Erreur serveur' });
+  }
+};
