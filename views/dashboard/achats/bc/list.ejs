@@ -564,7 +564,7 @@
                                         <i class="fas fa-box"></i> BL <i class="fas fa-caret-down"></i>
                                       </button>
                                       <div class="bl-dropdown-menu" id="bl-dropdown-<%= dp.id %>"
-                                        data-fournisseur-id="<%= dp.fournisseur?.id || '' %>"
+                                        data-fournisseur-id="<%= dp.fournisseur?.id %>"
                                         data-fournisseur-name="<%= dp.fournisseur?.name || '—' %>"
                                         data-bc-numero="<%= dp.numero %>">
                                         <div class="bl-dropdown-item" onclick="openCreateBLModal(<%= dp.id %>)">

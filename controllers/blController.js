@@ -22,7 +22,11 @@ export const listBL = async (req, res) => {
       where: { NOT: { status: 'Annulé' } },
       include: {
         fournisseur: true,
-        bondeCommande: true
+        bondeCommandeLinks: {
+          include: {
+            bondeCommande: true
+          }
+        }
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -137,6 +141,7 @@ export const getBLArticles = async (req, res) => {
  * Payload: { bc_id, articles: [{ bc_article_id, qte_recue }] }
  */
 export const affecterBCToBL = async (req, res) => {
+  console.log('affecterBCToBL payload:', { bl_id: req.params.bl_id, bc_id: req.body.bc_id, articles: req.body.articles });
   try {
     const blId = parseInt(req.params.bl_id);
     if (!blId || isNaN(blId)) {
@@ -156,16 +161,21 @@ export const affecterBCToBL = async (req, res) => {
 
     const bl = await prisma.bondeLivraison.findUnique({
       where: { id: blId },
-      include: { items: true }
+      include: { 
+        items: true,
+        bondeCommandeLinks: true
+      }
     });
     if (!bl) {
       return res.status(404).json({ success: false, error: 'Bon de livraison non trouvé' });
     }
 
-    if (bl.bondeCommandeId && bl.bondeCommandeId !== bcId) {
+    // Check if BL is already linked to this specific BC
+    const alreadyLinkedToThisBC = bl.bondeCommandeLinks?.some(link => link.bondeCommandeId === bcId);
+    if (alreadyLinkedToThisBC) {
       return res.status(400).json({
         success: false,
-        error: 'Ce BL est déjà lié à un autre BC'
+        error: 'Ce BL est déjà lié à ce BC'
       });
     }
 
@@ -173,9 +183,12 @@ export const affecterBCToBL = async (req, res) => {
       where: { id: bcId },
       include: {
         commandesItems: true,
-        bondeLivraisons: {
-          where: { NOT: { status: 'Annulé' } },
-          include: { items: true }
+        bondeLivraisonLinks: {
+          include: {
+            bondeLivraison: {
+              include: { items: true }
+            }
+          }
         }
       }
     });
@@ -203,8 +216,10 @@ export const affecterBCToBL = async (req, res) => {
         });
       }
 
-      const qteDejaRecue = bc.bondeLivraisons.reduce((sum, existingBl) => {
-        const blItems = (existingBl.items || []).filter(i => i.commandesItemsId === bcArticleId);
+      const qteDejaRecue = bc.bondeLivraisonLinks.reduce((sum, link) => {
+        const existingBl = link.bondeLivraison;
+        if (!existingBl || existingBl.status === 'Annulé') return sum;
+        const blItems = (existingBl.items || []).filter(i => i.commandesItemsId === bcArticleId && i.bondeLivraisonId !== blId);
         const blQty = blItems.reduce((s, it) => s + (it?.quantite || 0), 0);
         return sum + blQty;
       }, 0);
@@ -247,13 +262,24 @@ export const affecterBCToBL = async (req, res) => {
         }
       }
 
-      const currentBl = await tx.bondeLivraison.findUnique({ where: { id: blId } });
-      if (!currentBl.bondeCommandeId) {
-        await tx.bondeLivraison.update({
-          where: { id: blId },
-          data: { bondeCommandeId: bcId, status: 'Actif' }
+      const currentBl = await tx.bondeLivraison.findUnique({ 
+        where: { id: blId },
+        include: { bondeCommandeLinks: true }
+      });
+      
+      // Always create the link for many-to-many relationship
+      const alreadyLinked = currentBl.bondeCommandeLinks?.some(link => link.bondeCommandeId === bcId);
+      if (!alreadyLinked) {
+        await tx.bondeLivraisonBondeCommande.create({
+          data: {
+            bondeLivraisonId: blId,
+            bondeCommandeId: bcId
+          }
         });
-      } else if (currentBl.bondeCommandeId === bcId && currentBl.status !== 'Actif') {
+      }
+      
+      // Ensure BL status is Actif
+      if (currentBl.status !== 'Actif') {
         await tx.bondeLivraison.update({
           where: { id: blId },
           data: { status: 'Actif' }
