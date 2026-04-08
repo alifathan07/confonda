@@ -900,7 +900,7 @@
                 <div>Article</div>
                 <div class="text-center">Cmd / Reçu</div>
                 <div class="text-center">Qty Livrer</div>
-                <div class="text-center">Reste à livrer</div>
+                <div class="text-center">Prix Unit.</div>
                 <div></div>
               </div>
             `;
@@ -913,15 +913,14 @@
             // Case A: Fully received
             if (article.qte_deja_recue >= article.qte_commandee) {
               return `
-                  <div class="article-row disabled" data-id="${article.id}" style="display: grid; grid-template-columns: 2fr 100px 100px 100px 40px; gap: 10px; padding: 12px 10px; border-bottom: 1px solid #e3e6f0; align-items: center;">
+                  <div class="article-row disabled" data-id="${article.id}" style="display: grid; grid-template-columns: 2fr 100px 100px 100px; gap: 10px; padding: 12px 10px; border-bottom: 1px solid #e3e6f0; align-items: center;">
                     <div class="article-info">
                       <div class="designation" style="font-weight: 500;">${article.designation}</div>
-                      <div class="reference" style="font-size: 0.8rem; color: #6c757d;">Réf: ${article.reference || '—'} | Unité: ${article.unite || '—'}</div>
+                      <div class="reference" style="font-size: 0.8rem; color: #6c757d;">Réf: ${article.reference || '---'} | Unité: ${article.unite || '---'}</div>
                     </div>
                     <div class="text-center"><span class="badge badge-success article-badge"><i class="fas fa-check"></i> Complet</span></div>
                     <div class="text-center"><input type="number" class="form-control form-control-sm" value="${article.qte_commandee}" disabled style="text-align: center;"></div>
-                    <div class="text-center"><span class="badge badge-secondary">0</span></div>
-                    <div></div>
+                    <div class="text-center"><input type="number" class="form-control form-control-sm" value="${article.prixUnitaire || ''}" disabled step="0.01" style="text-align: center;"></div>
                   </div>
                 `;
             }
@@ -929,42 +928,44 @@
             // Case B: Partially received
             if (article.qte_deja_recue > 0) {
               return `
-                  <div class="article-row" data-id="${article.id}" data-qte-commandee="${article.qte_commandee}" data-qte-recue="${article.qte_deja_recue}" data-qte-restante="${qteRestante}" style="display: grid; grid-template-columns: 2fr 100px 100px 100px 40px; gap: 10px; padding: 12px 10px; border-bottom: 1px solid #e3e6f0; align-items: center;">
+                  <div class="article-row" data-id="${article.id}" data-qte-commandee="${article.qte_commandee}" data-qte-recue="${article.qte_deja_recue}" data-qte-restante="${qteRestante}" style="display: grid; grid-template-columns: 2fr 100px 100px 100px; gap: 10px; padding: 12px 10px; border-bottom: 1px solid #e3e6f0; align-items: center;">
                     <div class="article-info">
                       <div class="designation" style="font-weight: 500;">${article.designation}</div>
-                      <div class="reference" style="font-size: 0.8rem; color: #6c757d;">Réf: ${article.reference || '—'} | Unité: ${article.unite || '—'}</div>
+                      <div class="reference" style="font-size: 0.8rem; color: #6c757d;">Réf: ${article.reference || '---'} | Unité: ${article.unite || '---'}</div>
                     </div>
                     <div class="text-center"><span class="badge badge-warning article-badge">${article.qte_deja_recue}/${article.qte_commandee}</span></div>
                     <div class="text-center">
                       <input type="number" class="form-control form-control-sm qte-input" data-id="${article.id}" 
-                             value="${qteRestante}" min="0" max="${qteRestante}" 
+                             value="${qteRestante}" min="0" step="0.01" max="${qteRestante}" 
                              oninput="calculateReste(${article.id}, this)" style="text-align: center;">
                     </div>
                     <div class="text-center">
-                      <span class="badge badge-info reste-badge" id="reste-${article.id}">${qteRestante}</span>
+                      <input type="number" class="form-control form-control-sm prix-input" data-id="${article.id}" 
+                             value="${article.prixUnitaire || ''}" step="0.01" placeholder="---" 
+                             style="text-align: center;">
                     </div>
-                    <div><button type="button" class="btn-remove-article" onclick="removeArticle(${article.id})" style="width: 28px; height: 28px;"><i class="fas fa-times"></i></button></div>
                   </div>
                 `;
             }
 
             // Case C: Never received
             return `
-                <div class="article-row" data-id="${article.id}" data-qte-commandee="${article.qte_commandee}" data-qte-recue="0" data-qte-restante="${article.qte_commandee}" style="display: grid; grid-template-columns: 2fr 100px 100px 100px 40px; gap: 10px; padding: 12px 10px; border-bottom: 1px solid #e3e6f0; align-items: center;">
+                <div class="article-row" data-id="${article.id}" data-qte-commandee="${article.qte_commandee}" data-qte-recue="0" data-qte-restante="${article.qte_commandee}" style="display: grid; grid-template-columns: 2fr 100px 100px 100px; gap: 10px; padding: 12px 10px; border-bottom: 1px solid #e3e6f0; align-items: center;">
                   <div class="article-info">
                     <div class="designation" style="font-weight: 500;">${article.designation}</div>
-                    <div class="reference" style="font-size: 0.8rem; color: #6c757d;">Réf: ${article.reference || '—'} | Unité: ${article.unite || '—'}</div>
+                    <div class="reference" style="font-size: 0.8rem; color: #6c757d;">Réf: ${article.reference || '---'} | Unité: ${article.unite || '---'}</div>
                   </div>
                   <div class="text-center"><span class="badge badge-info article-badge">0/${article.qte_commandee}</span></div>
                   <div class="text-center">
                     <input type="number" class="form-control form-control-sm qte-input" data-id="${article.id}" 
-                           value="${article.qte_commandee}" min="0" max="${article.qte_commandee}" 
+                           value="${article.qte_commandee}" min="0" step="0.01" max="${article.qte_commandee}" 
                            oninput="calculateReste(${article.id}, this)" style="text-align: center;">
                   </div>
                   <div class="text-center">
-                    <span class="badge badge-info reste-badge" id="reste-${article.id}">${article.qte_commandee}</span>
+                    <input type="number" class="form-control form-control-sm prix-input" data-id="${article.id}" 
+                           value="${article.prixUnitaire || ''}" step="0.01" placeholder="---" 
+                           style="text-align: center;">
                   </div>
-                  <div><button type="button" class="btn-remove-article" onclick="removeArticle(${article.id})" style="width: 28px; height: 28px;"><i class="fas fa-times"></i></button></div>
                 </div>
               `;
           }).join('');
@@ -1029,10 +1030,12 @@
           document.querySelectorAll('.article-row:not(.disabled):not(.removed)').forEach(row => {
             const id = parseInt(row.dataset.id);
             const input = row.querySelector('.qte-input');
-            const qte = parseInt(input?.value || 0);
+            const qte = parseFloat(input?.value || 0);
+            const prixInput = row.querySelector('.prix-input');
+            const prixUnitaire = prixInput?.value ? parseFloat(prixInput.value) : null;
 
             if (qte > 0) {
-              activeArticles.push({ id, qte });
+              activeArticles.push({ id, qte, prixUnitaire });
             }
           });
 
@@ -1218,7 +1221,7 @@
 
           // Reset states
           removedRemainingArticleIds.clear();
-          existingBLArticles = [];
+          existingBLArticles = [];  
           remainingBCArticles = [];
 
           document.getElementById('existingBLArticlesContainer').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i></div>';
@@ -1258,17 +1261,28 @@
             return;
           }
 
-          let html = '';
+          let html = `
+            <div class="article-header-row" style="display: grid; grid-template-columns: 2fr 100px 100px 100px 100px 40px; gap: 10px; padding: 10px; background: #f8f9fc; border-bottom: 2px solid #e3e6f0; font-weight: bold; font-size: 0.85rem; color: #4e73df;">
+              <div>Article</div>
+              <div class="text-center">Statut</div>
+              <div class="text-center">Qté</div>
+              <div class="text-center">Prix Unit.</div>
+              <div class="text-center">Reste</div>
+              <div></div>
+            </div>
+          `;
           existingBLArticles.forEach(article => {
+            const prixUnitaire = article.prixUnitaire != null ? article.prixUnitaire : '---';
             html += `
-              <div class="article-row disabled" style="display: grid; grid-template-columns: 2fr 100px 100px 100px 40px; gap: 10px; padding: 12px 10px; border-bottom: 1px solid #e3e6f0; align-items: center; background: #f8f9fa; opacity: 0.5;" title="Cet article appartient à un autre BC">
+              <div class="article-row disabled" style="display: grid; grid-template-columns: 2fr 100px 100px 100px 100px 40px; gap: 10px; padding: 12px 10px; border-bottom: 1px solid #e3e6f0; align-items: center; background: #f8f9fa; opacity: 0.5;" title="Cet article appartient à un autre BC">
                 <div class="article-info">
-                  <div class="designation" style="font-weight: 500;">${article.designation || '—'}</div>
-                  <div class="reference" style="font-size: 0.8rem; color: #6c757d;">Réf: ${article.reference || '—'} | Unité: ${article.unite || '—'}</div>
+                  <div class="designation" style="font-weight: 500;">${article.designation || '---'}</div>
+                  <div class="reference" style="font-size: 0.8rem; color: #6c757d;">Réf: ${article.reference || '---'} | Unité: ${article.unite || '---'}</div>
                 </div>
                 <div class="text-center"><span class="badge badge-secondary"><i class="fas fa-lock"></i> Déjà enregistré</span></div>
                 <div class="text-center"><input type="number" class="form-control form-control-sm" value="${article.qte_recue || 0}" disabled style="text-align: center;"></div>
-                <div></div>
+                <div class="text-center">${prixUnitaire}</div>
+                <div class="text-center"><span class="badge badge-secondary">-</span></div>
                 <div></div>
               </div>
             `;
@@ -1290,7 +1304,7 @@
               <div>Article</div>
               <div class="text-center">Cmd / Reçu</div>
               <div class="text-center">Qty à Ajouter</div>
-              <div class="text-center">Reste à livrer</div>
+              <div class="text-center">Prix Unit.</div>
               <div></div>
             </div>
           `;
@@ -1313,17 +1327,19 @@
             html += `
               <div class="article-row remaining-article-row" data-id="${article.id}" data-qte-commandee="${article.qte_commandee}" data-qte-recue="${article.qte_deja_recue}" style="display: grid; grid-template-columns: 2fr 100px 100px 100px 40px; gap: 10px; padding: 12px 10px; border-bottom: 1px solid #e3e6f0; align-items: center;">
                 <div class="article-info">
-                  <div class="designation" style="font-weight: 500;">${article.designation || '—'}</div>
-                  <div class="reference" style="font-size: 0.8rem; color: #6c757d;">Réf: ${article.reference || '—'} | Unité: ${article.unite || '—'}</div>
+                  <div class="designation" style="font-weight: 500;">${article.designation || '---'}</div>
+                  <div class="reference" style="font-size: 0.8rem; color: #6c757d;">Réf: ${article.reference || '---'} | Unité: ${article.unite || '---'}</div>
                 </div>
                 <div class="text-center">${badgeHtml}</div>
                 <div class="text-center">
                   <input type="number" class="form-control form-control-sm affect-qte-input" data-id="${article.id}" 
-                         value="${qteRestante}" min="0" max="${qteRestante}" 
+                         value="${qteRestante}" min="0" step="0.01" max="${qteRestante}" 
                          oninput="calculateAffectReste(${article.id}, this)" style="text-align: center;">
                 </div>
                 <div class="text-center">
-                  <span class="badge badge-info reste-badge" id="affect-reste-${article.id}">${qteRestante}</span>
+                  <input type="number" class="form-control form-control-sm affect-prix-input" data-id="${article.id}" 
+                         value="${article.prixUnitaire || ''}" step="0.01" placeholder="---" 
+                         style="text-align: center;">
                 </div>
                 <div><button type="button" class="btn-remove-article" onclick="removeRemainingArticle(${article.id})" style="width: 28px; height: 28px;"><i class="fas fa-times"></i></button></div>
               </div>
@@ -1388,10 +1404,12 @@
           document.querySelectorAll('.remaining-article-row').forEach(row => {
             const id = parseInt(row.dataset.id);
             const input = row.querySelector('.affect-qte-input');
-            const qte = parseInt(input?.value || 0);
+            const qte = parseFloat(input?.value || 0);
+            const prixInput = row.querySelector('.affect-prix-input');
+            const prixUnitaire = prixInput?.value ? parseFloat(prixInput.value) : null;
 
             if (qte > 0 && !input.style.borderColor) {
-              articlesToAffect.push({ bc_article_id: id, qte_recue: qte });
+              articlesToAffect.push({ bc_article_id: id, qte_recue: qte, prixUnitaire: prixUnitaire });
             }
           });
 

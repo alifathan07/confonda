@@ -658,42 +658,43 @@ model BondeCommandeChantierItem {
   item            commandesItems @relation(fields: [itemId], references: [id])
   itemId          Int
   montant         Float?
-  qty             Int?
+  qty             Float?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model BondeCommande {
-  id                        Int                         @id @default(autoincrement())
-  date                      DateTime                    @default(now())
-  fournisseur               Fournisseur                 @relation(fields: [fournisseurId], references: [id])
-  fournisseurId             Int
-  BondeCommandeChantierItem BondeCommandeChantierItem[]
-  chantier                  Chantier?                   @relation(fields: [chantierId], references: [id])
-  chantierId                Int?
-  demandeur                 String?
-  commandesItems            commandesItems[]
-  totalHt                   Float?
-  tauxTva                   Float?
-  totalTtc                  Float?
-  dateLivraison             String?
-  lieuLivraison             String?
-  modeReg                   String?
-  delaiReg                  String?
-  numero                    String?
-  montantLettre             String?
-  statut                    String   @default("en_attente_bl") // en_attente_bl, partiel, livre, annule
-  createdAt                 DateTime                    @default(now())
-  updatedAt                 DateTime                    @updatedAt
-  bondeLivraisonLinks       BondeLivraisonBondeCommande[]
-}
+  model BondeCommande {
+    id                        Int                         @id @default(autoincrement())
+    date                      DateTime                    @default(now())
+    fournisseur               Fournisseur                 @relation(fields: [fournisseurId], references: [id])
+    fournisseurId             Int
+    BondeCommandeChantierItem BondeCommandeChantierItem[]
+    chantier                  Chantier?                   @relation(fields: [chantierId], references: [id])
+    chantierId                Int?
+    demandeur                 String?
+    commandesItems            commandesItems[]
+    totalHt                   Float?
+    tauxTva                   Float?
+    totalTtc                  Float?
+    dateLivraison             String?
+    lieuLivraison             String?
+    modeReg                   String?
+    delaiReg                  String?
+    numero                    String?
+    montantLettre             String?
+    statut                    String   @default("en_attente_bl") // en_attente_bl, partiel, livre, annule
+    createdAt                 DateTime                    @default(now())
+    updatedAt                 DateTime                    @updatedAt
+    bondeLivraisonLinks       BondeLivraisonBondeCommande[]
+  }
 
 model commandesItems {
   id                        Int                         @id @default(autoincrement())
   designation               String
   unite                     String
-  quantite                  Int
+  quantite                  Float
+  quantiteRecue             Float @default(0)
   imputation                String?
   prixUnitaire              Float?
   tauxRemise                Float?
@@ -728,6 +729,8 @@ model BondeLivraison {
   items                 BondeLivraisonItem[]
   bondeCommandeLinks    BondeLivraisonBondeCommande[]
   status                String                     @default("Actif") // Actif, Annulé
+  obs                   String?
+  fichier               String?
   createdAt             DateTime                   @default(now())
   updatedAt             DateTime                   @updatedAt
 }
@@ -748,9 +751,11 @@ model BondeLivraisonItem {
   designation      String
   unite            String?
   reference        String?
-  quantite         Int
+  quantite         Float
+  prixUnitaire Float?
+  obs String?
   commandesItems   commandesItems? @relation(fields: [commandesItemsId], references: [id])
-  commandesItemsId Int?
+  commandesItemsId Int? 
   bondeLivraison   BondeLivraison  @relation(fields: [bondeLivraisonId], references: [id], onDelete: Cascade)
   bondeLivraisonId Int
   createdAt        DateTime        @default(now())

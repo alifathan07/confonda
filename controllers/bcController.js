@@ -276,7 +276,7 @@ export const listBc = async (req, res) => {
   }
 };
 
-export const generateBcPDF = async (req, res) => {
+export const generateBcPDF = async (req, res) => {  
   const { id } = req.params;
   const bcId = parseInt(id, 10);
   const isMultiPage = true; // Use multi-page logic by default
@@ -293,10 +293,10 @@ export const generateBcPDF = async (req, res) => {
         fournisseur: { select: { id: true, name: true } },
         commandesItems: {
           include: {
-            BondeCommandeChantierItem: { include: { chantier: { select: { id: true, name: true } } } }
+            BondeCommandeChantierItem: { include: { chantier: { select: { id: true, nom: true } } } }
           }
         },
-        chantier: { select: { id: true, name: true } },
+        chantier: { select: { id: true, nom: true } },
         bondeLivraisonLinks: {
           include: {
             bondeLivraison: {
@@ -350,10 +350,10 @@ export const sendBcEmail = async (req, res) => {
         fournisseur: { select: { id: true, name: true, email: true } },
         commandesItems: {
           include: {
-            BondeCommandeChantierItem: { include: { chantier: { select: { id: true, name: true } } } }
+            BondeCommandeChantierItem: { include: { chantier: { select: { id: true, nom: true } } } }
           }
         },
-        chantier: { select: { id: true, name: true } },
+        chantier: { select: { id: true, nom: true } },
         bondeLivraisonLinks: {
           include: {
             bondeLivraison: {
@@ -513,10 +513,10 @@ export const editBc = async (req, res) => {
       include: {
         commandesItems: {
           include: {
-            BondeCommandeChantierItem: { include: { chantier: { select: { id: true, name: true } } } }
+            BondeCommandeChantierItem: { include: { chantier: { select: { id: true, nom: true } } } }
           },
         },
-        fournisseur: { select: { id: true, name: true } },
+        fournisseur: { select: { id: true, name: true, telFournisseur: true, email: true } },
         bondeLivraisonLinks: {
           include: {
             bondeLivraison: {
@@ -571,7 +571,7 @@ export const updateBc = async (req, res) => {
         designation: String(l.designation || "").trim(),
         unite: String(l.unite || ""),
         reference: String(l.reference || ""),
-        quantite: Number.parseInt(l.quantite) || 0,
+        quantite: parseFloat(l.quantite) || 0,
         imputation: String(l.imputation || ""),
         prixUnitaire: normalizeNumber(l.prixUnitaire),
         tauxRemise: normalizeNumber(l.tauxRemise),
@@ -586,7 +586,7 @@ export const updateBc = async (req, res) => {
         designation: String(l?.designation || "").trim(),
         unite: String(l?.unite || ""),
         reference: String(l?.reference || ""),
-        quantite: Number.parseInt(l?.quantite) || 0,
+        quantite: parseFloat(l?.quantite) || 0,
         imputation: String(l?.imputation || ""),
         prixUnitaire: normalizeNumber(l?.prixUnitaire),
         tauxRemise: normalizeNumber(l?.tauxRemise),
@@ -795,7 +795,7 @@ export const updateBcItemDistribution = async (req, res) => {
     // Insert new distributions
     for (const d of distArray) {
       const chantierId = parseInt(d.chantierId);
-      const qty = parseInt(d.qty) || 0;
+      const qty = parseFloat(d.qty) || 0;
       const montant = normalizeNumber(d.montant || 0);
       if (!chantierId) continue;
       await prisma.bondeCommandeChantierItem.create({
@@ -852,7 +852,7 @@ export const storeBc = async (req, res) => {
         designation: String(l?.designation || "").trim(),
         unite: String(l?.unite || ""),
         reference: String(l?.reference || ""),
-        quantite: Number.parseInt(l?.quantite) || 0,
+        quantite: Number.parseFloat(l?.quantite) || 0,
         imputation: String(l?.imputation || ""),
         prixUnitaire: normalizeNumber(l?.prixUnitaire),
         tauxRemise: normalizeNumber(l?.tauxRemise),
@@ -993,7 +993,7 @@ export const updateBcItem = async (req, res) => {
 
     // Calculate derived values if needed
     // Note: We expect the frontend to send valid numbers, but we re-calculate amounts for safety
-    const safeQty = quantite !== undefined ? (parseInt(quantite) || 0) : item.quantite;
+    const safeQty = quantite !== undefined ? (parseFloat(quantite) || 0) : item.quantite;
     const safePu = prixUnitaire !== undefined ? normalizeNumber(prixUnitaire) : item.prixUnitaire;
     const safeRate = tauxRemise !== undefined ? normalizeNumber(tauxRemise) : (item.tauxRemise || 0);
 
@@ -1492,7 +1492,8 @@ export const getArticlesRemaining = async (req, res) => {
         reference: item.reference,
         unite: item.unite,
         qte_commandee: item.quantite,
-        qte_deja_recue: qte_deja_recue
+        qte_deja_recue: qte_deja_recue,
+        prixUnitaire: item.prixUnitaire
       };
     });
 
@@ -1543,13 +1544,44 @@ export const createBondeLivraison = async (req, res) => {
               designation: item?.designation || '',
               unite: item?.unite || '',
               reference: item?.reference || '',
-              quantite: parseInt(art.qte),
+              quantite: parseFloat(art.qte),
+              prixUnitaire: art.prixUnitaire != null ? parseFloat(art.prixUnitaire) : null,
               commandesItemsId: parseInt(art.id)
             };
           })
         }
       },
       include: { items: true }
+    });
+
+    // Update quantiteRecue on commandesItems based on all linked BLs
+    await prisma.$transaction(async (tx) => {
+      for (const art of articles) {
+        const bcItemId = parseInt(art.id);
+        // Calculate total received from all BLs linked to this BC
+        const bcWithLinks = await tx.bondeCommande.findUnique({
+          where: { id: bcIdInt },
+          include: {
+            bondeLivraisonLinks: {
+              include: {
+                bondeLivraison: {
+                  include: { items: true }
+                }
+              }
+            }
+          }
+        });
+        const qteRecue = bcWithLinks.bondeLivraisonLinks.reduce((sum, link) => {
+          const bl = link.bondeLivraison;
+          if (!bl || bl.status === 'Annulé') return sum;
+          const blItems = (bl.items || []).filter(i => i.commandesItemsId === bcItemId);
+          return sum + blItems.reduce((s, it) => s + (it?.quantite || 0), 0);
+        }, 0);
+        await tx.commandesItems.update({
+          where: { id: bcItemId },
+          data: { quantiteRecue: qteRecue }
+        });
+      }
     });
 
     // Update BC status in DB and get status info
@@ -1633,4 +1665,4 @@ export const affecterBL = async (req, res) => {
     console.error('Erreur affecterBL:', error);
     return res.status(500).json({ success: false, error: 'Erreur serveur' });
   }
-};
+};  

@@ -160,13 +160,14 @@
                       <th>Fournisseur</th>
                       <th>Bon de Commande</th>
                       <th>Statut</th>
+                      <th>Fichier</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     <% if (!bls || bls.length === 0) { %>
                       <tr>
-                        <td colspan="6" class="text-center text-muted">Aucun Bon de Livraison disponible.</td>
+                        <td colspan="7" class="text-center text-muted">Aucun Bon de Livraison disponible.</td>
                       </tr>
                     <% } else { %>
                       <% bls.forEach(bl => { %>
@@ -187,9 +188,9 @@
                             <% if (bl.bondeCommandeLinks && bl.bondeCommandeLinks.length > 0) { %>
                               <% bl.bondeCommandeLinks.forEach((link, index) => { %>
                                 <% if (link.bondeCommande) { %>
-                                  <span class="badge badge-info">
+                                  <a href="/achat/bc/<%= link.bondeCommande.id %>/edit" class="badge badge-info" title="Voir BC">
                                     <%= link.bondeCommande.numero %>
-                                  </span>
+                                  </a>
                                   <% if (index < bl.bondeCommandeLinks.length - 1) { %>
                                     <br>
                                   <% } %>
@@ -204,6 +205,25 @@
                               <%= bl.status || 'Actif' %>
                             </span>
                           </td>
+                          <td class="text-center">
+                            <% if (bl.fichier) { %>
+                              <a href="/api/bons-livraison/<%= bl.id %>/download" class="btn btn-sm btn-success" title="Télécharger">
+                                <i class="fas fa-download"></i>
+                              </a>
+                            <% } else { %>
+                              <span class="text-muted">-</span>
+                            <% } %>
+                            <button class="btn btn-sm btn-outline-secondary ml-1" title="Uploader un fichier" onclick="toggleUploadForm(<%= bl.id %>)">
+                              <i class="fas fa-upload"></i>
+                            </button>
+                            <div id="upload-form-<%= bl.id %>" style="display:none; position:absolute; z-index:100; background:white; border:1px solid #ddd; padding:10px; border-radius:5px; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+                              <form onsubmit="uploadBLFile(event, <%= bl.id %>)" enctype="multipart/form-data">
+                                <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required style="font-size:12px;">
+                                <button type="submit" class="btn btn-sm btn-primary mt-1">Envoyer</button>
+                                <button type="button" class="btn btn-sm btn-secondary mt-1" onclick="toggleUploadForm(<%= bl.id %>)">Annuler</button>
+                              </form>
+                            </div>
+                          </td>
                           <td>
                             <div class="btn-group btn-group-sm" role="group">
                               <a href="/achats/bons-livraison/<%= bl.id %>/edit" class="btn btn-warning" title="Éditer">
@@ -214,9 +234,6 @@
                               </a>
                               <button class="btn btn-danger" title="Supprimer" onclick="deleteBL(<%= bl.id %>, this)">
                                 <i class="fas fa-trash"></i>
-                              </button>
-                              <button class="btn btn-outline-primary" title="PDF" onclick="downloadPDF(<%= bl.id %>)">
-                                <i class="fas fa-file-pdf"></i>
                               </button>
                             </div>
                           </td>
@@ -359,6 +376,73 @@
     function downloadPDF(id) {
       showToast('Génération du PDF...', 'success');
       window.open(`/achats/bons-livraison/${id}/pdf`, '_blank');
+    }
+
+    function toggleUploadForm(blId) {
+      const form = document.getElementById('upload-form-' + blId);
+      if (form) {
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+      }
+    }
+
+    async function uploadBLFile(event, blId) {
+      event.preventDefault();
+      const form = event.target;
+      const fileInput = form.querySelector('input[type="file"]');
+      const file = fileInput.files[0];
+
+      if (!file) {
+        showToast('Veuillez sélectionner un fichier', 'error');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const res = await fetch('/api/bons-livraison/' + blId + '/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const json = await res.json();
+
+        if (res.ok && json.success) {
+          showToast('Fichier uploadé avec succès', 'success');
+          setTimeout(() => window.location.reload(), 1000);
+        } else {
+          showToast(json.error || 'Erreur lors de l\'upload', 'error');
+        }
+      } catch (err) {
+        showToast('Erreur lors de l\'upload', 'error');
+      }
+
+      toggleUploadForm(blId);
+    }
+
+    async function linkBC(blId) {
+      const bcIdInput = document.getElementById('bc-link-' + blId);
+      const bcId = parseInt(bcIdInput.value);
+
+      if (!bcId || isNaN(bcId)) {
+        showToast('Veuillez entrer un ID de BC valide', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/bons-commande/' + bcId + '/affecter-bl/' + blId, {
+          method: 'PATCH'
+        });
+        const json = await res.json();
+
+        if (res.ok && json.success) {
+          showToast('BC lié avec succès', 'success');
+          setTimeout(() => window.location.reload(), 1000);
+        } else {
+          showToast(json.error || 'Erreur lors de la liaison', 'error');
+        }
+      } catch (err) {
+        showToast('Erreur lors de la liaison', 'error');
+      }
     }
   </script>
 </body>

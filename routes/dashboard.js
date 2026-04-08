@@ -27,7 +27,7 @@ import { addpricingforDemande, createDemandeFourniture, deleteDemandeFourniture,
 import { fileURLToPath } from 'url';
 import { EditDemandePrix, listDemandePrix, postDemandePrixViaFourniture, updateDemandePrix, viewDemandePrix, deleteDemandePrix, deleteArticle, createDemandePrix, storeDemandePrix, generateDemandePrixPDF, sendDemandePrixEmail } from '../controllers/demandeprixController.js';
 import { editBc, postBcDemandeFourniture, updateBc, deleteBcItem, createBcForm, storeBc, generateBcPDF, sendBcEmail, listBc, deleteBc, updateBcItemDistribution, updateBcItem, importBcInfo, updateSupplier, getArticlesRemaining, createBondeLivraison,affecterBL } from '../controllers/bcController.js';
-import { searchBLs, getBLArticles, affecterBCToBL, listBL } from '../controllers/blController.js';
+import { searchBLs, getBLArticles, affecterBCToBL, listBL, uploadBLFileHandler, downloadBLFile, uploadBLFile, editBL, updateBL, deleteBL } from '../controllers/blController.js';
 import { bmceDelete, bmceDownload, bmcePay, bmcePreview, bmceUpload, indexVirementPay } from '../controllers/virementpayController.js';
 import { getListFourniture } from '../controllers/listfournitureController.js';
 import { addNumbers, deleteNum, editSettingNum, settingsIndex } from '../controllers/settingsController.js';
@@ -439,10 +439,10 @@ dashboardRouter.get('/achat/bc/create', createBcForm);
 dashboardRouter.post("/achat/bc", storeBc);
 // dashboardRouter.get("/achat/bc/:id", viewBc);
 dashboardRouter.get("/achat/bc/:id/edit", editBc);
+dashboardRouter.patch('/achat/bc/supplier/update', updateSupplier);
 dashboardRouter.put("/achat/bc/:id", updateBc);
 // Update a single item (designation, unite, quantite, prixUnitaire)
 dashboardRouter.put('/achat/bc/item/:itemId', updateBcItem);
-dashboardRouter.patch('/achat/bc/supplier/update', updateSupplier);
 // Update distribution for a single commandesItems (AJAX)
 dashboardRouter.patch('/achat/bc/item/:itemId/distribution', updateBcItemDistribution);
 dashboardRouter.delete("/achat/bc/article/:id", deleteBcItem);
@@ -474,6 +474,16 @@ dashboardRouter.get('/api/bons-livraison/:bl_id/articles', getBLArticles);
 dashboardRouter.post('/api/bons-livraison/:bl_id/affecter-bc', affecterBCToBL);
 // Affecter (link) an existing BL to a BC (legacy)
 dashboardRouter.patch('/api/bons-commande/:bc_id/affecter-bl/:bl_id', affecterBL);
+
+// Upload file to BL
+dashboardRouter.post('/api/bons-livraison/:id/upload', uploadBLFile.single('file'), uploadBLFileHandler);
+// Download file from BL
+dashboardRouter.get('/api/bons-livraison/:id/download', downloadBLFile);
+
+// BL edit page and update
+dashboardRouter.get('/achats/bons-livraison/:id/edit', editBL);
+dashboardRouter.put('/achats/bons-livraison/:id', updateBL);
+dashboardRouter.delete('/api/bons-livraison/:id', deleteBL);
 
 
 

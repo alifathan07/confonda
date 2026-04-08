@@ -1,5 +1,40 @@
 import prisma from "../db.js";
 import { updateBCStatusInDB } from "./bcController.js";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+
+const BL_UPLOAD_DIR = "./uploads/bl";
+if (!fs.existsSync(BL_UPLOAD_DIR)) {
+  fs.mkdirSync(BL_UPLOAD_DIR, { recursive: true });
+}
+
+const blFileStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, BL_UPLOAD_DIR);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, "bl-" + req.params.id + "-" + uniqueSuffix + ext);
+  }
+});
+
+const blFileFilter = (req, file, cb) => {
+  const allowedExts = [".pdf", ".jpg", ".jpeg", ".png"];
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (allowedExts.includes(ext)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Type de fichier non autorisé. Seuls PDF, JPG, JPEG et PNG sont acceptés."));
+  }
+};
+
+export const uploadBLFile = multer({
+  storage: blFileStorage,
+  fileFilter: blFileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 }
+});
 
 /**
  * GET /achats/bons-livraison
@@ -124,7 +159,8 @@ export const getBLArticles = async (req, res) => {
       designation: item.designation,
       reference: item.reference,
       unite: item.unite,
-      qte_recue: item.quantite
+      qte_recue: item.quantite,
+      prixUnitaire: item.prixUnitaire
     }));
 
     return res.json(articles);
@@ -233,11 +269,14 @@ export const affecterBCToBL = async (req, res) => {
         });
       }
 
+      const prixUnitaire = art.prixUnitaire != null ? parseFloat(art.prixUnitaire) : (bcItem.prixUnitaire || null);
+
       itemsToCreate.push({
         designation: bcItem.designation,
         unite: bcItem.unite || '',
         reference: bcItem.reference || '',
         quantite: qteRecue,
+        prixUnitaire: prixUnitaire,
         commandesItemsId: bcArticleId,
         bondeLivraisonId: blId
       });
@@ -255,7 +294,10 @@ export const affecterBCToBL = async (req, res) => {
         if (existing) {
           await tx.bondeLivraisonItem.update({
             where: { id: existing.id },
-            data: { quantite: (existing.quantite || 0) + item.quantite }
+            data: { 
+              quantite: (existing.quantite || 0) + item.quantite,
+              prixUnitaire: item.prixUnitaire
+            }
           });
         } else {
           await tx.bondeLivraisonItem.create({ data: item });
@@ -283,6 +325,33 @@ export const affecterBCToBL = async (req, res) => {
         await tx.bondeLivraison.update({
           where: { id: blId },
           data: { status: 'Actif' }
+        });
+      }
+
+      // Update quantiteRecue on commandesItems for all affected articles
+      for (const art of articles) {
+        const bcArticleId = parseInt(art.bc_article_id);
+        const bcWithLinks = await tx.bondeCommande.findUnique({
+          where: { id: bcId },
+          include: {
+            bondeLivraisonLinks: {
+              include: {
+                bondeLivraison: {
+                  include: { items: true }
+                }
+              }
+            }
+          }
+        });
+        const qteRecue = bcWithLinks.bondeLivraisonLinks.reduce((sum, link) => {
+          const bl = link.bondeLivraison;
+          if (!bl || bl.status === 'Annulé') return sum;
+          const blItems = (bl.items || []).filter(i => i.commandesItemsId === bcArticleId);
+          return sum + blItems.reduce((s, it) => s + (it?.quantite || 0), 0);
+        }, 0);
+        await tx.commandesItems.update({
+          where: { id: bcArticleId },
+          data: { quantiteRecue: qteRecue }
         });
       }
     });
@@ -313,6 +382,67 @@ export const deleteBL = async (req, res) => {
     }
 
     const bl = await prisma.bondeLivraison.findUnique({
+      where: { id: blId },
+      include: {
+        bondeCommandeLinks: true,
+        items: true
+      }
+    });
+
+    if (!bl) {
+      return res.status(404).json({ success: false, error: 'Bon de livraison non trouvé' });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // First clear the FK to commandesItems for all items
+      await tx.bondeLivraisonItem.updateMany({
+        where: { bondeLivraisonId: blId },
+        data: { commandesItemsId: null }
+      });
+
+      // Delete all BL items
+      await tx.bondeLivraisonItem.deleteMany({
+        where: { bondeLivraisonId: blId }
+      });
+
+      // Delete BL-BC links
+      await tx.bondeLivraisonBondeCommande.deleteMany({
+        where: { bondeLivraisonId: blId }
+      });
+
+      // Delete the BL itself
+      await tx.bondeLivraison.delete({
+        where: { id: blId }
+      });
+    });
+
+    // Reset linked BCs status to 'en_attente_bl'
+    for (const link of bl.bondeCommandeLinks) {
+      await prisma.bondeCommande.update({
+        where: { id: link.bondeCommandeId },
+        data: { statut: 'en_attente_bl' }
+      });
+    }
+
+    return res.json({ success: true, message: 'Bon de livraison supprimé avec succès' });
+  } catch (error) {
+    console.error('Erreur deleteBL:', error);
+    return res.status(500).json({ success: false, error: 'Erreur serveur: ' + error.message });
+  }
+};
+
+/**
+ * POST /api/bons-livraison/:id/upload
+ * Upload a file (PDF or image) for a BL
+ */
+export const uploadBLFileHandler = async (req, res) => {
+  try {
+    const blId = parseInt(req.params.id);
+    if (!blId || isNaN(blId)) {
+      return res.status(400).json({ success: false, error: 'ID invalide' });
+    }
+
+    const bl = await prisma.bondeLivraison.findUnique({
       where: { id: blId }
     });
 
@@ -320,15 +450,177 @@ export const deleteBL = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Bon de livraison non trouvé' });
     }
 
-    // Soft delete - set status to 'Annulé'
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'Aucun fichier fourni' });
+    }
+
+    const filePath = req.file.path;
+
     await prisma.bondeLivraison.update({
       where: { id: blId },
-      data: { status: 'Annulé' }
+      data: { fichier: filePath }
     });
 
-    return res.json({ success: true, message: 'Bon de livraison supprimé avec succès' });
+    return res.json({ success: true, message: 'Fichier uploadé avec succès', fichier: filePath });
   } catch (error) {
-    console.error('Erreur deleteBL:', error);
+    console.error('Erreur uploadBLFile:', error);
+    return res.status(500).json({ success: false, error: 'Erreur serveur' });
+  }
+};
+
+/**
+ * GET /api/bons-livraison/:id/download
+ * Download the file attached to a BL
+ */
+export const downloadBLFile = async (req, res) => {
+  try {
+    const blId = parseInt(req.params.id);
+    if (!blId || isNaN(blId)) {
+      return res.status(400).json({ success: false, error: 'ID invalide' });
+    }
+
+    const bl = await prisma.bondeLivraison.findUnique({
+      where: { id: blId }
+    });
+
+    if (!bl) {
+      return res.status(404).json({ success: false, error: 'Bon de livraison non trouvé' });
+    }
+
+    if (!bl.fichier) {
+      return res.status(404).json({ success: false, error: 'Aucun fichier attaché' });
+    }
+
+    const filePath = bl.fichier;
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ success: false, error: 'Fichier non trouvé sur le serveur' });
+    }
+
+    const filename = path.basename(filePath);
+    res.download(filePath, filename);
+  } catch (error) {
+    console.error('Erreur downloadBLFile:', error);
+    return res.status(500).json({ success: false, error: 'Erreur serveur' });
+  }
+};
+
+/**
+ * GET /achats/bons-livraison/:id/edit
+ * Render BL edit page with items
+ */
+export const editBL = async (req, res) => {
+  try {
+    const blId = parseInt(req.params.id);
+    if (!blId || isNaN(blId)) {
+      return res.redirect('/achats/bons-livraison');
+    }
+
+    const bl = await prisma.bondeLivraison.findUnique({
+      where: { id: blId },
+      include: {
+        fournisseur: true,
+        items: {
+          include: {
+            commandesItems: true
+          }
+        },
+        bondeCommandeLinks: {
+          include: {
+            bondeCommande: true
+          }
+        }
+      }
+    });
+
+    if (!bl) {
+      return res.redirect('/achats/bons-livraison');
+    }
+
+    res.render('dashboard/Achats/bl/edit', {
+      bl,
+      pageTitle: `Éditer BL ${bl.numero}`
+    });
+  } catch (error) {
+    console.error('Erreur editBL:', error);
+    res.redirect('/achats/bons-livraison');
+  }
+};
+
+/**
+ * PUT /achats/bons-livraison/:id
+ * Update BL items and recalculate BC status
+ */
+export const updateBL = async (req, res) => {
+  try {
+    const blId = parseInt(req.params.id);
+    if (!blId || isNaN(blId)) {
+      return res.status(400).json({ success: false, error: 'ID invalide' });
+    }
+
+    const { items } = req.body;
+    if (!Array.isArray(items)) {
+      return res.status(400).json({ success: false, error: 'Données invalides' });
+    }
+
+    const bl = await prisma.bondeLivraison.findUnique({
+      where: { id: blId },
+      include: {
+        bondeCommandeLinks: true
+      }
+    });
+
+    if (!bl) {
+      return res.status(404).json({ success: false, error: 'Bon de livraison non trouvé' });
+    }
+
+    // Update each BL item
+    for (const item of items) {
+      if (item.id) {
+        await prisma.bondeLivraisonItem.update({
+          where: { id: item.id },
+          data: {
+            quantite: parseFloat(item.quantite) || 0,
+            prixUnitaire: item.prixUnitaire ? parseFloat(item.prixUnitaire) : null,
+            obs: item.remarque || null
+          }
+        });
+
+        // If linked to BC item, recalculate quantiteRecue
+        if (item.commandesItemsId) {
+          const bcItemId = parseInt(item.commandesItemsId);
+
+          // Sum quantite from ALL BL items linked to this BC item (where BL is not Annulé)
+          const allBLItems = await prisma.bondeLivraisonItem.findMany({
+            where: {
+              commandesItemsId: bcItemId,
+              bondeLivraison: {
+                status: { not: 'Annulé' }
+              }
+            },
+            include: {
+              bondeLivraison: true
+            }
+          });
+
+          const totalRecu = allBLItems.reduce((sum, bli) => sum + (bli.quantite || 0), 0);
+
+          // Update quantiteRecue on the BC item
+          await prisma.commandesItems.update({
+            where: { id: bcItemId },
+            data: { quantiteRecue: totalRecu }
+          });
+        }
+      }
+    }
+
+    // Update BC status for all linked BCs
+    for (const link of bl.bondeCommandeLinks) {
+      await updateBCStatusInDB(link.bondeCommandeId);
+    }
+
+    return res.json({ success: true, message: 'BL mis à jour avec succès' });
+  } catch (error) {
+    console.error('Erreur updateBL:', error);
     return res.status(500).json({ success: false, error: 'Erreur serveur' });
   }
 };
