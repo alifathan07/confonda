@@ -27,11 +27,11 @@ export const readyPromise = new Promise((resolve) => {
     _readyResolve = resolve;
 });
 
-// client.on("qr", qr => {
-//     qrcode.generate(qr, { small: true });
-//     console.log("Scan the QR code with WhatsApp");
+client.on("qr", qr => {
+    qrcode.generate(qr, { small: true });
+    console.log("Scan the QR code with WhatsApp");
     
-// });
+});
 
 client.on("ready", () => {
     _isReady = true;

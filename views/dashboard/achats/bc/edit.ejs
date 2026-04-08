@@ -876,7 +876,7 @@
                             value="<%= bc.fournisseur.telFournisseur || '' %>">
                         </div>
                         <div class="info-line">
-                          <button onclick="editSupplier(<%= bc.fournisseur.id %>)">Sauvegarder</button>
+                          <button onclick="editSupplier()">Sauvegarder</button>
                         </div>
                       </div>
                     </div>
@@ -953,17 +953,18 @@
                       <thead>
                         <tr>
                           <th style="width:6%; text-align:center; border: 1px solid #dee2e6;">N°</th>
-                          <th style="width:34%; border: 1px solid #dee2e6;">Désignation</th>
-                          <th style="width:16%; text-align:center; border: 1px solid #dee2e6;">Reference</th>
-                          <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Unité</th>
+                          <th style="width:30%; border: 1px solid #dee2e6;">Désignation</th>
+                          <th style="width:14%; text-align:center; border: 1px solid #dee2e6;">Reference</th>
+                          <th style="width:10%; text-align:center; border: 1px solid #dee2e6;">Unité</th>
 
-                          <th style="width:8%; text-align:center; border: 1px solid #dee2e6;">Quantité</th>
-                          <th style="width:8%; text-align:center; border: 1px solid #dee2e6;">Imputation</th>
-                          <th style="width:14%; text-align:center; border: 1px solid #dee2e6;">Prix unitaire HT</th>
-                          <th style="width:10%; text-align:center; border: 1px solid #dee2e6;">Remise (%)</th>
-                          <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Total HT</th>
-                          <th style="width:20%; text-align:center; border: 1px solid #dee2e6;">Affectation</th>
-                          <th style="width:6%; text-align:center; border: 1px solid #dee2e6;">Action</th>
+                          <th style="width:7%; text-align:center; border: 1px solid #dee2e6;">Quantité</th>
+                          <th style="width:7%; text-align:center; border: 1px solid #dee2e6;">Reste à recevoir</th>
+                          <th style="width:7%; text-align:center; border: 1px solid #dee2e6;">Imputation</th>
+                          <th style="width:12%; text-align:center; border: 1px solid #dee2e6;">Prix unitaire HT</th>
+                          <th style="width:8%; text-align:center; border: 1px solid #dee2e6;">Remise (%)</th>
+                          <th style="width:10%; text-align:center; border: 1px solid #dee2e6;">Total HT</th>
+                          <th style="width:18%; text-align:center; border: 1px solid #dee2e6;">Affectation</th>
+                          <th style="width:5%; text-align:center; border: 1px solid #dee2e6;">Action</th>
                         </tr>
                       </thead>
                       <tbody id="bcBody">
@@ -1003,6 +1004,20 @@
                               <input type="number" min="0" step="1" class="qty-pill item-total-qty"
                                 style="border:none;  max-width: 110px; outline:none;" value="<%= item.quantite || 0 %>"
                                 data-field="quantite" />
+                            </td>
+                            <td style="text-align:center; border: 1px solid #dee2e6; background-color: #f8f9fa;">
+                              <% 
+                                const qteRecue = (bc.bondeLivraisonLinks || []).reduce((sum, link) => {
+                                  const bl = link.bondeLivraison;
+                                  if (bl && bl.status !== 'Annulé') {
+                                    const blItems = (bl.items || []).filter(i => i.commandesItemsId === item.id);
+                                    return sum + blItems.reduce((s, it) => s + (it?.quantite || 0), 0);
+                                  }
+                                  return sum;
+                                }, 0);
+                                const reste = (item.quantite || 0) - qteRecue;
+                              %>
+                              <%= reste %>
                             </td>
                             <td style="text-align:center; border: 1px solid #dee2e6;">
                               <input type="text" min="0" step="0.01" class="qty-pill item-total-qty"
@@ -2156,7 +2171,11 @@
             style="border:none; outline:none;"
             value="0"
             data-field="quantite"
+            oninput="updateReste(this)"
           />
+      </td>
+      <td style="text-align:center; border: 1px solid #dee2e6; background-color: #f8f9fa;" class="reste-cell">
+        0
       </td>
       <td style="text-align:center; border: 1px solid #dee2e6;">
         <input
@@ -2211,6 +2230,16 @@
 
           // Recalcule après ajout
           if (recalcFn) recalcFn();
+        }
+
+        // Update "Reste à recevoir" when quantity changes for new rows
+        function updateReste(input) {
+          const row = input.closest('tr');
+          if (!row) return;
+          const resteCell = row.querySelector('.reste-cell');
+          if (!resteCell) return;
+          const qty = parseFloat(input.value) || 0;
+          resteCell.textContent = qty;
         }
 
         function updateMontantEnLettres(totalTtc) {
@@ -2469,9 +2498,10 @@
           }
         }
 
-        async function editSupplier(id) {
+        async function editSupplier() {
+          const id = document.getElementById('fournisseurId').value;
           if (!id) {
-            alert('Selectioner un fournisseur ! ')
+            alert('Sélectionnez un fournisseur !');
             return;
           }
 
@@ -2493,7 +2523,19 @@
               
             });
             if (!res.ok) { throw new Error(`Modification échouée (${res.status})`); }
-           window.location.reload()
+            // Show success without reloading
+            const btn = document.querySelector('button[onclick="editSupplier()"]');
+            const originalText = btn ? btn.textContent : '';
+            if (btn) {
+              btn.textContent = 'Sauvegardé !';
+              btn.classList.add('btn-success');
+              btn.classList.remove('btn-primary');
+              setTimeout(() => {
+                btn.textContent = originalText;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-primary');
+              }, 2000);
+            }
           } catch (e) {
             alert(e.message);
           }

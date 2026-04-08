@@ -119,6 +119,304 @@
       margin-left: .25rem;
       color: #6b7280;
     }
+
+    /* Status badges for BC */
+    .bc-status-badge {
+      font-size: 0.75rem;
+      padding: 0.35em 0.65em;
+      font-weight: 600;
+    }
+
+    /* BL Dropdown styles */
+    .bl-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .bl-dropdown-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.8rem;
+      border-radius: 0.2rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .bl-dropdown-btn:hover {
+      background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+      transform: translateY(-1px);
+    }
+
+    .bl-dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      margin-top: 4px;
+      min-width: 200px;
+      background: white;
+      border: 1px solid #e3e6f0;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    .bl-dropdown-menu.show {
+      display: block;
+    }
+
+    .bl-dropdown-item {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      color: #4e73df;
+      text-decoration: none;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .bl-dropdown-item:last-child {
+      border-bottom: none;
+    }
+
+    .bl-dropdown-item:hover {
+      background: #f8f9fc;
+    }
+
+    .bl-dropdown-item i {
+      margin-right: 0.5rem;
+      width: 18px;
+      text-align: center;
+    }
+
+    /* Modal styles */
+    .bl-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1050;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .bl-modal-overlay.show {
+      display: flex;
+    }
+
+    .bl-modal {
+      background: white;
+      border-radius: 0.5rem;
+      width: 100%;
+      max-width: 900px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .bl-modal-sm {
+      max-width: 600px;
+    }
+
+    .bl-modal-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid #e3e6f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+
+    .bl-modal-header h5 {
+      margin: 0;
+      font-weight: 600;
+      font-size: 1.25rem;
+    }
+
+    .bl-modal-header .subtitle {
+      font-size: 0.875rem;
+      opacity: 0.9;
+      margin-top: 0.25rem;
+    }
+
+    .bl-modal-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0.25rem;
+      line-height: 1;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+
+    .bl-modal-close:hover {
+      opacity: 1;
+    }
+
+    .bl-modal-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .bl-modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid #e3e6f0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    /* Article rows in modal */
+    .article-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 100px 40px;
+      gap: 1rem;
+      align-items: center;
+      padding: 0.75rem;
+      border: 1px solid #e3e6f0;
+      border-radius: 0.375rem;
+      margin-bottom: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .article-row.disabled {
+      background: #f8f9fa;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .article-row.removed {
+      display: none;
+    }
+
+    .article-info {
+      min-width: 0;
+    }
+
+    .article-info .designation {
+      font-weight: 500;
+      color: #333;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .article-info .reference {
+      font-size: 0.75rem;
+      color: #6c757d;
+    }
+
+    .article-badge {
+      font-size: 0.75rem;
+      padding: 0.35em 0.65em;
+      white-space: nowrap;
+    }
+
+    .article-row .form-control {
+      font-size: 0.875rem;
+    }
+
+    .btn-remove-article {
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 0.25rem;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-remove-article:hover {
+      background: #c82333;
+    }
+
+    /* BL list in affecter modal */
+    .bl-list-item {
+      padding: 1rem;
+      border: 2px solid #e3e6f0;
+      border-radius: 0.5rem;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .bl-list-item:hover {
+      border-color: #667eea;
+      background: #f8f9fc;
+    }
+
+    .bl-list-item.selected {
+      border-color: #667eea;
+      background: #e8eaff;
+    }
+
+    .bl-list-empty {
+      text-align: center;
+      padding: 2rem;
+      color: #6c757d;
+    }
+
+    /* Toast notification */
+    .toast-container {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 1060;
+    }
+
+    .toast {
+      background: white;
+      border-radius: 0.5rem;
+      padding: 1rem 1.25rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      min-width: 300px;
+      animation: slideIn 0.3s ease;
+    }
+
+    .toast.success {
+      border-left: 4px solid #1cc88a;
+    }
+
+    .toast.error {
+      border-left: 4px solid #e74a3b;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
   </style>
 </head>
 
@@ -154,6 +452,21 @@
 
                 <div class="card-body">
 
+                  <!-- Status Filter Pills -->
+                  <div class="mb-3">
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                      <span class="text-muted small mr-2">Filtrer par statut:</span>
+                      <button class="btn btn-sm btn-outline-secondary active"
+                        onclick="filterByStatus('all', this)">Tous</button>
+                      <button class="btn btn-sm btn-outline-secondary"
+                        onclick="filterByStatus('en_attente_bl', this)">Att. BL</button>
+                      <button class="btn btn-sm btn-outline-info"
+                        onclick="filterByStatus('partiel', this)">Partiel</button>
+                      <button class="btn btn-sm btn-outline-success"
+                        onclick="filterByStatus('livre', this)">Livré</button>
+                    </div>
+                  </div>
+
                   <div class="table-responsive">
                     <table id="dpTable" class="table table-bordered table-sm table-hover">
                       <thead class="thead-light">
@@ -163,13 +476,14 @@
                           <th>Fournisseur</th>
                           <th>Chantiers</th>
                           <th>Articles</th>
+                          <th>Statut</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         <% if (!bc || bc.length===0) { %>
                           <tr>
-                            <td colspan="6" class="text-center text-muted">Aucun Bon de commande disponible.</td>
+                            <td colspan="7" class="text-center text-muted">Aucun Bon de commande disponible.</td>
                           </tr>
                           <% } else { %>
                             <% bc.forEach(dp=> { %>
@@ -185,6 +499,7 @@
                                   <div><strong>
                                       <%= dp.fournisseur?.name || '—' %>
                                     </strong></div>
+
                                   <% if (dp.fournisseur && dp.fournisseur.ville) { %>
                                     <small class="text-muted">
                                       <%= dp.fournisseur.ville %>
@@ -221,6 +536,16 @@
                                 <td class="text-center"><span class="badge badge-info">
                                     <%= Array.isArray(dp.commandesItems) ? dp.commandesItems.length : 0 %>
                                   </span></td>
+                                <td class="text-center">
+                                  <span class="badge badge-<%= dp.statusColor || 'secondary' %> bc-status-badge"
+                                    data-status="<%= dp.statusValue %>" data-bc-id="<%= dp.id %>">
+                                    <%= dp.statusLabel || 'Att. BL' %>
+                                      <% if (dp.articlesRecus !==undefined && dp.articlesTotal !==undefined &&
+                                        dp.articlesTotal> 0) { %>
+                                        <small>(<%= dp.articlesRecus %>/<%= dp.articlesTotal %>)</small>
+                                        <% } %>
+                                  </span>
+                                </td>
                                 <td>
                                   <div class="btn-group btn-group-sm" role="group">
                                     <a href="/achat/bc/<%= dp.id %>/edit" class="btn btn-warning" title="Éditer">
@@ -233,6 +558,23 @@
                                       onclick="deletebc(<%= dp.id %>, this)">
                                       <i class="fas fa-trash"></i>
                                     </button>
+                                    <div class="bl-dropdown">
+                                      <button class="bl-dropdown-btn" onclick="toggleBLDropdown(event, <%= dp.id %>)"
+                                        data-bc-id="<%= dp.id %>">
+                                        <i class="fas fa-box"></i> BL <i class="fas fa-caret-down"></i>
+                                      </button>
+                                      <div class="bl-dropdown-menu" id="bl-dropdown-<%= dp.id %>"
+                                        data-fournisseur-id="<%= dp.fournisseur?.id %>"
+                                        data-fournisseur-name="<%= dp.fournisseur?.name || '—' %>"
+                                        data-bc-numero="<%= dp.numero %>">
+                                        <div class="bl-dropdown-item" onclick="openCreateBLModal(<%= dp.id %>)">
+                                          <i class="fas fa-plus-circle"></i> Créer un BL
+                                        </div>
+                                        <div class="bl-dropdown-item" onclick="openAffecterBLModal(<%= dp.id %>)">
+                                          <i class="fas fa-link"></i> Affecter un BL existant
+                                        </div>
+                                      </div>
+                                    </div>
                                   </div>
                                 </td>
                               </tr>
@@ -241,131 +583,975 @@
                       </tbody>
                     </table>
                   </div>
+                </div>
 
-                  <!-- Pagination UI -->
-                  <% if (totalPages> 1) { %>
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                      <div class="text-muted small">
-                        Affichage de <%= bc.length %> sur <%= totalCount %> bons de commande
+                <!-- MODAL: Créer un BL -->
+                <div class="bl-modal-overlay" id="createBLModal">
+                  <div class="bl-modal">
+                    <div class="bl-modal-header">
+                      <div>
+                        <h5><i class="fas fa-file-invoice"></i> Nouveau Bon de Livraison</h5>
+                        <div class="subtitle" id="createBLSubtitle">BC n° — Fournisseur</div>
                       </div>
-                      <nav aria-label="Pagination">
-                        <ul class="pagination pagination-sm mb-0">
-                          <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
-                            <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>"
-                              aria-label="Précédent">
-                              <span aria-hidden="true">&laquo;</span>
-                            </a>
-                          </li>
+                      <button class="bl-modal-close" onclick="closeCreateBLModal()">&times;</button>
+                    </div>
+                    <div class="bl-modal-body">
+                      <form id="createBLForm">
+                        <input type="hidden" id="createBL_bcId" name="bcId">
 
-                          <% let startPage=Math.max(1, currentPage - 2); let endPage=Math.min(totalPages, startPage +
-                            4); if (endPage - startPage < 4) startPage=Math.max(1, endPage - 4); %>
+                        <div class="row mb-4">
+                          <div class="col-md-6">
+                            <label for="numeroBL" class="font-weight-bold">N° BL fournisseur <span
+                                class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="numeroBL" name="numeroBL"
+                              placeholder="Ex: BL-2024-001" required>
+                          </div>
+                          <div class="col-md-6">
+                            <label for="dateReception" class="font-weight-bold">Date de réception <span
+                                class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="dateReception" name="dateReception" required>
+                          </div>
+                        </div>
 
-                            <% for (let i=startPage; i <=endPage; i++) { %>
-                              <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                                <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>">
-                                  <%= i %>
+                        <h6 class="font-weight-bold mb-3"><i class="fas fa-boxes"></i> Articles à livrer</h6>
+                        <div id="articlesContainer">
+                          <!-- Articles will be loaded here dynamically -->
+                        </div>
+                      </form>
+                    </div>
+                    <div class="bl-modal-footer">
+                      <button type="button" class="btn btn-secondary" onclick="closeCreateBLModal()">Annuler</button>
+                      <button type="button" class="btn btn-success" id="btnSaveBL" onclick="submitCreateBL()">
+                        <i class="fas fa-save"></i> Enregistrer le BL
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- MODAL: Affecter un BL (Etape 1) -->
+                <div class="bl-modal-overlay" id="affecterBLModal">
+                  <div class="bl-modal bl-modal-sm">
+                    <div class="bl-modal-header">
+                      <div>
+                        <h5><i class="fas fa-link"></i> Affecter un BL existant</h5>
+                        <div class="subtitle" id="affecterBLSubtitle">BC n° — </div>
+                      </div>
+                      <button class="bl-modal-close" onclick="closeAffecterBLModal()">&times;</button>
+                    </div>
+                    <div class="bl-modal-body">
+                      <div class="form-group mb-3">
+                        <label class="font-weight-bold">Rechercher par N° BL ou date...</label>
+                        <input type="text" class="form-control" id="searchBLInput"
+                          placeholder="Rechercher par N° BL ou date..." oninput="filterBLList()">
+                      </div>
+                      <div id="blListContainer">
+                        <div class="bl-list-empty">
+                          <i class="fas fa-search fa-2x mb-2"></i>
+                          <p>Recherchez un bon de livraison à affecter</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="bl-modal-footer">
+                      <button type="button" class="btn btn-secondary" onclick="closeAffecterBLModal()">Annuler</button>
+                      <button type="button" class="btn btn-primary" id="btnAffecterBLNext"
+                        onclick="goToAffecterBLStep2()" disabled>
+                        Suivant <i class="fas fa-arrow-right ml-1"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- MODAL: Affecter un BL - Etape 2 (Sélection des articles) -->
+                <div class="bl-modal-overlay" id="affecterBLDetailsModal">
+                  <div class="bl-modal">
+                    <div class="bl-modal-header">
+                      <div>
+                        <h5 id="affecterBLDetailsTitle">Affecter BL n° --- → BC n° ---</h5>
+                        <div class="subtitle" id="affecterBLDetailsSubtitle">Fournisseur — Date</div>
+                      </div>
+                      <button class="bl-modal-close" onclick="closeAffecterBLDetailsModal()">&times;</button>
+                    </div>
+                    <div class="bl-modal-body">
+
+                      <!-- Section A: Articles déjà dans ce BL -->
+                      <h6 class="font-weight-bold mb-3 mt-2 text-secondary"><i class="fas fa-lock"></i> Articles déjà
+                        dans ce BL</h6>
+                      <div id="existingBLArticlesContainer" class="mb-4">
+                        <!-- disabled rows will go here -->
+                      </div>
+
+                      <!-- Section B: Articles du BC à ajouter -->
+                      <h6 class="font-weight-bold mb-3"><i class="fas fa-boxes"></i> Articles du BC à ajouter</h6>
+                      <div id="remainingBCArticlesContainer">
+                        <!-- active rows will go here -->
+                      </div>
+
+                    </div>
+                    <div class="bl-modal-footer">
+                      <button type="button" class="btn btn-secondary"
+                        onclick="closeAffecterBLDetailsModal()">Annuler</button>
+                      <button type="button" class="btn btn-primary" id="btnConfirmAffectation"
+                        onclick="submitAffectationFinale()">
+                        <i class="fas fa-check"></i> Confirmer l'affectation
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Toast Container -->
+                <div class="toast-container" id="toastContainer"></div>
+
+                <!-- Pagination UI -->
+                <% if (totalPages> 1) { %>
+                  <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="text-muted small">
+                      Affichage de <%= bc.length %> sur <%= totalCount %> bons de commande
+                    </div>
+                    <nav aria-label="Pagination">
+                      <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                          <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>"
+                            aria-label="Précédent">
+                            <span aria-hidden="true">&laquo;</span>
+                          </a>
+                        </li>
+
+                        <% let startPage=Math.max(1, currentPage - 2); let endPage=Math.min(totalPages, startPage + 4);
+                          if (endPage - startPage < 4) startPage=Math.max(1, endPage - 4); %>
+
+                          <% for (let i=startPage; i <=endPage; i++) { %>
+                            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                              <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>">
+                                <%= i %>
+                              </a>
+                            </li>
+                            <% } %>
+
+                              <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                                <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>"
+                                  aria-label="Suivant">
+                                  <span aria-hidden="true">&raquo;</span>
                                 </a>
                               </li>
-                              <% } %>
+                      </ul>
+                    </nav>
+                  </div>
+                  <% } %>
 
-                                <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
-                                  <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>"
-                                    aria-label="Suivant">
-                                    <span aria-hidden="true">&raquo;</span>
-                                  </a>
-                                </li>
-                        </ul>
-                      </nav>
-                    </div>
-                    <% } %>
-
-                </div>
               </div>
             </div>
         </div>
-
-        <!-- Scripts (inchangés sauf petite amélioration Excel) -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-        <script
-          src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-        <script>
-          // Ensure jsPDF + autotable are available; load from CDN if needed
-          function loadPdfLibs() {
-            return new Promise((resolve, reject) => {
-              if (window.jspdf && window.jspdf.jsPDF && window.jspdf?.autoTable) return resolve();
-              const add = (src, onload) => { const s = document.createElement('script'); s.src = src; s.defer = true; s.onload = onload; s.onerror = reject; document.head.appendChild(s); };
-              const afterJsPdf = () => add('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js', () => resolve());
-              if (!(window.jspdf && window.jspdf.jsPDF)) add('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', afterJsPdf); else afterJsPdf();
-            });
-          }
-
-
-
-          async function deletebc(id, btn) {
-            if (!confirm('Confirmer la suppression du bon de commande #' + id + ' ?')) return;
-            const original = btn.innerHTML;
-            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            try {
-              const res = await fetch(`/achat/bc/${id}`, { method: 'DELETE' });
-              const json = await res.json().catch(() => ({}));
-              if (!res.ok || !json.success) { throw new Error(json.error || 'Suppression échouée'); }
-              const tr = btn.closest('tr');
-              if (tr) { tr.remove(); }
-            } catch (e) {
-              alert(e.message || 'Erreur serveur');
-              btn.disabled = false; btn.innerHTML = original;
-            }
-          }
-
-
-
-
-          async function downloadPDF(id) {
-            try {
-              const res = await fetch(`/achat/bc/${id}/pdf`);
-              if (!res.ok) throw new Error('Erreur lors du téléchargement');
-              const blob = await res.blob();
-              const url = URL.createObjectURL(blob);
-              const link = document.createElement('a');
-              link.href = url;
-              link.download = `bondeCommande_${id}.pdf`;
-              document.body.appendChild(link);
-              link.click();
-              link.remove();
-              URL.revokeObjectURL(url);
-            } catch (err) {
-              console.error(err);
-              alert('Erreur lors du téléchargement du PDF');
-            }
-          }
-
-
-
-
-        </script>
-
-
-        <script src="/vendor/jquery/jquery.min.js"></script>
-        <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-        <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
-
-        <script src="/js/sb-admin-2.min.js"></script>
-
-        <script>
-          // Data snapshot for robust exports (fallback if DOM/DataTables retrieval fails)
-          window.__DP_ROWS__ = (<% - JSON.stringify((bc || []).map(dp => ({
-            id: `#${dp.id}`,
-            date: new Date(dp.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-            fournisseur: (dp.fournisseur && dp.fournisseur.name) ? dp.fournisseur.name : '—',
-            articles: Array.isArray(dp.articles) ? String(dp.articles.length) : '0'
-          })), null, 2) %>);
-
-          // No DataTables: simple table, exports work over DOM rows
-        </script>
       </div>
+
+      <!-- Scripts (inchangés sauf petite amélioration Excel) -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+      <script>
+        // Ensure jsPDF + autotable are available; load from CDN if needed
+        function loadPdfLibs() {
+          return new Promise((resolve, reject) => {
+            if (window.jspdf && window.jspdf.jsPDF && window.jspdf?.autoTable) return resolve();
+            const add = (src, onload) => { const s = document.createElement('script'); s.src = src; s.defer = true; s.onload = onload; s.onerror = reject; document.head.appendChild(s); };
+            const afterJsPdf = () => add('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js', () => resolve());
+            if (!(window.jspdf && window.jspdf.jsPDF)) add('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', afterJsPdf); else afterJsPdf();
+          });
+        }
+
+
+
+        async function deletebc(id, btn) {
+          if (!confirm('Confirmer la suppression du bon de commande #' + id + ' ?')) return;
+          const original = btn.innerHTML;
+          btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+          try {
+            const res = await fetch(`/achat/bc/${id}`, { method: 'DELETE' });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok || !json.success) { throw new Error(json.error || 'Suppression échouée'); }
+            const tr = btn.closest('tr');
+            if (tr) { tr.remove(); }
+          } catch (e) {
+            alert(e.message || 'Erreur serveur');
+            btn.disabled = false; btn.innerHTML = original;
+          }
+        }
+
+
+
+
+        async function downloadPDF(id) {
+          try {
+            const res = await fetch(`/achat/bc/${id}/pdf`);
+            if (!res.ok) throw new Error('Erreur lors du téléchargement');
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `bondeCommande_${id}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+          } catch (err) {
+            console.error(err);
+            alert('Erreur lors du téléchargement du PDF');
+          }
+        }
+
+
+
+
+        // ==================== BL DROPDOWN FUNCTIONS ====================
+        let currentOpenDropdown = null;
+
+        function toggleBLDropdown(event, bcId) {
+          event.stopPropagation();
+          const dropdown = document.getElementById(`bl-dropdown-${bcId}`);
+
+          // Close any currently open dropdown
+          if (currentOpenDropdown && currentOpenDropdown !== dropdown) {
+            currentOpenDropdown.classList.remove('show');
+          }
+
+          // Toggle current dropdown
+          dropdown.classList.toggle('show');
+          currentOpenDropdown = dropdown.classList.contains('show') ? dropdown : null;
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (event) {
+          if (currentOpenDropdown && !event.target.closest('.bl-dropdown')) {
+            currentOpenDropdown.classList.remove('show');
+            currentOpenDropdown = null;
+          }
+        });
+
+        // ==================== TOAST NOTIFICATIONS ====================
+        function showToast(message, type = 'success') {
+          const container = document.getElementById('toastContainer');
+          const toast = document.createElement('div');
+          toast.className = `toast ${type}`;
+          toast.innerHTML = `
+              <i class="fas fa-${type === 'success' ? 'check-circle text-success' : 'exclamation-circle text-danger'}"></i>
+              <span>${message}</span>
+            `;
+          container.appendChild(toast);
+
+          setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 300);
+          }, 4000);
+        }
+
+        // ==================== CREATE BL MODAL ====================
+        let currentBcId = null;
+        let currentArticles = [];
+        let removedArticleIds = new Set();
+
+        async function openCreateBLModal(bcId) {
+          currentBcId = bcId;
+          removedArticleIds.clear();
+
+          const dropdown = document.getElementById(`bl-dropdown-${bcId}`);
+          const bcNumero = dropdown.dataset.bcNumero;
+
+          document.getElementById('createBLSubtitle').textContent = `BC n° ${bcNumero} — Fournisseur`;
+          document.getElementById('createBL_bcId').value = bcId;
+
+          // Reset form
+          document.getElementById('createBLForm').reset();
+          document.getElementById('dateReception').valueAsDate = new Date();
+
+          // Load articles
+          try {
+            const response = await fetch(`/api/bons-commande/${bcId}/articles-remaining`);
+            if (!response.ok) throw new Error('Erreur de chargement des articles');
+
+            currentArticles = await response.json();
+            renderArticles();
+
+            document.getElementById('createBLModal').classList.add('show');
+          } catch (error) {
+            showToast('Erreur: ' + error.message, 'error');
+          }
+        }
+
+        function closeCreateBLModal() {
+          document.getElementById('createBLModal').classList.remove('show');
+          currentBcId = null;
+          currentArticles = [];
+          removedArticleIds.clear();
+        }
+
+        function renderArticles() {
+          const container = document.getElementById('articlesContainer');
+
+          if (currentArticles.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-info-circle"></i> Aucun article à livrer</div>';
+            return;
+          }
+
+          // Add column headers
+          let html = `
+              <div class="article-header-row" style="display: grid; grid-template-columns: 2fr 100px 100px 100px 40px; gap: 10px; padding: 10px; background: #f8f9fc; border-bottom: 2px solid #e3e6f0; font-weight: bold; font-size: 0.85rem; color: #4e73df;">
+                <div>Article</div>
+                <div class="text-center">Cmd / Reçu</div>
+                <div class="text-center">Qty Livrer</div>
+                <div class="text-center">Prix Unit.</div>
+                <div></div>
+              </div>
+            `;
+
+          html += currentArticles.map(article => {
+            if (removedArticleIds.has(article.id)) return '';
+
+            const qteRestante = article.qte_commandee - article.qte_deja_recue;
+
+            // Case A: Fully received
+            if (article.qte_deja_recue >= article.qte_commandee) {
+              return `
+                  <div class="article-row disabled" data-id="${article.id}" style="display: grid; grid-template-columns: 2fr 100px 100px 100px; gap: 10px; padding: 12px 10px; border-bottom: 1px solid #e3e6f0; align-items: center;">
+                    <div class="article-info">
+                      <div class="designation" style="font-weight: 500;">${article.designation}</div>
+                      <div class="reference" style="font-size: 0.8rem; color: #6c757d;">Réf: ${article.reference || '---'} | Unité: ${article.unite || '---'}</div>
+                    </div>
+                    <div class="text-center"><span class="badge badge-success article-badge"><i class="fas fa-check"></i> Complet</span></div>
+                    <div class="text-center"><input type="number" class="form-control form-control-sm" value="${article.qte_commandee}" disabled style="text-align: center;"></div>
+                    <div class="text-center"><input type="number" class="form-control form-control-sm" value="${article.prixUnitaire || ''}" disabled step="0.01" style="text-align: center;"></div>
+                  </div>
+                `;
+            }
+
+            // Case B: Partially received
+            if (article.qte_deja_recue > 0) {
+              return `
+                  <div class="article-row" data-id="${article.id}" data-qte-commandee="${article.qte_commandee}" data-qte-recue="${article.qte_deja_recue}" data-qte-restante="${qteRestante}" style="display: grid; grid-template-columns: 2fr 100px 100px 100px; gap: 10px; padding: 12px 10px; border-bottom: 1px solid #e3e6f0; align-items: center;">
+                    <div class="article-info">
+                      <div class="designation" style="font-weight: 500;">${article.designation}</div>
+                      <div class="reference" style="font-size: 0.8rem; color: #6c757d;">Réf: ${article.reference || '---'} | Unité: ${article.unite || '---'}</div>
+                    </div>
+                    <div class="text-center"><span class="badge badge-warning article-badge">${article.qte_deja_recue}/${article.qte_commandee}</span></div>
+                    <div class="text-center">
+                      <input type="number" class="form-control form-control-sm qte-input" data-id="${article.id}" 
+                             value="${qteRestante}" min="0" step="0.01" max="${qteRestante}" 
+                             oninput="calculateReste(${article.id}, this)" style="text-align: center;">
+                    </div>
+                    <div class="text-center">
+                      <input type="number" class="form-control form-control-sm prix-input" data-id="${article.id}" 
+                             value="${article.prixUnitaire || ''}" step="0.01" placeholder="---" 
+                             style="text-align: center;">
+                    </div>
+                  </div>
+                `;
+            }
+
+            // Case C: Never received
+            return `
+                <div class="article-row" data-id="${article.id}" data-qte-commandee="${article.qte_commandee}" data-qte-recue="0" data-qte-restante="${article.qte_commandee}" style="display: grid; grid-template-columns: 2fr 100px 100px 100px; gap: 10px; padding: 12px 10px; border-bottom: 1px solid #e3e6f0; align-items: center;">
+                  <div class="article-info">
+                    <div class="designation" style="font-weight: 500;">${article.designation}</div>
+                    <div class="reference" style="font-size: 0.8rem; color: #6c757d;">Réf: ${article.reference || '---'} | Unité: ${article.unite || '---'}</div>
+                  </div>
+                  <div class="text-center"><span class="badge badge-info article-badge">0/${article.qte_commandee}</span></div>
+                  <div class="text-center">
+                    <input type="number" class="form-control form-control-sm qte-input" data-id="${article.id}" 
+                           value="${article.qte_commandee}" min="0" step="0.01" max="${article.qte_commandee}" 
+                           oninput="calculateReste(${article.id}, this)" style="text-align: center;">
+                  </div>
+                  <div class="text-center">
+                    <input type="number" class="form-control form-control-sm prix-input" data-id="${article.id}" 
+                           value="${article.prixUnitaire || ''}" step="0.01" placeholder="---" 
+                           style="text-align: center;">
+                  </div>
+                </div>
+              `;
+          }).join('');
+
+          container.innerHTML = html;
+        }
+
+        // Calculate remaining quantity when user types in Qty Livrer
+        function calculateReste(articleId, input) {
+          const row = input.closest('.article-row');
+          const qteCommandee = parseInt(row.dataset.qteCommandee) || 0;
+          const qteRecue = parseInt(row.dataset.qteRecue) || 0;
+          const qteLivrer = parseInt(input.value) || 0;
+
+          // Calculate remaining: (Cmd - Recu) - Livrer = Reste
+          const reste = Math.max(0, (qteCommandee - qteRecue) - qteLivrer);
+
+          // Update the reste badge
+          const resteBadge = document.getElementById(`reste-${articleId}`);
+          if (resteBadge) {
+            resteBadge.textContent = reste;
+            if (reste === 0) {
+              resteBadge.className = 'badge badge-success reste-badge';
+            } else {
+              resteBadge.className = 'badge badge-info reste-badge';
+            }
+          }
+
+          // Validate max
+          const maxAllowed = qteCommandee - qteRecue;
+          if (qteLivrer > maxAllowed) {
+            input.style.borderColor = '#e74a3b';
+          } else {
+            input.style.borderColor = '';
+          }
+        }
+
+        function removeArticle(articleId) {
+          removedArticleIds.add(articleId);
+          const row = document.querySelector(`.article-row[data-id="${articleId}"]`);
+          if (row) row.classList.add('removed');
+        }
+
+        async function submitCreateBL() {
+          const numeroBL = document.getElementById('numeroBL').value.trim();
+          const dateReception = document.getElementById('dateReception').value;
+
+          // Validation
+          if (!numeroBL) {
+            showToast('Le N° BL est requis', 'error');
+            document.getElementById('numeroBL').focus();
+            return;
+          }
+          if (!dateReception) {
+            showToast('La date de réception est requise', 'error');
+            document.getElementById('dateReception').focus();
+            return;
+          }
+
+          // Get active articles with quantities
+          const activeArticles = [];
+          document.querySelectorAll('.article-row:not(.disabled):not(.removed)').forEach(row => {
+            const id = parseInt(row.dataset.id);
+            const input = row.querySelector('.qte-input');
+            const qte = parseFloat(input?.value || 0);
+            const prixInput = row.querySelector('.prix-input');
+            const prixUnitaire = prixInput?.value ? parseFloat(prixInput.value) : null;
+
+            if (qte > 0) {
+              activeArticles.push({ id, qte, prixUnitaire });
+            }
+          });
+
+          if (activeArticles.length === 0) {
+            showToast('Au moins un article actif est requis', 'error');
+            return;
+          }
+
+          // Submit
+          const btn = document.getElementById('btnSaveBL');
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
+
+          try {
+            const response = await fetch('/api/bons-livraison', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                bcId: currentBcId,
+                numeroBL,
+                dateReception,
+                articles: activeArticles
+              })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+              showToast('Bon de livraison créé avec succès', 'success');
+              updateBCStatusBadge(currentBcId, data.bc_statut, data.articles_recus, data.articles_total);
+              closeCreateBLModal();
+            } else {
+              throw new Error(data.error || 'Erreur lors de la création');
+            }
+          } catch (error) {
+            showToast('Erreur: ' + error.message, 'error');
+          } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Enregistrer le BL';
+          }
+        }
+
+        // ==================== AFFECTER BL MODAL ====================
+        let selectedBLId = null;
+        let currentFournisseurId = null;
+        let unlinkedBLs = [];
+
+        async function openAffecterBLModal(bcId) {
+          currentBcId = bcId;
+          selectedBLId = null;
+          currentFournisseurId = null;
+          unlinkedBLs = [];
+
+          const dropdown = document.getElementById(`bl-dropdown-${bcId}`);
+          const bcNumero = dropdown.dataset.bcNumero;
+          currentFournisseurId = dropdown.dataset.fournisseurId;
+          const fournisseurName = dropdown.dataset.fournisseurName;
+
+          document.getElementById('affecterBLSubtitle').textContent = `BC n° ${bcNumero} — ${fournisseurName || '—'}`;
+          document.getElementById('searchBLInput').value = '';
+          document.getElementById('btnAffecterBLNext').disabled = true;
+
+          document.getElementById('affecterBLModal').classList.add('show');
+
+          // Load unlinked BLs
+          await loadUnlinkedBLs();
+        }
+
+        function closeAffecterBLModal(preserveContext = false) {
+          document.getElementById('affecterBLModal').classList.remove('show');
+          if (!preserveContext) {
+            currentBcId = null;
+            selectedBLId = null;
+            currentFournisseurId = null;
+            unlinkedBLs = [];
+            document.getElementById('btnAffecterBLNext').disabled = true;
+          }
+        }
+
+        async function loadUnlinkedBLs(query = '') {
+          const container = document.getElementById('blListContainer');
+          container.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Chargement...</p></div>';
+
+          try {
+            if (!currentFournisseurId) {
+              container.innerHTML = '<div class="bl-list-empty"><p>Fournisseur non défini pour ce BC.</p></div>';
+              return;
+            }
+
+            const url = `/api/bons-livraison/search?fournisseur_id=${currentFournisseurId}&q=${encodeURIComponent(query)}`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+            console.log('BL data:', data);
+            if (!response.ok) throw new Error('Erreur de chargement');
+
+            unlinkedBLs = data;
+            renderBLList(unlinkedBLs);
+          } catch (error) {
+            container.innerHTML = `<div class="bl-list-empty"><i class="fas fa-exclamation-triangle fa-2x mb-2 text-warning"></i><p>Erreur: ${error.message}</p></div>`;
+          }
+        }
+
+        function renderBLList(bls) {
+          const container = document.getElementById('blListContainer');
+
+          if (bls.length === 0) {
+            container.innerHTML = '<div class="bl-list-empty"><i class="fas fa-inbox fa-2x mb-2"></i><p>Aucun BL disponible à affecter</p></div>';
+            return;
+          }
+
+          const header = `
+            <div style="display:grid; grid-template-columns: 1.2fr 1fr 1.2fr 0.8fr; gap: 10px; padding: 8px 12px; font-size: 0.8rem; font-weight: 700; color: #4e73df; border-bottom: 1px solid #e3e6f0; background: #f8f9fc;">
+              <div>N° BL</div>
+              <div>Date réception</div>
+              <div>Fournisseur</div>
+              <div class="text-right">Nb articles</div>
+            </div>
+          `;
+
+          const rows = bls.map(bl => {
+            const dateStr = bl.dateReception ? new Date(bl.dateReception).toLocaleDateString('fr-FR') : '—';
+            return `
+              <div class="bl-list-item ${bl.id === selectedBLId ? 'selected' : ''}" data-id="${bl.id}" onclick="selectBL(${bl.id})" style="display:grid; grid-template-columns: 1.2fr 1fr 1.2fr 0.8fr; gap: 10px; align-items: center;">
+                <div class="font-weight-bold">BL n° ${bl.numero || '—'}</div>
+                <div class="text-muted small">${dateStr}</div>
+                <div class="text-muted small">${bl.fournisseur_name || 'Fournisseur inconnu'}</div>
+                <div class="text-right"><span class="badge badge-info">${bl.nb_articles || 0}</span></div>
+              </div>
+            `;
+          }).join('');
+
+          container.innerHTML = header + rows;
+        }
+
+        function selectBL(blId) {
+          selectedBLId = blId;
+          document.getElementById('btnAffecterBLNext').disabled = false;
+
+          // Update UI
+          document.querySelectorAll('.bl-list-item').forEach(item => {
+            item.classList.toggle('selected', parseInt(item.dataset.id) === blId);
+          });
+        }
+
+        function filterBLList() {
+          const search = document.getElementById('searchBLInput').value;
+          loadUnlinkedBLs(search);
+        }
+
+        // ==================== AFFECTER BL - ETAPE 2 ====================
+        let existingBLArticles = [];
+        let remainingBCArticles = [];
+        let removedRemainingArticleIds = new Set();
+
+        async function goToAffecterBLStep2() {
+          if (!selectedBLId || !currentBcId) {
+            showToast('Veuillez sélectionner un BL et un BC valides', 'error');
+            return;
+          }
+
+          const bcIdInt = parseInt(currentBcId);
+          const blIdInt = parseInt(selectedBLId);
+          if (!bcIdInt || isNaN(bcIdInt) || !blIdInt || isNaN(blIdInt)) {
+            showToast('IDs invalides. Veuillez réessayer.', 'error');
+            return;
+          }
+
+          const selectedBL = unlinkedBLs.find(b => b.id === selectedBLId);
+          if (!selectedBL) return;
+
+          const dropdown = document.getElementById(`bl-dropdown-${currentBcId}`);
+          const bcNumero = dropdown.dataset.bcNumero;
+
+          // Populate Header
+          document.getElementById('affecterBLDetailsTitle').innerHTML = `<i class="fas fa-link"></i> Affecter BL n° ${selectedBL.numero} → BC n° ${bcNumero}`;
+          const dateStr = selectedBL.dateReception ? new Date(selectedBL.dateReception).toLocaleDateString('fr-FR') : 'Date non définie';
+          document.getElementById('affecterBLDetailsSubtitle').textContent = `${selectedBL.fournisseur_name} — ${dateStr}`;
+
+          // Switch Modals
+          closeAffecterBLModal(true);
+          document.getElementById('affecterBLDetailsModal').classList.add('show');
+
+          // Reset states
+          removedRemainingArticleIds.clear();
+          existingBLArticles = [];  
+          remainingBCArticles = [];
+
+          document.getElementById('existingBLArticlesContainer').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i></div>';
+          document.getElementById('remainingBCArticlesContainer').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i></div>';
+          document.getElementById('btnConfirmAffectation').disabled = true;
+
+          // Fetch Data
+          try {
+            // 1. Existing articles
+            const resExisting = await fetch(`/api/bons-livraison/${blIdInt}/articles`);
+            if (resExisting.ok) {
+              existingBLArticles = await resExisting.json();
+              renderExistingBLArticles();
+            }
+
+            // 2. Remaining articles
+            const resRemaining = await fetch(`/api/bons-commande/${bcIdInt}/articles-remaining`);
+            if (resRemaining.ok) {
+              remainingBCArticles = await resRemaining.json();
+              renderRemainingBCArticles();
+            }
+
+            checkConfirmButtonState();
+          } catch (e) {
+            showToast('Erreur lors du chargement des détails', 'error');
+          }
+        }
+
+        function closeAffecterBLDetailsModal() {
+          document.getElementById('affecterBLDetailsModal').classList.remove('show');
+        }
+
+        function renderExistingBLArticles() {
+          const container = document.getElementById('existingBLArticlesContainer');
+          if (existingBLArticles.length === 0) {
+            container.innerHTML = '<div class="text-muted small ml-2 mb-2">Aucun article enregistré dans ce BL pour le moment.</div>';
+            return;
+          }
+
+          let html = `
+            <div class="article-header-row" style="display: grid; grid-template-columns: 2fr 100px 100px 100px 100px 40px; gap: 10px; padding: 10px; background: #f8f9fc; border-bottom: 2px solid #e3e6f0; font-weight: bold; font-size: 0.85rem; color: #4e73df;">
+              <div>Article</div>
+              <div class="text-center">Statut</div>
+              <div class="text-center">Qté</div>
+              <div class="text-center">Prix Unit.</div>
+              <div class="text-center">Reste</div>
+              <div></div>
+            </div>
+          `;
+          existingBLArticles.forEach(article => {
+            const prixUnitaire = article.prixUnitaire != null ? article.prixUnitaire : '---';
+            html += `
+              <div class="article-row disabled" style="display: grid; grid-template-columns: 2fr 100px 100px 100px 100px 40px; gap: 10px; padding: 12px 10px; border-bottom: 1px solid #e3e6f0; align-items: center; background: #f8f9fa; opacity: 0.5;" title="Cet article appartient à un autre BC">
+                <div class="article-info">
+                  <div class="designation" style="font-weight: 500;">${article.designation || '---'}</div>
+                  <div class="reference" style="font-size: 0.8rem; color: #6c757d;">Réf: ${article.reference || '---'} | Unité: ${article.unite || '---'}</div>
+                </div>
+                <div class="text-center"><span class="badge badge-secondary"><i class="fas fa-lock"></i> Déjà enregistré</span></div>
+                <div class="text-center"><input type="number" class="form-control form-control-sm" value="${article.qte_recue || 0}" disabled style="text-align: center;"></div>
+                <div class="text-center">${prixUnitaire}</div>
+                <div class="text-center"><span class="badge badge-secondary">-</span></div>
+                <div></div>
+              </div>
+            `;
+          });
+          container.innerHTML = html;
+        }
+
+        function renderRemainingBCArticles() {
+          const container = document.getElementById('remainingBCArticlesContainer');
+          if (remainingBCArticles.length === 0) {
+            container.innerHTML = '<div class="text-muted small ml-2 mb-2">Tous les articles de ce BC ont déjà été reçus. Aucun article à ajouter à ce BL.</div>';
+            return;
+          }
+
+          // Count active elements
+          let activeCount = 0;
+          let html = `
+            <div class="article-header-row" style="display: grid; grid-template-columns: 2fr 100px 100px 100px 40px; gap: 10px; padding: 10px; background: #f8f9fc; border-bottom: 2px solid #e3e6f0; font-weight: bold; font-size: 0.85rem; color: #4e73df;">
+              <div>Article</div>
+              <div class="text-center">Cmd / Reçu</div>
+              <div class="text-center">Qty à Ajouter</div>
+              <div class="text-center">Prix Unit.</div>
+              <div></div>
+            </div>
+          `;
+
+          remainingBCArticles.forEach(article => {
+            if (removedRemainingArticleIds.has(article.id)) return;
+
+            const qteRestante = article.qte_commandee - article.qte_deja_recue;
+            if (qteRestante <= 0) return; // Fully received
+
+            activeCount++;
+
+            let badgeHtml = '';
+            if (article.qte_deja_recue > 0) {
+              badgeHtml = `<span class="badge badge-warning article-badge">${article.qte_deja_recue}/${article.qte_commandee} reçus</span>`;
+            } else {
+              badgeHtml = `<span class="badge badge-info article-badge">Non reçu</span>`;
+            }
+
+            html += `
+              <div class="article-row remaining-article-row" data-id="${article.id}" data-qte-commandee="${article.qte_commandee}" data-qte-recue="${article.qte_deja_recue}" style="display: grid; grid-template-columns: 2fr 100px 100px 100px 40px; gap: 10px; padding: 12px 10px; border-bottom: 1px solid #e3e6f0; align-items: center;">
+                <div class="article-info">
+                  <div class="designation" style="font-weight: 500;">${article.designation || '---'}</div>
+                  <div class="reference" style="font-size: 0.8rem; color: #6c757d;">Réf: ${article.reference || '---'} | Unité: ${article.unite || '---'}</div>
+                </div>
+                <div class="text-center">${badgeHtml}</div>
+                <div class="text-center">
+                  <input type="number" class="form-control form-control-sm affect-qte-input" data-id="${article.id}" 
+                         value="${qteRestante}" min="0" step="0.01" max="${qteRestante}" 
+                         oninput="calculateAffectReste(${article.id}, this)" style="text-align: center;">
+                </div>
+                <div class="text-center">
+                  <input type="number" class="form-control form-control-sm affect-prix-input" data-id="${article.id}" 
+                         value="${article.prixUnitaire || ''}" step="0.01" placeholder="---" 
+                         style="text-align: center;">
+                </div>
+                <div><button type="button" class="btn-remove-article" onclick="removeRemainingArticle(${article.id})" style="width: 28px; height: 28px;"><i class="fas fa-times"></i></button></div>
+              </div>
+            `;
+          });
+
+          if (activeCount === 0) {
+            container.innerHTML = '<div class="alert alert-info">Tous les articles de ce BC ont déjà été reçus ou exclus. Aucun article à ajouter à ce BL.</div>';
+          } else {
+            container.innerHTML = html;
+          }
+          checkConfirmButtonState();
+        }
+
+        function calculateAffectReste(articleId, input) {
+          const row = input.closest('.remaining-article-row');
+          const qteCommandee = parseInt(row.dataset.qteCommandee) || 0;
+          const qteRecue = parseInt(row.dataset.qteRecue) || 0;
+          const qteLivrer = parseInt(input.value) || 0;
+
+          const maxAllowed = qteCommandee - qteRecue;
+          const reste = Math.max(0, maxAllowed - qteLivrer);
+
+          const resteBadge = document.getElementById(`affect-reste-${articleId}`);
+          if (resteBadge) {
+            resteBadge.textContent = reste;
+            resteBadge.className = reste === 0 ? 'badge badge-success reste-badge' : 'badge badge-info reste-badge';
+          }
+
+          if (qteLivrer > maxAllowed || qteLivrer <= 0) {
+            input.style.borderColor = '#e74a3b';
+          } else {
+            input.style.borderColor = '';
+          }
+          checkConfirmButtonState();
+        }
+
+        function removeRemainingArticle(articleId) {
+          removedRemainingArticleIds.add(articleId);
+          renderRemainingBCArticles();
+        }
+
+        function checkConfirmButtonState() {
+          const btn = document.getElementById('btnConfirmAffectation');
+          let hasValidArticle = false;
+
+          document.querySelectorAll('.remaining-article-row').forEach(row => {
+            const input = row.querySelector('.affect-qte-input');
+            if (input && parseInt(input.value) > 0 && !input.style.borderColor) {
+              hasValidArticle = true;
+            }
+          });
+
+          btn.disabled = !hasValidArticle;
+        }
+
+        async function submitAffectationFinale() {
+          if (!selectedBLId || !currentBcId) return;
+
+          // Collect valid active articles
+          const articlesToAffect = [];
+          document.querySelectorAll('.remaining-article-row').forEach(row => {
+            const id = parseInt(row.dataset.id);
+            const input = row.querySelector('.affect-qte-input');
+            const qte = parseFloat(input?.value || 0);
+            const prixInput = row.querySelector('.affect-prix-input');
+            const prixUnitaire = prixInput?.value ? parseFloat(prixInput.value) : null;
+
+            if (qte > 0 && !input.style.borderColor) {
+              articlesToAffect.push({ bc_article_id: id, qte_recue: qte, prixUnitaire: prixUnitaire });
+            }
+          });
+
+          if (articlesToAffect.length === 0) {
+            showToast('Au moins un article valide est requis', 'error');
+            return;
+          }
+
+          const btn = document.getElementById('btnConfirmAffectation');
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Affectation...';
+
+          try {
+            const response = await fetch(`/api/bons-livraison/${selectedBLId}/affecter-bc`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                bc_id: currentBcId,
+                articles: articlesToAffect
+              })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+              const selectedBL = unlinkedBLs.find(b => b.id === selectedBLId);
+              showToast(`BL n° ${selectedBL?.numero || ''} affecté avec succès`, 'success');
+              updateBCStatusBadge(currentBcId, data.bc_statut, data.articles_recus, data.articles_total);
+              closeAffecterBLDetailsModal();
+            } else {
+              throw new Error(data.error || 'Erreur lors de l\'affectation');
+            }
+          } catch (error) {
+            showToast('Erreur: ' + error.message, 'error');
+          } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check"></i> Confirmer l\'affectation';
+          }
+        }
+
+        // ==================== STATUS BADGE UPDATE ====================
+        function updateBCStatusBadge(bcId, status, recus = 0, total = 0) {
+          const badge = document.querySelector(`.bc-status-badge[data-bc-id="${bcId}"]`);
+          if (!badge) return;
+
+          let color = 'secondary';
+          let label = 'Att. BL';
+
+          if (status === 'livre') {
+            color = 'success';
+            label = 'Livré';
+          } else if (status === 'partiel') {
+            color = 'info';
+            label = 'Partiel';
+          }
+
+          badge.className = `badge badge-${color} bc-status-badge`;
+          badge.dataset.status = status;
+
+          let content = label;
+          if (total > 0 && (status === 'partiel' || status === 'livre')) {
+            content += ` <small>(${recus}/${total})</small>`;
+          }
+          badge.innerHTML = content;
+        }
+
+        // ==================== STATUS FILTERING ====================
+        function filterByStatus(status, btn) {
+          // Update active button state
+          document.querySelectorAll('.btn-group .btn, .d-flex .btn').forEach(b => {
+            if (b.textContent.includes('Tous') ||
+              b.textContent.includes('Att. BL') ||
+              b.textContent.includes('Partiel') ||
+              b.textContent.includes('Livré')) {
+              b.classList.remove('active');
+            }
+          });
+          btn.classList.add('active');
+
+          // Filter rows
+          const rows = document.querySelectorAll('#dpTable tbody tr[data-id]');
+          rows.forEach(row => {
+            const statusBadge = row.querySelector('.bc-status-badge');
+            if (!statusBadge) return;
+
+            const rowStatus = statusBadge.dataset.status;
+
+            if (status === 'all' || rowStatus === status) {
+              row.style.display = '';
+            } else {
+              row.style.display = 'none';
+            }
+          });
+
+          // Show message if no results
+          const visibleRows = document.querySelectorAll('#dpTable tbody tr[data-id]:not([style*="display: none"])');
+          const emptyRow = document.querySelector('#dpTable tbody tr td[colspan]')?.parentElement;
+          if (emptyRow) {
+            emptyRow.style.display = visibleRows.length === 0 ? '' : 'none';
+            if (visibleRows.length === 0) {
+              emptyRow.querySelector('td').textContent = 'Aucun Bon de commande correspondant au filtre sélectionné.';
+            }
+          }
+        }
+
+        // Close modals on Escape key
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape') {
+            closeCreateBLModal();
+            closeAffecterBLModal();
+            closeAffecterBLDetailsModal();
+          }
+        });
+
+        // Close modals when clicking overlay
+        document.getElementById('createBLModal').addEventListener('click', function (event) {
+          if (event.target === this) closeCreateBLModal();
+        });
+        document.getElementById('affecterBLModal').addEventListener('click', function (event) {
+          if (event.target === this) closeAffecterBLModal();
+        });
+        document.getElementById('affecterBLDetailsModal').addEventListener('click', function (event) {
+          if (event.target === this) closeAffecterBLDetailsModal();
+        });
+      </script>
+
+      <script src="/vendor/jquery/jquery.min.js"></script>
+      <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+      <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+
+      <script src="/js/sb-admin-2.min.js"></script>
+
+      <script>
+        // Data snapshot for robust exports (fallback if DOM/DataTables retrieval fails)
+        window.__DP_ROWS__ = (<%- JSON.stringify((bc || []).map(dp => ({
+          id: `#${dp.id}`,
+          date: new Date(dp.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+          fournisseur: (dp.fournisseur && dp.fournisseur.name) ? dp.fournisseur.name : '—',
+          articles: Array.isArray(dp.articles) ? String(dp.articles.length) : '0'
+        })), null, 2) %>);
+      </script>
+  </div>
   </div>
 </body>
 

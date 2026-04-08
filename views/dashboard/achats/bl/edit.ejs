@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <title><%= pageTitle || 'Éditer BL' %></title>
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+
+  <style>
+    .bl-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .bl-item-row:hover {
+      background-color: #f8f9fa;
+    }
+    .bc-qty-label {
+      font-size: 0.75rem;
+      color: #6c757d;
+      background-color: #e9ecef;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 8px;
+    }
+    .qty-error {
+      border-color: #dc3545 !important;
+    }
+    .qty-error-msg {
+      color: #dc3545;
+      font-size: 0.75rem;
+      display: none;
+    }
+    .qty-error-msg.show {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="wrapper">
+    <%- include('../../../layouts/sidebar') %>
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <%- include('../../../layouts/topbar') %>
+
+        <div class="container-fluid py-4">
+          <!-- Header -->
+          <div class="bl-header d-flex justify-content-between align-items-center">
+            <div>
+              <h4 class="mb-1"><i class="fas fa-truck-loading"></i> Bon de Livraison</h4>
+              <h2 class="mb-0"><%= bl.numero %></h2>
+            </div>
+            <div class="text-right">
+              <div class="mb-1"><strong>Date:</strong> <%= bl.date ? new Date(bl.date).toLocaleDateString('fr-FR') : '---' %></div>
+              <div><strong>Fournisseur:</strong> <%= bl.fournisseur?.name || '---' %></div>
+            </div>
+          </div>
+
+          <!-- Items Table -->
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">Articles du BL</h6>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-bordered table-sm" id="blItemsTable">
+                  <thead class="thead-light">
+                    <tr>
+                      <th style="width:5%; text-align:center;">#</th>
+                      <th style="width:25%;">Désignation</th>
+                      <th style="width:10%; text-align:center;">Unité</th>
+                      <th style="width:12%; text-align:center;">Quantité</th>
+                      <th style="width:12%; text-align:center;">Prix Unitaire</th>
+                      <th style="width:20%;">Remarque</th>
+                      <th style="width:10%; text-align:center;">Total HT</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% if (bl.items && bl.items.length > 0) { %>
+                      <% bl.items.forEach((item, index) => { %>
+                        <tr class="bl-item-row" data-id="<%= item.id %>">
+                          <td style="text-align:center;"><%= index + 1 %></td>
+                          <td>
+                            <%= item.designation %>
+                            <% if (item.commandesItemsId && item.commandesItems) { %>
+                              <span class="bc-qty-label">Qté commandée: <%= item.commandesItems.quantite %></span>
+                            <% } %>
+                          </td>
+                          <td style="text-align:center;"><%= item.unite || '---' %></td>
+                          <td>
+                            <input type="number" step="0.01" min="0" class="form-control form-control-sm text-center qty-input"
+                              value="<%= item.quantite || 0 %>" 
+                              data-field="quantite" 
+                              data-id="<%= item.id %>"
+                              data-commandes-items-id="<%= item.commandesItemsId || '' %>"
+                              data-bc-qty="<%= item.commandesItems ? item.commandesItems.quantite : '' %>">
+                            <div class="qty-error-msg">Quantité exceeds BC qty</div>
+                          </td>
+                          <td>
+                            <input type="number" step="0.01" min="0" class="form-control form-control-sm text-right"
+                              value="<%= item.prixUnitaire ? item.prixUnitaire.toFixed(2) : '' %>"
+                              placeholder="0.00" data-field="prixUnitaire" data-id="<%= item.id %>">
+                          </td>
+                          <td>
+                            <input type="text" class="form-control form-control-sm"
+                              value="<%= item.obs || '' %>" placeholder="Optional..."
+                              data-field="remarque" data-id="<%= item.id %>">
+                          </td>
+                          <td style="text-align:right;" class="item-total" data-id="<%= item.id %>">
+                            <%= ((item.quantite || 0) * (item.prixUnitaire || 0)).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    <% } else { %>
+                      <tr>
+                        <td colspan="7" class="text-center text-muted">Aucun article dans ce BL.</td>
+                      </tr>
+                    <% } %>
+                  </tbody>
+                  <tfoot>
+                    <tr style="background-color: #f8f9fa; font-weight: bold;">
+                      <td colspan="6" class="text-right">Total HT:</td>
+                      <td class="text-right" id="totalHt"><%= (bl.items || []).reduce((sum, item) => sum + ((item.quantite || 0) * (item.prixUnitaire || 0)), 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <div class="d-flex justify-content-between mt-3">
+                <a href="/achats/bons-livraison" class="btn btn-secondary">
+                  <i class="fas fa-arrow-left"></i> Retour à la liste
+                </a>
+                <button type="button" class="btn btn-primary" onclick="saveBL()">
+                  <i class="fas fa-save"></i> Enregistrer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // Validate quantity against BC quantity
+    document.querySelectorAll('.qty-input').forEach(input => {
+      input.addEventListener('input', function() {
+        const bcQty = parseFloat(this.dataset.bcQty);
+        const currentQty = parseFloat(this.value) || 0;
+        const errorMsg = this.nextElementSibling;
+
+        if (bcQty && currentQty > bcQty) {
+          this.classList.add('qty-error');
+          errorMsg.textContent = 'Max: ' + bcQty;
+          errorMsg.classList.add('show');
+        } else {
+          this.classList.remove('qty-error');
+          errorMsg.classList.remove('show');
+        }
+
+        // Recalculate row total
+        const row = this.closest('tr');
+        const qtyInput = row.querySelector('input[data-field="quantite"]');
+        const priceInput = row.querySelector('input[data-field="prixUnitaire"]');
+        const totalCell = row.querySelector('.item-total');
+
+        const qty = parseFloat(qtyInput.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        const total = qty * price;
+
+        totalCell.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        // Recalculate grand total
+        let grandTotal = 0;
+        document.querySelectorAll('.item-total').forEach(cell => {
+          const text = cell.textContent.replace(/\s/g, '').replace(',', '.');
+          grandTotal += parseFloat(text) || 0;
+        });
+        document.getElementById('totalHt').textContent = grandTotal.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      });
+    });
+
+    // Recalculate totals when price changes
+    document.querySelectorAll('#blItemsTable input[data-field="prixUnitaire"]').forEach(input => {
+      input.addEventListener('input', function() {
+        const row = this.closest('tr');
+        const qtyInput = row.querySelector('input[data-field="quantite"]');
+        const priceInput = row.querySelector('input[data-field="prixUnitaire"]');
+        const totalCell = row.querySelector('.item-total');
+
+        const qty = parseFloat(qtyInput.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        const total = qty * price;
+
+        totalCell.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        // Recalculate grand total
+        let grandTotal = 0;
+        document.querySelectorAll('.item-total').forEach(cell => {
+          const text = cell.textContent.replace(/\s/g, '').replace(',', '.');
+          grandTotal += parseFloat(text) || 0;
+        });
+        document.getElementById('totalHt').textContent = grandTotal.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      });
+    });
+
+    async function saveBL() {
+      // Check for validation errors
+      const hasError = document.querySelectorAll('.qty-error').length > 0;
+      if (hasError) {
+        alert('Veuillez corriger les erreurs avant d\'enregistrer');
+        return;
+      }
+
+      const items = [];
+      document.querySelectorAll('#blItemsTable .bl-item-row').forEach(row => {
+        const id = parseInt(row.dataset.id);
+        const qtyInput = row.querySelector('input[data-field="quantite"]');
+        const priceInput = row.querySelector('input[data-field="prixUnitaire"]');
+        const remarqueInput = row.querySelector('input[data-field="remarque"]');
+
+        items.push({
+          id: id,
+          quantite: qtyInput.value,
+          prixUnitaire: priceInput.value,
+          remarque: remarqueInput.value,
+          commandesItemsId: qtyInput.dataset.commandesItemsId || null
+        });
+      });
+
+      try {
+        const res = await fetch('/achats/bons-livraison/<%= bl.id %>', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items })
+        });
+        const json = await res.json();
+
+        if (res.ok && json.success) {
+          alert('BL mis à jour avec succès');
+          window.location.reload();
+        } else {
+          alert(json.error || 'Erreur lors de la sauvegarde');
+        }
+      } catch (err) {
+        alert('Erreur lors de la sauvegarde');
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+
+</html>
