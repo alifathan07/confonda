@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Modifier Popup - Developer Dashboard</title>
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+
+  <style>
+    .type-option {
+      cursor: pointer;
+      padding: 1rem;
+      border: 2px solid #e3e6f0;
+      border-radius: 0.5rem;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .type-option:hover,
+    .type-option.selected {
+      border-color: #4e73df;
+      background: #f8f9fc;
+    }
+    .type-option.selected {
+      background: #e8eaff;
+    }
+    .type-info.selected { border-color: #17a2b8; background: #e8f4f8; }
+    .type-warning.selected { border-color: #ffc107; background: #fff8e1; }
+    .type-success.selected { border-color: #28a745; background: #e8f5e9; }
+    .type-error.selected { border-color: #dc3545; background: #ffe5e5; }
+  </style>
+</head>
+
+<body id="page-top">
+  <div id="wrapper">
+    <%- include('../../layouts/sidebar') %>
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <%- include('../../layouts/topbar') %>
+        <div class="container-fluid">
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0 text-gray-800">
+              <i class="fas fa-bullhorn mr-2"></i>Modifier Popup
+            </h1>
+            <a href="/popups" class="btn btn-secondary">
+              <i class="fas fa-arrow-left mr-2"></i>Retour
+            </a>
+          </div>
+
+          <div class="card shadow">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">Détails du Popup #<%= popup.id %></h6>
+            </div>
+            <div class="card-body">
+              <form id="popupForm">
+                <!-- Status -->
+                <div class="form-group">
+                  <label class="font-weight-bold">Statut <span class="text-danger">*</span></label>
+                  <select class="form-control" id="status" name="status">
+                    <option value="active" <%= popup.status === 'active' ? 'selected' : '' %>>Actif</option>
+                    <option value="done" <%= popup.status === 'done' ? 'selected' : '' %>>Terminé</option>
+                    <option value="cancelled" <%= popup.status === 'cancelled' ? 'selected' : '' %>>Annulé</option>
+                  </select>
+                </div>
+
+                <!-- Title -->
+                <div class="form-group">
+                  <label for="title" class="font-weight-bold">Titre <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="title" name="title" 
+                    value="<%= popup.title %>" required>
+                </div>
+
+                <!-- Message -->
+                <div class="form-group">
+                  <label for="message" class="font-weight-bold">Message <span class="text-danger">*</span></label>
+                  <textarea class="form-control" id="message" name="message" rows="4" required><%= popup.message %></textarea>
+                </div>
+
+                <!-- Type -->
+                <div class="form-group">
+                  <label class="font-weight-bold d-block">Type de popup <span class="text-danger">*</span></label>
+                  <div class="row">
+                    <div class="col-md-3 mb-3">
+                      <div class="type-option type-info <%= popup.type === 'info' ? 'selected' : '' %>" data-type="info" onclick="selectType('info')">
+                        <i class="fas fa-info-circle fa-2x text-info mb-2"></i>
+                        <div class="font-weight-bold">Information</div>
+                      </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <div class="type-option type-warning <%= popup.type === 'warning' ? 'selected' : '' %>" data-type="warning" onclick="selectType('warning')">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                        <div class="font-weight-bold">Attention</div>
+                      </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <div class="type-option type-success <%= popup.type === 'success' ? 'selected' : '' %>" data-type="success" onclick="selectType('success')">
+                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                        <div class="font-weight-bold">Succès</div>
+                      </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <div class="type-option type-error <%= popup.type === 'error' ? 'selected' : '' %>" data-type="error" onclick="selectType('error')">
+                        <i class="fas fa-times-circle fa-2x text-danger mb-2"></i>
+                        <div class="font-weight-bold">Erreur</div>
+                      </div>
+                    </div>
+                  </div>
+                  <input type="hidden" name="type" id="type" value="<%= popup.type %>">
+                </div>
+
+                <!-- Target Users -->
+                <div class="form-group">
+                  <label class="font-weight-bold">Ciblage des utilisateurs</label>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <label>Utilisateurs spécifiques (laisser vide pour tous)</label>
+                      <select class="form-control" id="targetUsers" name="targetUsers" multiple size="5">
+                        <% users.forEach(u => { %>
+                          <% const isSelected = popup.targetUsers && popup.targetUsers.split(',').includes(u.id.toString()); %>
+                          <option value="<%= u.id %>" <%= isSelected ? 'selected' : '' %>><%= u.name %> (<%= u.email %>)</option>
+                        <% }) %>
+                      </select>
+                      <small class="form-text text-muted">Ctrl+Click pour sélectionner plusieurs</small>
+                    </div>
+                    <div class="col-md-6">
+                      <label>Rôles ciblés (laisser vide pour tous)</label>
+                      <% const selectedRoles = popup.targetRoles ? popup.targetRoles.split(',') : []; %>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="targetRoles" value="user" id="roleUser" <%= selectedRoles.includes('user') ? 'checked' : '' %>>
+                        <label class="form-check-label" for="roleUser">User</label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="targetRoles" value="admin" id="roleAdmin" <%= selectedRoles.includes('admin') ? 'checked' : '' %>>
+                        <label class="form-check-label" for="roleAdmin">Admin</label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="targetRoles" value="developer" id="roleDeveloper" <%= selectedRoles.includes('developer') ? 'checked' : '' %>>
+                        <label class="form-check-label" for="roleDeveloper">Developer</label>
+                      </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="targetRoles" value="grandadmin" id="roleGrandAdmin" <%= selectedRoles.includes('grandadmin') ? 'checked' : '' %>>
+                        <label class="form-check-label" for="roleGrandAdmin">Grand Admin</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Display Options -->
+                <div class="form-group">
+                  <label class="font-weight-bold">Options d'affichage</label>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="showOnce" name="showOnce" value="true" <%= popup.showOnce ? 'checked' : '' %>>
+                    <label class="form-check-label" for="showOnce">
+                      Afficher une seule fois par session
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Dates -->
+                <div class="form-group">
+                  <label class="font-weight-bold">Période d'affichage</label>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <label>Date de début</label>
+                      <input type="datetime-local" class="form-control" id="startDate" name="startDate" 
+                        value="<%= popup.startDate ? new Date(popup.startDate).toISOString().slice(0, 16) : '' %>">
+                    </div>
+                    <div class="col-md-6">
+                      <label>Date de fin (optionnel)</label>
+                      <input type="datetime-local" class="form-control" id="endDate" name="endDate"
+                        value="<%= popup.endDate ? new Date(popup.endDate).toISOString().slice(0, 16) : '' %>">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Display Mode -->
+                <div class="form-group">
+                  <label class="font-weight-bold d-block">Mode d'affichage <span class="text-danger">*</span></label>
+                  <div class="row">
+                    <div class="col-md-6 mb-2">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="displayMode" id="modeAfterLogin" value="after_login" <%= popup.displayMode === 'after_login' ? 'checked' : '' %>>
+                        <label class="form-check-label" for="modeAfterLogin">
+                          <i class="fas fa-sign-in-alt mr-1 text-primary"></i>
+                          <strong>Après connexion</strong>
+                          <small class="d-block text-muted">Afficher une fois après chaque connexion</small>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="displayMode" id="modeAlways" value="always" <%= popup.displayMode === 'always' ? 'checked' : '' %>>
+                        <label class="form-check-label" for="modeAlways">
+                          <i class="fas fa-sync mr-1 text-success"></i>
+                          <strong>Toujours visible</strong>
+                          <small class="d-block text-muted">Reste affiché tant qu'il n'est pas fermé</small>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="displayMode" id="modeOnceOnly" value="once_only" <%= popup.displayMode === 'once_only' ? 'checked' : '' %>>
+                        <label class="form-check-label" for="modeOnceOnly">
+                          <i class="fas fa-times mr-1 text-danger"></i>
+                          <strong>Une seule fois</strong>
+                          <small class="d-block text-muted">Une fois par utilisateur, puis jamais plus</small>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                      <div class="form-check">
+                        <input class="form-check-input" type="radio" name="displayMode" id="modeAfterAction" value="after_every_action" <%= popup.displayMode === 'after_every_action' ? 'checked' : '' %>>
+                        <label class="form-check-label" for="modeAfterAction">
+                          <i class="fas fa-mouse-pointer mr-1 text-warning"></i>
+                          <strong>Après chaque action</strong>
+                          <small class="d-block text-muted">Après chaque clic/page visitée</small>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Created Info -->
+                <div class="alert alert-info">
+                  <small>
+                    <i class="fas fa-user mr-2"></i>Créé par: <%= popup.creator?.name || 'Inconnu' %><br>
+                    <i class="fas fa-calendar mr-2"></i>Date de création: <%= new Date(popup.createdAt).toLocaleString('fr-FR') %>
+                  </small>
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between">
+                  <a href="/popups" class="btn btn-secondary">Annuler</a>
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save mr-2"></i>Enregistrer
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+  <script src="/js/sb-admin-2.min.js"></script>
+
+  <script>
+    function selectType(type) {
+      $('.type-option').removeClass('selected');
+      $(`.type-option[data-type="${type}"]`).addClass('selected');
+      $('#type').val(type);
+    }
+
+    $('#popupForm').submit(function(e) {
+      e.preventDefault();
+
+      const formData = {
+        title: $('#title').val(),
+        message: $('#message').val(),
+        type: $('#type').val(),
+        status: $('#status').val(),
+        displayMode: $('input[name="displayMode"]:checked').val()
+      };
+
+      // Get selected users
+      const selectedUsers = $('#targetUsers').val();
+      if (selectedUsers && selectedUsers.length > 0) {
+        formData.targetUsers = selectedUsers.join(',');
+      }
+
+      // Get selected roles
+      const selectedRoles = [];
+      $('input[name="targetRoles"]:checked').each(function() {
+        selectedRoles.push($(this).val());
+      });
+      if (selectedRoles.length > 0) {
+        formData.targetRoles = selectedRoles.join(',');
+      }
+
+      // Get dates
+      if ($('#startDate').val()) {
+        formData.startDate = $('#startDate').val();
+      }
+      if ($('#endDate').val()) {
+        formData.endDate = $('#endDate').val();
+      }
+
+      $.ajax({
+        url: '/api/popups/<%= popup.id %>',
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function(data) {
+          if (data.success) {
+            window.location.href = '/popups';
+          } else {
+            alert(data.error || 'Erreur lors de la mise à jour');
+          }
+        },
+        error: function() {
+          alert('Erreur lors de la mise à jour du popup');
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>

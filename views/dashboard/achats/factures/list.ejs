@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Liste des Factures</title>
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+
+  <style>
+    #factureTable {
+      font-size: 0.9rem;
+    }
+
+    #factureTable th,
+    #factureTable td {
+      padding: 0.5rem 0.75rem !important;
+      vertical-align: middle;
+    }
+
+    #factureTable th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .badge-status {
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+    }
+
+    .badge-en_attente {
+      background-color: #ffc107;
+      color: #000;
+    }
+
+    .badge-payee {
+      background-color: #28a745;
+      color: #fff;
+    }
+
+    .badge-partielle {
+      background-color: #17a2b8;
+      color: #fff;
+    }
+
+    .bl-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .bl-dropdown-btn {
+      background: #4e73df;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .bl-dropdown-btn:hover {
+      background: #2e59d9;
+    }
+
+    .bl-dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      background: white;
+      min-width: 200px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border-radius: 6px;
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    .bl-dropdown-menu.show {
+      display: block;
+    }
+
+    .bl-dropdown-item {
+      padding: 10px 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #333;
+    }
+
+    .bl-dropdown-item:hover {
+      background: #f8f9fa;
+    }
+
+    .bl-dropdown-divider {
+      height: 1px;
+      background: #e9ecef;
+      margin: 4px 0;
+    }
+  </style>
+</head>
+
+<body id="page-top">
+
+<div id="wrapper">
+  <%- include('../../../layouts/sidebar') %>
+
+  <div id="content-wrapper" class="d-flex flex-column">
+    <div id="content">
+      <%- include('../../../layouts/topbar') %>
+
+      <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h1 class="h3 mb-0 text-gray-800">Liste des Factures</h1>
+        </div>
+
+        <div class="card shadow mb-4">
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-bordered" id="factureTable" width="100%" cellspacing="0">
+                <thead>
+                  <tr>
+                    <th>Numéro</th>
+                    <th>Date</th>
+                    <th>Fournisseur</th>
+                    <th>Total HT</th>
+                    <th>Taux TVA</th>
+                    <th>Total TTC</th>
+                    <th>Statut</th>
+                    <th>BLs Liés</th>
+                    <th>Facture Avoir</th>
+                    <th>Fichier</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (factures && factures.length > 0) { %>
+                    <% factures.forEach(facture => { %>
+                      <tr>
+                        <td class="text-center"><strong><%= facture.numero %></strong></td>
+                        <td class="text-center"><%= new Date(facture.date).toLocaleDateString('fr-FR') %></td>
+                        <td><%= facture.fournisseur ? facture.fournisseur.name : 'N/A' %></td>
+                        <td class="text-right"><%= facture.totalHt.toFixed(2) %> DH</td>
+                        <td class="text-center"><%= facture.tauxTva %>%</td>
+                        <td class="text-right"><strong><%= facture.totalTtc.toFixed(2) %> DH</strong></td>
+                        <td class="text-center">
+                          <span class="badge badge-status badge-<%= facture.statut || 'en_attente' %>">
+                            <%= facture.statut === 'payee' ? 'Payée' : facture.statut === 'partielle' ? 'Partielle' : 'En attente' %>
+                          </span>
+                        </td>
+                        <td class="text-center">
+                          <% if (facture.bondeLivraisonLinks && facture.bondeLivraisonLinks.length > 0) { %>
+                            <% let blCount = 0; %>
+                            <% facture.bondeLivraisonLinks.forEach((link) => { %>
+                              <% if (link.bondeLivraison) { %>
+                                <% blCount++; %>
+                                <a href="/achats/bons-livraison/<%= link.bondeLivraison.id %>/edit" class="badge badge-info" title="Voir BL">
+                                  BL N° <%= link.bondeLivraison.numero %>
+                                </a>
+                              <% } %>
+                            <% }) %>
+                            <% if (blCount === 0) { %>-<% } %>
+                          <% } else { %>
+                            -
+                          <% } %>
+                        </td>
+                        <td class="text-center">
+                          <% if (facture.avoirs && facture.avoirs.length > 0) { %>
+                            <% facture.avoirs.forEach((avoir) => { %>
+                              <a href="/achats/factures-avoir/<%= avoir.id %>/view" class="badge badge-danger" title="Voir Avoir">
+                                Avoir N° <%= avoir.numero %>
+                              </a>
+                            <% }) %>
+                          <% } else { %>
+                            -
+                          <% } %>
+                        </td>
+                        <td class="text-center">
+                          <% if (facture.fichier) { %>
+                            <a href="/api/factures/<%= facture.id %>/download" class="btn btn-sm btn-success" title="Télécharger">
+                              <i class="fas fa-download"></i>
+                            </a>
+                          <% } %>
+                          <button type="button" class="btn btn-sm btn-primary" onclick="toggleFactureUploadForm(<%= facture.id %>)">
+                            <i class="fas fa-upload"></i>
+                          </button>
+                          <div id="facture-upload-form-<%= facture.id %>" style="display:none; position:absolute; right:0; z-index:100; background:white; border:1px solid #ddd; padding:10px; border-radius:5px; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+                            <form onsubmit="uploadFactureFile(event, <%= facture.id %>)" enctype="multipart/form-data">
+                              <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required style="font-size:12px;">
+                              <button type="submit" class="btn btn-sm btn-primary mt-1">Envoyer</button>
+                              <button type="button" class="btn btn-sm btn-secondary mt-1" onclick="toggleFactureUploadForm(<%= facture.id %>)">Annuler</button>
+                            </form>
+                          </div>
+                        </td>
+                        <td>
+                          <button class="btn btn-info btn-sm" title="Voir" onclick="viewFacture(<%= facture.id %>)">
+                            <i class="fas fa-eye"></i>
+                          </button>
+                          <button class="btn btn-danger btn-sm" title="Supprimer" onclick="deleteFacture(<%= facture.id %>)">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } else { %>
+                    <tr>
+                      <td colspan="9" class="text-center text-muted">Aucune facture trouvée</td>
+                    </tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="sticky-footer bg-white">
+      <div class="container my-auto">
+        <div class="copyright text-center my-auto">
+          <span>Copyright &copy; Confonda <%= new Date().getFullYear() %></span>
+        </div>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirmer la suppression</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        Êtes-vous sûr de vouloir supprimer cette Facture ? Cette action est irréversible.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Supprimer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/vendor/jquery/jquery.min.js"></script>
+<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+<script src="/js/sb-admin-2.min.js"></script>
+
+<script>
+  let deleteTargetId = null;
+
+  // Dropdown functions
+  let currentOpenDropdown = null;
+
+  function toggleFactureDropdown(event, factureId) {
+    event.stopPropagation();
+    const dropdown = document.getElementById(`facture-dropdown-${factureId}`);
+    
+    if (currentOpenDropdown && currentOpenDropdown !== dropdown) {
+      currentOpenDropdown.classList.remove('show');
+    }
+    
+    if (dropdown.classList.contains('show')) {
+      dropdown.classList.remove('show');
+      currentOpenDropdown = null;
+    } else {
+      dropdown.classList.add('show');
+      currentOpenDropdown = dropdown;
+    }
+  }
+
+  document.addEventListener('click', function() {
+    if (currentOpenDropdown) {
+      currentOpenDropdown.classList.remove('show');
+      currentOpenDropdown = null;
+    }
+  });
+
+  function viewFacture(id) {
+    window.location.href = `/achats/factures/${id}/view`;
+  }
+
+  function viewFactureDetails(id) {
+    viewFacture(id);
+  }
+
+  function viewFactureBLs(id) {
+    viewFacture(id);
+  }
+
+  function viewFactureAvoirs(id) {
+    window.location.href = `/achats/factures-avoir/${id}/view`;
+  }
+
+  function deleteFacture(id) {
+    deleteTargetId = id;
+    $('#deleteModal').modal('show');
+  }
+
+  document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
+    if (!deleteTargetId) return;
+
+    try {
+      const res = await fetch(`/api/factures/${deleteTargetId}`, {
+        method: 'DELETE'
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        window.location.reload();
+      } else {
+        alert(json.error || 'Erreur lors de la suppression');
+      }
+    } catch (err) {
+      alert('Erreur lors de la suppression');
+      console.error(err);
+    }
+    $('#deleteModal').modal('hide');
+  });
+
+  function toggleFactureUploadForm(factureId) {
+    const form = document.getElementById('facture-upload-form-' + factureId);
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+  }
+
+  async function uploadFactureFile(event, factureId) {
+    event.preventDefault();
+    const form = event.target;
+    const fileInput = form.querySelector('input[type="file"]');
+    const file = fileInput.files[0];
+    if (!file) {
+      alert('Veuillez sélectionner un fichier');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/factures/' + factureId + '/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        window.location.reload();
+      } else {
+        alert(json.error || 'Erreur lors de l\'upload');
+      }
+    } catch (err) {
+      alert('Erreur lors de l\'upload');
+      console.error(err);
+    }
+  }
+</script>
+
+</body>
+</html>

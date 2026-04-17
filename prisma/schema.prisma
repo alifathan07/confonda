@@ -23,7 +23,10 @@ model User {
 
   demandeCaisse     DemandeCaisse[]
   demandeFourniture DemandeFourniture[]
-  role              String              @default("grandadmin") // user, admin, grandadmin
+  bugReports        BugReport[]
+  createdPopups     Popup[]             // Popups created by this user
+  role              String              @default("grandadmin") // user, admin, grandadmin, developer
+  popupEnabled      Boolean             @default(true) // For user-specific popup control
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
 }
@@ -225,6 +228,9 @@ model Fournisseur {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   bondeLivraisons BondeLivraison[]
+  factures Facture[]
+  facturesAvoir FactureAvoir[]
+
 }
 
 model Cheque {
@@ -687,6 +693,7 @@ model BondeCommandeChantierItem {
     createdAt                 DateTime                    @default(now())
     updatedAt                 DateTime                    @updatedAt
     bondeLivraisonLinks       BondeLivraisonBondeCommande[]
+    factureLinks              FactureBondecommande[]
   }
 
 model commandesItems {
@@ -698,7 +705,7 @@ model commandesItems {
   imputation                String?
   prixUnitaire              Float?
   tauxRemise                Float?
-  remise                    Float?
+  remise                    Float?  
   totalHt                   Float?
   reference                 String?
   bondeCommande             BondeCommande?              @relation(fields: [bondeCommandeId], references: [id], onDelete: Cascade)
@@ -718,50 +725,6 @@ model Fourniture_list {
 
   @@unique([designation, reference])
 }
-
-model BondeLivraison {
-  id                    Int                        @id @default(autoincrement())
-  numero                String
-  date                  DateTime                   @default(now())
-  dateReception         DateTime?
-  fournisseur           Fournisseur                @relation(fields: [fournisseurId], references: [id])
-  fournisseurId         Int
-  items                 BondeLivraisonItem[]
-  bondeCommandeLinks    BondeLivraisonBondeCommande[]
-  status                String                     @default("Actif") // Actif, Annulé
-  obs                   String?
-  fichier               String?
-  createdAt             DateTime                   @default(now())
-  updatedAt             DateTime                   @updatedAt
-}
-
-model BondeLivraisonBondeCommande {
-  id                Int             @id @default(autoincrement())
-  bondeLivraison    BondeLivraison  @relation(fields: [bondeLivraisonId], references: [id], onDelete: Cascade)
-  bondeLivraisonId  Int
-  bondeCommande     BondeCommande   @relation(fields: [bondeCommandeId], references: [id], onDelete: Cascade)
-  bondeCommandeId   Int
-  createdAt         DateTime        @default(now())
-  
-  @@unique([bondeLivraisonId, bondeCommandeId])
-}
-
-model BondeLivraisonItem {
-  id               Int             @id @default(autoincrement())
-  designation      String
-  unite            String?
-  reference        String?
-  quantite         Float
-  prixUnitaire Float?
-  obs String?
-  commandesItems   commandesItems? @relation(fields: [commandesItemsId], references: [id])
-  commandesItemsId Int? 
-  bondeLivraison   BondeLivraison  @relation(fields: [bondeLivraisonId], references: [id], onDelete: Cascade)
-  bondeLivraisonId Int
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-}
-
 model WhatsAppNotificationRecipient {
   id                   Int     @id @default(autoincrement())
   phone                String  @unique
@@ -773,4 +736,196 @@ model WhatsAppNotificationRecipient {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+
+
+model BondeLivraison {
+  id                    Int                           @id @default(autoincrement())
+  numero                String
+  date                  DateTime                      @default(now())
+  dateReception         DateTime?
+  fournisseur           Fournisseur                   @relation(fields: [fournisseurId], references: [id])
+  fournisseurId         Int
+  items                 BondeLivraisonItem[]
+  bondeCommandeLinks    BondeLivraisonBondeCommande[]
+  factureLinks          FactureBondeLivraison[]       // ✅ moved here from Item
+  avoirs                FactureAvoir[]                // ✅ moved here from Item
+  status                String                        @default("Actif")
+  obs                   String?
+  fichier               String?
+  createdAt             DateTime                      @default(now())
+  updatedAt             DateTime                      @updatedAt
+}
+
+model BondeLivraisonBondeCommande {
+  id                Int             @id @default(autoincrement())
+  bondeLivraison    BondeLivraison  @relation(fields: [bondeLivraisonId], references: [id], onDelete: Cascade)
+  bondeLivraisonId  Int
+  bondeCommande     BondeCommande   @relation(fields: [bondeCommandeId], references: [id], onDelete: Cascade)
+  bondeCommandeId   Int
+  createdAt         DateTime        @default(now())
+
+  @@unique([bondeLivraisonId, bondeCommandeId])
+}
+
+model BondeLivraisonItem {
+  id               Int              @id @default(autoincrement())
+  designation      String
+  unite            String?
+  reference        String?
+  quantite         Float
+  prixUnitaire     Float?
+  obs              String?
+  qtyRetourne      Float            @default(0)
+
+  // ✅ only item-level back-relations stay here
+  factureItems      FactureItem[]
+  factureAvoirItems FactureAvoirItem[]
+
+  commandesItems   commandesItems?  @relation(fields: [commandesItemsId], references: [id])
+  commandesItemsId Int?
+  bondeLivraison   BondeLivraison   @relation(fields: [bondeLivraisonId], references: [id], onDelete: Cascade)
+  bondeLivraisonId Int
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+model Facture {
+  id            Int      @id @default(autoincrement())
+  numero        String
+  date          DateTime
+  totalHt       Float
+  tauxTva       Float
+  totalTtc      Float    // totalHt + (totalHt * tauxTva / 100)
+  statut        String   @default("en_attente") // en_attente | payee | partielle
+
+  fournisseurId Int
+  fournisseur   Fournisseur @relation(fields: [fournisseurId], references: [id])
+  fichier               String?
+  items               FactureItem[]
+  bondeLivraisonLinks FactureBondeLivraison[]
+  bondeCommandeLinks  FactureBondecommande[]
+  avoirs              FactureAvoir[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FactureBondeLivraison {
+  id               Int            @id @default(autoincrement())
+  factureId        Int
+  facture          Facture        @relation(fields: [factureId], references: [id], onDelete: Cascade)
+  bondeLivraisonId Int
+  bondeLivraison   BondeLivraison @relation(fields: [bondeLivraisonId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+
+  @@unique([factureId, bondeLivraisonId])
+}
+
+model FactureBondecommande {
+  id                 Int            @id @default(autoincrement())
+  factureId          Int
+  facture            Facture        @relation(fields: [factureId], references: [id], onDelete: Cascade)
+  bondeCommandeId    Int
+  bondeCommande      BondeCommande  @relation(fields: [bondeCommandeId], references: [id], onDelete: Cascade)
+  createdAt          DateTime       @default(now())
+
+  @@unique([factureId, bondeCommandeId])
+}
+
+model FactureItem {
+  id           Int     @id @default(autoincrement())
+  designation  String
+  unite        String?
+  reference    String?
+  quantite     Float
+  prixUnitaire Float
+  totalHt      Float   // quantite * prixUnitaire
+
+  factureId            Int
+  facture              Facture             @relation(fields: [factureId], references: [id], onDelete: Cascade)
+  bondeLivraisonItemId Int?
+  bondeLivraisonItem   BondeLivraisonItem? @relation(fields: [bondeLivraisonItemId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FactureAvoir {
+  id       Int      @id @default(autoincrement())
+  numero   String
+  date     DateTime
+  type     String   // "retour" | "remise"
+  totalHt  Float
+  tauxTva  Float
+  totalTtc Float    // totalHt + (totalHt * tauxTva / 100)
+  raison   String?  // Reason for the avoir
+
+  fournisseurId Int
+  fournisseur   Fournisseur       @relation(fields: [fournisseurId], references: [id])
+  factureId     Int
+  facture       Facture           @relation(fields: [factureId], references: [id])
+  bondeLivraisonId Int?
+  bondeLivraison   BondeLivraison? @relation(fields: [bondeLivraisonId], references: [id])
+
+  items     FactureAvoirItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FactureAvoirItem {
+  id           Int     @id @default(autoincrement())
+  designation  String
+  unite        String?
+  reference    String?
+  quantite     Float
+  prixUnitaire Float
+  totalHt      Float   // quantite * prixUnitaire
+
+  factureAvoirId       Int
+  factureAvoir         FactureAvoir        @relation(fields: [factureAvoirId], references: [id], onDelete: Cascade)
+  bondeLivraisonItemId Int?
+  bondeLivraisonItem   BondeLivraisonItem? @relation(fields: [bondeLivraisonItemId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BugReport {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String   @db.Text
+  status      String   @default("nouveau") // nouveau, en_cours, resolu, ferme
+  priority    String   @default("moyenne") // basse, moyenne, haute, critique
+  category    String   @default("autre") // ui, fonctionnalite, performance, securite, autre
+  userId      Int?
+  user        User?    @relation(fields: [userId], references: [id])
+  userName    String?
+  userEmail   String?
+  screenshot  String?  // Path to uploaded screenshot
+  url         String?  // Page URL where bug occurred
+  resolution  String?  @db.Text // Solution/response from admin
+  resolvedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Popup {
+  id          Int       @id @default(autoincrement())
+  title       String  
+  message     String    @db.Text
+  type        String    @default("info") // info, warning, success, error
+  status      String    @default("active") // active, done, cancelled
+  targetUsers String?   // Comma-separated user IDs (null = all users)
+  targetRoles String?   // Comma-separated roles (null = all roles)
+  createdBy   Int
+  creator     User      @relation(fields: [createdBy], references: [id])
+  displayMode String    @default("after_login") // after_login, always, once_only, after_every_action
+  showOnce    Boolean   @default(true) // Legacy: Show once per session
+  startDate   DateTime  @default(now())
+  endDate     DateTime?
+  dismissedBy String?   // Comma-separated user IDs who dismissed it
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Signaler un Bug</title>
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+
+  <style>
+    .bug-form-card {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .category-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .category-option {
+      cursor: pointer;
+      padding: 1rem;
+      border: 2px solid #e3e6f0;
+      border-radius: 0.5rem;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .category-option:hover,
+    .category-option.selected {
+      border-color: #4e73df;
+      background: #f8f9fc;
+    }
+
+    .category-option.selected {
+      background: #e8eaff;
+    }
+
+    .priority-option {
+      cursor: pointer;
+      padding: 0.75rem 1rem;
+      border: 2px solid #e3e6f0;
+      border-radius: 0.5rem;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .priority-option:hover,
+    .priority-option.selected {
+      border-color: #4e73df;
+    }
+
+    .priority-basse.selected { border-color: #6c757d; background: #f8f9fa; }
+    .priority-moyenne.selected { border-color: #ffc107; background: #fff8e1; }
+    .priority-haute.selected { border-color: #fd7e14; background: #fff3e0; }
+    .priority-critique.selected { border-color: #dc3545; background: #ffe5e5; }
+  </style>
+</head>
+
+<body id="page-top">
+  <div id="wrapper">
+    <%- include('../../layouts/sidebar') %>
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <%- include('../../layouts/topbar') %>
+        <div class="container-fluid">
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0 text-gray-800">
+              <i class="fas fa-bug mr-2 text-danger"></i>Signaler un Bug
+            </h1>
+            <a href="/bug-reports" class="btn btn-secondary">
+              <i class="fas fa-arrow-left mr-2"></i>Retour à la liste
+            </a>
+          </div>
+
+          <div class="card shadow bug-form-card">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">Détails du Bug</h6>
+            </div>
+            <div class="card-body">
+              <form id="bugForm" enctype="multipart/form-data">
+                <input type="hidden" name="url" value="<%= currentUrl %>">
+
+                <!-- Title -->
+                <div class="form-group">
+                  <label for="title" class="font-weight-bold">Titre du bug <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="title" name="title" 
+                    placeholder="Décrivez brièvement le problème..." required>
+                  <small class="form-text text-muted">Ex: "Erreur lors de la création d'un bon de commande"</small>
+                </div>
+
+                <!-- Category -->
+                <div class="form-group">
+                  <label class="font-weight-bold d-block">Catégorie <span class="text-danger">*</span></label>
+                  <div class="row">
+                    <div class="col-md-3 mb-3">
+                      <div class="category-option" data-category="ui" onclick="selectCategory('ui')">
+                        <div class="category-icon text-primary"><i class="fas fa-desktop"></i></div>
+                        <div class="font-weight-bold">Interface</div>
+                        <small class="text-muted">Problème d'affichage, design</small>
+                      </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <div class="category-option" data-category="fonctionnalite" onclick="selectCategory('fonctionnalite')">
+                        <div class="category-icon text-success"><i class="fas fa-cogs"></i></div>
+                        <div class="font-weight-bold">Fonctionnalité</div>
+                        <small class="text-muted">Une fonction ne marche pas</small>
+                      </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <div class="category-option" data-category="performance" onclick="selectCategory('performance')">
+                        <div class="category-icon text-warning"><i class="fas fa-tachometer-alt"></i></div>
+                        <div class="font-weight-bold">Performance</div>
+                        <small class="text-muted">Lent, bloque, ralentit</small>
+                      </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <div class="category-option" data-category="autre" onclick="selectCategory('autre')">
+                        <div class="category-icon text-secondary"><i class="fas fa-question-circle"></i></div>
+                        <div class="font-weight-bold">Autre</div>
+                        <small class="text-muted">Autre type de problème</small>
+                      </div>
+                    </div>
+                  </div>
+                  <input type="hidden" name="category" id="category" value="autre" required>
+                </div>
+
+                <!-- Priority -->
+                <div class="form-group">
+                  <label class="font-weight-bold d-block">Priorité <span class="text-danger">*</span></label>
+                  <div class="row">
+                    <div class="col-md-3 mb-3">
+                      <div class="priority-option priority-basse" data-priority="basse" onclick="selectPriority('basse')">
+                        <i class="fas fa-arrow-down text-secondary"></i>
+                        <span class="font-weight-bold ml-2">Basse</span>
+                        <br><small class="text-muted">Problème mineur</small>
+                      </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <div class="priority-option priority-moyenne selected" data-priority="moyenne" onclick="selectPriority('moyenne')">
+                        <i class="fas fa-minus text-warning"></i>
+                        <span class="font-weight-bold ml-2">Moyenne</span>
+                        <br><small class="text-muted">Problème modéré</small>
+                      </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <div class="priority-option priority-haute" data-priority="haute" onclick="selectPriority('haute')">
+                        <i class="fas fa-arrow-up text-warning" style="color: #fd7e14 !important;"></i>
+                        <span class="font-weight-bold ml-2">Haute</span>
+                        <br><small class="text-muted">Problème important</small>
+                      </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <div class="priority-option priority-critique" data-priority="critique" onclick="selectPriority('critique')">
+                        <i class="fas fa-exclamation-triangle text-danger"></i>
+                        <span class="font-weight-bold ml-2">Critique</span>
+                        <br><small class="text-muted">Bloque le travail</small>
+                      </div>
+                    </div>
+                  </div>
+                  <input type="hidden" name="priority" id="priority" value="moyenne" required>
+                </div>
+
+                <!-- Description -->
+                <div class="form-group">
+                  <label for="description" class="font-weight-bold">Description détaillée <span class="text-danger">*</span></label>
+                  <textarea class="form-control" id="description" name="description" rows="5" 
+                    placeholder="Décrivez le bug en détail :&#10;- Que faisiez-vous quand le bug est apparu ?&#10;- Quel était le comportement attendu ?&#10;- Quel était le comportement réel ?&#10;- Message d'erreur (si applicable)"
+                    required></textarea>
+                </div>
+
+                <!-- Screenshot -->
+                <div class="form-group">
+                  <label for="screenshot" class="font-weight-bold">Capture d'écran (optionnel)</label>
+                  <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="screenshot" name="screenshot" 
+                      accept=".jpg,.jpeg,.png,.gif">
+                    <label class="custom-file-label" for="screenshot">Choisir un fichier...</label>
+                  </div>
+                  <small class="form-text text-muted">Formats acceptés: JPG, PNG, GIF (max 5MB)</small>
+                </div>
+
+                <!-- Current URL (if provided) -->
+                <% if (currentUrl) { %>
+                <div class="form-group">
+                  <label class="font-weight-bold">Page concernée</label>
+                  <div class="alert alert-info">
+                    <i class="fas fa-link mr-2"></i><%= currentUrl %>
+                  </div>
+                </div>
+                <% } %>
+
+                <hr>
+
+                <div class="d-flex justify-content-between">
+                  <a href="/bug-reports" class="btn btn-secondary">Annuler</a>
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane mr-2"></i>Envoyer le rapport
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+  <script src="/js/sb-admin-2.min.js"></script>
+
+  <script>
+    function selectCategory(category) {
+      $('.category-option').removeClass('selected');
+      $(`.category-option[data-category="${category}"]`).addClass('selected');
+      $('#category').val(category);
+    }
+
+    function selectPriority(priority) {
+      $('.priority-option').removeClass('selected');
+      $(`.priority-option[data-priority="${priority}"]`).addClass('selected');
+      $('#priority').val(priority);
+    }
+
+    // File input label update
+    $('#screenshot').change(function() {
+      var fileName = $(this).val().split('\\').pop();
+      $(this).next('.custom-file-label').html(fileName || 'Choisir un fichier...');
+    });
+
+    // Form submission
+    $('#bugForm').submit(function(e) {
+      e.preventDefault();
+
+      var formData = new FormData(this);
+
+      $.ajax({
+        url: '/api/bug-reports',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(data) {
+          if (data.success) {
+            // Redirect immediately to bug reports list
+            window.location.href = '/bug-reports';
+          } else {
+            alert(data.error || 'Erreur lors de l\'envoi du rapport');
+          }
+        },
+        error: function(xhr) {
+          var error = xhr.responseJSON?.error || 'Erreur lors de l\'envoi du rapport';
+          alert(error);
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>

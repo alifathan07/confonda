@@ -38,6 +38,7 @@ export const login = async (req, res) => {
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (isPasswordValid) {
             req.session.user = { id: user.id, name: user.name, email: user.email, role: user.role, chantierId: user.chantierId };
+            req.session.showWelcomeBugMessage = true; // Flag for welcome popup
             req.session.save(() => {
                 return res.redirect('/dashboard');
             });

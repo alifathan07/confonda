@@ -1,5 +1,5 @@
 import express from 'express';
-import { isGrandAdmin, isAuthenticated, isAdmin, isUser } from '../middlewares/auth.js';
+import { isGrandAdmin, isAuthenticated, isAdmin, isUser, isDeveloper, canCreateBug } from '../middlewares/auth.js';
 import { create, update, show, deleteSupplier, importExel, upload, atess } from '../controllers/supplierController.js';
 import multer from 'multer';
 import ExcelJS from 'exceljs';
@@ -26,8 +26,11 @@ import { addJustifCaisse, addJustifCaisseAdminAuto, addJustifCaisseUserFirstTime
 import { addpricingforDemande, createDemandeFourniture, deleteDemandeFourniture, downloadImageFourniture, editDemandeFourniture, generateDemandeFourniturePDF, indexDemandeFourniture, storeDemandeFourniture, updateDemandeFourniture, updateDemandeStatus, updateEtat, updateValidationFourniture, uploadFour, uploadImageFourniture, uploadTempImage, validateAllFourniture, viewDemandeFourniture } from '../controllers/demandeFourniture.js';
 import { fileURLToPath } from 'url';
 import { EditDemandePrix, listDemandePrix, postDemandePrixViaFourniture, updateDemandePrix, viewDemandePrix, deleteDemandePrix, deleteArticle, createDemandePrix, storeDemandePrix, generateDemandePrixPDF, sendDemandePrixEmail } from '../controllers/demandeprixController.js';
-import { editBc, postBcDemandeFourniture, updateBc, deleteBcItem, createBcForm, storeBc, generateBcPDF, sendBcEmail, listBc, deleteBc, updateBcItemDistribution, updateBcItem, importBcInfo, updateSupplier, getArticlesRemaining, createBondeLivraison,affecterBL } from '../controllers/bcController.js';
-import { searchBLs, getBLArticles, affecterBCToBL, listBL, uploadBLFileHandler, downloadBLFile, uploadBLFile, editBL, updateBL, deleteBL } from '../controllers/blController.js';
+import { editBc, postBcDemandeFourniture, updateBc, deleteBcItem, createBcForm, storeBc, generateBcPDF, sendBcEmail, listBc, deleteBc, updateBcItemDistribution, updateBcItem, importBcInfo, updateSupplier, getArticlesRemaining, createBondeLivraison,affecterBL, getBCDashboard } from '../controllers/bcController.js';
+import { searchBLs, getBLArticles, affecterBCToBL, listBL, uploadBLFileHandler, downloadBLFile, uploadBLFile, editBL, updateBL, deleteBL, viewFacture, viewFactureAvoir, viewBL } from '../controllers/blController.js';
+import { listFactures, getFacture, createFacture, updateFacture, deleteFacture, affecterBLToFacture, listFactureAvoirs, createFactureAvoir, deleteFactureAvoir, affecterBLToFactureAvoir, getFacturesByFournisseur, getFactureAvoirsByFournisseur, getFactureAvoirsByFacture, getFactureAvoir, getBLFactureStatus, uploadFactureFile, downloadFactureFile, uploadFactureFileMulter } from '../controllers/factureController.js';
+import { listBugReports, createBugReportForm, createBugReport, editBugReportForm, updateBugReport, deleteBugReport, getBugReport, getBugStats, uploadBugScreenshot } from '../controllers/bugReportController.js';
+import { listPopups, createPopupForm, createPopup, editPopupForm, updatePopup, deletePopup, getActivePopupsForUser, dismissPopup, toggleUserPopup, getPopupStats } from '../controllers/popupController.js';
 import { bmceDelete, bmceDownload, bmcePay, bmcePreview, bmceUpload, indexVirementPay } from '../controllers/virementpayController.js';
 import { getListFourniture } from '../controllers/listfournitureController.js';
 import { addNumbers, deleteNum, editSettingNum, settingsIndex } from '../controllers/settingsController.js';
@@ -121,6 +124,98 @@ dashboardRouter.get('/dashboard', isAdmin, async (req, res) => {
       amount: p.montant,
     })).filter(p => p.date !== null);
 
+    // Check for welcome message flag
+    const showWelcomeBugMessage = req.session.showWelcomeBugMessage || false;
+    if (showWelcomeBugMessage) {
+      delete req.session.showWelcomeBugMessage;
+    }
+
+    // Fetch active popups for this user
+    let activePopups = [];
+    const user = req.session.user;
+    if (user && user.popupEnabled !== false) {
+      const now = new Date();
+      const dismissedPopups = req.session.dismissedPopups || [];
+      const afterLoginShown = req.session.afterLoginShown || [];
+      
+      const popups = await prisma.popup.findMany({
+        where: {
+          status: 'active',
+          startDate: { lte: now },
+          OR: [
+            { endDate: null },
+            { endDate: { gte: now } }
+          ]
+        }
+      });
+
+      // Filter popups based on displayMode, target users/roles, and dismissal
+      activePopups = popups.filter(popup => {
+        const dismissedBy = popup.dismissedBy ? popup.dismissedBy.split(',').map(id => parseInt(id)) : [];
+        
+        // Check target users
+        if (popup.targetUsers) {
+          const targetUserIds = popup.targetUsers.split(',').map(id => parseInt(id));
+          if (!targetUserIds.includes(user.id)) return false;
+        }
+
+        // Check target roles
+        if (popup.targetRoles) {
+          const targetRoleList = popup.targetRoles.split(',');
+          if (!targetRoleList.includes(user.role)) return false;
+        }
+
+        // Handle displayMode
+        switch (popup.displayMode) {
+          case 'once_only':
+            // Show once per user permanently (stored in DB)
+            if (dismissedBy.includes(user.id)) return false;
+            break;
+            
+          case 'after_login':
+            // Show once per session after login
+            if (afterLoginShown.includes(popup.id)) return false;
+            // Mark as shown for this session
+            if (!req.session.afterLoginShown) req.session.afterLoginShown = [];
+            if (!req.session.afterLoginShown.includes(popup.id)) {
+              req.session.afterLoginShown.push(popup.id);
+            }
+            break;
+            
+          case 'always':
+            // Always show unless explicitly dismissed this session
+            if (dismissedPopups.includes(popup.id)) return false;
+            break;
+            
+          case 'after_every_action':
+            // Show on every page load until dismissed in DB
+            if (dismissedBy.includes(user.id)) return false;
+            break;
+            
+          default:
+            // Legacy: use showOnce logic
+            if (popup.showOnce && dismissedPopups.includes(popup.id)) return false;
+        }
+
+        return true;
+      });
+    }
+
+    // Fetch "Nouveau" bug reports for developer role ONLY to show as popups
+    let nouveauBugs = [];
+    if (user && user.role === 'developer') {
+      const dismissedBugs = req.session.dismissedBugs || [];
+      
+      nouveauBugs = await prisma.bugReport.findMany({
+        where: {
+          status: 'nouveau',
+          id: { notIn: dismissedBugs.length > 0 ? dismissedBugs : [0] }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5 // Show max 5 at a time
+      });
+    }
+
     res.render('dashboard/index', {
       user: req.session.user,
       banques,
@@ -130,6 +225,9 @@ dashboardRouter.get('/dashboard', isAdmin, async (req, res) => {
       echeancesThisWeek,
       recettesChartData,
       payementsChartData,
+      showWelcomeBugMessage,
+      activePopups,
+      nouveauBugs,
     });
   } catch (error) {
     console.error(error);
@@ -452,7 +550,9 @@ dashboardRouter.post('/api/bc/:id/send-email', sendBcEmail);
 
 dashboardRouter.post('/achats/bc/create-from-demande', postBcDemandeFourniture);
 dashboardRouter.get('/achats/demandefourniture/:id/pdf', generateDemandeFourniturePDF)
-dashboardRouter.get("/achat/bon-commande", listBc);
+dashboardRouter.get("/achat/bc", listBc);
+dashboardRouter.get("/achat/bon-commande", (req, res) => res.redirect('/achat/bc'));
+dashboardRouter.get("/achats/bons-commande/:id/dashboard", getBCDashboard);
 dashboardRouter.delete("/achat/bc/:id", deleteBc)
 // import bc to list 
 dashboardRouter.post('/achat/bc/import', upload.single('excelFile'), importBcInfo);
@@ -481,10 +581,38 @@ dashboardRouter.post('/api/bons-livraison/:id/upload', uploadBLFile.single('file
 dashboardRouter.get('/api/bons-livraison/:id/download', downloadBLFile);
 
 // BL edit page and update
+dashboardRouter.get('/achats/bons-livraison/:id/view', viewBL);
 dashboardRouter.get('/achats/bons-livraison/:id/edit', editBL);
 dashboardRouter.put('/achats/bons-livraison/:id', updateBL);
 dashboardRouter.delete('/api/bons-livraison/:id', deleteBL);
 
+// -----------Factures-----------------
+dashboardRouter.get('/achats/factures', listFactures);
+dashboardRouter.get('/achats/factures/:id/view', viewFacture);
+// dashboardRouter.get('/achats/factures/:id/edit', editFacture);
+dashboardRouter.put('/achats/factures/:id', updateFacture);
+dashboardRouter.get('/api/factures', listFactures);
+dashboardRouter.get('/api/factures/:id', getFacture);
+dashboardRouter.post('/api/factures', createFacture);
+dashboardRouter.put('/api/factures/:id', updateFacture);
+dashboardRouter.delete('/api/factures/:id', deleteFacture);
+dashboardRouter.post('/api/factures/:id/affecter-bl', affecterBLToFacture);
+dashboardRouter.get('/api/factures/by-fournisseur/:fournisseurId', getFacturesByFournisseur);
+dashboardRouter.post('/api/factures/:id/upload', uploadFactureFileMulter.single('file'), uploadFactureFile);
+dashboardRouter.get('/api/factures/:id/download', downloadFactureFile);
+
+// -----------Factures Avoir-----------------
+dashboardRouter.get('/achats/factures-avoir/:id/view', viewFactureAvoir);
+dashboardRouter.get('/api/factures-avoir', listFactureAvoirs);
+dashboardRouter.get('/api/factures/avoirs/:id', getFactureAvoir);
+dashboardRouter.post('/api/factures-avoir', createFactureAvoir);
+dashboardRouter.delete('/api/factures-avoir/:id', deleteFactureAvoir);
+dashboardRouter.post('/api/factures-avoir/:id/affecter-bl', affecterBLToFactureAvoir);
+dashboardRouter.get('/api/factures/:factureId/avoirs', getFactureAvoirsByFacture);
+dashboardRouter.get('/api/factures-avoir/by-fournisseur/:fournisseurId', getFactureAvoirsByFournisseur);
+
+// -----------BL Facture Status-----------------
+dashboardRouter.get('/api/bons-livraison/:id/facture-status', getBLFactureStatus);
 
 
 
@@ -521,4 +649,72 @@ dashboardRouter.post('/settings/whatsapp-recipients', isGrandAdmin, addNumbers);
 dashboardRouter.post('/settings/whatsapp-recipients/:id', isGrandAdmin, editSettingNum);
 
 dashboardRouter.post('/settings/whatsapp-recipients/:id/delete', isGrandAdmin, deleteNum );
+
+// -----------Bug Reports-----------------
+// List all bug reports - accessible to all authenticated users
+dashboardRouter.get('/bug-reports', isAuthenticated, listBugReports);
+
+// Create bug report form - only admin, grandadmin, granduser
+dashboardRouter.get('/bug-reports/create', canCreateBug, createBugReportForm);
+
+// Create bug report API - only admin, grandadmin, granduser
+dashboardRouter.post('/api/bug-reports', canCreateBug, uploadBugScreenshot.single('screenshot'), createBugReport);
+
+// Edit bug report form - ONLY developer can access
+dashboardRouter.get('/bug-reports/:id/edit', isDeveloper, editBugReportForm);
+
+// Update bug report - only developer can update (change status)
+dashboardRouter.put('/api/bug-reports/:id', isDeveloper, updateBugReport);
+
+// Delete bug report - developer can delete any, users can delete their own
+dashboardRouter.delete('/api/bug-reports/:id', isAuthenticated, deleteBugReport);
+
+// Get bug report by ID (API) - only developer
+dashboardRouter.get('/api/bug-reports/:id', isDeveloper, getBugReport);
+
+// Get bug statistics - accessible to all
+dashboardRouter.get('/api/bug-reports/stats', isAuthenticated, getBugStats);
+
+// Dismiss bug notification for developer
+dashboardRouter.post('/api/bug-reports/:id/dismiss', isDeveloper, (req, res) => {
+  const bugId = parseInt(req.params.id);
+  if (!req.session.dismissedBugs) {
+    req.session.dismissedBugs = [];
+  }
+  if (!req.session.dismissedBugs.includes(bugId)) {
+    req.session.dismissedBugs.push(bugId);
+  }
+  res.json({ success: true, message: 'Bug notification dismissed' });
+});
+
+// -----------Popups (Developer only)-----------------
+// List all popups
+dashboardRouter.get('/popups', isDeveloper, listPopups);
+
+// Create popup form
+dashboardRouter.get('/popups/create', isDeveloper, createPopupForm);
+
+// Create popup API
+dashboardRouter.post('/api/popups', isDeveloper, createPopup);
+
+// Edit popup form
+dashboardRouter.get('/popups/:id/edit', isDeveloper, editPopupForm);
+
+// Update popup
+dashboardRouter.put('/api/popups/:id', isDeveloper, updatePopup);
+
+// Delete popup
+dashboardRouter.delete('/api/popups/:id', isDeveloper, deletePopup);
+
+// Get active popups for current user (public)
+dashboardRouter.get('/api/popups/active', isAuthenticated, getActivePopupsForUser);
+
+// Dismiss popup for current user
+dashboardRouter.post('/api/popups/:id/dismiss', isAuthenticated, dismissPopup);
+
+// Toggle user popup enabled status
+dashboardRouter.patch('/api/users/:userId/popup-toggle', isDeveloper, toggleUserPopup);
+
+// Get popup statistics
+dashboardRouter.get('/api/popups/stats', isDeveloper, getPopupStats);
 

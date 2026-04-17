@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard BC - <%= bc.numero %></title>
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+
+  <style>
+    .dashboard-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 1rem;
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .section-card {
+      background: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+
+    .section-header {
+      background: #f8f9fa;
+      padding: 1rem 1.5rem;
+      border-bottom: 2px solid #667eea;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+
+    .section-body {
+      padding: 1.5rem;
+    }
+
+    .item-row:hover {
+      background: #f8f9fa;
+    }
+
+    .badge-bl {
+      background: #4e73df;
+      color: white;
+    }
+
+    .badge-facture {
+      background: #1cc88a;
+      color: white;
+    }
+
+    .badge-avoir {
+      background: #f6c23e;
+      color: black;
+    }
+
+    .link-chain {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .link-arrow {
+      color: #6c757d;
+    }
+  </style>
+</head>
+
+<body id="page-top">
+  <div id="wrapper">
+    <%- include('../../../layouts/sidebar') %>
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <%- include('../../../layouts/topbar') %>
+        <div class="container-fluid">
+
+          <!-- Header -->
+          <div class="dashboard-header">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h3 class="mb-0"><i class="fas fa-file-invoice-dollar mr-2"></i>Dashboard Bon de Commande</h3>
+                <p class="mb-0 mt-2"><strong>N° <%= bc.numero %></strong> - <%= bc.fournisseur?.name || 'N/A' %></p>
+                <small>Date: <%= new Date(bc.date).toLocaleDateString('fr-FR') %></small>
+              </div>
+              <a href="/achat/bon-commande" class="btn btn-light">
+                <i class="fas fa-arrow-left"></i> Retour à la liste
+              </a>
+            </div>
+          </div>
+
+          <!-- Stats Row -->
+          <div class="row">
+            <div class="col-md-3">
+              <div class="stat-card text-center">
+                <div class="stat-number"><%= bc.commandesItems?.length || 0 %></div>
+                <div class="text-muted">Articles commandés</div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="stat-card text-center">
+                <div class="stat-number"><%= bls?.length || 0 %></div>
+                <div class="text-muted">BLs liés</div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="stat-card text-center">
+                <div class="stat-number"><%= factures?.length || 0 %></div>
+                <div class="text-muted">Factures</div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="stat-card text-center">
+                <div class="stat-number">
+                  <%= factures?.reduce((sum, f) => sum + (f.totalTtc || 0), 0).toFixed(2) %> DH
+                </div>
+                <div class="text-muted">Total TTC Facturé</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Articles du BC -->
+          <div class="section-card">
+            <div class="section-header">
+              <h5 class="mb-0"><i class="fas fa-shopping-cart mr-2"></i>Articles du Bon de Commande</h5>
+            </div>
+            <div class="section-body">
+              <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                  <thead class="thead-light">
+                    <tr>
+                      <th>N°</th>
+                      <th>Désignation</th>
+                      <th>Référence</th>
+                      <th>Unité</th>
+                      <th class="text-center">Qté Commandée</th>
+                      <th class="text-center">Prix U.</th>
+                      <th class="text-right">Total HT</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% if (bc.commandesItems && bc.commandesItems.length > 0) { %>
+                      <% bc.commandesItems.forEach((item, index) => { %>
+                        <tr class="item-row">
+                          <td><%= index + 1 %></td>
+                          <td><strong><%= item.designation %></strong></td>
+                          <td><%= item.reference || '-' %></td>
+                          <td><%= item.unite || '-' %></td>
+                          <td class="text-center"><%= item.quantite %></td>
+                          <td class="text-center"><%= item.prixUnitaire?.toFixed(2) || '-' %> DH</td>
+                          <td class="text-right"><%= item.totalHt?.toFixed(2) || (item.quantite * item.prixUnitaire).toFixed(2) %> DH</td>
+                        </tr>
+                      <% }) %>
+                    <% } else { %>
+                      <tr>
+                        <td colspan="7" class="text-center text-muted">Aucun article</td>
+                      </tr>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- BLs Liés -->
+          <div class="section-card">
+            <div class="section-header">
+              <h5 class="mb-0"><i class="fas fa-truck mr-2"></i>Bons de Livraison Liés</h5>
+            </div>
+            <div class="section-body">
+              <% if (bls && bls.length > 0) { %>
+                <% bls.forEach((bl, blIndex) => { %>
+                  <div class="card mb-3">
+                    <div class="card-header bg-light">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <div class="link-chain">
+                          <span class="badge badge-bl"><i class="fas fa-truck"></i> BL <%= blIndex + 1 %></span>
+                          <a href="/achats/bons-livraison/<%= bl.id %>/edit" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-external-link-alt"></i> <%= bl.numero %>
+                          </a>
+                          <span class="text-muted">| <%= new Date(bl.date).toLocaleDateString('fr-FR') %></span>
+                        </div>
+                        <span class="badge badge-<%= bl.status === 'Actif' ? 'success' : 'secondary' %>">
+                          <%= bl.status %>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="card-body">
+                      <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                          <thead class="thead-light">
+                            <tr>
+                              <th>Article</th>
+                              <th class="text-center">Qté commandée</th>
+                              <th class="text-center">Qté reçue</th>
+                              <th class="text-center" style="background-color: #fff3cd;">Qté Retournée</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <% if (bl.items && bl.items.length > 0) { %>
+                              <% bl.items.forEach(blItem => { %>
+                                <tr>
+                                  <td><%= blItem.designation %></td>
+                                  <td class="text-center">
+                                    <% 
+                                      // First check current BC, then check all other BCs linked to this BL
+                                      let bcItem = bc.commandesItems?.find(ci => ci.id === blItem.commandesItemsId);
+                                      if (!bcItem && bl.bondeCommandeLinks) {
+                                        for (const link of bl.bondeCommandeLinks) {
+                                          if (link.bondeCommande?.commandesItems) {
+                                            bcItem = link.bondeCommande.commandesItems.find(ci => ci.id === blItem.commandesItemsId);
+                                            if (bcItem) break;
+                                          }
+                                        }
+                                      }
+                                    %>
+                                    <%= bcItem?.quantite || '-' %>
+                                  </td>
+                                  <td class="text-center"><%= blItem.quantite %> <%= blItem.unite %></td>
+                                  <td class="text-center" style="background-color: #fff3cd; font-weight: bold; color: #856404;">
+                                    <%= blItem.qtyRetourne || 0 %>
+                                  </td>
+                                </tr>
+                              <% }) %>
+                            <% } else { %>
+                              <tr>
+                                <td colspan="4" class="text-center text-muted">Aucun article</td>
+                              </tr>
+                            <% } %>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <!-- Factures liées à ce BL -->
+                      <% if (bl.factureLinks && bl.factureLinks.length > 0) { %>
+                        <div class="mt-3">
+                          <h6 class="text-muted"><i class="fas fa-file-invoice mr-1"></i>Factures liées à ce BL:</h6>
+                          <div class="link-chain mt-2">
+                            <% bl.factureLinks.forEach((fl, fi) => { %>
+                              <a href="/achats/factures/<%= fl.facture?.id %>/view" class="btn btn-sm btn-success">
+                                <i class="fas fa-file-invoice"></i> <%= fl.facture?.numero %>
+                              </a>
+                              <span class="text-muted">(<%= fl.facture?.totalTtc?.toFixed(2) %> DH)</span>
+                              <% if (fi < bl.factureLinks.length - 1) { %>
+                                <span class="link-arrow">|</span>
+                              <% } %>
+                            <% }) %>
+                          </div>
+                        </div>
+                      <% } %>
+                    </div>
+                  </div>
+                <% }) %>
+              <% } else { %>
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle"></i> Aucun BL lié à ce bon de commande.
+                </div>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- Toutes les Factures -->
+          <div class="section-card">
+            <div class="section-header">
+              <h5 class="mb-0"><i class="fas fa-file-invoice-dollar mr-2"></i>Toutes les Factures</h5>
+            </div>
+            <div class="section-body">
+              <% if (factures && factures.length > 0) { %>
+                <div class="table-responsive">
+                  <table class="table table-sm table-hover">
+                    <thead class="thead-light">
+                      <tr>
+                        <th>N° Facture</th>
+                        <th>Date</th>
+                        <th class="text-right">Total HT</th>
+                        <th class="text-center">TVA</th>
+                        <th class="text-right">Total TTC</th>
+                        <th>BLs Source</th>
+                        <th>Avoirs</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% factures.forEach(facture => { %>
+                        <tr class="item-row">
+                          <td>
+                            <span class="badge badge-facture"><i class="fas fa-file-invoice"></i></span>
+                            <strong><%= facture.numero %></strong>
+                          </td>
+                          <td><%= new Date(facture.date).toLocaleDateString('fr-FR') %></td>
+                          <td class="text-right"><%= facture.totalHt?.toFixed(2) %> DH</td>
+                          <td class="text-center"><%= facture.tauxTva %>%</td>
+                          <td class="text-right"><strong><%= facture.totalTtc?.toFixed(2) %> DH</strong></td>
+                          <td>
+                            <% if (facture.bondeLivraisonLinks) { %>
+                              <% facture.bondeLivraisonLinks.forEach(fl => { %>
+                                <span class="badge badge-bl mr-1"><%= fl.bondeLivraison?.numero %></span>
+                              <% }) %>
+                            <% } %>
+                          </td>
+                          <td>
+                            <% if (facture.avoirs && facture.avoirs.length > 0) { %>
+                              <% facture.avoirs.forEach(avoir => { %>
+                                <span class="badge badge-avoir mr-1" title="<%= avoir.type %>">
+                                  <i class="fas fa-minus-circle"></i> <%= avoir.numero %>
+                                </span>
+                              <% }) %>
+                            <% } else { %>
+                              <span class="text-muted">-</span>
+                            <% } %>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Résumé des factures -->
+                <div class="alert alert-info mt-3">
+                  <div class="row">
+                    <div class="col-md-4">
+                      <strong>Total HT:</strong> <%= factures.reduce((sum, f) => sum + (f.totalHt || 0), 0).toFixed(2) %> DH
+                    </div>
+                    <div class="col-md-4">
+                      <strong>Total TVA:</strong> <%= factures.reduce((sum, f) => sum + ((f.totalTtc || 0) - (f.totalHt || 0)), 0).toFixed(2) %> DH
+                    </div>
+                    <div class="col-md-4">
+                      <strong>Total TTC:</strong> <%= factures.reduce((sum, f) => sum + (f.totalTtc || 0), 0).toFixed(2) %> DH
+                    </div>
+                  </div>
+                </div>
+              <% } else { %>
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle"></i> Aucune facture associée à ce bon de commande.
+                </div>
+              <% } %>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+  <script src="/js/sb-admin-2.min.js"></script>
+</body>
+
+</html>

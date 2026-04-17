@@ -18,6 +18,7 @@ import fs from "fs";
 import { generateBcPDF } from './controllers/bcController.js';
 import { postUser, userData } from './controllers/usersController.js';
 import { apiRouter } from './routes/api.js';
+import { checkPopups } from './middlewares/popups.js';
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -60,6 +61,9 @@ app.use(session({
         httpOnly: true
     }
 }));
+
+// Global popup middleware - runs on every request
+app.use(checkPopups);
 
 const PUBLIC_BC_SECRET = process.env.PUBLIC_BC_SECRET || 'confonda_public_bc_secret';
 

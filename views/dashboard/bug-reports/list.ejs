@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Liste des Rapports de Bugs</title>
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+
+  <style>
+    .bug-card {
+      border-left: 4px solid;
+      margin-bottom: 1rem;
+    }
+
+    .bug-nouveau { border-left-color: #6c757d; }
+    .bug-en_cours { border-left-color: #ffc107; }
+    .bug-resolu { border-left-color: #28a745; }
+    .bug-ferme { border-left-color: #17a2b8; }
+
+    .priority-critique { color: #dc3545; font-weight: bold; }
+    .priority-haute { color: #fd7e14; font-weight: bold; }
+    .priority-moyenne { color: #ffc107; }
+    .priority-basse { color: #6c757d; }
+
+    .status-badge {
+      font-size: 0.75rem;
+      padding: 0.35em 0.65em;
+    }
+  </style>
+</head>
+
+<body id="page-top">
+  <div id="wrapper">
+    <%- include('../../layouts/sidebar') %>
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <%- include('../../layouts/topbar') %>
+        <div class="container-fluid">
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0 text-gray-800">
+              <i class="fas fa-bug mr-2"></i>Rapports de Bugs
+            </h1>
+            <a href="/bug-reports/create" class="btn btn-primary">
+              <i class="fas fa-plus mr-2"></i>Signaler un Bug
+            </a>
+          </div>
+
+          <!-- Stats Cards -->
+          <div class="row mb-4">
+            <div class="col-xl-3 col-md-6">
+              <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Nouveaux</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800" id="count-nouveau">0</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-exclamation-circle fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+              <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">En Cours</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800" id="count-en_cours">0</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-spinner fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+              <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Résolus</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800" id="count-resolu">0</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+              <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800" id="count-total">0</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-bug fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">Filtres</h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-3">
+                  <select class="form-control" id="filter-status" onchange="filterBugs()">
+                    <option value="all">Tous les statuts</option>
+                    <option value="nouveau">Nouveau</option>
+                    <option value="en_cours">En Cours</option>
+                    <option value="resolu">Résolu</option>
+                    <option value="ferme">Fermé</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <select class="form-control" id="filter-priority" onchange="filterBugs()">
+                    <option value="all">Toutes les priorités</option>
+                    <option value="critique">Critique</option>
+                    <option value="haute">Haute</option>
+                    <option value="moyenne">Moyenne</option>
+                    <option value="basse">Basse</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <select class="form-control" id="filter-category" onchange="filterBugs()">
+                    <option value="all">Toutes les catégories</option>
+                    <option value="ui">Interface (UI)</option>
+                    <option value="fonctionnalite">Fonctionnalité</option>
+                    <option value="performance">Performance</option>
+                    <option value="securite">Sécurité</option>
+                    <option value="autre">Autre</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <input type="text" class="form-control" id="filter-search" placeholder="Rechercher..." onkeyup="filterBugs()">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bug List -->
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">Liste des Bugs</h6>
+            </div>
+            <div class="card-body">
+              <% if (!bugReports || bugReports.length === 0) { %>
+                <div class="text-center py-5">
+                  <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                  <h5>Aucun bug signalé !</h5>
+                  <p class="text-muted">C'est un bon signe. Mais si vous trouvez un bug, n'hésitez pas à le signaler.</p>
+                  <a href="/bug-reports/create" class="btn btn-primary">Signaler un Bug</a>
+                </div>
+              <% } else { %>
+                <div class="table-responsive">
+                  <table class="table table-hover" id="bugsTable">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Titre</th>
+                        <th>Catégorie</th>
+                        <th>Priorité</th>
+                        <th>Statut</th>
+                        <th>Signalé par</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% bugReports.forEach(bug => { %>
+                        <tr class="bug-row bug-<%= bug.status %>" data-status="<%= bug.status %>" data-priority="<%= bug.priority %>" data-category="<%= bug.category %>">
+                          <td>#<%= bug.id %></td>
+                          <td>
+                            <strong><%= bug.title %></strong>
+                            <% if (bug.screenshot) { %>
+                              <i class="fas fa-image text-info ml-1" title="Capture d'écran attachée"></i>
+                            <% } %>
+                          </td>
+                          <td>
+                            <span class="badge badge-light">
+                              <%= bug.category === 'ui' ? 'UI' : 
+                                  bug.category === 'fonctionnalite' ? 'Fonctionnalité' :
+                                  bug.category === 'performance' ? 'Performance' :
+                                  bug.category === 'securite' ? 'Sécurité' : 'Autre' %>
+                            </span>
+                          </td>
+                          <td class="priority-<%= bug.priority %>">
+                            <%= bug.priority.charAt(0).toUpperCase() + bug.priority.slice(1) %>
+                          </td>
+                          <td>
+                            <span class="badge status-badge badge-<%= 
+                              bug.status === 'nouveau' ? 'secondary' :
+                              bug.status === 'en_cours' ? 'warning' :
+                              bug.status === 'resolu' ? 'success' : 'info' %>">
+                              <%= bug.status === 'nouveau' ? 'Nouveau' :
+                                  bug.status === 'en_cours' ? 'En Cours' :
+                                  bug.status === 'resolu' ? 'Résolu' : 'Fermé' %>
+                            </span>
+                          </td>
+                          <td><%= bug.userName || 'Anonyme' %></td>
+                          <td><%= new Date(bug.createdAt).toLocaleDateString('fr-FR') %></td>
+                          <td>
+                            <% const isDev = user?.role === 'developer'; %>
+                            <% const isOwner = bug.userId === user?.id; %>
+                            
+                            <% if (isDev) { %>
+                              <a href="/bug-reports/<%= bug.id %>/edit" class="btn btn-sm btn-info" title="Traiter le bug">
+                                <i class="fas fa-wrench"></i>
+                              </a>
+                            <% } %>
+                            
+                            <% if (isDev || isOwner) { %>
+                              <button class="btn btn-sm btn-danger" onclick="deleteBug(<%= bug.id %>)" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                              </button>
+                            <% } %>
+                          </td>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+              <% } %>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Modal -->
+  <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirmer la suppression</h5>
+          <button type="button" class="close" data-dismiss="modal">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          Êtes-vous sûr de vouloir supprimer ce rapport de bug ?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-danger" id="confirmDelete">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+  <script src="/js/sb-admin-2.min.js"></script>
+
+  <script>
+    let deleteBugId = null;
+
+    // Load stats on page load
+    $(document).ready(function() {
+      loadStats();
+    });
+
+    function loadStats() {
+      $.get('/api/bug-reports/stats', function(data) {
+        if (data.success) {
+          const statusStats = {};
+          data.statusStats.forEach(s => {
+            statusStats[s.status] = s._count.status;
+          });
+          $('#count-nouveau').text(statusStats['nouveau'] || 0);
+          $('#count-en_cours').text(statusStats['en_cours'] || 0);
+          $('#count-resolu').text(statusStats['resolu'] || 0);
+          $('#count-total').text(
+            (statusStats['nouveau'] || 0) +
+            (statusStats['en_cours'] || 0) +
+            (statusStats['resolu'] || 0) +
+            (statusStats['ferme'] || 0)
+          );
+        }
+      });
+    }
+
+    function filterBugs() {
+      const status = $('#filter-status').val();
+      const priority = $('#filter-priority').val();
+      const category = $('#filter-category').val();
+      const search = $('#filter-search').val().toLowerCase();
+
+      $('.bug-row').each(function() {
+        const rowStatus = $(this).data('status');
+        const rowPriority = $(this).data('priority');
+        const rowCategory = $(this).data('category');
+        const rowText = $(this).text().toLowerCase();
+
+        const matchStatus = status === 'all' || rowStatus === status;
+        const matchPriority = priority === 'all' || rowPriority === priority;
+        const matchCategory = category === 'all' || rowCategory === category;
+        const matchSearch = rowText.includes(search);
+
+        $(this).toggle(matchStatus && matchPriority && matchCategory && matchSearch);
+      });
+    }
+
+    function deleteBug(id) {
+      deleteBugId = id;
+      $('#deleteModal').modal('show');
+    }
+
+    $('#confirmDelete').click(function() {
+      if (!deleteBugId) return;
+
+      $.ajax({
+        url: '/api/bug-reports/' + deleteBugId,
+        method: 'DELETE',
+        success: function(data) {
+          if (data.success) {
+            window.location.reload();
+          } else {
+            alert(data.error || 'Erreur lors de la suppression');
+          }
+        },
+        error: function() {
+          alert('Erreur lors de la suppression');
+        }
+      });
+
+      $('#deleteModal').modal('hide');
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Voir/Modifier le Bug #<%= bugReport.id %></title>
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+
+  <style>
+    .timeline {
+      position: relative;
+      padding-left: 30px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 10px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: #e3e6f0;
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 1rem;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -24px;
+      top: 5px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #4e73df;
+      border: 2px solid white;
+    }
+
+    .screenshot-preview {
+      max-width: 100%;
+      max-height: 400px;
+      border: 1px solid #e3e6f0;
+      border-radius: 0.5rem;
+    }
+
+    .status-nouveau { background: #6c757d; color: white; }
+    .status-en_cours { background: #ffc107; color: black; }
+    .status-resolu { background: #28a745; color: white; }
+    .status-ferme { background: #17a2b8; color: white; }
+
+    .priority-critique { background: #dc3545; color: white; }
+    .priority-haute { background: #fd7e14; color: white; }
+    .priority-moyenne { background: #ffc107; color: black; }
+    .priority-basse { background: #6c757d; color: white; }
+  </style>
+</head>
+
+<body id="page-top">
+  <div id="wrapper">
+    <%- include('../../layouts/sidebar') %>
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <%- include('../../layouts/topbar') %>
+        <div class="container-fluid">
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0 text-gray-800">
+              <i class="fas fa-bug mr-2 text-danger"></i>Bug #<%= bugReport.id %>: <%= bugReport.title %>
+            </h1>
+            <div>
+              <a href="/bug-reports" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Retour
+              </a>
+              <button class="btn btn-danger ml-2" onclick="deleteBug(<%= bugReport.id %>)">
+                <i class="fas fa-trash mr-2"></i>Supprimer
+              </button>
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- Left Column - Bug Details -->
+            <div class="col-lg-8">
+              <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                  <h6 class="m-0 font-weight-bold text-primary">Description du problème</h6>
+                  <span class="badge <%= 'priority-' + bugReport.priority %>">
+                    <%= bugReport.priority.charAt(0).toUpperCase() + bugReport.priority.slice(1) %>
+                  </span>
+                </div>
+                <div class="card-body">
+                  <p class="lead"><%= bugReport.title %></p>
+                  <hr>
+                  <h6 class="font-weight-bold">Description détaillée:</h6>
+                  <p style="white-space: pre-wrap;"><%= bugReport.description %></p>
+
+                  <% if (bugReport.url) { %>
+                  <hr>
+                  <h6 class="font-weight-bold">Page concernée:</h6>
+                  <a href="<%= bugReport.url %>" target="_blank" class="btn btn-sm btn-outline-info">
+                    <i class="fas fa-external-link-alt mr-1"></i><%= bugReport.url %>
+                  </a>
+                  <% } %>
+                </div>
+              </div>
+
+              <% if (bugReport.screenshot) { %>
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Capture d'écran</h6>
+                </div>
+                <div class="card-body text-center">
+                  <img src="/<%= bugReport.screenshot %>" alt="Screenshot" class="screenshot-preview">
+                  <br>
+                  <a href="/<%= bugReport.screenshot %>" target="_blank" class="btn btn-sm btn-outline-primary mt-3">
+                    <i class="fas fa-expand mr-1"></i>Voir en taille réelle
+                  </a>
+                </div>
+              </div>
+              <% } %>
+            </div>
+
+            <!-- Right Column - Info & Actions -->
+            <div class="col-lg-4">
+              <!-- Status Card -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Statut et Actions</h6>
+                </div>
+                <div class="card-body">
+                  <form id="updateForm">
+                    <div class="form-group">
+                      <label class="font-weight-bold">Statut actuel</label>
+                      <select class="form-control" name="status" id="status" onchange="updateBug()">
+                        <option value="nouveau" <%= bugReport.status === 'nouveau' ? 'selected' : '' %>>Nouveau</option>
+                        <option value="en_cours" <%= bugReport.status === 'en_cours' ? 'selected' : '' %>>En Cours</option>
+                        <option value="resolu" <%= bugReport.status === 'resolu' ? 'selected' : '' %>>Résolu</option>
+                        <option value="ferme" <%= bugReport.status === 'ferme' ? 'selected' : '' %>>Fermé</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="font-weight-bold">Priorité</label>
+                      <select class="form-control" name="priority" id="priority" onchange="updateBug()">
+                        <option value="basse" <%= bugReport.priority === 'basse' ? 'selected' : '' %>>Basse</option>
+                        <option value="moyenne" <%= bugReport.priority === 'moyenne' ? 'selected' : '' %>>Moyenne</option>
+                        <option value="haute" <%= bugReport.priority === 'haute' ? 'selected' : '' %>>Haute</option>
+                        <option value="critique" <%= bugReport.priority === 'critique' ? 'selected' : '' %>>Critique</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="font-weight-bold">Catégorie</label>
+                      <select class="form-control" name="category" id="category" onchange="updateBug()">
+                        <option value="ui" <%= bugReport.category === 'ui' ? 'selected' : '' %>>Interface (UI)</option>
+                        <option value="fonctionnalite" <%= bugReport.category === 'fonctionnalite' ? 'selected' : '' %>>Fonctionnalité</option>
+                        <option value="performance" <%= bugReport.category === 'performance' ? 'selected' : '' %>>Performance</option>
+                        <option value="securite" <%= bugReport.category === 'securite' ? 'selected' : '' %>>Sécurité</option>
+                        <option value="autre" <%= bugReport.category === 'autre' ? 'selected' : '' %>>Autre</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="font-weight-bold">Résolution / Commentaire</label>
+                      <textarea class="form-control" name="resolution" id="resolution" rows="4" 
+                        placeholder="Décrivez la solution ou ajoutez un commentaire..."
+                        onblur="updateBug()"><%= bugReport.resolution || '' %></textarea>
+                    </div>
+                  </form>
+
+                  <hr>
+
+                  <div class="timeline">
+                    <div class="timeline-item">
+                      <small class="text-muted">Signalé le <%= new Date(bugReport.createdAt).toLocaleString('fr-FR') %></small>
+                      <br>
+                      <span>par <strong><%= bugReport.userName || 'Anonyme' %></strong></span>
+                      <% if (bugReport.userEmail) { %>
+                      <br><small class="text-muted"><%= bugReport.userEmail %></small>
+                      <% } %>
+                    </div>
+                    <% if (bugReport.resolvedAt) { %>
+                    <div class="timeline-item">
+                      <small class="text-muted">Résolu le <%= new Date(bugReport.resolvedAt).toLocaleString('fr-FR') %></small>
+                    </div>
+                    <% } %>
+                    <% if (bugReport.updatedAt > bugReport.createdAt) { %>
+                    <div class="timeline-item">
+                      <small class="text-muted">Mis à jour le <%= new Date(bugReport.updatedAt).toLocaleString('fr-FR') %></small>
+                    </div>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Actions -->
+              <div class="card shadow">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Actions rapides</h6>
+                </div>
+                <div class="card-body">
+                  <button class="btn btn-success btn-block mb-2" onclick="setStatus('resolu')">
+                    <i class="fas fa-check mr-1"></i>Marquer comme Résolu
+                  </button>
+                  <button class="btn btn-warning btn-block mb-2" onclick="setStatus('en_cours')">
+                    <i class="fas fa-spinner mr-1"></i>Marquer En Cours
+                  </button>
+                  <button class="btn btn-info btn-block" onclick="setStatus('ferme')">
+                    <i class="fas fa-archive mr-1"></i>Fermer le ticket
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Modal -->
+  <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirmer la suppression</h5>
+          <button type="button" class="close" data-dismiss="modal">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          Êtes-vous sûr de vouloir supprimer ce rapport de bug ?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-danger" onclick="confirmDelete()">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+  <script src="/js/sb-admin-2.min.js"></script>
+
+  <script>
+    let deleteBugId = <%= bugReport.id %>;
+
+    // Store original values for update
+    const originalTitle = `<%- bugReport.title %>`;
+    const originalDescription = `<%- bugReport.description %>`;
+
+    function updateBug() {
+      const data = {
+        title: originalTitle,
+        description: originalDescription,
+        status: $('#status').val(),
+        priority: $('#priority').val(),
+        category: $('#category').val(),
+        resolution: $('#resolution').val()
+      };
+
+      $.ajax({
+        url: '/api/bug-reports/<%= bugReport.id %>',
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: function(response) {
+          if (response.success) {
+            // Show toast or brief notification
+            console.log('Bug mis à jour');
+          }
+        },
+        error: function() {
+          alert('Erreur lors de la mise à jour');
+        }
+      });
+    }
+
+    function setStatus(status) {
+      $('#status').val(status);
+      updateBug();
+    }
+
+    function deleteBug(id) {
+      $('#deleteModal').modal('show');
+    }
+
+    function confirmDelete() {
+      $.ajax({
+        url: '/api/bug-reports/' + deleteBugId,
+        method: 'DELETE',
+        success: function(data) {
+          if (data.success) {
+            window.location.href = '/bug-reports';
+          } else {
+            alert(data.error || 'Erreur lors de la suppression');
+          }
+        },
+        error: function() {
+          alert('Erreur lors de la suppression');
+        }
+      });
+      $('#deleteModal').modal('hide');
+    }
+  </script>
+</body>
+
+</html>

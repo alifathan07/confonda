@@ -92,6 +92,81 @@
       border-radius: 50px;
     }
 
+    /* Process Tracker - Professional Styling */
+    .process-tracker {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      padding: 1rem;
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e2e8f0;
+    }
+
+    .process-step {
+      display: flex;
+      align-items: center;
+    }
+
+    .process-box {
+      padding: 0.4rem 0.5rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.7rem;
+      text-align: center;
+      width: 120px;
+      height: 85px;
+      border: 2px solid;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.2;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .process-box i {
+      font-size: 1rem;
+      margin-bottom: 2px;
+    }
+
+    .process-box.inactive {
+      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+      border-color: #cbd5e1;
+      color: #64748b;
+    }
+
+    .process-box.active {
+      background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+      border-color: #22c55e;
+      color: #166534;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25);
+    }
+
+    .process-box.active i {
+      color: #15803d;
+    }
+
+    .process-arrow {
+      padding: 0 12px;
+      font-size: 1.4rem;
+      transition: all 0.3s ease;
+    }
+
+    .process-arrow.inactive {
+      color: #cbd5e1;
+    }
+
+    .process-arrow.active {
+      color: #22c55e;
+      text-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+    }
+
     .btn-modern {
       padding: 0.7rem 1.4rem;
       border-radius: 12px;
@@ -774,6 +849,201 @@
       font-weight: 700;
       color: #94a3b8;
     }
+
+    /* BL Modal styles */
+    .bl-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1050;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .bl-modal-overlay.show {
+      display: flex;
+    }
+
+    .bl-modal {
+      background: white;
+      border-radius: 0.5rem;
+      width: 100%;
+      max-width: 900px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .bl-modal-sm {
+      max-width: 600px;
+    }
+
+    .bl-modal-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid #e3e6f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #4e73df;
+      color: white;
+      border-radius: 0.5rem 0.5rem 0 0;
+    }
+
+    .bl-modal-header h5 {
+      margin: 0;
+      font-weight: 600;
+      font-size: 1.25rem;
+    }
+
+    .bl-modal-header .subtitle {
+      font-size: 0.875rem;
+      opacity: 0.9;
+      margin-top: 0.25rem;
+    }
+
+    .bl-modal-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0.25rem;
+      line-height: 1;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+
+    .bl-modal-close:hover {
+      opacity: 1;
+    }
+
+    .bl-modal-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .bl-modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid #e3e6f0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    .article-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 100px 40px;
+      gap: 1rem;
+      align-items: center;
+      padding: 0.75rem;
+      border: 1px solid #e3e6f0;
+      border-radius: 0.375rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .article-row.disabled {
+      background: #f8f9fa;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .article-row.removed {
+      display: none;
+    }
+
+    .article-info .designation {
+      font-weight: 500;
+      color: #333;
+    }
+
+    .article-info .reference {
+      font-size: 0.75rem;
+      color: #6c757d;
+    }
+
+    .btn-remove-article {
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 0.25rem;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .bl-list-item {
+      padding: 1rem;
+      border: 2px solid #e3e6f0;
+      border-radius: 0.5rem;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .bl-list-item:hover {
+      border-color: #667eea;
+      background: #f8f9fc;
+    }
+
+    .bl-list-item.selected {
+      border-color: #667eea;
+      background: #e8eaff;
+    }
+
+    .bl-list-empty {
+      text-align: center;
+      padding: 2rem;
+      color: #6c757d;
+    }
+
+    .toast-container {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 1060;
+    }
+
+    .toast {
+      background: white;
+      border-radius: 0.5rem;
+      padding: 1rem 1.25rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      min-width: 300px;
+      margin-bottom: 0.5rem;
+      animation: slideIn 0.3s ease;
+    }
+
+    .toast.success {
+      border-left: 4px solid #1cc88a;
+    }
+
+    .toast.error {
+      border-left: 4px solid #e74a3b;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
   </style>
 </head>
 
@@ -807,9 +1077,82 @@
                   title="Sauvegarder les modifications">
                   <i class="fas fa-save"></i> <span>Sauvegarder</span>
                 </button>
+                <button class="btn btn-sm btn-info d-flex align-items-center gap-1" title="Créer un BL"
+                  onclick="openBLCreationModal(<%= bc.id %>, '<%= (bc.fournisseur && bc.fournisseur.name) || '' %>', <%= (bc.fournisseur && bc.fournisseur.id) || 'null' %>, '<%= bc.numero || bc.id %>')">
+                  <i class="fas fa-box"></i> <span>Créer BL</span>
+                </button>
               </div>
             </div>
           </div> <!-- Close action-bar div -->
+
+          <!-- Process Tracker -->
+          <%
+            // Determine process status based on BC data
+            const hasBL = bc.bondeLivraisonLinks && bc.bondeLivraisonLinks.length > 0;
+            let hasFacture = false;
+            let hasReglement = false;
+            
+            if (hasBL) {
+              for (const link of bc.bondeLivraisonLinks) {
+                if (link.bondeLivraison) {
+                  if (link.bondeLivraison.factureLinks && link.bondeLivraison.factureLinks.length > 0) {
+                    hasFacture = true;
+                    // Check for reglements
+                    for (const fl of link.bondeLivraison.factureLinks) {
+                      if (fl.facture && fl.facture.reglements && fl.facture.reglements.length > 0) {
+                        hasReglement = true;
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          %>
+          <div class="process-tracker no-print">
+            <div class="process-step">
+              <div class="process-box active" title="Bon de Commande">
+                <i class="fas fa-file-contract"></i><br><strong>Bon de Commande</strong>
+              </div>
+            </div>
+            <div class="process-arrow <%= hasBL ? 'active' : 'inactive' %>">
+              <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="process-step">
+              <div class="process-box <%= hasBL ? 'active' : 'inactive' %>" title="<%= hasBL ? 'BL créé - livraison en cours' : 'En attente de BL' %>">
+                <% if (hasBL) { %>
+                  <i class="fas fa-truck"></i><br><strong>BL Créé</strong><br><small>Livré</small>
+                <% } else { %>
+                  <i class="fas fa-truck"></i><br><strong>BL</strong><br><small>En attente</small>
+                <% } %>
+              </div>
+            </div>
+            <div class="process-arrow <%= hasFacture ? 'active' : 'inactive' %>">
+              <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="process-step">
+              <div class="process-box <%= hasFacture ? 'active' : 'inactive' %>" title="<%= hasFacture ? 'Facture créée' : 'En attente de facture' %>">
+                <% if (hasFacture) { %>
+                  <i class="fas fa-file-invoice"></i><br><strong>Facture</strong><br><small>Créée</small>
+                <% } else { %>
+                  <i class="fas fa-file-invoice"></i><br><strong>Facture</strong><br><small>En attente</small>
+                <% } %>
+              </div>
+            </div>
+            <div class="process-arrow <%= hasReglement ? 'active' : 'inactive' %>">
+              <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="process-step">
+              <div class="process-box <%= hasReglement ? 'active' : 'inactive' %>" title="<%= hasReglement ? 'Règlement effectué' : 'En attente de règlement' %>">
+                <% if (hasReglement) { %>
+                  <i class="fas fa-check-circle"></i><br><strong>Règlement</strong><br><small>Payé</small>
+                <% } else { %>
+                  <i class="fas fa-check-circle"></i><br><strong>Règlement</strong><br><small>En attente</small>
+                <% } %>
+              </div>
+            </div>
+          </div>
+
           <!-- Document -->
           <div class="doc-card">
               <!-- Document -->
@@ -827,7 +1170,6 @@
                     </div>
                     <div style="font-weight:800; color:#b45309; font-size: 1.05rem;"></div>
                   </div>
-
                   <div class="header-grid">
                     <div class="fournisseur-box">
                       <input type="date" name="date" value="<%= new Date(bc.date).toISOString().slice(0,10) %>" hidden>
@@ -1207,6 +1549,319 @@
       <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
       <script>
+        // BL Creation Modal Functions
+        function openBLCreationModal(bcId, fourName, fourId, bcNumero) {
+          document.getElementById('blActionModal').style.display = 'flex';
+          document.getElementById('blActionSubtitle').textContent = 'BC n° ' + bcNumero;
+          window.currentBCEditionId = bcId;
+          window.currentBCFournisseurId = fourId;
+          window.currentBCNumero = bcNumero;
+        }
+
+        function closeBLActionModal() {
+          document.getElementById('blActionModal').style.display = 'none';
+          window.currentBCEditionId = null;
+        }
+
+        // ==================== BL MODAL FUNCTIONS ====================
+        let currentArticles = [];
+        let removedArticleIds = new Set();
+        let selectedBLId = null;
+        let unlinkedBLs = [];
+        let existingBLArticles = [];
+        let remainingBCArticles = [];
+        let removedRemainingArticleIds = new Set();
+
+        async function openCreateBLModal(bcId) {
+          currentArticles = [];
+          removedArticleIds.clear();
+          document.getElementById('createBLSubtitle').textContent = 'BC n° ' + (window.currentBCNumero || bcId);
+          document.getElementById('createBL_bcId').value = bcId;
+          document.getElementById('createBLForm').reset();
+          document.getElementById('dateReception').valueAsDate = new Date();
+          try {
+            const response = await fetch('/api/bons-commande/' + bcId + '/articles-remaining');
+            if (!response.ok) throw new Error('Erreur de chargement des articles');
+            currentArticles = await response.json();
+            renderArticles();
+            document.getElementById('createBLModal').style.display = 'flex';
+          } catch (error) {
+            showToast('Erreur: ' + error.message, 'error');
+          }
+        }
+
+        function closeCreateBLModal() {
+          document.getElementById('createBLModal').style.display = 'none';
+          currentArticles = [];
+          removedArticleIds.clear();
+        }
+
+        function renderArticles() {
+          const container = document.getElementById('articlesContainer');
+          if (currentArticles.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted py-4">Aucun article à livrer</div>';
+            return;
+          }
+          let html = '<div style="display:grid; grid-template-columns: 2fr 100px 100px 100px 40px; gap:10px; padding:10px; background:#f8f9fc; font-weight:bold; font-size:0.85rem; color:#4e73df;"><div>Article</div><div class="text-center">Cmd/Reçu</div><div class="text-center">Qty Livrer</div><div class="text-center">Prix Unit.</div><div></div></div>';
+          currentArticles.forEach(article => {
+            if (removedArticleIds.has(article.id)) return;
+            const qteRestante = article.qte_commandee - article.qte_deja_recue;
+            if (article.qte_deja_recue >= article.qte_commandee) {
+              html += '<div class="article-row disabled" style="display:grid; grid-template-columns:2fr 100px 100px 100px; gap:10px; padding:12px 10px; border-bottom:1px solid #e3e6f0; align-items:center; background:#f8f9fa; opacity:0.6;"><div><strong>' + article.designation + '</strong><div style="font-size:0.8rem; color:#6c757d;">Réf: ' + (article.reference || '---') + '</div></div><div class="text-center"><span class="badge badge-success">Complet</span></div><div class="text-center"><input type="number" class="form-control form-control-sm" value="' + article.qte_commandee + '" disabled></div><div class="text-center">' + (article.prixUnitaire || '') + '</div></div>';
+            } else {
+              const badge = article.qte_deja_recue > 0 ? '<span class="badge badge-warning">' + article.qte_deja_recue + '/' + article.qte_commandee + '</span>' : '<span class="badge badge-info">0/' + article.qte_commandee + '</span>';
+              html += '<div class="article-row" data-id="' + article.id + '" data-qte-commandee="' + article.qte_commandee + '" data-qte-recue="' + article.qte_deja_recue + '" style="display:grid; grid-template-columns:2fr 100px 100px 100px; gap:10px; padding:12px 10px; border-bottom:1px solid #e3e6f0; align-items:center;"><div><strong>' + article.designation + '</strong><div style="font-size:0.8rem; color:#6c757d;">Réf: ' + (article.reference || '---') + '</div></div><div class="text-center">' + badge + '</div><div class="text-center"><input type="number" class="form-control form-control-sm qte-input" data-id="' + article.id + '" value="' + qteRestante + '" min="0" max="' + qteRestante + '"></div><div class="text-center"><input type="number" class="form-control form-control-sm prix-input" data-id="' + article.id + '" value="' + (article.prixUnitaire || '') + '" step="0.01"></div></div>';
+            }
+          });
+          container.innerHTML = html;
+        }
+
+        async function submitCreateBL() {
+          const numeroBL = document.getElementById('numeroBL').value.trim();
+          const dateReception = document.getElementById('dateReception').value;
+          if (!numeroBL) { showToast('Le N° BL est requis', 'error'); return; }
+          if (!dateReception) { showToast('La date de réception est requise', 'error'); return; }
+          const activeArticles = [];
+          document.querySelectorAll('.article-row:not(.disabled)').forEach(row => {
+            const id = parseInt(row.dataset.id);
+            const input = row.querySelector('.qte-input');
+            const qte = parseFloat(input?.value || 0);
+            const prixInput = row.querySelector('.prix-input');
+            const prixUnitaire = prixInput?.value ? parseFloat(prixInput.value) : null;
+            if (qte > 0) activeArticles.push({ id, qte, prixUnitaire });
+          });
+          if (activeArticles.length === 0) { showToast('Au moins un article actif est requis', 'error'); return; }
+          const btn = document.getElementById('btnSaveBL');
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
+          try {
+            const response = await fetch('/api/bons-livraison', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ bcId: window.currentBCEditionId, numeroBL, dateReception, articles: activeArticles })
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+              showToast('Bon de livraison créé avec succès', 'success');
+              closeCreateBLModal();
+              window.location.reload();
+            } else {
+              throw new Error(data.error || 'Erreur lors de la création');
+            }
+          } catch (error) {
+            showToast('Erreur: ' + error.message, 'error');
+          } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Enregistrer le BL';
+          }
+        }
+
+        async function openAffecterBLModal(bcId) {
+          selectedBLId = null;
+          unlinkedBLs = [];
+          document.getElementById('affecterBLSubtitle').textContent = 'BC n° ' + (window.currentBCNumero || '');
+          document.getElementById('searchBLInput').value = '';
+          document.getElementById('btnAffecterBLNext').disabled = true;
+          document.getElementById('affecterBLModal').style.display = 'flex';
+          await loadUnlinkedBLs();
+        }
+
+        function closeAffecterBLModal(preserveContext = false) {
+          document.getElementById('affecterBLModal').style.display = 'none';
+          if (!preserveContext) {
+            selectedBLId = null;
+            unlinkedBLs = [];
+            document.getElementById('btnAffecterBLNext').disabled = true;
+          }
+        }
+
+        async function loadUnlinkedBLs(query = '') {
+          const container = document.getElementById('blListContainer');
+          container.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i><p>Chargement...</p></div>';
+          try {
+            const fournisseurId = window.currentBCFournisseurId;
+            console.log('loadUnlinkedBLs - fournisseurId:', fournisseurId, 'type:', typeof fournisseurId);
+            if (!fournisseurId || fournisseurId === 'null' || fournisseurId === 'undefined') {
+              container.innerHTML = '<div class="bl-list-empty"><p>Fournisseur non défini pour ce BC.</p></div>';
+              return;
+            }
+            const url = '/api/bons-livraison/search?fournisseur_id=' + fournisseurId + '&q=' + encodeURIComponent(query);
+            console.log('Loading BLs from:', url);
+            const response = await fetch(url);
+            const data = await response.json();
+            console.log('BL search response:', response.status, data);
+            if (!response.ok) throw new Error('Erreur de chargement: ' + (data.error || response.statusText));
+            unlinkedBLs = data;
+            renderBLList(unlinkedBLs);
+          } catch (error) {
+            console.error('loadUnlinkedBLs error:', error);
+            container.innerHTML = '<div class="bl-list-empty"><p>Erreur: ' + error.message + '</p></div>';
+          }
+        }
+
+        function renderBLList(bls) {
+          const container = document.getElementById('blListContainer');
+          console.log('renderBLList called with:', bls.length, 'items');
+          if (bls.length === 0) {
+            container.innerHTML = '<div class="bl-list-empty"><p>Aucun BL disponible à affecter</p></div>';
+            return;
+          }
+          let rows = bls.map(bl => {
+            const dateStr = bl.dateReception ? new Date(bl.dateReception).toLocaleDateString('fr-FR') : '---';
+            return '<div class="bl-list-item ' + (bl.id === selectedBLId ? 'selected' : '') + '" data-id="' + bl.id + '" onclick="selectBL(' + bl.id + ')"><div><strong>BL n° ' + (bl.numero || '---') + '</strong></div><div class="text-muted small">' + dateStr + '</div><div class="text-muted small">' + (bl.fournisseur_name || '---') + '</div><div><span class="badge badge-info">' + (bl.nb_articles || 0) + '</span></div></div>';
+          }).join('');
+          console.log('Generated HTML:', rows.substring(0, 200));
+          container.innerHTML = rows;
+          console.log('Container innerHTML length:', container.innerHTML.length);
+        }
+
+        function selectBL(blId) {
+          selectedBLId = blId;
+          document.getElementById('btnAffecterBLNext').disabled = false;
+          document.querySelectorAll('.bl-list-item').forEach(item => {
+            item.classList.toggle('selected', parseInt(item.dataset.id) === blId);
+          });
+        }
+
+        function filterBLList() {
+          loadUnlinkedBLs(document.getElementById('searchBLInput').value);
+        }
+
+        async function goToAffecterBLStep2() {
+          if (!selectedBLId || !window.currentBCEditionId) {
+            showToast('Veuillez sélectionner un BL et un BC valides', 'error');
+            return;
+          }
+          const selectedBL = unlinkedBLs.find(b => b.id === selectedBLId);
+          if (!selectedBL) return;
+          document.getElementById('affecterBLDetailsTitle').innerHTML = '<i class="fas fa-link"></i> Affecter BL n° ' + selectedBL.numero + ' - BC n° ' + (window.currentBCNumero || '');
+          document.getElementById('affecterBLDetailsSubtitle').textContent = (selectedBL.fournisseur_name || '---');
+          closeAffecterBLModal(true);
+          document.getElementById('affecterBLDetailsModal').style.display = 'flex';
+          removedRemainingArticleIds.clear();
+          existingBLArticles = [];
+          remainingBCArticles = [];
+          document.getElementById('existingBLArticlesContainer').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i></div>';
+          document.getElementById('remainingBCArticlesContainer').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i></div>';
+          document.getElementById('btnConfirmAffectation').disabled = true;
+          try {
+            const resExisting = await fetch('/api/bons-livraison/' + selectedBLId + '/articles');
+            if (resExisting.ok) { existingBLArticles = await resExisting.json(); renderExistingBLArticles(); }
+            const resRemaining = await fetch('/api/bons-commande/' + window.currentBCEditionId + '/articles-remaining');
+            if (resRemaining.ok) { remainingBCArticles = await resRemaining.json(); renderRemainingBCArticles(); }
+            checkConfirmButtonState();
+          } catch (e) { showToast('Erreur lors du chargement des détails', 'error'); }
+        }
+
+        function closeAffecterBLDetailsModal() {
+          document.getElementById('affecterBLDetailsModal').style.display = 'none';
+        }
+
+        function renderExistingBLArticles() {
+          const container = document.getElementById('existingBLArticlesContainer');
+          if (existingBLArticles.length === 0) {
+            container.innerHTML = '<div class="text-muted small">Aucun article enregistré dans ce BL.</div>';
+            return;
+          }
+          let html = '';
+          existingBLArticles.forEach(article => {
+            html += '<div style="padding:10px; border-bottom:1px solid #e3e6f0; background:#f8f9fa; opacity:0.6;"><strong>' + (article.designation || '---') + '</strong><div class="text-muted small">Qté: ' + (article.qte_recue || 0) + '</div></div>';
+          });
+          container.innerHTML = html;
+        }
+
+        function renderRemainingBCArticles() {
+          const container = document.getElementById('remainingBCArticlesContainer');
+          if (remainingBCArticles.length === 0) {
+            container.innerHTML = '<div class="text-muted small">Tous les articles de ce BC ont déjà été reçus.</div>';
+            return;
+          }
+          let activeCount = 0;
+          let html = '';
+          remainingBCArticles.forEach(article => {
+            if (removedRemainingArticleIds.has(article.id)) return;
+            const qteRestante = article.qte_commandee - article.qte_deja_recue;
+            if (qteRestante <= 0) return;
+            activeCount++;
+            html += '<div class="article-row remaining-article-row" data-id="' + article.id + '" data-qte-commandee="' + article.qte_commandee + '" data-qte-recue="' + article.qte_deja_recue + '" style="display:grid; grid-template-columns:2fr 100px 100px 100px 40px; gap:10px; padding:12px 10px; border-bottom:1px solid #e3e6f0; align-items:center;"><div><strong>' + (article.designation || '---') + '</strong><div style="font-size:0.8rem; color:#6c757d;">Réf: ' + (article.reference || '---') + '</div></div><div class="text-center"><span class="badge badge-info">' + article.qte_deja_recue + '/' + article.qte_commandee + '</span></div><div class="text-center"><input type="number" class="form-control form-control-sm affect-qte-input" data-id="' + article.id + '" value="' + qteRestante + '" min="0" max="' + qteRestante + '"></div><div class="text-center"><input type="number" class="form-control form-control-sm affect-prix-input" data-id="' + article.id + '" value="' + (article.prixUnitaire || '') + '" step="0.01"></div><div><button type="button" class="btn-remove-article" onclick="removeRemainingArticle(' + article.id + ')">×</button></div></div>';
+          });
+          if (activeCount === 0) {
+            container.innerHTML = '<div class="alert alert-info">Tous les articles de ce BC ont déjà été reçus.</div>';
+          } else {
+            container.innerHTML = html;
+          }
+          checkConfirmButtonState();
+        }
+
+        function removeRemainingArticle(articleId) {
+          removedRemainingArticleIds.add(articleId);
+          renderRemainingBCArticles();
+        }
+
+        function checkConfirmButtonState() {
+          const btn = document.getElementById('btnConfirmAffectation');
+          if (!btn) return;
+          let hasValidArticle = false;
+          document.querySelectorAll('.remaining-article-row').forEach(row => {
+            const input = row.querySelector('.affect-qte-input');
+            if (input && parseInt(input.value) > 0) hasValidArticle = true;
+          });
+          btn.disabled = !hasValidArticle;
+        }
+
+        async function submitAffectationFinale() {
+          if (!selectedBLId || !window.currentBCEditionId) return;
+          const articlesToAffect = [];
+          document.querySelectorAll('.remaining-article-row').forEach(row => {
+            const id = parseInt(row.dataset.id);
+            const input = row.querySelector('.affect-qte-input');
+            const qte = parseFloat(input?.value || 0);
+            const prixInput = row.querySelector('.affect-prix-input');
+            const prixUnitaire = prixInput?.value ? parseFloat(prixInput.value) : null;
+            if (qte > 0) articlesToAffect.push({ bc_article_id: id, qte_recue: qte, prixUnitaire: prixUnitaire });
+          });
+          if (articlesToAffect.length === 0) { showToast('Au moins un article valide est requis', 'error'); return; }
+          const btn = document.getElementById('btnConfirmAffectation');
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Affectation...';
+          try {
+            const response = await fetch('/api/bons-livraison/' + selectedBLId + '/affecter-bc', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ bc_id: window.currentBCEditionId, articles: articlesToAffect })
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+              showToast('BL affecté avec succès', 'success');
+              closeAffecterBLDetailsModal();
+              window.location.reload();
+            } else {
+              throw new Error(data.error || 'Erreur lors de l\'affectation');
+            }
+          } catch (error) {
+            showToast('Erreur: ' + error.message, 'error');
+          } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check"></i> Confirmer l\'affectation';
+          }
+        }
+
+        function showToast(message, type = 'success') {
+          const container = document.getElementById('toastContainer');
+          const toast = document.createElement('div');
+          toast.className = 'toast ' + type;
+          toast.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle text-success' : 'exclamation-circle text-danger') + '"></i><span>' + message + '</span>';
+          container.appendChild(toast);
+          setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 4000);
+        }
+
+        function createNewBL() {
+          const bcId = window.currentBCEditionId;
+          if (!bcId) return;
+          closeBLActionModal();
+          window.location.href = '/achat/bl/create?bcId=' + bcId;
+        }
+
         function sendEmail() {
           const btn = $('#btnSend');
           btn.html('<i class="fas fa-spinner fa-spin"></i> Envoi...').prop('disabled', true);
@@ -1227,7 +1882,7 @@
 
         function downloadPDF(id) {
           if (!id) return;
-          window.location.href = `/achat/bc/${id}/pdf`;
+          window.location.href = '/achat/bc/' + id + '/pdf';
         }
 
         // Fournisseurs data for BC edit (UI only)
@@ -2542,6 +3197,125 @@
         }
 
       </script>
+
+      <!-- BL Action Modal -->
+      <div class="bl-modal-overlay" id="blActionModal" style="display:none;">
+        <div class="bl-modal bl-modal-sm">
+          <div class="bl-modal-header">
+            <div>
+              <h5><i class="fas fa-box"></i> Gestion des Bons de Livraison</h5>
+              <div class="subtitle" id="blActionSubtitle">BC n° ---</div>
+            </div>
+            <button class="bl-modal-close" onclick="closeBLActionModal()">&times;</button>
+          </div>
+          <div class="bl-modal-body text-center py-4">
+            <p class="mb-4">Que souhaitez-vous faire ?</p>
+            <div class="d-flex flex-column gap-3">
+              <button class="btn btn-primary btn-lg" onclick="openCreateBLModal(window.currentBCEditionId); closeBLActionModal();">
+                <i class="fas fa-plus-circle"></i> Créer un nouveau BL
+              </button>
+              <button class="btn btn-outline-primary btn-lg" onclick="openAffecterBLModal(window.currentBCEditionId); closeBLActionModal();">
+                <i class="fas fa-link"></i> Affecter un BL existant
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL: Créer un BL -->
+      <div class="bl-modal-overlay" id="createBLModal" style="display:none;">
+        <div class="bl-modal">
+          <div class="bl-modal-header">
+            <div>
+              <h5><i class="fas fa-file-invoice"></i> Nouveau Bon de Livraison</h5>
+              <div class="subtitle" id="createBLSubtitle">BC n° ---</div>
+            </div>
+            <button class="bl-modal-close" onclick="closeCreateBLModal()">&times;</button>
+          </div>
+          <div class="bl-modal-body">
+            <form id="createBLForm">
+              <input type="hidden" id="createBL_bcId" name="bcId">
+              <div class="form-group">
+                <label class="font-weight-bold">N° BL</label>
+                <input type="text" class="form-control" id="numeroBL" name="numeroBL" required>
+              </div>
+              <div class="form-group">
+                <label class="font-weight-bold">Date de réception</label>
+                <input type="date" class="form-control" id="dateReception" name="dateReception" required>
+              </div>
+              <div class="form-group">
+                <label class="font-weight-bold">Articles à livrer</label>
+                <div id="articlesContainer"></div>
+              </div>
+            </form>
+          </div>
+          <div class="bl-modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeCreateBLModal()">Annuler</button>
+            <button type="button" class="btn btn-success" id="btnSaveBL" onclick="submitCreateBL()">
+              <i class="fas fa-save"></i> Enregistrer le BL
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL: Affecter un BL (Etape 1) -->
+      <div class="bl-modal-overlay" id="affecterBLModal" style="display:none;">
+        <div class="bl-modal bl-modal-sm">
+          <div class="bl-modal-header">
+            <div>
+              <h5><i class="fas fa-link"></i> Affecter un BL existant</h5>
+              <div class="subtitle" id="affecterBLSubtitle">BC n° ---</div>
+            </div>
+            <button class="bl-modal-close" onclick="closeAffecterBLModal()">&times;</button>
+          </div>
+          <div class="bl-modal-body">
+            <div class="form-group mb-3">
+              <label class="font-weight-bold">Rechercher par N° BL ou date...</label>
+              <input type="text" class="form-control" id="searchBLInput" oninput="filterBLList()">
+            </div>
+            <div id="blListContainer">
+              <div class="bl-list-empty">
+                <i class="fas fa-search fa-2x mb-2"></i>
+                <p>Recherchez un bon de livraison à affecter</p>
+              </div>
+            </div>
+          </div>
+          <div class="bl-modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeAffecterBLModal()">Annuler</button>
+            <button type="button" class="btn btn-primary" id="btnAffecterBLNext" onclick="goToAffecterBLStep2()" disabled>
+              Suivant <i class="fas fa-arrow-right ml-1"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL: Affecter un BL - Etape 2 -->
+      <div class="bl-modal-overlay" id="affecterBLDetailsModal" style="display:none;">
+        <div class="bl-modal">
+          <div class="bl-modal-header">
+            <div>
+              <h5 id="affecterBLDetailsTitle">Affecter BL n° ---</h5>
+              <div class="subtitle" id="affecterBLDetailsSubtitle"></div>
+            </div>
+            <button class="bl-modal-close" onclick="closeAffecterBLDetailsModal()">&times;</button>
+          </div>
+          <div class="bl-modal-body">
+            <h6 class="font-weight-bold mb-3 mt-2 text-secondary"><i class="fas fa-lock"></i> Articles déjà dans ce BL</h6>
+            <div id="existingBLArticlesContainer" class="mb-4"></div>
+            <h6 class="font-weight-bold mb-3"><i class="fas fa-boxes"></i> Articles du BC à ajouter</h6>
+            <div id="remainingBCArticlesContainer"></div>
+          </div>
+          <div class="bl-modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeAffecterBLDetailsModal()">Annuler</button>
+            <button type="button" class="btn btn-primary" id="btnConfirmAffectation" onclick="submitAffectationFinale()">
+              <i class="fas fa-check"></i> Confirmer l'affectation
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toast Container -->
+      <div class="toast-container" id="toastContainer"></div>
 
 </body>
 

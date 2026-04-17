@@ -229,7 +229,7 @@
         <hr class="sidebar-divider">
 
         <!-- Nav Item - Payment Methods -->
-        <% if (user && user.role === 'grandadmin' || user.role === 'admin') { %>
+        <% if (user && (user.role === 'grandadmin' || user.role === 'admin' || user.role === 'developer')) { %>
             <li class="nav-item">
                 <a class="nav-link py-3" href="/tresorerie">
                     <i class="fas fa-fw fa-credit-card" style="font-size: 17px;"></i>
@@ -276,6 +276,22 @@
             </li>
 
             <hr class="sidebar-divider">
+            <% if (user && user.role === 'developer') { %>
+            <li class="nav-item">
+                <a class="nav-link py-3" href="/popups">
+                    <i class="fas fa-fw fa-bullhorn" style="font-size: 17px;"></i>
+                    <span>Gestion Popups</span>
+                </a>
+            </li>
+            <% } %>
+            <% if (user && (user.role === 'admin' || user.role === 'grandadmin' || user.role === 'granduser' || user.role === 'developer')) { %>
+            <li class="nav-item">
+                <a class="nav-link py-3" href="/bug-reports">
+                    <i class="fas fa-fw fa-bug" style="font-size: 17px;"></i>
+                    <span>Signaler un problème</span>
+                </a>
+            </li>
+            <% } %>
             <li class="nav-item">
                 <a class="nav-link py-3" href="/settings">
                     <i class="fas fa-fw fa-cog" style="font-size: 17px;"></i>
@@ -300,7 +316,7 @@
           <% } %>
         <hr class="sidebar-divider">
 
-        <% if (user && user.role === 'grandadmin') { %>
+        <% if (user && (user.role === 'grandadmin' || user.role === 'developer')) { %>
         <li class="nav-item">
             <a class="nav-link py-3" href="/users">
                 <i class="fas fa-fw fa-users" style="font-size: 17px;"></i>

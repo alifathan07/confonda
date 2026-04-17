@@ -121,6 +121,21 @@
     }
 
     /* Status badges for BC */
+    /* BL badge style */
+    .badge-bl {
+      background: #4e73df;
+      color: white;
+      font-size: 0.75rem;
+      padding: 0.35em 0.65em;
+      text-decoration: none;
+    }
+
+    .badge-bl:hover {
+      background: #2e59d9;
+      color: white;
+      text-decoration: none;
+    }
+
     .bc-status-badge {
       font-size: 0.75rem;
       padding: 0.35em 0.65em;
@@ -151,17 +166,6 @@
 
     .bl-dropdown-menu {
       display: none;
-      position: absolute;
-      right: 0;
-      top: 100%;
-      margin-top: 4px;
-      min-width: 200px;
-      background: white;
-      border: 1px solid #e3e6f0;
-      border-radius: 0.5rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      z-index: 1000;
-      overflow: hidden;
     }
 
     .bl-dropdown-menu.show {
@@ -452,6 +456,27 @@
 
                 <div class="card-body">
 
+                  <!-- Search by BC Number -->
+                  <div class="mb-3">
+                    <form method="GET" action="/achat/bc" class="d-flex flex-wrap gap-2 align-items-center">
+                      <div class="input-group" style="max-width: 300px;">
+                        <input type="text" name="search" class="form-control form-control-sm" 
+                          placeholder="Rechercher par numéro BC..." 
+                          value="<%= typeof search !== 'undefined' ? search : '' %>">
+                        <div class="input-group-append">
+                          <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fas fa-search"></i>
+                          </button>
+                        </div>
+                      </div>
+                      <% if (typeof search !== 'undefined' && search) { %>
+                        <a href="/achat/bc" class="btn btn-outline-secondary btn-sm">
+                          <i class="fas fa-times"></i> Effacer
+                        </a>
+                      <% } %>
+                    </form>
+                  </div>
+
                   <!-- Status Filter Pills -->
                   <div class="mb-3">
                     <div class="d-flex flex-wrap gap-2 align-items-center">
@@ -476,14 +501,16 @@
                           <th>Fournisseur</th>
                           <th>Chantiers</th>
                           <th>Articles</th>
+                          <th>BLs Liés</th>
                           <th>Statut</th>
+                          <th>Statut facturation</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         <% if (!bc || bc.length===0) { %>
                           <tr>
-                            <td colspan="7" class="text-center text-muted">Aucun Bon de commande disponible.</td>
+                            <td colspan="9" class="text-center text-muted">Aucun Bon de commande disponible.</td>
                           </tr>
                           <% } else { %>
                             <% bc.forEach(dp=> { %>
@@ -537,6 +564,19 @@
                                     <%= Array.isArray(dp.commandesItems) ? dp.commandesItems.length : 0 %>
                                   </span></td>
                                 <td class="text-center">
+                                  <% if (dp.bondeLivraisonLinks && dp.bondeLivraisonLinks.length > 0) { %>
+                                    <% dp.bondeLivraisonLinks.forEach((link, index) => { %>
+                                      <% if (link.bondeLivraison) { %>
+                                        <a href="/achats/bons-livraison/<%= link.bondeLivraison.id %>/edit" class="badge badge-bl d-block mb-1" title="Voir BL">
+                                          BL n° <%= link.bondeLivraison.numero %>
+                                        </a>
+                                      <% } %>
+                                    <% }) %>
+                                  <% } else { %>
+                                    <span class="text-muted">0</span>
+                                  <% } %>
+                                </td>
+                                <td class="text-center">
                                   <span class="badge badge-<%= dp.statusColor || 'secondary' %> bc-status-badge"
                                     data-status="<%= dp.statusValue %>" data-bc-id="<%= dp.id %>">
                                     <%= dp.statusLabel || 'Att. BL' %>
@@ -546,10 +586,54 @@
                                         <% } %>
                                   </span>
                                 </td>
+                                <td class="text-center">
+                                  <% 
+                                    // Collect all unique factures and avoirs from linked BLs
+                                    const factureSet = new Set();
+                                    const avoirSet = new Set();
+                                    if (dp.bondeLivraisonLinks) {
+                                      for (const link of dp.bondeLivraisonLinks) {
+                                        if (link.bondeLivraison) {
+                                          if (link.bondeLivraison.factureLinks) {
+                                            link.bondeLivraison.factureLinks.forEach(fl => {
+                                              if (fl.facture) {
+                                                factureSet.add(fl.facture);
+                                              }
+                                            });
+                                          }
+                                          if (link.bondeLivraison.avoirs) {
+                                            link.bondeLivraison.avoirs.forEach(a => {
+                                              avoirSet.add(a);
+                                            });
+                                          }
+                                        }
+                                      }
+                                    }
+                                    const factures = Array.from(factureSet);
+                                    const avoirs = Array.from(avoirSet);
+                                  %>
+                                  <% if (factures.length === 0) { %>
+                                    <span class="badge badge-warning text-dark">Sans facture</span>
+                                  <% } else { %>
+                                    <% factures.forEach(facture => { %>
+                                      <a href="/achats/factures/<%= facture.id %>/view" class="badge badge-success text-white d-block mb-1" style="font-size: 0.75rem;">
+                                        Facture N° <%= facture.numero %>
+                                      </a>
+                                    <% }) %>
+                                    <% avoirs.forEach(avoir => { %>
+                                      <a href="/achats/factures-avoir/<%= avoir.id %>/view" class="badge badge-danger text-white d-block mb-1" style="font-size: 0.75rem;">
+                                        Avoir N° <%= avoir.numero %>
+                                      </a>
+                                    <% }) %>
+                                  <% } %>
+                                </td>
                                 <td>
                                   <div class="btn-group btn-group-sm" role="group">
                                     <a href="/achat/bc/<%= dp.id %>/edit" class="btn btn-warning" title="Éditer">
                                       <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="/achats/bons-commande/<%= dp.id %>/dashboard" class="btn btn-info" title="Dashboard BLs & Factures">
+                                      <i class="fas fa-chart-pie"></i>
                                     </a>
                                     <button class="btn btn-danger" title="PDF" onclick="downloadPDF(<%= dp.id %>)">
                                       <i class="fas fa-file-pdf"></i>
@@ -558,23 +642,9 @@
                                       onclick="deletebc(<%= dp.id %>, this)">
                                       <i class="fas fa-trash"></i>
                                     </button>
-                                    <div class="bl-dropdown">
-                                      <button class="bl-dropdown-btn" onclick="toggleBLDropdown(event, <%= dp.id %>)"
-                                        data-bc-id="<%= dp.id %>">
-                                        <i class="fas fa-box"></i> BL <i class="fas fa-caret-down"></i>
-                                      </button>
-                                      <div class="bl-dropdown-menu" id="bl-dropdown-<%= dp.id %>"
-                                        data-fournisseur-id="<%= dp.fournisseur?.id %>"
-                                        data-fournisseur-name="<%= dp.fournisseur?.name || '—' %>"
-                                        data-bc-numero="<%= dp.numero %>">
-                                        <div class="bl-dropdown-item" onclick="openCreateBLModal(<%= dp.id %>)">
-                                          <i class="fas fa-plus-circle"></i> Créer un BL
-                                        </div>
-                                        <div class="bl-dropdown-item" onclick="openAffecterBLModal(<%= dp.id %>)">
-                                          <i class="fas fa-link"></i> Affecter un BL existant
-                                        </div>
-                                      </div>
-                                    </div>
+                                    <button class="bl-dropdown-btn" onclick="openBLActionModal(<%= dp.id %>, '<%= (dp.fournisseur && dp.fournisseur.name) || '' %>', <%= (dp.fournisseur && dp.fournisseur.id) || 'null' %>, '<%= dp.numero %>')">
+                                      <i class="fas fa-box"></i> BL
+                                    </button>
                                   </div>
                                 </td>
                               </tr>
@@ -582,6 +652,30 @@
                                 <% } %>
                       </tbody>
                     </table>
+                  </div>
+                </div>
+
+                <!-- MODAL: BL Action Choice -->
+                <div class="bl-modal-overlay" id="blActionModal">
+                  <div class="bl-modal bl-modal-sm">
+                    <div class="bl-modal-header">
+                      <div>
+                        <h5><i class="fas fa-box"></i> Gestion des Bons de Livraison</h5>
+                        <div class="subtitle" id="blActionSubtitle">BC n° ---</div>
+                      </div>
+                      <button class="bl-modal-close" onclick="closeBLActionModal()">&times;</button>
+                    </div>
+                    <div class="bl-modal-body text-center py-4">
+                      <p class="mb-4">Que souhaitez-vous faire ?</p>
+                      <div class="d-flex flex-column gap-3">
+                        <button class="btn btn-primary btn-lg" onclick="closeBLActionModal(); openCreateBLModal(currentBcId);">
+                          <i class="fas fa-plus-circle"></i> Créer un nouveau BL
+                        </button>
+                        <button class="btn btn-outline-primary btn-lg" onclick="closeBLActionModal(); openAffecterBLModal(currentBcId);">
+                          <i class="fas fa-link"></i> Affecter un BL existant
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -848,17 +942,30 @@
 
         // ==================== CREATE BL MODAL ====================
         let currentBcId = null;
+        let currentBcNumero = null;
+        let currentFournisseurName = null;
+        let currentFournisseurId = null;
         let currentArticles = [];
         let removedArticleIds = new Set();
+
+        function openBLActionModal(bcId, fournisseurName, fournisseurId, bcNumero) {
+          currentBcId = bcId;
+          currentBcNumero = bcNumero;
+          currentFournisseurName = fournisseurName;
+          currentFournisseurId = fournisseurId;
+          document.getElementById('blActionSubtitle').textContent = `BC n° ${bcNumero} - ${fournisseurName || 'Fournisseur'}`;
+          document.getElementById('blActionModal').classList.add('show');
+        }
+
+        function closeBLActionModal() {
+          document.getElementById('blActionModal').classList.remove('show');
+        }
 
         async function openCreateBLModal(bcId) {
           currentBcId = bcId;
           removedArticleIds.clear();
 
-          const dropdown = document.getElementById(`bl-dropdown-${bcId}`);
-          const bcNumero = dropdown.dataset.bcNumero;
-
-          document.getElementById('createBLSubtitle').textContent = `BC n° ${bcNumero} — Fournisseur`;
+          document.getElementById('createBLSubtitle').textContent = `BC n° ${currentBcNumero} - ${currentFournisseurName || 'Fournisseur'}`;
           document.getElementById('createBL_bcId').value = bcId;
 
           // Reset form
@@ -1067,6 +1174,7 @@
               showToast('Bon de livraison créé avec succès', 'success');
               updateBCStatusBadge(currentBcId, data.bc_statut, data.articles_recus, data.articles_total);
               closeCreateBLModal();
+              window.location.reload();
             } else {
               throw new Error(data.error || 'Erreur lors de la création');
             }
@@ -1080,21 +1188,14 @@
 
         // ==================== AFFECTER BL MODAL ====================
         let selectedBLId = null;
-        let currentFournisseurId = null;
         let unlinkedBLs = [];
 
         async function openAffecterBLModal(bcId) {
           currentBcId = bcId;
           selectedBLId = null;
-          currentFournisseurId = null;
           unlinkedBLs = [];
 
-          const dropdown = document.getElementById(`bl-dropdown-${bcId}`);
-          const bcNumero = dropdown.dataset.bcNumero;
-          currentFournisseurId = dropdown.dataset.fournisseurId;
-          const fournisseurName = dropdown.dataset.fournisseurName;
-
-          document.getElementById('affecterBLSubtitle').textContent = `BC n° ${bcNumero} — ${fournisseurName || '—'}`;
+          document.getElementById('affecterBLSubtitle').textContent = `BC n° ${currentBcNumero} - ${currentFournisseurName || '---'}`;
           document.getElementById('searchBLInput').value = '';
           document.getElementById('btnAffecterBLNext').disabled = true;
 
@@ -1109,7 +1210,6 @@
           if (!preserveContext) {
             currentBcId = null;
             selectedBLId = null;
-            currentFournisseurId = null;
             unlinkedBLs = [];
             document.getElementById('btnAffecterBLNext').disabled = true;
           }
@@ -1207,11 +1307,8 @@
           const selectedBL = unlinkedBLs.find(b => b.id === selectedBLId);
           if (!selectedBL) return;
 
-          const dropdown = document.getElementById(`bl-dropdown-${currentBcId}`);
-          const bcNumero = dropdown.dataset.bcNumero;
-
           // Populate Header
-          document.getElementById('affecterBLDetailsTitle').innerHTML = `<i class="fas fa-link"></i> Affecter BL n° ${selectedBL.numero} → BC n° ${bcNumero}`;
+          document.getElementById('affecterBLDetailsTitle').innerHTML = `<i class="fas fa-link"></i> Affecter BL n° ${selectedBL.numero} → BC n° ${currentBcNumero}`;
           const dateStr = selectedBL.dateReception ? new Date(selectedBL.dateReception).toLocaleDateString('fr-FR') : 'Date non définie';
           document.getElementById('affecterBLDetailsSubtitle').textContent = `${selectedBL.fournisseur_name} — ${dateStr}`;
 

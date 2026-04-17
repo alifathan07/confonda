@@ -212,17 +212,23 @@ export const deleteBc = async (req, res) => {
   }
 };
 
-
 export const listBc = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
+    const search = req.query.search || '';
 
-    const totalCount = await prisma.bondeCommande.count();
+    // Build where clause for search
+    const whereClause = search ? {
+      numero: { contains: search }
+    } : {};
+
+    const totalCount = await prisma.bondeCommande.count({ where: whereClause });
     const totalPages = Math.ceil(totalCount / limit);
 
     const bc = await prisma.bondeCommande.findMany({
+      where: whereClause,
       skip,
       take: limit,
       include: {
@@ -236,7 +242,11 @@ export const listBc = async (req, res) => {
         bondeLivraisonLinks: {
           include: {
             bondeLivraison: {
-              include: { items: true }
+              include: { 
+                items: true,
+                factureLinks: { include: { facture: true } },
+                avoirs: true
+              }
             }
           }
         }
@@ -268,7 +278,8 @@ export const listBc = async (req, res) => {
       currentPage: page,
       totalPages,
       totalCount,
-      limit
+      limit,
+      search
     });
   } catch (err) {
     console.error('Erreur affichage bon de commande:', err);
@@ -520,7 +531,12 @@ export const editBc = async (req, res) => {
         bondeLivraisonLinks: {
           include: {
             bondeLivraison: {
-              include: { items: true }
+              include: { 
+                items: true,
+                bondeCommandeLinks: true,
+                factureLinks: true,
+                avoirs: true
+              }
             }
           }
         }
@@ -826,14 +842,19 @@ export const createBcForm = async (req, res) => {
     console.log("Headers:", req.headers);
     res.render('dashboard/achats/bc/create', { fournisseurs, chantiers, listfourniture });
   } catch (error) {
-    console.error("Erreur affichage formulaire BC:", error);
-    res.status(500).json({ success: false, error: "Erreur serveur" });
+    console.error('Erreur création formulaire BC:', error);
+    res.status(500).json({ success: false, error: 'Erreur serveur' });
   }
-};
+}
 
 export const storeBc = async (req, res) => {
   try {
+    console.log('=== storeBc DEBUG START ===');
+    console.log('Full body:', JSON.stringify(req.body, null, 2));
+
     const { supplier, date, dateLivraison, lieuLivraison, modeReg, delaiReg, montantLettre, tauxTva, commandesItems = [], distributionData = [] } = req.body || {};
+
+    console.log('commandesItems received:', JSON.stringify(commandesItems, null, 2));
 
     const fournisseurId = parseInt(supplier);
     const jsDate = new Date(date);
@@ -950,20 +971,32 @@ export const storeBc = async (req, res) => {
     });
 
     // Step 2: Create the distribution (BondeCommandeChantierItem)
+    // Match by index to ensure correct distribution assignment
+    console.log('=== Creating distributions ===');
+    console.log('bc.commandesItems:', JSON.stringify(bc.commandesItems.map(i => ({id: i.id, designation: i.designation})), null, 2));
+    console.log('toCreate distributions:', JSON.stringify(toCreate.map(t => t.chantierDistribution), null, 2));
+    
     for (const item of bc.commandesItems) {
-      const itemDistribution = toCreate.find(l => l.designation === item.designation)?.chantierDistribution || [];
+      const idx = bc.commandesItems.indexOf(item);
+      const itemDistribution = toCreate[idx]?.chantierDistribution || [];
+      console.log(`Item ${idx} (${item.designation}): distribution =`, itemDistribution);
+      
       for (const d of itemDistribution) {
-        await prisma.bondeCommandeChantierItem.create({
-          data: {
-            bondeCommandeId: bc.id,
-            itemId: item.id,
-            chantierId: parseInt(d.chantierId),
-            qty: parseInt(d.qty) || 0,
-            montant: parseFloat(d.montant) || 0,
-          },
-        });
+        if (d.chantierId && d.qty > 0) {
+          console.log('Creating distribution:', { bondeCommandeId: bc.id, itemId: item.id, chantierId: d.chantierId, qty: d.qty, montant: d.montant });
+          await prisma.bondeCommandeChantierItem.create({
+            data: {
+              bondeCommandeId: bc.id,
+              itemId: item.id,
+              chantierId: parseInt(d.chantierId),
+              qty: parseFloat(d.qty) || 0,
+              montant: parseFloat(d.montant) || 0,
+            },
+          });
+        }
       }
     }
+    console.log('=== Distributions created ===');
 
     return res.json({
       success: true,
@@ -1464,7 +1497,11 @@ export const getArticlesRemaining = async (req, res) => {
         bondeLivraisonLinks: {
           include: {
             bondeLivraison: {
-              include: { items: true }
+              include: { 
+                items: true,
+                factureLinks : true,
+                avoirs: true
+              }
             }
           }
         }
@@ -1666,3 +1703,87 @@ export const affecterBL = async (req, res) => {
     return res.status(500).json({ success: false, error: 'Erreur serveur' });
   }
 };  
+
+/**
+ * GET /achats/bons-commande/:id/dashboard
+ * Show dashboard for a BC with all linked BLs and their Factures
+ */
+export const getBCDashboard = async (req, res) => {
+  try {
+    const bcId = parseInt(req.params.id);
+    if (!bcId || isNaN(bcId)) {
+      return res.status(400).json({ success: false, error: 'ID invalide' });
+    }
+
+    // Fetch BC with all related data
+    const bc = await prisma.bondeCommande.findUnique({
+      where: { id: bcId },
+      include: {
+        fournisseur: true,
+        commandesItems: {
+          include: {
+            BondeCommandeChantierItem: {
+              include: {
+                chantier: true
+              }
+            }
+          }
+        },
+        bondeLivraisonLinks: {
+          include: {
+            bondeLivraison: {
+              include: {
+                items: true,
+                bondeCommandeLinks: {
+                  include: {
+                    bondeCommande: {
+                      include: { commandesItems: true }
+                    }
+                  }
+                },
+                factureLinks: {
+                  include: {
+                    facture: {
+                      include: {
+                        items: true,
+                        avoirs: true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!bc) {
+      return res.status(404).json({ success: false, error: 'Bon de Commande non trouvé' });
+    }
+
+    // Collect all unique factures from all BLs
+    const facturesMap = new Map();
+    bc.bondeLivraisonLinks.forEach(link => {
+      const bl = link.bondeLivraison;
+      if (bl && bl.factureLinks) {
+        bl.factureLinks.forEach(fl => {
+          if (fl.facture) {
+            facturesMap.set(fl.facture.id, fl.facture);
+          }
+        });
+      }
+    });
+    const factures = Array.from(facturesMap.values());
+
+    res.render('dashboard/achats/bc/dashboard', {
+      bc,
+      bls: bc.bondeLivraisonLinks.map(link => link.bondeLivraison),
+      factures,
+      user: req.session.user
+    });
+  } catch (error) {
+    console.error('Erreur getBCDashboard:', error);
+    res.status(500).json({ success: false, error: 'Erreur serveur' });
+  }
+};

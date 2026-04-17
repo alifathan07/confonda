@@ -146,3 +146,52 @@ document.addEventListener('click', function(e){
     }
 });
 </script>
+
+<% if (typeof activePopups !== 'undefined' && activePopups && activePopups.length > 0) { %>
+  <% activePopups.forEach(function(popup) { %>
+    <% 
+      const typeColors = {
+        'info': 'bg-blue-500',
+        'warning': 'bg-yellow-500', 
+        'success': 'bg-green-500',
+        'error': 'bg-red-500'
+      };
+      const typeIcons = {
+        'info': 'fa-info-circle',
+        'warning': 'fa-exclamation-triangle',
+        'success': 'fa-check-circle',
+        'error': 'fa-times-circle'
+      };
+    %>
+    <div id="popup-<%= popup.id %>" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-9999" style="display: flex;">
+      <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4 animate__animated animate__fadeInDown">
+        <div class="flex items-start">
+          <div class="flex-shrink-0 <%= typeColors[popup.type] || 'bg-blue-500' %> rounded-full p-2">
+            <i class="fas <%= typeIcons[popup.type] || 'fa-info-circle' %> text-white"></i>
+          </div>
+          <div class="ml-4 flex-1">
+            <h4 class="font-bold text-gray-900"><%= popup.title %></h4>
+            <p class="mt-2 text-sm text-gray-600"><%= popup.message %></p>
+          </div>
+          <button onclick="dismissPopup(<%= popup.id %>)" class="text-gray-400 hover:text-gray-600">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="mt-4 flex justify-end">
+          <button onclick="dismissPopup(<%= popup.id %>)" class="btn btn-primary btn-sm">
+            J'ai compris
+          </button>
+        </div>
+      </div>
+    </div>
+    <script>
+      function dismissPopup(popupId) {
+        document.getElementById('popup-' + popupId).style.display = 'none';
+        fetch('/api/popups/' + popupId + '/dismiss', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+    </script>
+  <% }); %>
+<% } %>
