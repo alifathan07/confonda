@@ -156,7 +156,7 @@
 
           <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 mb-0 text-gray-800">
-              <i class="fas fa-bug mr-2 text-danger"></i>Signaler un Bug
+              <i class="fas fa-exclamation-triangle mr-2 text-warning"></i>Signaler un Probleme
             </h1>
             <a href="/bug-reports" class="btn btn-secondary btn-sm">
               <i class="fas fa-arrow-left mr-1"></i>Retour
@@ -165,7 +165,7 @@
 
           <div class="card shadow bug-form-card">
             <div class="card-header py-3 d-flex align-items-center justify-content-between">
-              <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-clipboard-list mr-2"></i>Nouveau rapport de bug</h6>
+              <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-clipboard-list mr-2"></i>Nouveau rapport de probleme</h6>
               <small class="text-muted"><span class="text-danger">*</span> champs obligatoires</small>
             </div>
             <div class="card-body">
@@ -175,10 +175,10 @@
                 <!-- Description -->
                 <div class="form-group">
                   <label for="description" class="font-weight-bold">
-                    Description du problÃ¨me <span class="text-danger">*</span>
+                    Description du probleme <span class="text-danger">*</span>
                   </label>
                   <textarea class="form-control" id="description" name="description" rows="6"
-                    placeholder="DÃ©crivez le problÃ¨me que vous avez rencontrÃ©..."
+                    placeholder="DÃ©crivez le probleme que vous avez rencontrÃ©..."
                     required maxlength="2000"></textarea>
                   <small class="text-muted" id="descCounter">0 / 2000</small>
                 </div>
@@ -228,64 +228,11 @@
   <script src="/js/sb-admin-2.min.js"></script>
 
   <script>
-    /* ── Selectors ── */
-    function selectCategory(cat) {
-      $('.category-option').removeClass('selected');
-      $(`.category-option[data-category="${cat}"]`).addClass('selected');
-      $('#category').val(cat);
-    }
-    function selectPriority(p) {
-      $('.priority-option').removeClass('selected');
-      $(`.priority-option[data-priority="${p}"]`).addClass('selected');
-      $('#priority').val(p);
-    }
-
     /* ── Char counter ── */
     $('#description').on('input', function () {
       var len = $(this).val().length;
       var $c = $('#descCounter');
       $c.text(len + ' / 2000');
-      $c.removeClass('warn danger');
-      if (len > 1800) $c.addClass('danger');
-      else if (len > 1400) $c.addClass('warn');
-    });
-
-    /* ── Upload preview ── */
-    function handleFile(file) {
-      if (!file) return;
-      if (file.size > 5 * 1024 * 1024) { showToast('error', 'Fichier trop lourd (max 5 Mo)'); return; }
-      var reader = new FileReader();
-      reader.onload = function (e) {
-        $('#previewImg').attr('src', e.target.result);
-        $('#previewName').text(file.name + ' (' + (file.size / 1024).toFixed(0) + ' Ko)');
-        $('#previewWrapper').show();
-        $('#uploadZone').hide();
-      };
-      reader.readAsDataURL(file);
-    }
-
-    $('#screenshot').on('change', function () { handleFile(this.files[0]); });
-
-    // Drag & drop
-    var zone = document.getElementById('uploadZone');
-    zone.addEventListener('dragover', function (e) { e.preventDefault(); $(this).addClass('drag-over'); });
-    zone.addEventListener('dragleave', function () { $(this).removeClass('drag-over'); });
-    zone.addEventListener('drop', function (e) {
-      e.preventDefault();
-      $(this).removeClass('drag-over');
-      var file = e.dataTransfer.files[0];
-      // Assign to input
-      var dt = new DataTransfer();
-      dt.items.add(file);
-      document.getElementById('screenshot').files = dt.files;
-      handleFile(file);
-    });
-
-    // Remove image
-    $('#removeImg').on('click', function () {
-      $('#screenshot').val('');
-      $('#previewWrapper').hide();
-      $('#uploadZone').show();
     });
 
     /* ── Toast helper ── */

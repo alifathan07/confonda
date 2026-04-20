@@ -80,24 +80,21 @@ export const createBugReportForm = async (req, res) => {
  */
 export const createBugReport = async (req, res) => {
   try {
-    const { title, description, category, priority, url } = req.body;
+    const { description } = req.body;
     const user = req.session.user;
 
     if (!description) {
       return res.status(400).json({ success: false, error: 'Description obligatoire' });
     }
 
-    // Generate title from description if not provided
-    const bugTitle = title || (description.length > 50 ? description.substring(0, 50) + '...' : description);
+    // Generate title from description
+    const title = description.length > 50 ? description.substring(0, 50) + '...' : description;
 
     const bugReport = await prisma.bugReport.create({
       data: {
-        title: bugTitle,
-        description,
-        category: category || 'autre',
-        priority: priority || 'moyenne',
+        title: title,
+        description: description,
         status: 'en_cours',
-        url: url || null,
         userId: user?.id || null,
         userName: user?.name || 'Anonyme',
         userEmail: user?.email || null,
@@ -109,8 +106,8 @@ export const createBugReport = async (req, res) => {
     if (user?.id) {
       await prisma.popup.create({
         data: {
-          title: 'Bug signalé',
-          message: `Merci pour votre signalement, nous traitons votre bug "${title}".`,
+          title: 'Probleme  signalé',
+          message: `Merci pour votre signalement, nous traitons votre bug.`,
           type: 'info',
           status: 'active',
           targetUsers: String(user.id),
@@ -121,67 +118,13 @@ export const createBugReport = async (req, res) => {
       });
     }
 
-    // Send response immediately - don't wait for WhatsApp
-    res.json({ success: true, bugReport, message: 'Bug reporté avec succès', redirect: '/bug-reports' });
-
-    // Send WhatsApp notification asynchronously (fire-and-forget)
-    // This runs in background and doesn't block the response
-    (async () => {
-      try {
-        const devPhoneNumber = '0698361022';
-        const priorityEmoji = {
-          'critique': '🚨',
-          'haute': '⚠️',
-          'moyenne': 'ℹ️',
-          'basse': '📝'
-        };
-        
-        const categoryLabel = {
-          'ui': 'Interface',
-          'fonctionnalite': 'Fonctionnalité',
-          'performance': 'Performance',
-          'securite': 'Sécurité',
-          'autre': 'Autre'
-        };
-
-        const message = `🐛 *NOUVEAU BUG SIGNALÉ*\n\n` +
-          `${priorityEmoji[priority] || 'ℹ️'} *Priorité:* ${priority?.toUpperCase() || 'MOYENNE'}\n` +
-          `📁 *Catégorie:* ${categoryLabel[category] || 'Autre'}\n` +
-          `📝 *Titre:* ${title}\n` +
-          `👤 *Signalé par:* ${user?.name || 'Anonyme'}\n` +
-          `📅 *Date:* ${new Date().toLocaleString('fr-FR')}\n\n` +
-          `📄 *Description:*\n${description?.substring(0, 200)}${description?.length > 200 ? '...' : ''}\n\n` +
-          `🔗 *Voir le bug:* http://localhost:3000/bug-reports/${bugReport.id}/edit`;
-
-        await whatsappService.sendMessage(devPhoneNumber, message);
-        console.log('WhatsApp notification sent to developer');
-      } catch (waError) {
-        console.error('Failed to send WhatsApp notification:', waError);
-      }
-    })();
+    // Send response
+    res.json({ success: true, bugReport, message: 'Probleme  reporté avec succès', redirect: '/bug-reports' });
 
     // Send Telegram notification asynchronously
     (async () => {
       try {
-        const priorityEmoji = {
-          'critique': 'CRITIQUE',
-          'haute': 'HAUTE',
-          'moyenne': 'MOYENNE',
-          'basse': 'BASSE'
-        };
-        
-        const categoryLabel = {
-          'ui': 'Interface',
-          'fonctionnalite': 'Fonctionnalité',
-          'performance': 'Performance',
-          'securite': 'Sécurité',
-          'autre': 'Autre'
-        };
-
         const telegramMessage = `Ali Sir, votre client a un nouveau bug:\n\n` +
-          `Priorité: ${priorityEmoji[priority] || 'MOYENNE'}\n` +
-          `Catégorie: ${categoryLabel[category] || 'Autre'}\n` +
-          `Titre: ${title}\n` +
           `Signalé par: ${user?.name || 'Anonyme'}\n` +
           `Date: ${new Date().toLocaleString('fr-FR')}\n\n` +
           `Description:\n${description}`;
@@ -226,7 +169,7 @@ export const editBugReportForm = async (req, res) => {
     });
 
     if (!bugReport) {
-      return res.status(404).json({ success: false, error: 'Bug report non trouvé' });
+      return res.status(404).json({ success: false, error: 'Probleme  report non trouvé' });
     }
 
     res.render('dashboard/bug-reports/edit', {
@@ -283,7 +226,7 @@ export const updateBugReport = async (req, res) => {
       if (originalBug && originalBug.userId) {
         await prisma.popup.create({
           data: {
-            title: 'Bug résolu',
+            title: 'Probleme  résolu',
             message: `Votre Problem  "${originalBug.title}" a été résolu.`,
             type: 'success',
             status: 'active',
@@ -296,7 +239,7 @@ export const updateBugReport = async (req, res) => {
       }
     }
 
-    res.json({ success: true, bugReport, message: 'Bug mis à jour avec succès' });
+    res.json({ success: true, bugReport, message: 'Probleme  mis à jour avec succès' });
   } catch (error) {
     console.error('Erreur updateBugReport:', error);
     res.status(500).json({ success: false, error: 'Erreur serveur' });
@@ -323,7 +266,7 @@ export const deleteBugReport = async (req, res) => {
     });
 
     if (!bugReport) {
-      return res.status(404).json({ success: false, error: 'Bug non trouvé' });
+      return res.status(404).json({ success: false, error: 'Probleme  non trouvé' });
     }
 
     // Check permissions: developer can delete any, others can only delete their own
@@ -343,7 +286,7 @@ export const deleteBugReport = async (req, res) => {
       where: { id }
     });
 
-    res.json({ success: true, message: 'Bug supprimé avec succès' });
+    res.json({ success: true, message: 'Probleme  supprimé avec succès' });
   } catch (error) {
     console.error('Erreur deleteBugReport:', error);
     res.status(500).json({ success: false, error: 'Erreur serveur' });
@@ -370,7 +313,7 @@ export const getBugReport = async (req, res) => {
     });
 
     if (!bugReport) {
-      return res.status(404).json({ success: false, error: 'Bug report non trouvé' });
+      return res.status(404).json({ success: false, error: 'Probleme  report non trouvé' });
     }
 
     res.json({ success: true, bugReport });
