@@ -256,10 +256,11 @@
     const originalDescription = `<%- bugReport.description %>`;
 
     function updateBug() {
+      const newStatus = $('#status').val();
       const data = {
         title: originalTitle,
         description: originalDescription,
-        status: $('#status').val(),
+        status: newStatus,
         priority: $('#priority').val(),
         category: $('#category').val(),
         resolution: $('#resolution').val()
@@ -272,8 +273,9 @@
         data: JSON.stringify(data),
         success: function(response) {
           if (response.success) {
-            // Show toast or brief notification
-            console.log('Bug mis à jour');
+            if (newStatus === 'resolu') {
+              alert('Votre problème a été résolu avec succès !');
+            }
           }
         },
         error: function() {

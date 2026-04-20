@@ -1571,12 +1571,14 @@
         let existingBLArticles = [];
         let remainingBCArticles = [];
         let removedRemainingArticleIds = new Set();
+        let currentAffectationBcId = null;
 
         async function openCreateBLModal(bcId) {
           currentArticles = [];
           removedArticleIds.clear();
-          document.getElementById('createBLSubtitle').textContent = 'BC n° ' + (window.currentBCNumero || bcId);
+          window.currentBCEditionId = bcId; // Store before closing other modal
           document.getElementById('createBL_bcId').value = bcId;
+          document.getElementById('createBLSubtitle').textContent = 'BC n° ' + (window.currentBCNumero || bcId);
           document.getElementById('createBLForm').reset();
           document.getElementById('dateReception').valueAsDate = new Date();
           try {
@@ -1617,8 +1619,10 @@
         }
 
         async function submitCreateBL() {
+          const bcId = document.getElementById('createBL_bcId').value;
           const numeroBL = document.getElementById('numeroBL').value.trim();
           const dateReception = document.getElementById('dateReception').value;
+          if (!bcId) { showToast('Erreur: BC non identifié', 'error'); return; }
           if (!numeroBL) { showToast('Le N° BL est requis', 'error'); return; }
           if (!dateReception) { showToast('La date de réception est requise', 'error'); return; }
           const activeArticles = [];
@@ -1638,7 +1642,7 @@
             const response = await fetch('/api/bons-livraison', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ bcId: window.currentBCEditionId, numeroBL, dateReception, articles: activeArticles })
+              body: JSON.stringify({ bcId: bcId, numeroBL, dateReception, articles: activeArticles })
             });
             const data = await response.json();
             if (response.ok && data.success) {
@@ -1657,6 +1661,7 @@
         }
 
         async function openAffecterBLModal(bcId) {
+          currentAffectationBcId = bcId;
           selectedBLId = null;
           unlinkedBLs = [];
           document.getElementById('affecterBLSubtitle').textContent = 'BC n° ' + (window.currentBCNumero || '');
@@ -1728,7 +1733,7 @@
         }
 
         async function goToAffecterBLStep2() {
-          if (!selectedBLId || !window.currentBCEditionId) {
+          if (!selectedBLId || !currentAffectationBcId) {
             showToast('Veuillez sélectionner un BL et un BC valides', 'error');
             return;
           }
@@ -1747,7 +1752,7 @@
           try {
             const resExisting = await fetch('/api/bons-livraison/' + selectedBLId + '/articles');
             if (resExisting.ok) { existingBLArticles = await resExisting.json(); renderExistingBLArticles(); }
-            const resRemaining = await fetch('/api/bons-commande/' + window.currentBCEditionId + '/articles-remaining');
+            const resRemaining = await fetch('/api/bons-commande/' + currentAffectationBcId + '/articles-remaining');
             if (resRemaining.ok) { remainingBCArticles = await resRemaining.json(); renderRemainingBCArticles(); }
             checkConfirmButtonState();
           } catch (e) { showToast('Erreur lors du chargement des détails', 'error'); }
@@ -1810,7 +1815,9 @@
         }
 
         async function submitAffectationFinale() {
-          if (!selectedBLId || !window.currentBCEditionId) return;
+          const bcId = currentAffectationBcId;
+          const blId = selectedBLId;
+          if (!blId || !bcId) return;
           const articlesToAffect = [];
           document.querySelectorAll('.remaining-article-row').forEach(row => {
             const id = parseInt(row.dataset.id);
@@ -1825,10 +1832,10 @@
           btn.disabled = true;
           btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Affectation...';
           try {
-            const response = await fetch('/api/bons-livraison/' + selectedBLId + '/affecter-bc', {
+            const response = await fetch('/api/bons-livraison/' + blId + '/affecter-bc', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ bc_id: window.currentBCEditionId, articles: articlesToAffect })
+              body: JSON.stringify({ bc_id: bcId, articles: articlesToAffect })
             });
             const data = await response.json();
             if (response.ok && data.success) {

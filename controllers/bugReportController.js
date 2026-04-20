@@ -93,6 +93,7 @@ export const createBugReport = async (req, res) => {
         description,
         category: category || 'autre',
         priority: priority || 'moyenne',
+        status: 'en_cours',
         url: url || null,
         userId: user?.id || null,
         userName: user?.name || 'Anonyme',
@@ -100,6 +101,22 @@ export const createBugReport = async (req, res) => {
         screenshot: req.file ? req.file.path : null
       }
     });
+
+    // Create popup for the user who reported the bug
+    if (user?.id) {
+      await prisma.popup.create({
+        data: {
+          title: 'Bug signalé',
+          message: `Merci pour votre signalement, nous traitons votre bug "${title}".`,
+          type: 'info',
+          status: 'active',
+          targetUsers: String(user.id),
+          displayMode: 'once_only',
+          createdBy: user.id,
+          startDate: new Date()
+        }
+      });
+    }
 
     // Send response immediately - don't wait for WhatsApp
     res.json({ success: true, bugReport, message: 'Bug reporté avec succès', redirect: '/bug-reports' });
@@ -137,6 +154,47 @@ export const createBugReport = async (req, res) => {
         console.log('WhatsApp notification sent to developer');
       } catch (waError) {
         console.error('Failed to send WhatsApp notification:', waError);
+      }
+    })();
+
+    // Send Telegram notification asynchronously
+    (async () => {
+      try {
+        const priorityEmoji = {
+          'critique': 'CRITIQUE',
+          'haute': 'HAUTE',
+          'moyenne': 'MOYENNE',
+          'basse': 'BASSE'
+        };
+        
+        const categoryLabel = {
+          'ui': 'Interface',
+          'fonctionnalite': 'Fonctionnalité',
+          'performance': 'Performance',
+          'securite': 'Sécurité',
+          'autre': 'Autre'
+        };
+
+        const telegramMessage = `Ali Sir, votre client a un nouveau bug:\n\n` +
+          `Priorité: ${priorityEmoji[priority] || 'MOYENNE'}\n` +
+          `Catégorie: ${categoryLabel[category] || 'Autre'}\n` +
+          `Titre: ${title}\n` +
+          `Signalé par: ${user?.name || 'Anonyme'}\n` +
+          `Date: ${new Date().toLocaleString('fr-FR')}\n\n` +
+          `Description:\n${description}`;
+
+        await fetch('https://api.telegram.org/bot8798805211:AAElHM6qfreLXdTqvIKECcax-CSoDiH2X7A/sendMessage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: 6027161132,
+            text: telegramMessage,
+            parse_mode: 'HTML'
+          })
+        });
+        console.log('Telegram notification sent');
+      } catch (tgError) {
+        console.error('Failed to send Telegram notification:', tgError);
       }
     })();
   } catch (error) {
@@ -211,6 +269,29 @@ export const updateBugReport = async (req, res) => {
       where: { id },
       data: updateData
     });
+
+    // Create popup for the reporter when bug is resolved
+    if (status === 'resolu' || status === 'ferme') {
+      const originalBug = await prisma.bugReport.findUnique({
+        where: { id },
+        include: { user: true }
+      });
+      
+      if (originalBug && originalBug.userId) {
+        await prisma.popup.create({
+          data: {
+            title: 'Bug résolu',
+            message: `Votre Problem  "${originalBug.title}" a été résolu.`,
+            type: 'success',
+            status: 'active',
+            targetUsers: String(originalBug.userId),
+            displayMode: 'once_only',
+            createdBy: req.session.user.id,
+            startDate: new Date()
+          }
+        });
+      }
+    }
 
     res.json({ success: true, bugReport, message: 'Bug mis à jour avec succès' });
   } catch (error) {

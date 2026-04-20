@@ -163,23 +163,32 @@ document.addEventListener('click', function(e){
         'error': 'fa-times-circle'
       };
     %>
-    <div id="popup-<%= popup.id %>" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-9999" style="display: flex;">
-      <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4 animate__animated animate__fadeInDown">
-        <div class="flex items-start">
-          <div class="flex-shrink-0 <%= typeColors[popup.type] || 'bg-blue-500' %> rounded-full p-2">
-            <i class="fas <%= typeIcons[popup.type] || 'fa-info-circle' %> text-white"></i>
+    <% 
+      const typeConfig = {
+        'info': { color: '#007bff', bg: '#d6e9f8', icon: 'fa-info-circle', btnClass: 'btn-primary' },
+        'success': { color: '#28a745', bg: '#d4edda', icon: 'fa-check-circle', btnClass: 'btn-success' },
+        'error': { color: '#dc3545', bg: '#f8d7da', icon: 'fa-times-circle', btnClass: 'btn-danger' },
+        'warning': { color: '#ffc107', bg: '#fff3cd', icon: 'fa-exclamation-triangle', btnClass: 'btn-warning' }
+      };
+      const cfg = typeConfig[popup.type] || typeConfig['info'];
+    %>
+    <div id="popup-<%= popup.id %>" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;">
+      <div class="bg-white rounded shadow-lg p-4" style="max-width:420px;width:90%;border-top:4px solid <%= cfg.color %>;">
+        <div class="d-flex align-items-start">
+          <div class="rounded-circle p-2 mr-3" style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:<%= cfg.bg %>;">
+            <i class="fas <%= cfg.icon %>" style="font-size:1.5rem;color:<%= cfg.color %>;"></i>
           </div>
-          <div class="ml-4 flex-1">
-            <h4 class="font-bold text-gray-900"><%= popup.title %></h4>
-            <p class="mt-2 text-sm text-gray-600"><%= popup.message %></p>
+          <div class="flex-grow-1">
+            <h5 class="font-weight-bold mb-1" style="color:<%= cfg.color %>;"><%= popup.title %></h5>
+            <p class="text-muted mb-0" style="font-size:0.95rem;"><%= popup.message %></p>
           </div>
-          <button onclick="dismissPopup(<%= popup.id %>)" class="text-gray-400 hover:text-gray-600">
-            <i class="fas fa-times"></i>
+          <button onclick="dismissPopup(<%= popup.id %>)" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#6c757d;padding:0;margin-left:8px;">
+            &times;
           </button>
         </div>
-        <div class="mt-4 flex justify-end">
-          <button onclick="dismissPopup(<%= popup.id %>)" class="btn btn-primary btn-sm">
-            J'ai compris
+        <div class="mt-4 text-center">
+          <button onclick="dismissPopup(<%= popup.id %>)" class="btn <%= cfg.btnClass %> btn-lg px-5" style="width:100%;">
+            <i class="fas fa-check mr-2"></i>J'ai compris
           </button>
         </div>
       </div>

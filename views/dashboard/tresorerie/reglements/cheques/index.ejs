@@ -266,6 +266,8 @@
                               >Impayé</option>
                             <option value="Treso" <%=(filters && filters.statut==='Treso' ) ? 'selected' : '' %>>Treso
                             </option>
+                            <option value="annulé" <%=(filters && filters.statut==='annulé' ) ? 'selected' : '' %>>Annulé
+                            </option>
                           </select>
                         </div>
                         <div id="filterBoxChantier" style="display:none;">
@@ -673,7 +675,7 @@
               return String(statut || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
             }
 
-            const statutOptions = ['En Circulation', 'Payé', 'Impayé', 'Treso'];
+            const statutOptions = ['En Circulation', 'Payé', 'Impayé', 'Treso', 'Annulé'];
 
             function statutBadgeHtml(statut) {
               const cls = normalizeStatutClass(statut);
