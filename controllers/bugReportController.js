@@ -106,12 +106,11 @@ export const createBugReport = async (req, res) => {
     if (user?.id) {
       await prisma.popup.create({
         data: {
-          title: 'Probleme  signalé',
-          message: `Merci pour votre signalement, nous traitons votre bug.`,
+          title: 'Probleme signalé',
+          message: `Merci pour votre signalement, nous traitons votre probleme.`,
           type: 'info',
           status: 'active',
-          targetUsers: String(user.id),
-          displayMode: 'once_only',
+          displayMode: 'always',
           createdBy: user.id,
           startDate: new Date()
         }
