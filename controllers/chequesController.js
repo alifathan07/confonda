@@ -161,9 +161,13 @@ function buildChequeWhereFromQuery(req, extraWhere = {}) {
   // Business rule:
   // - default list (no filters): show all statuses (including annulé)
   // - when any filter is applied: annulé must be hidden and excluded from totals
+  // - EXCEPT when filtering specifically by 'annulé'
   if (hasAnyChequeFilters(req)) {
-    where.AND = Array.isArray(where.AND) ? where.AND : [];
-    where.AND.push({ statut: { not: 'annulé' } });
+    const statutFilter = String(req.query.statut || '').toLowerCase();
+    if (statutFilter !== 'annulé') {
+      where.AND = Array.isArray(where.AND) ? where.AND : [];
+      where.AND.push({ statut: { not: 'annulé' } });
+    }
   }
 
   if (req.query.banqueId) where.banqueId = Number(req.query.banqueId);
@@ -235,9 +239,13 @@ function buildChequeWhereFromQuery(req, extraWhere = {}) {
 function buildChequeWhereFromQueryWithoutChantier(req, extraWhere = {}) {
   const where = { ...extraWhere };
 
+  // Business rule: only exclude annulé when NOT filtering by annulé
   if (hasAnyChequeFilters(req)) {
-    where.AND = Array.isArray(where.AND) ? where.AND : [];
-    where.AND.push({ statut: { not: 'annulé' } });
+    const statutFilter = String(req.query.statut || '').toLowerCase();
+    if (statutFilter !== 'annulé') {
+      where.AND = Array.isArray(where.AND) ? where.AND : [];
+      where.AND.push({ statut: { not: 'annulé' } });
+    }
   }
 
   if (req.query.banqueId) where.banqueId = Number(req.query.banqueId);

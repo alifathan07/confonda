@@ -2,41 +2,288 @@
 <html lang="fr">
 
 <head>
-  <meta charset="UTF-8">
-  <title><%= pageTitle || 'Éditer BL' %></title>
-  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
-  <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bon de Livraison #<%= bl.numero %> - Édition</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" />
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
 
   <style>
-    .bl-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 1.5rem;
-      border-radius: 0.5rem;
+    :root {
+      --blue: #0052cc;
+      --blue-light: #f3f8ff;
+      --gray-100: #f8f9fc;
+      --gray-200: #e9ecef;
+      --gray-600: #6c757d;
+      --gray-800: #343a40;
+      --gray-900: #212529;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f2f4f7;
+      color: var(--gray-800);
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+    }
+
+    @media print {
+      .no-print, .action-bar, .sidebar, .topbar {
+        display: none !important;
+      }
+      body {
+        background: white;
+        padding: 15px;
+      }
+    }
+
+    .action-bar {
+      background: white;
+      border-bottom: 1px solid #dee2e6;
+      padding: 1rem 1.5rem;
       margin-bottom: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
-    .bl-item-row:hover {
-      background-color: #f8f9fa;
+
+    .action-bar h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    .bc-qty-label {
+
+    .action-bar .badge {
+      background: #6366f1;
+      color: white;
+      font-weight: 600;
+      font-size: 0.8rem;
+      padding: 0.35rem 0.8rem;
+      border-radius: 50px;
+    }
+
+    .btn-modern {
+      padding: 0.7rem 1.4rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border: none;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: all 0.25s;
+    }
+
+    .btn-modern:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-save {
+      background-color: #2563eb !important;
+      border-color: #2563eb !important;
+      color: white !important;
+    }
+
+    .btn-save:hover {
+      background-color: #1d4ed8 !important;
+    }
+
+    .doc-card {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      margin: 0 auto 1.5rem;
+      width: calc(100% - 4px);
+      max-width: 1000px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .doc-header {
+      padding: 1.5rem 2rem;
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .doc-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #1e293b;
+      margin: 0 0 0.5rem 0;
+    }
+
+    .doc-subtitle {
+      font-size: 0.9rem;
+      color: #64748b;
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .doc-subtitle span {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .doc-subtitle i {
+      color: var(--blue);
+    }
+
+    .table-section {
+      padding: 1.5rem 2rem;
+      background: white;
+    }
+
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .table-doc {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .table-doc thead th {
+      background: #1e293b;
+      color: white;
+      padding: 0.85rem 0.75rem;
+      text-align: left;
+      font-weight: 600;
       font-size: 0.75rem;
-      color: #6c757d;
-      background-color: #e9ecef;
-      padding: 2px 6px;
-      border-radius: 4px;
-      margin-left: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: 1px solid #334155;
     }
-    .qty-error {
-      border-color: #dc3545 !important;
+
+    .table-doc thead th:first-child {
+      border-radius: 8px 0 0 0;
     }
-    .qty-error-msg {
-      color: #dc3545;
+
+    .table-doc thead th:last-child {
+      border-radius: 0 8px 0 0;
+    }
+
+    .table-doc tbody td {
+      padding: 0.85rem 0.75rem;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+    }
+
+    .table-doc tbody tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    .table-doc tbody tr:hover {
+      background: #f1f5f9;
+    }
+
+    .num-circle {
+      background: var(--blue);
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+
+    .table-input {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .table-input:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.1);
+    }
+
+    .table-input-readonly {
+      background: #f8fafc;
+      color: #475569;
+      font-weight: 500;
+    }
+
+    .qty-input {
+      width: 90px;
+      text-align: center;
+    }
+
+    .price-input {
+      width: 100px;
+      text-align: right;
+    }
+
+    .signature-area {
+      padding: 2rem;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .signature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .sig-box {
+      text-align: center;
+      padding: 1.5rem;
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      background: white;
+    }
+
+    .sig-box h6 {
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
       font-size: 0.75rem;
-      display: none;
+      margin-bottom: 1rem;
     }
-    .qty-error-msg.show {
-      display: block;
+
+    .sig-line {
+      height: 60px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    @media (max-width: 768px) {
+      .doc-header {
+        padding: 1rem;
+      }
+      .doc-title {
+        font-size: 1.25rem;
+      }
+      .table-section {
+        padding: 1rem;
+      }
+      .signature-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -48,193 +295,860 @@
     <div id="content-wrapper" class="d-flex flex-column">
       <div id="content">
         <%- include('../../../layouts/topbar') %>
+        <div class="container-fluid px-3 px-md-4">
 
-        <div class="container-fluid py-4">
-          <!-- Header -->
-          <div class="bl-header d-flex justify-content-between align-items-center">
-            <div>
-              <h4 class="mb-1"><i class="fas fa-truck-loading"></i> Bon de Livraison</h4>
-              <h2 class="mb-0"><%= bl.numero %></h2>
-            </div>
-            <div class="text-right">
-              <div class="mb-1"><strong>Date:</strong> <%= bl.date ? new Date(bl.date).toLocaleDateString('fr-FR') : '---' %></div>
-              <div><strong>Fournisseur:</strong> <%= bl.fournisseur?.name || '---' %></div>
-            </div>
-          </div>
-
-          <!-- Items Table -->
-          <div class="card shadow mb-4">
-            <div class="card-header py-3">
-              <h6 class="m-0 font-weight-bold text-primary">Articles du BL</h6>
-            </div>
-            <div class="card-body">
-              <div class="table-responsive">
-                <table class="table table-bordered table-sm" id="blItemsTable">
-                  <thead class="thead-light">
-                    <tr>
-                      <th style="width:5%; text-align:center;">#</th>
-                      <th style="width:25%;">Désignation</th>
-                      <th style="width:10%; text-align:center;">Unité</th>
-                      <th style="width:12%; text-align:center;">Quantité</th>
-                      <th style="width:12%; text-align:center;">Prix Unitaire</th>
-                      <th style="width:20%;">Remarque</th>
-                      <th style="width:10%; text-align:center;">Total HT</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% if (bl.items && bl.items.length > 0) { %>
-                      <% bl.items.forEach((item, index) => { %>
-                        <tr class="bl-item-row" data-id="<%= item.id %>">
-                          <td style="text-align:center;"><%= index + 1 %></td>
-                          <td>
-                            <%= item.designation %>
-                            <% if (item.commandesItemsId && item.commandesItems) { %>
-                              <span class="bc-qty-label">Qté commandée: <%= item.commandesItems.quantite %></span>
-                            <% } %>
-                          </td>
-                          <td style="text-align:center;"><%= item.unite || '---' %></td>
-                          <td>
-                            <input type="number" step="0.01" min="0" class="form-control form-control-sm text-center qty-input"
-                              value="<%= item.quantite || 0 %>" 
-                              data-field="quantite" 
-                              data-id="<%= item.id %>"
-                              data-commandes-items-id="<%= item.commandesItemsId || '' %>"
-                              data-bc-qty="<%= item.commandesItems ? item.commandesItems.quantite : '' %>">
-                            <div class="qty-error-msg">Quantité exceeds BC qty</div>
-                          </td>
-                          <td>
-                            <input type="number" step="0.01" min="0" class="form-control form-control-sm text-right"
-                              value="<%= item.prixUnitaire ? item.prixUnitaire.toFixed(2) : '' %>"
-                              placeholder="0.00" data-field="prixUnitaire" data-id="<%= item.id %>">
-                          </td>
-                          <td>
-                            <input type="text" class="form-control form-control-sm"
-                              value="<%= item.obs || '' %>" placeholder="Optional..."
-                              data-field="remarque" data-id="<%= item.id %>">
-                          </td>
-                          <td style="text-align:right;" class="item-total" data-id="<%= item.id %>">
-                            <%= ((item.quantite || 0) * (item.prixUnitaire || 0)).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
-                          </td>
-                        </tr>
-                      <% }) %>
+          <!-- Action Bar -->
+          <div class="action-bar no-print">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+              <h1>
+                <i class="fas fa-truck-loading"></i> Bon de Livraison
+                <span class="badge">#<%= bl.numero || bl.id %></span>
+              </h1>
+              <div class="d-flex gap-2">
+                <div class="dropdown" style="position: relative;">
+                  <button class="btn btn-modern btn-secondary" type="button" onclick="toggleFactureMenu()">
+                    <i class="fas fa-file-invoice"></i> Facture / FA <i class="fas fa-chevron-down ml-1"></i>
+                  </button>
+                  <div id="factureMenu" class="dropdown-menu" style="display: none; position: absolute; z-index: 1000;">
+                    <% const hasFacture = bl.factureLinks && bl.factureLinks.length > 0; %>
+                    <% const firstFacture = hasFacture ? bl.factureLinks[0].facture : null; %>
+                    <% const hasAvoir = bl.avoirs && bl.avoirs.length > 0; %>
+                    
+                    <% if (!hasFacture) { %>
+                      <a class="dropdown-item" href="#" onclick="closeFactureMenu(); openCreateFactureModal();">
+                        <i class="fas fa-plus"></i> Créer Facture
+                      </a>
+                      <a class="dropdown-item" href="#" onclick="closeFactureMenu(); openAffectFactureModal();">
+                        <i class="fas fa-link"></i> Affecter à Facture existante
+                      </a>
                     <% } else { %>
-                      <tr>
-                        <td colspan="7" class="text-center text-muted">Aucun article dans ce BL.</td>
-                      </tr>
+                      <% if (firstFacture) { %>
+                        <a class="dropdown-item" href="#" onclick="viewFacture(<%= firstFacture.id %>)">
+                          <i class="fas fa-file-invoice"></i> Facture N° <%= firstFacture.numero %>
+                        </a>
+                      <% } %>
+                      <% if (hasAvoir) { %>
+                        <div class="dropdown-divider"></div>
+                        <% bl.avoirs.forEach(avoir => { %>
+                          <a class="dropdown-item" href="#" onclick="viewFactureAvoir(<%= avoir.id %>)">
+                            <i class="fas fa-file-invoice-dollar"></i> FA N° <%= avoir.numero %> (<%= avoir.type %>)
+                          </a>
+                        <% }) %>
+                      <% } %>
+                      <% if (hasFacture) { %>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#" onclick="closeFactureMenu(); openCreateFactureAvoirModal('retour');">
+                          <i class="fas fa-undo"></i> Créer FA Avoir Retour
+                        </a>
+                        <a class="dropdown-item" href="#" onclick="closeFactureMenu(); openCreateFactureAvoirModal('remise');">
+                          <i class="fas fa-percent"></i> Créer FA Avoir Remise
+                        </a>
+                      <% } else { %>
+                        <a class="dropdown-item" href="#" onclick="closeFactureMenu(); openAffectFactureAvoirModal();">
+                          <i class="fas fa-link"></i> Affecter à FA existante
+                        </a>
+                      <% } %>
                     <% } %>
-                  </tbody>
-                  <tfoot>
-                    <tr style="background-color: #f8f9fa; font-weight: bold;">
-                      <td colspan="6" class="text-right">Total HT:</td>
-                      <td class="text-right" id="totalHt"><%= (bl.items || []).reduce((sum, item) => sum + ((item.quantite || 0) * (item.prixUnitaire || 0)), 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-
-              <div class="d-flex justify-content-between mt-3">
-                <a href="/achats/bons-livraison" class="btn btn-secondary">
-                  <i class="fas fa-arrow-left"></i> Retour à la liste
-                </a>
-                <button type="button" class="btn btn-primary" onclick="saveBL()">
-                  <i class="fas fa-save"></i> Enregistrer
+                  </div>
+                </div>
+                <button id="btnSaveBl" class="btn btn-modern btn-save">
+                  <i class="fas fa-save"></i> Sauvegarder
                 </button>
               </div>
             </div>
           </div>
-        </div>
 
+          <!-- Document -->
+          <div class="doc-card">
+            <div class="doc-header">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <h1 class="doc-title">Bon de Livraison</h1>
+                  <div class="doc-subtitle">
+                    <span><i class="fas fa-hashtag"></i> <strong>N°:</strong> <%= bl.numero || bl.id %></span>
+                    <span><i class="fas fa-calendar"></i> <strong>Date:</strong> <%= bl.date ? new Date(bl.date).toLocaleDateString('fr-FR') : '---' %></span>
+                    <span><i class="fas fa-building"></i> <strong>Fournisseur:</strong> <%= bl.fournisseur?.name || '---' %></span>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <% if (bl.fichier) { %>
+                    <a href="/api/bons-livraison/<%= bl.id %>/download" class="btn btn-sm btn-success" target="_blank">
+                      <i class="fas fa-download"></i> Télécharger
+                    </a>
+                  <% } %>
+                  <button type="button" class="btn btn-sm btn-primary" onclick="toggleUploadForm()">
+                    <i class="fas fa-upload"></i> <%= bl.fichier ? 'Remplacer' : 'Joindre fichier' %>
+                  </button>
+                  <div id="upload-form" style="display:none; position:absolute; right:0; z-index:100; background:white; border:1px solid #ddd; padding:10px; border-radius:5px; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+                    <form onsubmit="uploadBLFile(event)" enctype="multipart/form-data">
+                      <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required style="font-size:12px;">
+                      <button type="submit" class="btn btn-sm btn-primary mt-1">Envoyer</button>
+                      <button type="button" class="btn btn-sm btn-secondary mt-1" onclick="toggleUploadForm()">Annuler</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Related Documents -->
+            <div style="padding: 1rem 2rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+              <div class="row">
+                <!-- BC Links -->
+                <div class="col-md-4">
+                  <h6 class="font-weight-bold mb-2" style="color: #6366f1;">
+                    <i class="fas fa-file-contract mr-1"></i> Bons de Commande
+                  </h6>
+                  <% if (bl.bondeCommandeLinks && bl.bondeCommandeLinks.length > 0) { %>
+                    <% bl.bondeCommandeLinks.forEach(link => { %>
+                      <% if (link.bondeCommande) { %>
+                        <a href="/achat/bc/<%= link.bondeCommande.id %>/edit" class="badge badge-primary mr-1 mb-1" style="font-size: 0.8rem;">
+                          BC : <%= link.bondeCommande.numero %>
+                        </a>
+                      <% } %>
+                    <% }) %>
+                  <% } else { %>
+                    <span class="text-muted small">Aucun BC lié</span>
+                  <% } %>
+                </div>
+                <!-- Factures -->
+                <div class="col-md-4">
+                  <h6 class="font-weight-bold mb-2" style="color: #16a34a;">
+                    <i class="fas fa-file-invoice mr-1"></i> Factures
+                  </h6>
+                  <% if (bl.factureLinks && bl.factureLinks.length > 0) { %>
+                    <% bl.factureLinks.forEach(link => { %>
+                      <% if (link.facture) { %>
+                        <a href="/achats/factures/<%= link.facture.id %>/view" class="badge badge-success mr-1 mb-1" style="font-size: 0.8rem;">
+                          Facture : <%= link.facture.numero %>
+                        </a>
+                      <% } %>
+                    <% }) %>
+                  <% } else { %>
+                    <span class="text-muted small">Aucune facture</span>
+                  <% } %>
+                </div>
+                <!-- Avoirs -->
+                <div class="col-md-4">
+                  <h6 class="font-weight-bold mb-2" style="color: #dc2626;">
+                    <i class="fas fa-file-invoice-dollar mr-1"></i> Avoirs
+                  </h6>
+                  <% if (bl.avoirs && bl.avoirs.length > 0) { %>
+                    <% bl.avoirs.forEach(avoir => { %>
+                      <a href="/achats/factures-avoir/<%= avoir.id %>/view" class="badge badge-danger mr-1 mb-1" style="font-size: 0.8rem;">
+                        Avoir : <%= avoir.numero %>
+                      </a>
+                    <% }) %>
+                  <% } else { %>
+                    <span class="text-muted small">Aucun avoir</span>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+
+            <!-- Items Table -->
+            <div class="table-section">
+              <div class="table-container">
+                <table class="table-doc">
+                  <thead>
+                    <tr>
+                      <th style="width:50px; text-align:center;">N°</th>
+                      <th>Désignation</th>
+                      <th style="width:100px; text-align:center;">Référence</th>
+                      <th style="width:80px; text-align:center;">Unité</th>
+                      <th style="width:100px; text-align:center;">Qté commandée</th>
+                      <th style="width:100px; text-align:center;">Qté reçue</th>
+                      <th style="width:100px; text-align:center; background-color: #dc3545; color: white;">Qté Retournée</th>
+                      <th style="width:100px; text-align:center; background-color: #0d9488; color: white;">Qté reste à livrer</th>
+                      <th style="width:110px; text-align:right;">Prix U.</th>
+                      <th>Remarque</th>
+                    </tr>
+                  </thead>
+                  <tbody id="blBody">
+                    <% (bl.items || []).forEach((item, i)=> { %>
+                      <tr class="bl-row" data-id="<%= item.id %>" data-commandes-items-id="<%= item.commandesItemsId || '' %>">
+                        <td style="text-align:center;">
+                          <div class="num-circle"><%= i + 1 %></div>
+                        </td>
+                        <td>
+                          <input type="text" class="table-input table-input-readonly" readonly value="<%= item.designation || '' %>">
+                        </td>
+                        <td style="text-align:center;">
+                          <%= item.reference || '---' %>
+                        </td>
+                        <td style="text-align:center;">
+                          <%= item.unite || '---' %>
+                        </td>
+                        <td style="text-align:center; background-color: #f8fafc;">
+                          <%= item.commandesItemsId && item.commandesItems ? item.commandesItems.quantite : '---' %>
+                        </td>
+                        <td style="text-align:center;">
+                          <input type="number" step="0.01" min="0" class="table-input qty-input"
+                            value="<%= item.quantite || 0 %>" data-field="quantite">
+                        </td>
+                        <td style="text-align:center; background-color: #fff3cd;">
+                          <input type="number" step="0.01" min="0" class="table-input qty-input"
+                            value="<%= item.qtyRetourne || 0 %>" data-field="qtyRetourne" style="font-weight: bold; color: #856404;">
+                        </td>
+                        <td style="text-align:center; background-color: #ccfbf1; font-weight: bold; color: #0f766e;">
+                          <% 
+                            const qteCommandee = item.commandesItemsId && item.commandesItems ? item.commandesItems.quantite : 0;
+                            const qteRecue = item.quantite || 0;
+                            const qteRestant = qteCommandee - qteRecue;
+                          %>
+                          <%= qteRestant %>
+                        </td>
+                        <td style="text-align:right;">
+                          <input type="text" class="table-input price-input"
+                            value="<%= item.prixUnitaire ? item.prixUnitaire.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '' %>"
+                            data-field="prixUnitaire" placeholder="0.00">
+                        </td>
+                        <td>
+                          <input type="text" class="table-input" value="<%= item.obs || '' %>"
+                            data-field="remarque" placeholder="...">
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Signature -->
+            <div class="signature-area">
+              <div class="signature-grid">
+                <div class="sig-box">
+                  <h6>Signature Fournisseur</h6>
+                  <div class="sig-line"></div>
+                </div>
+                <div class="sig-box">
+                  <h6>Réception Confonda</h6>
+                  <div class="sig-line"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Facture Modal -->
+  <div class="modal fade" id="createFactureModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Créer Facture</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Numéro Facture *</label>
+                <input type="text" id="factureNumero" class="form-control" required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Date *</label>
+                <input type="date" id="factureDate" class="form-control" required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Taux TVA (%)</label>
+                <input type="number" id="factureTauxTva" class="form-control" value="20" step="0.01" onchange="calculateFactureTotals()">
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Total HT (fournisseur) *</label>
+                <input type="number" id="factureTotalHt" class="form-control" step="0.01" required onchange="calculateFactureTotals()">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Total TTC</label>
+                <input type="text" id="factureTotalTtc" class="form-control" readonly>
+              </div>
+            </div>
+          </div>
+          <h6 class="mt-3">Articles (copiés du BL - modifiables)</h6>
+          <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+            <table class="table table-sm table-bordered" id="factureItemsTable">
+              <thead class="thead-light">
+                <tr>
+                  <th>Désignation</th>
+                  <th>Unité</th>
+                  <th>Référence</th>
+                  <th style="width:80px;">Qté</th>
+                  <th style="width:100px;">Prix U.</th>
+                  <th style="width:100px;">Total HT</th>
+                </tr>
+              </thead>
+              <tbody id="factureItemsBody">
+              </tbody>
+              <tfoot>
+                <tr style="font-weight: bold; background: #f8f9fa;">
+                  <td colspan="5" class="text-right">Total items:</td>
+                  <td id="factureItemsTotal">0.00</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-primary" onclick="createFacture()">Créer Facture</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Affect to Existing Facture Modal -->
+  <div class="modal fade" id="affectFactureModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Affecter à une Facture existante</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Sélectionner une Facture</label>
+            <select id="existingFactureSelect" class="form-control">
+              <option value="">-- Choisir une facture --</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-primary" onclick="affectToFacture()">Affecter</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create FactureAvoir Modal -->
+  <div class="modal fade" id="createFactureAvoirModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="faModalTitle">Créer Facture Avoir</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="faType" value="retour">
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Numéro FA *</label>
+                <input type="text" id="faNumero" class="form-control" required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Date *</label>
+                <input type="date" id="faDate" class="form-control" required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Taux TVA (%)</label>
+                <input type="number" id="faTauxTva" class="form-control" value="20" step="0.01" onchange="calculateFATotals()">
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Total HT (auto-calculé)</label>
+                <input type="text" id="faTotalHt" class="form-control" readonly>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Total TTC</label>
+                <input type="text" id="faTotalTtc" class="form-control" readonly>
+              </div>
+            </div>
+          </div>
+          <h6 class="mt-3">Articles à retourner/remettre</h6>
+          <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+            <table class="table table-sm table-bordered" id="faItemsTable">
+              <thead class="thead-light">
+                <tr>
+                  <th>Désignation</th>
+                  <th>Unité</th>
+                  <th>Référence</th>
+                  <th style="width:80px;">Qté BL</th>
+                  <th style="width:80px; background-color: #dc3545; color: white;">Qté Retournée</th>
+                  <th style="width:100px;">Prix U.</th>
+                  <th style="width:100px;">Total HT</th>
+                </tr>
+              </thead>
+              <tbody id="faItemsBody">
+              </tbody>
+              <tfoot>
+                <tr style="font-weight: bold; background: #f8f9fa;">
+                  <td colspan="6" class="text-right">Total:</td>
+                  <td id="faItemsTotal">0.00</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-primary" onclick="createFactureAvoir()">Créer Facture Avoir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Affect to Existing FactureAvoir Modal -->
+  <div class="modal fade" id="affectFactureAvoirModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Affecter à une Facture Avoir existante</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Sélectionner une Facture Avoir</label>
+            <select id="existingFactureAvoirSelect" class="form-control">
+              <option value="">-- Choisir un avoir --</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-primary" onclick="affectToFactureAvoir()">Affecter</button>
+        </div>
       </div>
     </div>
   </div>
 
   <script src="/vendor/jquery/jquery.min.js"></script>
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+  <script src="/js/sb-admin-2.min.js"></script>
 
   <script>
-    // Validate quantity against BC quantity
-    document.querySelectorAll('.qty-input').forEach(input => {
-      input.addEventListener('input', function() {
-        const bcQty = parseFloat(this.dataset.bcQty);
-        const currentQty = parseFloat(this.value) || 0;
-        const errorMsg = this.nextElementSibling;
+    function toggleUploadForm() {
+      const form = document.getElementById('upload-form');
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
 
-        if (bcQty && currentQty > bcQty) {
-          this.classList.add('qty-error');
-          errorMsg.textContent = 'Max: ' + bcQty;
-          errorMsg.classList.add('show');
+    async function uploadBLFile(event) {
+      event.preventDefault();
+      const form = event.target;
+      const fileInput = form.querySelector('input[type="file"]');
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const res = await fetch('/api/bons-livraison/<%= bl.id %>/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          window.location.reload();
         } else {
-          this.classList.remove('qty-error');
-          errorMsg.classList.remove('show');
+          alert(json.error || 'Erreur lors de l\'upload');
         }
+      } catch (err) {
+        alert('Erreur lors de l\'upload');
+        console.error(err);
+      }
+    }
 
-        // Recalculate row total
-        const row = this.closest('tr');
-        const qtyInput = row.querySelector('input[data-field="quantite"]');
-        const priceInput = row.querySelector('input[data-field="prixUnitaire"]');
-        const totalCell = row.querySelector('.item-total');
+    // BL items data for Facture
+    const blItems = <%- JSON.stringify(bl.items || []) %>;
+    const blId = <%= bl.id %>;
+    const fournisseurId = <%= bl.fournisseur?.id %>;
 
-        const qty = parseFloat(qtyInput.value) || 0;
-        const price = parseFloat(priceInput.value) || 0;
-        const total = qty * price;
-
-        totalCell.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-        // Recalculate grand total
-        let grandTotal = 0;
-        document.querySelectorAll('.item-total').forEach(cell => {
-          const text = cell.textContent.replace(/\s/g, '').replace(',', '.');
-          grandTotal += parseFloat(text) || 0;
-        });
-        document.getElementById('totalHt').textContent = grandTotal.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    // Facture functions
+    function openCreateFactureModal() {
+      document.getElementById('factureNumero').value = '';
+      document.getElementById('factureDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('factureTauxTva').value = 20;
+      document.getElementById('factureTotalHt').value = '';
+      document.getElementById('factureTotalTtc').value = '';
+      
+      // Populate items from BL
+      const tbody = document.getElementById('factureItemsBody');
+      tbody.innerHTML = '';
+      blItems.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${item.designation || ''}</td>
+          <td>${item.unite || ''}</td>
+          <td>${item.reference || ''}</td>
+          <td><input type="number" class="form-control form-control-sm" value="${item.quantite || 0}" data-field="quantite" data-id="${item.id}" onchange="calculateFactureItemTotal(this)"></td>
+          <td><input type="number" class="form-control form-control-sm" value="${item.prixUnitaire || 0}" step="0.01" data-field="prixUnitaire" data-id="${item.id}" onchange="calculateFactureItemTotal(this)"></td>
+          <td class="text-right item-total">${((item.quantite || 0) * (item.prixUnitaire || 0)).toFixed(2)}</td>
+        `;
+        tbody.appendChild(row);
       });
-    });
+      calculateFactureTotals();
+      $('#createFactureModal').modal('show');
+    }
 
-    // Recalculate totals when price changes
-    document.querySelectorAll('#blItemsTable input[data-field="prixUnitaire"]').forEach(input => {
-      input.addEventListener('input', function() {
-        const row = this.closest('tr');
-        const qtyInput = row.querySelector('input[data-field="quantite"]');
-        const priceInput = row.querySelector('input[data-field="prixUnitaire"]');
-        const totalCell = row.querySelector('.item-total');
+    function calculateFactureItemTotal(input) {
+      const row = input.closest('tr');
+      const qty = parseFloat(row.querySelector('[data-field="quantite"]').value) || 0;
+      const price = parseFloat(row.querySelector('[data-field="prixUnitaire"]').value) || 0;
+      row.querySelector('.item-total').textContent = (qty * price).toFixed(2);
+      calculateFactureTotals();
+    }
 
-        const qty = parseFloat(qtyInput.value) || 0;
-        const price = parseFloat(priceInput.value) || 0;
-        const total = qty * price;
+    function calculateFactureTotals() {
+      const tauxTva = parseFloat(document.getElementById('factureTauxTva').value) || 0;
+      const totalHt = parseFloat(document.getElementById('factureTotalHt').value) || 0;
+      const totalTtc = totalHt + (totalHt * tauxTva / 100);
+      document.getElementById('factureTotalTtc').value = totalTtc.toFixed(2);
 
-        totalCell.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-        // Recalculate grand total
-        let grandTotal = 0;
-        document.querySelectorAll('.item-total').forEach(cell => {
-          const text = cell.textContent.replace(/\s/g, '').replace(',', '.');
-          grandTotal += parseFloat(text) || 0;
-        });
-        document.getElementById('totalHt').textContent = grandTotal.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      // Calculate items total
+      let itemsTotal = 0;
+      document.querySelectorAll('#factureItemsBody .item-total').forEach(cell => {
+        itemsTotal += parseFloat(cell.textContent) || 0;
       });
-    });
+      document.getElementById('factureItemsTotal').textContent = itemsTotal.toFixed(2);
+    }
 
-    async function saveBL() {
-      // Check for validation errors
-      const hasError = document.querySelectorAll('.qty-error').length > 0;
-      if (hasError) {
-        alert('Veuillez corriger les erreurs avant d\'enregistrer');
+    async function createFacture() {
+      const numero = document.getElementById('factureNumero').value;
+      const date = document.getElementById('factureDate').value;
+      const totalHt = parseFloat(document.getElementById('factureTotalHt').value);
+      const tauxTva = parseFloat(document.getElementById('factureTauxTva').value) || 0;
+
+      if (!numero || !date || !totalHt) {
+        alert('Veuillez remplir tous les champs obligatoires');
         return;
       }
 
       const items = [];
-      document.querySelectorAll('#blItemsTable .bl-item-row').forEach(row => {
+      document.querySelectorAll('#factureItemsBody tr').forEach(row => {
+        const qtyInput = row.querySelector('[data-field="quantite"]');
+        const priceInput = row.querySelector('[data-field="prixUnitaire"]');
+        items.push({
+          designation: row.cells[0].textContent,
+          unite: row.cells[1].textContent,
+          reference: row.cells[2].textContent,
+          quantite: parseFloat(qtyInput.value) || 0,
+          prixUnitaire: parseFloat(priceInput.value) || 0,
+          bondeLivraisonItemId: parseInt(qtyInput.dataset.id)
+        });
+      });
+
+      try {
+        const res = await fetch('/api/factures', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            numero,
+            date,
+            totalHt,
+            tauxTva,
+            bondeLivraisonIds: [blId],
+            items
+          })
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          $('#createFactureModal').modal('hide');
+          window.location.reload();
+        } else {
+          alert(json.error || 'Erreur lors de la création');
+        }
+      } catch (err) {
+        alert('Erreur lors de la création');
+        console.error(err);
+      }
+    }
+
+    async function openAffectFactureModal() {
+      const select = document.getElementById('existingFactureSelect');
+      select.innerHTML = '<option value="">-- Choisir une facture --</option>';
+      
+      try {
+        const res = await fetch(`/api/factures/by-fournisseur/${fournisseurId}`);
+        const factures = await res.json();
+        factures.forEach(f => {
+          const option = document.createElement('option');
+          option.value = f.id;
+          option.textContent = `N° ${f.numero} - ${new Date(f.date).toLocaleDateString('fr-FR')} (${f.totalTtc.toFixed(2)} TTC)`;
+          select.appendChild(option);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+      
+      $('#affectFactureModal').modal('show');
+    }
+
+    async function affectToFacture() {
+      const factureId = document.getElementById('existingFactureSelect').value;
+      if (!factureId) {
+        alert('Veuillez sélectionner une facture');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/factures/${factureId}/affecter-bl`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bondeLivraisonId: blId })
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          $('#affectFactureModal').modal('hide');
+          window.location.reload();
+        } else {
+          alert(json.error || 'Erreur lors de l\'affectation');
+        }
+      } catch (err) {
+        alert('Erreur lors de l\'affectation');
+        console.error(err);
+      }
+    }
+
+    function toggleFactureMenu() {
+      var menu = document.getElementById('factureMenu');
+      if (menu.style.display === 'none') {
+        menu.style.display = 'block';
+      } else {
+        menu.style.display = 'none';
+      }
+    }
+
+    function closeFactureMenu() {
+      document.getElementById('factureMenu').style.display = 'none';
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function(e) {
+      var menu = document.getElementById('factureMenu');
+      var btn = e.target.closest('button');
+      if (!e.target.closest('#factureMenu') && (!btn || !btn.onclick.toString().includes('toggleFactureMenu'))) {
+        menu.style.display = 'none';
+      }
+    });
+
+    function viewFacture(factureId) {
+      document.getElementById('factureMenu').style.display = 'none';
+      window.location.href = '/achats/factures/' + factureId + '/view';
+    }
+
+    // FactureAvoir functions
+    function openCreateFactureAvoirModal(type) {
+      document.getElementById('faType').value = type;
+      document.getElementById('faModalTitle').textContent = type === 'retour' ? 'Créer Facture Avoir (Retour)' : 'Créer Facture Avoir (Remise)';
+      document.getElementById('faNumero').value = '';
+      document.getElementById('faDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('faTauxTva').value = 20;
+      document.getElementById('faTotalHt').value = '';
+      document.getElementById('faTotalTtc').value = '';
+
+      // Populate items from BL
+      const tbody = document.getElementById('faItemsBody');
+      tbody.innerHTML = '';
+      blItems.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${item.designation || ''}</td>
+          <td>${item.unite || ''}</td>
+          <td>${item.reference || ''}</td>
+          <td class="text-center">${item.quantite || 0}</td>
+          <td><input type="number" class="form-control form-control-sm" value="0" min="0" step="0.01" data-field="quantite" data-id="${item.id}" onchange="calculateFAItemTotal(this)"></td>
+          <td><input type="number" class="form-control form-control-sm" value="${item.prixUnitaire || 0}" step="0.01" data-field="prixUnitaire" data-id="${item.id}" onchange="calculateFAItemTotal(this)"></td>
+          <td class="text-right item-total">0.00</td>
+        `;
+        tbody.appendChild(row);
+      });
+      calculateFATotals();
+      $('#createFactureAvoirModal').modal('show');
+    }
+
+    function calculateFAItemTotal(input) {
+      const row = input.closest('tr');
+      const qty = parseFloat(row.querySelector('[data-field="quantite"]').value) || 0;
+      const price = parseFloat(row.querySelector('[data-field="prixUnitaire"]').value) || 0;
+      row.querySelector('.item-total').textContent = (qty * price).toFixed(2);
+      calculateFATotals();
+    }
+
+    function calculateFATotals() {
+      const tauxTva = parseFloat(document.getElementById('faTauxTva').value) || 0;
+      
+      let itemsTotal = 0;
+      document.querySelectorAll('#faItemsBody .item-total').forEach(cell => {
+        itemsTotal += parseFloat(cell.textContent) || 0;
+      });
+      
+      const totalTtc = itemsTotal + (itemsTotal * tauxTva / 100);
+      document.getElementById('faTotalHt').value = itemsTotal.toFixed(2);
+      document.getElementById('faTotalTtc').value = totalTtc.toFixed(2);
+      document.getElementById('faItemsTotal').textContent = itemsTotal.toFixed(2);
+    }
+
+    async function createFactureAvoir() {
+      const type = document.getElementById('faType').value;
+      const numero = document.getElementById('faNumero').value;
+      const date = document.getElementById('faDate').value;
+      const tauxTva = parseFloat(document.getElementById('faTauxTva').value) || 0;
+
+      if (!numero || !date) {
+        alert('Veuillez remplir tous les champs obligatoires');
+        return;
+      }
+
+      // Get first linked facture
+      const factureLinks = <%- JSON.stringify(bl.factureLinks || []) %>;
+      if (!factureLinks || factureLinks.length === 0) {
+        alert('Ce BL n\'est lié à aucune facture');
+        return;
+      }
+      const factureId = factureLinks[0].facture.id;
+
+      const items = [];
+      document.querySelectorAll('#faItemsBody tr').forEach(row => {
+        const qtyInput = row.querySelector('[data-field="quantite"]');
+        const priceInput = row.querySelector('[data-field="prixUnitaire"]');
+        const qty = parseFloat(qtyInput.value) || 0;
+        if (qty > 0) {
+          items.push({
+            designation: row.cells[0].textContent,
+            unite: row.cells[1].textContent,
+            reference: row.cells[2].textContent,
+            quantite: qty,
+            prixUnitaire: parseFloat(priceInput.value) || 0,
+            bondeLivraisonItemId: parseInt(qtyInput.dataset.id)
+          });
+        }
+      });
+
+      if (items.length === 0) {
+        alert('Veuillez entrer au moins une quantité');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/factures-avoir', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            numero,
+            date,
+            type,
+            tauxTva,
+            factureId,
+            bondeLivraisonId: blId,
+            fournisseurId: fournisseurId,
+            items
+          })
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          $('#createFactureAvoirModal').modal('hide');
+          window.location.reload();
+        } else {
+          alert(json.error || 'Erreur lors de la création');
+        }
+      } catch (err) {
+        alert('Erreur lors de la création');
+        console.error(err);
+      }
+    }
+
+    async function openAffectFactureAvoirModal() {
+      const select = document.getElementById('existingFactureAvoirSelect');
+      select.innerHTML = '<option value="">-- Choisir un avoir --</option>';
+      
+      try {
+        const res = await fetch(`/api/factures-avoir/by-fournisseur/${fournisseurId}`);
+        const avoirs = await res.json();
+        avoirs.forEach(a => {
+          const option = document.createElement('option');
+          option.value = a.id;
+          option.textContent = `N° ${a.numero} - ${a.type} - ${new Date(a.date).toLocaleDateString('fr-FR')}`;
+          select.appendChild(option);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+      
+      $('#affectFactureAvoirModal').modal('show');
+    }
+
+    async function affectToFactureAvoir() {
+      const avoirId = document.getElementById('existingFactureAvoirSelect').value;
+      if (!avoirId) {
+        alert('Veuillez sélectionner un avoir');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/factures-avoir/${avoirId}/affecter-bl`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bondeLivraisonId: blId })
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          $('#affectFactureAvoirModal').modal('hide');
+          window.location.reload();
+        } else {
+          alert(json.error || 'Erreur lors de l\'affectation');
+        }
+      } catch (err) {
+        alert('Erreur lors de l\'affectation');
+        console.error(err);
+      }
+    }
+
+    function viewFactureAvoir(avoirId) {
+      window.location.href = '/achats/factures-avoir/' + avoirId + '/view';
+    }
+
+    document.getElementById('btnSaveBl').addEventListener('click', async function() {
+      const btn = this;
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
+
+      const items = [];
+      document.querySelectorAll('#blBody .bl-row').forEach(row => {
         const id = parseInt(row.dataset.id);
+        const commandesItemsId = row.dataset.commandesItemsId || null;
         const qtyInput = row.querySelector('input[data-field="quantite"]');
+        const qtyRetourneInput = row.querySelector('input[data-field="qtyRetourne"]');
         const priceInput = row.querySelector('input[data-field="prixUnitaire"]');
         const remarqueInput = row.querySelector('input[data-field="remarque"]');
+        const qtyRetourne = qtyRetourneInput ? parseFloat(qtyRetourneInput.value) || 0 : 0;
+
+        let prixUnitaire = null;
+        if (priceInput.value) {
+          prixUnitaire = parseFloat(priceInput.value.toString().replace(/\s/g, '').replace(',', '.'));
+          if (isNaN(prixUnitaire)) prixUnitaire = null;
+        }
 
         items.push({
           id: id,
-          quantite: qtyInput.value,
-          prixUnitaire: priceInput.value,
+          quantite: parseFloat(qtyInput.value) || 0,
+          qtyRetourne: qtyRetourne,
+          prixUnitaire: prixUnitaire,
           remarque: remarqueInput.value,
-          commandesItemsId: qtyInput.dataset.commandesItemsId || null
+          commandesItemsId: commandesItemsId
         });
       });
 
@@ -247,16 +1161,25 @@
         const json = await res.json();
 
         if (res.ok && json.success) {
-          alert('BL mis à jour avec succès');
-          window.location.reload();
+          btn.innerHTML = '<i class="fas fa-check"></i> Sauvegardé !';
+          btn.classList.add('btn-success');
+          setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.remove('btn-success');
+            btn.disabled = false;
+          }, 2000);
         } else {
           alert(json.error || 'Erreur lors de la sauvegarde');
+          btn.disabled = false;
+          btn.innerHTML = originalText;
         }
       } catch (err) {
         alert('Erreur lors de la sauvegarde');
         console.error(err);
+        btn.disabled = false;
+        btn.innerHTML = originalText;
       }
-    }
+    });
   </script>
 </body>
 

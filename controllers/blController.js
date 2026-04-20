@@ -1,5 +1,6 @@
 import prisma from "../db.js";
 import { updateBCStatusInDB } from "./bcController.js";
+import { buildPublicBlUrl } from "../utils/utils.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -60,6 +61,16 @@ export const listBL = async (req, res) => {
         bondeCommandeLinks: {
           include: {
             bondeCommande: true
+          }
+        },
+        factureLinks: {
+          include: {
+            facture: true
+          }
+        },
+        avoirs: {
+          include: {
+            facture: true
           }
         }
       },
@@ -160,6 +171,7 @@ export const getBLArticles = async (req, res) => {
       reference: item.reference,
       unite: item.unite,
       qte_recue: item.quantite,
+      qtyRetourne: item.qtyRetourne || 0,
       prixUnitaire: item.prixUnitaire
     }));
 
@@ -505,6 +517,59 @@ export const downloadBLFile = async (req, res) => {
 };
 
 /**
+ * GET /achats/bons-livraison/:id/view
+ * Render BL view page
+ */
+export const viewBL = async (req, res) => {
+  try {
+    const blId = parseInt(req.params.id);
+    if (!blId || isNaN(blId)) {
+      return res.redirect('/achats/bons-livraison');
+    }
+
+    const bl = await prisma.bondeLivraison.findUnique({
+      where: { id: blId },
+      include: {
+        fournisseur: true,
+        items: {
+          include: {
+            commandesItems: true
+          }
+        },
+        bondeCommandeLinks: {
+          include: {
+            bondeCommande: true
+          }
+        },
+        factureLinks: {
+          include: {
+            facture: true
+          }
+        },
+        avoirs: {
+          include: {
+            facture: true,
+            items: true
+          }
+        }
+      }
+    });
+
+    if (!bl) {
+      return res.redirect('/achats/bons-livraison');
+    }
+
+    res.render('dashboard/Achats/bl/view', {
+      bl,
+      pageTitle: `BL ${bl.numero}`
+    });
+  } catch (error) {
+    console.error('Erreur viewBL:', error);
+    res.redirect('/achats/bons-livraison');
+  }
+};
+
+/**
  * GET /achats/bons-livraison/:id/edit
  * Render BL edit page with items
  */
@@ -528,6 +593,17 @@ export const editBL = async (req, res) => {
           include: {
             bondeCommande: true
           }
+        },
+        factureLinks: {
+          include: {
+            facture: true
+          }
+        },
+        avoirs: {
+          include: {
+            facture: true,
+            items: true
+          }
         }
       }
     });
@@ -536,8 +612,11 @@ export const editBL = async (req, res) => {
       return res.redirect('/achats/bons-livraison');
     }
 
+    const publicBlUrl = buildPublicBlUrl(req, bl.id);
+
     res.render('dashboard/Achats/bl/edit', {
       bl,
+      publicBlUrl,
       pageTitle: `Éditer BL ${bl.numero}`
     });
   } catch (error) {
@@ -580,6 +659,7 @@ export const updateBL = async (req, res) => {
           where: { id: item.id },
           data: {
             quantite: parseFloat(item.quantite) || 0,
+            qtyRetourne: parseFloat(item.qtyRetourne) || 0,
             prixUnitaire: item.prixUnitaire ? parseFloat(item.prixUnitaire) : null,
             obs: item.remarque || null
           }
@@ -622,5 +702,100 @@ export const updateBL = async (req, res) => {
   } catch (error) {
     console.error('Erreur updateBL:', error);
     return res.status(500).json({ success: false, error: 'Erreur serveur' });
+  }
+};
+
+/**
+ * GET /achats/factures/:id/view
+ * Render Facture view page
+ */
+export const viewFacture = async (req, res) => {
+  try {
+    const factureId = parseInt(req.params.id);
+    if (!factureId || isNaN(factureId)) {
+      return res.status(400).json({ success: false, error: 'ID invalide' });
+    }
+
+    // First get all BL IDs linked to this facture
+    const blLinks = await prisma.factureBondeLivraison.findMany({
+      where: { factureId: factureId },
+      select: { bondeLivraisonId: true }
+    });
+    const blIds = blLinks.map(link => link.bondeLivraisonId);
+
+    // Then get avoirs that come from those BLs
+    const avoirsFromBLs = await prisma.factureAvoir.findMany({
+      where: { bondeLivraisonId: { in: blIds } },
+      include: { bondeLivraison: true }
+    });
+
+    const facture = await prisma.facture.findUnique({
+      where: { id: factureId },
+      include: {
+        fournisseur: true,
+        bondeLivraisonLinks: {
+          include: {
+            bondeLivraison: {
+              include: {
+                bondeCommandeLinks: {
+                  include: { bondeCommande: true }
+                }
+              }
+            }
+          }
+        },
+        items: true
+      }
+    });
+
+    // Attach avoirs to facture
+    facture.avoirs = avoirsFromBLs;
+
+    if (!facture) {
+      return res.status(404).json({ success: false, error: 'Facture non trouvée' });
+    }
+
+    res.render('dashboard/achats/factures/view', {
+      facture,
+      user: req.session.user
+    });
+  } catch (error) {
+    console.error('Erreur viewFacture:', error);
+    res.status(500).json({ success: false, error: 'Erreur serveur' });
+  }
+};
+
+/**
+ * GET /achats/factures-avoir/:id/view
+ * Render Facture Avoir view page
+ */
+export const viewFactureAvoir = async (req, res) => {
+  try {
+    const avoirId = parseInt(req.params.id);
+    if (!avoirId || isNaN(avoirId)) {
+      return res.status(400).json({ success: false, error: 'ID invalide' });
+    }
+
+    const avoir = await prisma.factureAvoir.findUnique({
+      where: { id: avoirId },
+      include: {
+        fournisseur: true,
+        bondeLivraison: true,
+        facture: true,
+        items: true
+      }
+    });
+
+    if (!avoir) {
+      return res.status(404).json({ success: false, error: 'Facture Avoir non trouvée' });
+    }
+
+    res.render('dashboard/achats/factures-avoir/view', {
+      avoir,
+      user: req.session.user
+    });
+  } catch (error) {
+    console.error('Erreur viewFactureAvoir:', error);
+    res.status(500).json({ success: false, error: 'Erreur serveur' });
   }
 };

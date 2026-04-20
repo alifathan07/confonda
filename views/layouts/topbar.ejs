@@ -146,3 +146,61 @@ document.addEventListener('click', function(e){
     }
 });
 </script>
+
+<% if (typeof activePopups !== 'undefined' && activePopups && activePopups.length > 0) { %>
+  <% activePopups.forEach(function(popup) { %>
+    <% 
+      const typeColors = {
+        'info': 'bg-blue-500',
+        'warning': 'bg-yellow-500', 
+        'success': 'bg-green-500',
+        'error': 'bg-red-500'
+      };
+      const typeIcons = {
+        'info': 'fa-info-circle',
+        'warning': 'fa-exclamation-triangle',
+        'success': 'fa-check-circle',
+        'error': 'fa-times-circle'
+      };
+    %>
+    <% 
+      const typeConfig = {
+        'info': { color: '#007bff', bg: '#d6e9f8', icon: 'fa-info-circle', btnClass: 'btn-primary' },
+        'success': { color: '#28a745', bg: '#d4edda', icon: 'fa-check-circle', btnClass: 'btn-success' },
+        'error': { color: '#dc3545', bg: '#f8d7da', icon: 'fa-times-circle', btnClass: 'btn-danger' },
+        'warning': { color: '#ffc107', bg: '#fff3cd', icon: 'fa-exclamation-triangle', btnClass: 'btn-warning' }
+      };
+      const cfg = typeConfig[popup.type] || typeConfig['info'];
+    %>
+    <div id="popup-<%= popup.id %>" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;">
+      <div class="bg-white rounded shadow-lg p-4" style="max-width:420px;width:90%;border-top:4px solid <%= cfg.color %>;">
+        <div class="d-flex align-items-start">
+          <div class="rounded-circle p-2 mr-3" style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:<%= cfg.bg %>;">
+            <i class="fas <%= cfg.icon %>" style="font-size:1.5rem;color:<%= cfg.color %>;"></i>
+          </div>
+          <div class="flex-grow-1">
+            <h5 class="font-weight-bold mb-1" style="color:<%= cfg.color %>;"><%= popup.title %></h5>
+            <p class="text-muted mb-0" style="font-size:0.95rem;"><%= popup.message %></p>
+          </div>
+          <button onclick="dismissPopup(<%= popup.id %>)" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#6c757d;padding:0;margin-left:8px;">
+            &times;
+          </button>
+        </div>
+        <div class="mt-4 text-center">
+          <button onclick="dismissPopup(<%= popup.id %>)" class="btn <%= cfg.btnClass %> btn-lg px-5" style="width:100%;">
+            <i class="fas fa-check mr-2"></i>J'ai compris
+          </button>
+        </div>
+      </div>
+    </div>
+    <script>
+      function dismissPopup(popupId) {
+        document.getElementById('popup-' + popupId).style.display = 'none';
+        fetch('/api/popups/' + popupId + '/dismiss', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+    </script>
+  <% }); %>
+<% } %>

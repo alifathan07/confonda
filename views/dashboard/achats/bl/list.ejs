@@ -151,6 +151,17 @@
             </div>
 
             <div class="card-body">
+              
+              <!-- Legend -->
+              <div class="mb-3 p-2 bg-light rounded">
+                <small class="text-muted">
+                  <strong>Légende :</strong>
+                  <span class="badge badge-warning text-dark ml-2"><i class="fas fa-circle" style="font-size:0.5rem;"></i> Sans facture</span>
+                  <span class="badge badge-success ml-2"><i class="fas fa-circle" style="font-size:0.5rem;"></i> Facturé</span>
+                  <span class="badge badge-info ml-2"><i class="fas fa-circle" style="font-size:0.5rem;"></i> Avoir créé</span>
+                </small>
+              </div>
+
               <div class="table-responsive">
                 <table id="blTable" class="table table-bordered table-sm table-hover">
                   <thead class="thead-light">
@@ -160,6 +171,7 @@
                       <th>Fournisseur</th>
                       <th>Bon de Commande</th>
                       <th>Statut</th>
+                      <th>Statut facturation</th>
                       <th>Fichier</th>
                       <th>Actions</th>
                     </tr>
@@ -167,7 +179,7 @@
                   <tbody>
                     <% if (!bls || bls.length === 0) { %>
                       <tr>
-                        <td colspan="7" class="text-center text-muted">Aucun Bon de Livraison disponible.</td>
+                        <td colspan="8" class="text-center text-muted">Aucun Bon de Livraison disponible.</td>
                       </tr>
                     <% } else { %>
                       <% bls.forEach(bl => { %>
@@ -206,6 +218,32 @@
                             </span>
                           </td>
                           <td class="text-center">
+                            <% const hasFacture = bl.factureLinks && bl.factureLinks.length > 0; %>
+                            <% const firstFacture = hasFacture ? bl.factureLinks[0].facture : null; %>
+                            <% const hasAvoir = bl.avoirs && bl.avoirs.length > 0; %>
+                            
+                            <% if (!hasFacture) { %>
+                              <span class="badge badge-warning text-dark">Sans facture</span>
+                            <% } else { %>
+                              <% if (firstFacture) { %>
+                                <div class="small">
+                                  <a href="/achats/factures/<%= firstFacture.id %>/view" class="badge badge-success text-white text-decoration-none" style="font-size: 0.75rem;">
+                                    Facture: <%= firstFacture.numero %>
+                                  </a>
+                                </div>
+                              <% } %>
+                              <% if (hasAvoir) { %>
+                                <div class="small mt-1">
+                                  <% bl.avoirs.forEach(avoir => { %>
+                                    <a href="/achats/factures-avoir/<%= avoir.id %>/view" class="badge badge-danger text-white text-decoration-none" style="font-size: 0.75rem;">
+                                      Avoir: <%= avoir.numero %>
+                                    </a>
+                                  <% }) %>
+                                </div>
+                              <% } %>
+                            <% } %>
+                          </td>
+                          <td class="text-center">
                             <% if (bl.fichier) { %>
                               <a href="/api/bons-livraison/<%= bl.id %>/download" class="btn btn-sm btn-success" title="Télécharger">
                                 <i class="fas fa-download"></i>
@@ -227,11 +265,32 @@
                           <td>
                             <div class="btn-group btn-group-sm" role="group">
                               <a href="/achats/bons-livraison/<%= bl.id %>/edit" class="btn btn-warning" title="Éditer">
-                                <i class="fas fa-edit"></i>
-                              </a>
-                              <a href="/achats/bons-livraison/<%= bl.id %>/view" class="btn btn-info" title="Voir">
                                 <i class="fas fa-eye"></i>
                               </a>
+                            
+                              <% const hasFactureAction = bl.factureLinks && bl.factureLinks.length > 0; %>
+                              <% const hasAvoirAction = bl.avoirs && bl.avoirs.length > 0; %>
+                              
+                              <% if (!hasFactureAction) { %>
+                              <button class="btn btn-primary btn-sm" title="Créer Facture" 
+                                data-bl-id="<%= bl.id %>" 
+                                data-fournisseur-name="<%= bl.fournisseur ? bl.fournisseur.name : '' %>"
+                                onclick="openFactureActionMenu(<%= bl.id %>, '<%= encodeURIComponent(bl.fournisseur ? bl.fournisseur.name : '') %>')">
+                                <i class="fas fa-plus"></i> Créer facture
+                              </button>
+                              <% } else if (hasFactureAction && !hasAvoirAction) { %>
+                              <button class="btn btn-outline-success btn-sm" title="Créer Avoir" 
+                                data-bl-id="<%= bl.id %>" 
+                                data-fournisseur-id="<%= bl.fournisseur ? bl.fournisseur.id : '' %>"
+                                data-fournisseur-name="<%= bl.fournisseur ? bl.fournisseur.name : '' %>"
+                                onclick="openFactureAvoirActionMenu(this)">
+                                <i class="fas fa-plus"></i> Créer avoir
+                              </button>
+                              <% } else if (hasFactureAction && hasAvoirAction) { %>
+                              <a href="/achats/bons-livraison/<%= bl.id %>/view" class="btn btn-outline-secondary btn-sm" title="Voir">
+                                <i class="fas fa-eye"></i> Voir
+                              </a>
+                              <% } %>
                               <button class="btn btn-danger" title="Supprimer" onclick="deleteBL(<%= bl.id %>, this)">
                                 <i class="fas fa-trash"></i>
                               </button>
@@ -309,6 +368,222 @@
     </div>
   </div>
 
+  <!-- Action Menu Modal -->
+  <div class="modal fade" id="factureActionMenuModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Actions Facture</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body" id="factureActionMenuBody">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Facture Modal -->
+  <div class="modal fade" id="createFactureModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Créer Facture</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="factureBlId">
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Numéro *</label>
+                <input type="text" id="factureNumero" class="form-control" required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Date *</label>
+                <input type="date" id="factureDate" class="form-control" required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Taux TVA (%)</label>
+                <input type="number" id="factureTauxTva" class="form-control" value="20" step="0.01" oninput="calcFactureTotals()">
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Total HT *</label>
+                <input type="number" id="factureTotalHt" class="form-control" step="0.01" required oninput="calcFactureTotals()">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Total TTC</label>
+                <input type="text" id="factureTotalTtc" class="form-control" readonly>
+              </div>
+            </div>
+          </div>
+          <h6 class="mt-3">Articles</h6>
+          <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+            <table class="table table-sm table-bordered" id="factureItemsTable">
+              <thead class="thead-light">
+                <tr>
+                  <th>Désignation</th>
+                  <th>Référence</th>
+                  <th>Unité</th>
+                  <th style="width:80px;">Qté</th>
+                  <th style="width:100px;">Prix U.</th>
+                  <th style="width:100px;">Total HT</th>
+                </tr>
+              </thead>
+              <tbody id="factureItemsBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-primary" onclick="submitCreateFacture()">Créer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Affect Facture Modal -->
+  <div class="modal fade" id="affectFactureModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Affecter à une Facture existante</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="affectFactureBlId">
+          <div class="form-group">
+            <label>Sélectionner une Facture</label>
+            <select id="factureSelect" class="form-control">
+              <option value="">-- Choisir une facture --</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-primary" onclick="submitAffectFacture()">Affecter</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create FactureAvoir Modal -->
+  <div class="modal fade" id="createFactureAvoirModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Créer Facture Avoir</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="faBlId">
+          <input type="hidden" id="faFactureId">
+          <div class="row">
+            <div class="col-md-3">
+              <div class="form-group">
+                <label>Type</label>
+                <select id="faType" class="form-control" onchange="updateFAItems()">
+                  <option value="retour">Retour</option>
+                  <option value="remise">Remise</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label>Numéro *</label>
+                <input type="text" id="faNumero" class="form-control" required>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label>Date *</label>
+                <input type="date" id="faDate" class="form-control" required>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label>Taux TVA (%)</label>
+                <input type="number" id="faTauxTva" class="form-control" value="20" step="0.01" oninput="calcFATotals()">
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Total HT</label>
+                <input type="text" id="faTotalHt" class="form-control" readonly>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>Total TTC</label>
+                <input type="text" id="faTotalTtc" class="form-control" readonly>
+              </div>
+            </div>
+          </div>
+          <h6 class="mt-3">Articles</h6>
+          <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+            <table class="table table-sm table-bordered" id="faItemsTable">
+              <thead class="thead-light">
+                <tr>
+                  <th>Désignation</th>
+                  <th>Référence</th>
+                  <th>Unité</th>
+                  <th style="width:80px;">Qté BL</th>
+                  <th style="width:80px;">Qté Ret.</th>
+                  <th style="width:80px;">Qté</th>
+                  <th style="width:100px;">Prix U.</th>
+                  <th style="width:100px;">Total HT</th>
+                </tr>
+              </thead>
+              <tbody id="faItemsBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-primary" id="btnCreateFA" onclick="submitCreateFactureAvoir()">Créer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Affect FactureAvoir Modal -->
+  <div class="modal fade" id="affectFactureAvoirModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Affecter à une Facture Avoir existante</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="affectFABlId">
+          <div class="form-group">
+            <label>Sélectionner un Avoir</label>
+            <select id="factureAvoirSelect" class="form-control">
+              <option value="">-- Choisir un avoir --</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-primary" onclick="submitAffectFactureAvoir()">Affecter</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="/vendor/jquery/jquery.min.js"></script>
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
@@ -332,6 +607,435 @@
         toast.style.transform = 'translateX(100%)';
         setTimeout(() => toast.remove(), 300);
       }, 3000);
+    }
+
+    // Facture action menu functions
+    let currentBlId = null;
+    let currentFournisseurId = null;
+    let currentBLItems = [];
+
+    async function openFactureActionMenu(blId, fournisseurName) {
+      currentBlId = blId;
+      currentFournisseurId = decodeURIComponent(fournisseurName);
+      
+      try {
+        // Fetch BL items
+        const blRes = await fetch(`/api/bons-livraison/${blId}/articles`);
+        if (blRes.ok) {
+          currentBLItems = await blRes.json();
+        } else {
+          currentBLItems = [];
+        }
+        
+        // Always show 2 choices
+        const html = `<div class="list-group">
+          <button class="list-group-item list-group-item-action" onclick="closeActionMenu(); openCreateFactureModal()">
+            <i class="fas fa-plus"></i> Créer Facture
+          </button>
+          <button class="list-group-item list-group-item-action" onclick="closeActionMenu(); openAffectFactureModal()">
+            <i class="fas fa-link"></i> Affecter à une Facture existante
+          </button>
+        </div>`;
+        
+        document.getElementById('factureActionMenuBody').innerHTML = html;
+        $('#factureActionMenuModal').modal('show');
+      } catch (err) {
+        console.error(err);
+        alert('Erreur lors du chargement');
+      }
+    }
+
+    async function openFactureAvoirActionMenu(btn) {
+      const blId = btn.dataset.blId;
+      const fournisseurId = btn.dataset.fournisseurId;
+      currentBlId = blId;
+      currentFournisseurId = parseInt(fournisseurId) || null;
+      
+      try {
+        // Fetch BL items
+        const blRes = await fetch(`/api/bons-livraison/${blId}/articles`);
+        if (blRes.ok) {
+          currentBLItems = await blRes.json();
+        } else {
+          currentBLItems = [];
+        }
+        
+        // Get linked facture ID
+        const statusRes = await fetch(`/api/bons-livraison/${blId}/facture-status`);
+        const status = await statusRes.json();
+        document.getElementById('faFactureId').value = status.factureId || '';
+        
+        // Always show 2 choices
+        const html = `<div class="list-group">
+          <button class="list-group-item list-group-item-action" onclick="closeActionMenu(); openCreateFactureAvoirModal()">
+            <i class="fas fa-plus"></i> Créer Facture Avoir
+          </button>
+          <button class="list-group-item list-group-item-action" onclick="closeActionMenu(); openAffectFactureAvoirModal()">
+            <i class="fas fa-link"></i> Affecter à une Facture Avoir existante
+          </button>
+        </div>`;
+        
+        document.getElementById('factureActionMenuBody').innerHTML = html;
+        $('#factureActionMenuModal').modal('show');
+      } catch (err) {
+        console.error(err);
+        alert('Erreur lors du chargement');
+      }
+    }
+
+    function closeActionMenu() {
+      $('#factureActionMenuModal').modal('hide');
+    }
+
+    async function openCreateFactureModal() {
+      document.getElementById('factureBlId').value = currentBlId;
+      document.getElementById('factureNumero').value = '';
+      document.getElementById('factureDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('factureTauxTva').value = 20;
+      document.getElementById('factureTotalHt').value = '';
+      document.getElementById('factureTotalTtc').value = '';
+      
+      const tbody = document.getElementById('factureItemsBody');
+      tbody.innerHTML = '';
+      
+      currentBLItems.forEach(item => {
+        const row = document.createElement('tr');
+        const originalPrice = item.prixUnitaire || 0;
+        const qteRecue = item.qte_recue || item.quantite || 0;
+        row.innerHTML = `
+          <td>${item.designation || ''}</td>
+          <td>${item.reference || ''}</td>
+          <td>${item.unite || ''}</td>
+          <td>${qteRecue}</td>
+          <td><input type="number" class="form-control form-control-sm" value="${originalPrice}" step="0.01" data-id="${item.id}" data-original="${originalPrice}" data-qte="${qteRecue}" oninput="calcFactureItemTotal(this)"></td>
+          <td class="text-right item-total">${(qteRecue * originalPrice).toFixed(2)}</td>
+        `;
+        tbody.appendChild(row);
+      });
+      
+      calcFactureTotals();
+      $('#createFactureModal').modal('show');
+    }
+
+    function calcFactureItemTotal(input) {
+      const row = input.closest('tr');
+      const qty = parseFloat(input.dataset.qte) || 0;
+      const price = parseFloat(input.value) || 0;
+      row.querySelector('.item-total').textContent = (qty * price).toFixed(2);
+      
+      // Highlight if price changed
+      const original = parseFloat(input.dataset.original);
+      if (price !== original) {
+        input.classList.add('border-danger');
+      } else {
+        input.classList.remove('border-danger');
+      }
+      
+      calcFactureTotals();
+    }
+
+    function calcFactureTotals() {
+      const tauxTva = parseFloat(document.getElementById('factureTauxTva').value) || 0;
+      const totalHt = parseFloat(document.getElementById('factureTotalHt').value) || 0;
+      document.getElementById('factureTotalTtc').value = (totalHt + (totalHt * tauxTva / 100)).toFixed(2);
+    }
+
+    async function submitCreateFacture() {
+      const numero = document.getElementById('factureNumero').value;
+      const date = document.getElementById('factureDate').value;
+      const totalHt = parseFloat(document.getElementById('factureTotalHt').value);
+      const tauxTva = parseFloat(document.getElementById('factureTauxTva').value) || 0;
+      
+      if (!numero || !date || !totalHt) {
+        alert('Veuillez remplir tous les champs obligatoires');
+        return;
+      }
+
+      const items = [];
+      document.querySelectorAll('#factureItemsBody tr').forEach(row => {
+        const priceInput = row.querySelector('input');
+        const qty = parseFloat(priceInput.dataset.qte) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        items.push({
+          designation: row.cells[0].textContent,
+          reference: row.cells[1].textContent,
+          unite: row.cells[2].textContent,
+          quantite: qty,
+          prixUnitaire: price,
+          bondeLivraisonItemId: parseInt(priceInput.dataset.id)
+        });
+      });
+
+      try {
+        const res = await fetch('/api/factures', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ numero, date, totalHt, tauxTva, bondeLivraisonIds: [currentBlId], items })
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          $('#createFactureModal').modal('hide');
+          window.location.reload();
+        } else {
+          alert(json.error || 'Erreur lors de la création');
+        }
+      } catch (err) {
+        alert('Erreur lors de la création');
+        console.error(err);
+      }
+    }
+
+    async function openAffectFactureModal() {
+      console.log('openAffectFactureModal called, currentBlId:', currentBlId, 'currentFournisseurId:', currentFournisseurId);
+      document.getElementById('affectFactureBlId').value = currentBlId;
+      const select = document.getElementById('factureSelect');
+      select.innerHTML = '<option value="">-- Choisir une facture --</option>';
+      
+      if (!currentFournisseurId) {
+        alert('Ce BL n\'a pas de fournisseur défini');
+        return;
+      }
+      
+      try {
+        console.log('Fetching from: /api/factures/by-fournisseur/' + currentFournisseurId);
+        const res = await fetch(`/api/factures/by-fournisseur/${currentFournisseurId}`);
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.error || 'Erreur lors du chargement des factures');
+          return;
+        }
+        const factures = await res.json();
+        
+        if (factures.length === 0) {
+          select.innerHTML = '<option value="">Aucune facture pour ce fournisseur</option>';
+        } else {
+          factures.forEach(f => {
+            const opt = document.createElement('option');
+            opt.value = f.id;
+            opt.textContent = `N° ${f.numero} - ${new Date(f.date).toLocaleDateString('fr-FR')}`;
+            select.appendChild(opt);
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Erreur lors du chargement des factures');
+      }
+      
+      $('#affectFactureModal').modal('show');
+    }
+
+    async function submitAffectFacture() {
+      const factureId = document.getElementById('factureSelect').value;
+      if (!factureId) {
+        alert('Veuillez sélectionner une facture');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/factures/${factureId}/affecter-bl`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bondeLivraisonId: currentBlId })
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          $('#affectFactureModal').modal('hide');
+          window.location.reload();
+        } else {
+          alert(json.error || 'Erreur lors de l\'affectation');
+        }
+      } catch (err) {
+        alert('Erreur lors de l\'affectation');
+        console.error(err);
+      }
+    }
+
+    async function openCreateFactureAvoirModal() {
+      document.getElementById('faBlId').value = currentBlId;
+      document.getElementById('faNumero').value = '';
+      document.getElementById('faDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('faTauxTva').value = 20;
+      document.getElementById('faType').value = 'retour';
+      
+      // Get first linked facture
+      try {
+        const res = await fetch(`/api/bons-livraison/${currentBlId}/facture-status`);
+        const status = await res.json();
+        document.getElementById('faFactureId').value = status.factureId || '';
+      } catch (err) {
+        console.error(err);
+      }
+      
+      updateFAItems();
+      $('#createFactureAvoirModal').modal('show');
+    }
+
+    function updateFAItems() {
+      const type = document.getElementById('faType').value;
+      const tbody = document.getElementById('faItemsBody');
+      tbody.innerHTML = '';
+      
+      currentBLItems.forEach(item => {
+        const qteRecue = item.qte_recue || item.quantite || 0;
+        const maxQty = qteRecue - (item.qtyRetourne || 0);
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${item.designation || ''}</td>
+          <td>${item.reference || ''}</td>
+          <td>${item.unite || ''}</td>
+          <td class="text-center">${qteRecue}</td>
+          <td class="text-center">${item.qtyRetourne || 0}</td>
+          <td><input type="number" class="form-control form-control-sm" value="0" min="0" max="${type === 'retour' ? maxQty : qteRecue}" step="0.01" data-id="${item.id}" data-max="${type === 'retour' ? maxQty : qteRecue}" oninput="calcFAItemTotal(this)"></td>
+          <td><input type="number" class="form-control form-control-sm" value="${item.prixUnitaire || 0}" step="0.01" oninput="calcFAItemTotal(this)"></td>
+          <td class="text-right item-total">0.00</td>
+        `;
+        tbody.appendChild(row);
+      });
+      
+      calcFATotals();
+    }
+
+    function calcFAItemTotal(input) {
+      const row = input.closest('tr');
+      const type = document.getElementById('faType').value;
+      const qty = parseFloat(input.value) || 0;
+      const maxQty = parseFloat(input.dataset.max) || 0;
+      const price = parseFloat(row.querySelectorAll('input')[1].value) || 0;
+      
+      // Validation for retour
+      if (type === 'retour' && qty > maxQty) {
+        input.classList.add('is-invalid');
+      } else {
+        input.classList.remove('is-invalid');
+      }
+      
+      row.querySelector('.item-total').textContent = (qty * price).toFixed(2);
+      calcFATotals();
+    }
+
+    function calcFATotals() {
+      const tauxTva = parseFloat(document.getElementById('faTauxTva').value) || 0;
+      
+      let itemsTotal = 0;
+      document.querySelectorAll('#faItemsBody .item-total').forEach(cell => {
+        itemsTotal += parseFloat(cell.textContent) || 0;
+      });
+      
+      document.getElementById('faTotalHt').value = itemsTotal.toFixed(2);
+      document.getElementById('faTotalTtc').value = (itemsTotal + (itemsTotal * tauxTva / 100)).toFixed(2);
+    }
+
+    async function submitCreateFactureAvoir() {
+      const type = document.getElementById('faType').value;
+      const numero = document.getElementById('faNumero').value;
+      const date = document.getElementById('faDate').value;
+      const tauxTva = parseFloat(document.getElementById('faTauxTva').value) || 0;
+      const factureId = document.getElementById('faFactureId').value;
+      
+      if (!numero || !date || !factureId) {
+        alert('Veuillez remplir tous les champs obligatoires');
+        return;
+      }
+
+      // Check validation
+      let hasError = false;
+      const items = [];
+      document.querySelectorAll('#faItemsBody tr').forEach(row => {
+        const qtyInput = row.querySelectorAll('input')[0];
+        const priceInput = row.querySelectorAll('input')[1];
+        const qty = parseFloat(qtyInput.value) || 0;
+        const maxQty = parseFloat(qtyInput.dataset.max) || 0;
+        
+        if (type === 'retour' && qty > maxQty) {
+          hasError = true;
+        }
+        
+        if (qty > 0) {
+          items.push({
+            designation: row.cells[0].textContent,
+            reference: row.cells[1].textContent,
+            unite: row.cells[2].textContent,
+            quantite: qty,
+            prixUnitaire: parseFloat(priceInput.value) || 0,
+            bondeLivraisonItemId: parseInt(qtyInput.dataset.id)
+          });
+        }
+      });
+
+      if (hasError) {
+        alert('Veuillez corriger les erreurs avant de soumettre');
+        return;
+      }
+
+      if (items.length === 0) {
+        alert('Veuillez entrer au moins une quantité');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/factures-avoir', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ numero, date, type, tauxTva, factureId, bondeLivraisonId: currentBlId, fournisseurId: currentFournisseurId, items })
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          $('#createFactureAvoirModal').modal('hide');
+          window.location.reload();
+        } else {
+          alert(json.error || 'Erreur lors de la création');
+        }
+      } catch (err) {
+        alert('Erreur lors de la création');
+        console.error(err);
+      }
+    }
+
+    async function openAffectFactureAvoirModal() {
+      document.getElementById('affectFABlId').value = currentBlId;
+      const select = document.getElementById('factureAvoirSelect');
+      select.innerHTML = '<option value="">-- Choisir un avoir --</option>';
+      
+      try {
+        const res = await fetch(`/api/factures-avoir/by-fournisseur/${currentFournisseurId}`);
+        const avoirs = await res.json();
+        avoirs.forEach(a => {
+          const opt = document.createElement('option');
+          opt.value = a.id;
+          opt.textContent = `N° ${a.numero} - ${a.type} - ${new Date(a.date).toLocaleDateString('fr-FR')}`;
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+      
+      $('#affectFactureAvoirModal').modal('show');
+    }
+
+    async function submitAffectFactureAvoir() {
+      const avoirId = document.getElementById('factureAvoirSelect').value;
+      if (!avoirId) {
+        alert('Veuillez sélectionner un avoir');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/factures-avoir/${avoirId}/affecter-bl`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bondeLivraisonId: currentBlId })
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          $('#affectFactureAvoirModal').modal('hide');
+          window.location.reload();
+        } else {
+          alert(json.error || 'Erreur lors de l\'affectation');
+        }
+      } catch (err) {
+        alert('Erreur lors de l\'affectation');
+        console.error(err);
+      }
     }
 
     function deleteBL(id, btn) {

@@ -1062,13 +1062,75 @@
       const label = document.getElementById('selectedChantiersLabel');
       if (!chantierSelectEl || !label) return;
 
+      const getSelectedChantiers = () => {
+        const selected = [];
+        if (chantierSelectEl && chantierSelectEl.selectedOptions) {
+          Array.from(chantierSelectEl.selectedOptions).forEach(o => {
+            if (o.value) {
+              selected.push({ id: o.value, name: o.textContent });
+            }
+          });
+        }
+        return selected;
+      };
+
+      const autoDistributeAll = () => {
+        const selectedChantiers = getSelectedChantiers();
+        if (selectedChantiers.length !== 1) return;
+        
+        const ch = selectedChantiers[0];
+        const rows = document.querySelectorAll('#bcBody .bc-row');
+        
+        rows.forEach(row => {
+          const qtyInput = row.querySelector('input[data-field="quantite"]');
+          const priceInput = row.querySelector('input[data-field="prixUnitaire"]');
+          const remiseInput = row.querySelector('input[data-field="remise"]');
+          
+          if (!qtyInput) return;
+          
+          const qty = parseFloat(qtyInput.value) || 0;
+          if (qty <= 0) return;
+          
+          const pu = parseFloat((priceInput?.value || '0').toString().replace(/\s/g, '').replace(',', '.')) || 0;
+          const rem = parseFloat((remiseInput?.value || '0').toString().replace(/\s/g, '').replace(',', '.')) || 0;
+          const qtyNet = pu > 0 ? qty - (rem / pu) : qty;
+          
+          const dist = [{chantierId: ch.id, qty: qty, montant: qtyNet * pu}];
+          row.dataset.distribution = JSON.stringify(dist);
+          
+          let badge = row.querySelector('.distribution-badge');
+          if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'distribution-badge badge badge-success ml-2';
+            const btn = row.querySelector('button[onclick*="openDistributionModal"]');
+            if (btn) btn.parentNode.insertBefore(badge, btn.nextSibling);
+          }
+          badge.textContent = ch.name + ': ' + qty;
+          
+          if (typeof updateRowTotal === 'function') updateRowTotal(row);
+        });
+        
+        if (typeof window.__recalcBcTotals === 'function') window.__recalcBcTotals();
+      };
+
+      // Expose for addBcRow to call
+      window.__autoDistributeIfSingleChantier = autoDistributeAll;
+
       const updateLabel = () => {
         const selected = Array.from(chantierSelectEl.selectedOptions || []).map(o => (o.textContent || '').trim()).filter(Boolean);
         label.textContent = selected.length ? selected.join(', ') : 'Non renseigné';
+        // Delay auto-distribute to ensure rows exist
+        setTimeout(autoDistributeAll, 100);
       };
 
+      // Run updateLabel after page loads and rows are created
+      window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+          updateLabel();
+        }, 200);
+      });
+      
       chantierSelectEl.addEventListener('change', updateLabel);
-      updateLabel();
     })();
 
     (function () {
@@ -1705,6 +1767,11 @@
 
       // Recalcule après ajout
       if (recalcFn) recalcFn();
+
+      // Auto-distribute if only one chantier is selected
+      if (typeof window.__autoDistributeIfSingleChantier === 'function') {
+        window.__autoDistributeIfSingleChantier();
+      }
     }
     function updateMontantEnLettres(totalTtc) {
       const displayEl = document.getElementById('montantLettresValue');
@@ -1926,6 +1993,28 @@
       }
       if (selectedChantiers.length === 0) {
         alert('Veuillez sélectionner au moins un chantier.');
+        return;
+      }
+
+      // Auto-fill if only ONE chantier selected
+      if (selectedChantiers.length === 1) {
+        const ch = selectedChantiers[0];
+        const pu = parseFloat((row.querySelector('.price-input')?.value || '0').toString().replace(/\s/g, '').replace(',', '.')) || 0;
+        const qty = parseFloat(row.querySelector('.qty-input')?.value) || 0;
+        const rem = parseFloat((row.querySelector('.remise-input')?.value || '0').toString().replace(/\s/g, '').replace(',', '.')) || 0;
+        const qtyNet = pu > 0 ? qty - (rem / pu) : qty;
+        
+        const dist = [{chantierId: ch.id, qty: qty, montant: qtyNet * pu}];
+        row.dataset.distribution = JSON.stringify(dist);
+        updateRowTotal(row);
+        
+        let badge = row.querySelector('.distribution-badge');
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'distribution-badge badge badge-success ml-2';
+          row.querySelector('.affect-btn').appendChild(badge);
+        }
+        badge.textContent = ch.name + ': ' + qty;
         return;
       }
 
@@ -2164,6 +2253,21 @@
               });
             }
           } catch (e) { distributionData = []; }
+        }
+        
+        // Auto-populate distribution if empty and single chantier selected
+        if (distributionData.length === 0 && quantite > 0) {
+          const chantierSelectEl = document.getElementById('chantierSelect');
+          if (chantierSelectEl && chantierSelectEl.selectedOptions && chantierSelectEl.selectedOptions.length === 1) {
+            const selectedOption = chantierSelectEl.selectedOptions[0];
+            if (selectedOption.value) {
+              distributionData = [{
+                chantierId: selectedOption.value,
+                qty: quantite,
+                montant: quantite * prixUnitaireRemise
+              }];
+            }
+          }
         }
 
         // Per-row remise (in %)

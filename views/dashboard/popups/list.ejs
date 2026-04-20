@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Gestion des Popups - Developer Dashboard</title>
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+
+  <style>
+    .popup-card {
+      border-left: 4px solid;
+      margin-bottom: 1rem;
+    }
+    .popup-info { border-left-color: #17a2b8; }
+    .popup-warning { border-left-color: #ffc107; }
+    .popup-success { border-left-color: #28a745; }
+    .popup-error { border-left-color: #dc3545; }
+
+    .status-active { background: #28a745; color: white; }
+    .status-done { background: #6c757d; color: white; }
+    .status-cancelled { background: #dc3545; color: white; }
+
+    .user-toggle {
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .user-toggle:hover {
+      background: #f8f9fa;
+    }
+  </style>
+</head>
+
+<body id="page-top">
+  <div id="wrapper">
+    <%- include('../../layouts/sidebar') %>
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <%- include('../../layouts/topbar') %>
+        <div class="container-fluid">
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0 text-gray-800">
+              <i class="fas fa-bullhorn mr-2"></i>Gestion des Popups
+            </h1>
+            <a href="/popups/create" class="btn btn-primary">
+              <i class="fas fa-plus mr-2"></i>Nouveau Popup
+            </a>
+          </div>
+
+          <!-- Stats Cards -->
+          <div class="row mb-4">
+            <div class="col-xl-3 col-md-6">
+              <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Actifs</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800" id="count-active">0</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-play-circle fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+              <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Terminés</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800" id="count-done">0</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+              <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800" id="count-total">0</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-bullhorn fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+              <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Utilisateurs avec popups</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800" id="count-users-enabled">0</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- User Popup Controls -->
+          <div class="card shadow mb-4">
+            <div class="card-header py-3">
+              <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-users-cog mr-2"></i>Contrôle des Popups par Utilisateur
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                  <thead>
+                    <tr>
+                      <th>Nom</th>
+                      <th>Email</th>
+                      <th>Rôle</th>
+                      <th>Status Popup</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% users.forEach(u => { %>
+                      <tr class="user-toggle">
+                        <td><strong><%= u.name %></strong></td>
+                        <td><%= u.email %></td>
+                        <td>
+                          <span class="badge badge-<%= 
+                            u.role === 'grandadmin' ? 'danger' : 
+                            u.role === 'developer' ? 'info' :
+                            u.role === 'admin' ? 'warning' : 'secondary' %>">
+                            <%= u.role %>
+                          </span>
+                        </td>
+                        <td>
+                          <span class="badge badge-<%= u.popupEnabled ? 'success' : 'danger' %>">
+                            <%= u.popupEnabled ? 'Activé' : 'Désactivé' %>
+                          </span>
+                        </td>
+                        <td>
+                          <% const btnClass = u.popupEnabled ? 'danger' : 'success'; %>
+                          <% const btnText = u.popupEnabled ? 'Désactiver' : 'Activer'; %>
+                          <% const newState = !u.popupEnabled; %>
+                          <button class="btn btn-sm btn-<%= btnClass %>" 
+                            onclick="toggleUserPopup(<%= u.id %>, <%= newState %>)">
+                            <%= btnText %>
+                          </button>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Popups List -->
+          <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+              <h6 class="m-0 font-weight-bold text-primary">Liste des Popups</h6>
+              <div>
+                <select class="form-control form-control-sm" id="filter-status" onchange="filterPopups()">
+                  <option value="all">Tous les statuts</option>
+                  <option value="active">Actif</option>
+                  <option value="done">Terminé</option>
+                  <option value="cancelled">Annulé</option>
+                </select>
+              </div>
+            </div>
+            <div class="card-body">
+              <% if (!popups || popups.length === 0) { %>
+                <div class="text-center py-5">
+                  <i class="fas fa-bullhorn fa-3x text-muted mb-3"></i>
+                  <h5>Aucun popup créé</h5>
+                  <p class="text-muted">Créez votre premier popup pour communiquer avec les utilisateurs.</p>
+                  <a href="/popups/create" class="btn btn-primary">Créer un popup</a>
+                </div>
+              <% } else { %>
+                <div class="row">
+                  <% popups.forEach(popup => { %>
+                    <div class="col-md-6 mb-3 popup-item" data-status="<%= popup.status %>">
+                      <div class="card popup-card popup-<%= popup.type %>">
+                        <div class="card-body">
+                          <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0"><%= popup.title %></h5>
+                            <span class="badge status-<%= popup.status %>">
+                              <%= popup.status === 'active' ? 'Actif' : 
+                                  popup.status === 'done' ? 'Terminé' : 'Annulé' %>
+                            </span>
+                          </div>
+                          <p class="card-text text-muted" style="white-space: pre-wrap; max-height: 100px; overflow: hidden;"><%= popup.message %></p>
+                          
+                          <div class="mb-2">
+                            <small class="text-muted">
+                              <i class="fas fa-user mr-1"></i>Créé par <%= popup.creator?.name || 'Inconnu' %>
+                              <br>
+                              <i class="fas fa-calendar mr-1"></i><%= new Date(popup.createdAt).toLocaleDateString('fr-FR') %>
+                            </small>
+                          </div>
+
+                          <div class="mb-2">
+                            <% if (popup.targetUsers) { %>
+                              <span class="badge badge-light border">Utilisateurs ciblés</span>
+                            <% } else if (popup.targetRoles) { %>
+                              <span class="badge badge-light border">Rôles: <%= popup.targetRoles %></span>
+                            <% } else { %>
+                              <span class="badge badge-info">Tous</span>
+                            <% } %>
+                            <% 
+                              const modeLabels = {
+                                'after_login': 'Après connexion',
+                                'always': 'Toujours',
+                                'once_only': 'Une fois seulement',
+                                'after_every_action': 'Après chaque action'
+                              };
+                              const modeColors = {
+                                'after_login': 'primary',
+                                'always': 'success',
+                                'once_only': 'danger',
+                                'after_every_action': 'warning'
+                              };
+                            %>
+                            <span class="badge badge-<%= modeColors[popup.displayMode] || 'secondary' %>">
+                              <%= modeLabels[popup.displayMode] || popup.displayMode %>
+                            </span>
+                          </div>
+
+                          <div class="d-flex justify-content-between mt-3">
+                            <div class="btn-group btn-group-sm">
+                              <a href="/popups/<%= popup.id %>/edit" class="btn btn-info" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                              </a>
+                              <% const toggleBtnClass = popup.status === 'active' ? 'warning' : 'success'; %>
+                              <% const toggleIcon = popup.status === 'active' ? 'check' : 'play'; %>
+                              <% const toggleTitle = popup.status === 'active' ? 'Marquer comme terminé' : 'Réactiver'; %>
+                              <% const newStatus = popup.status === 'active' ? 'done' : 'active'; %>
+                              <button class="btn btn-<%= toggleBtnClass %>" 
+                                onclick="toggleStatus(<%= popup.id %>, '<%= newStatus %>')"
+                                title="<%= toggleTitle %>">
+                                <i class="fas fa-<%= toggleIcon %>"></i>
+                              </button>
+                              <button class="btn btn-danger" onclick="deletePopup(<%= popup.id %>)" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  <% }) %>
+                </div>
+              <% } %>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Modal -->
+  <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirmer la suppression</h5>
+          <button type="button" class="close" data-dismiss="modal">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          Êtes-vous sûr de vouloir supprimer ce popup ?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-danger" id="confirmDelete">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+  <script src="/js/sb-admin-2.min.js"></script>
+
+  <script>
+    let deletePopupId = null;
+
+    $(document).ready(function() {
+      loadStats();
+      updateUserCount();
+    });
+
+    function loadStats() {
+      $.get('/api/popups/stats', function(data) {
+        if (data.success) {
+          const statusStats = {};
+          data.statusStats.forEach(s => {
+            statusStats[s.status] = s._count.status;
+          });
+          $('#count-active').text(statusStats['active'] || 0);
+          $('#count-done').text(statusStats['done'] || 0);
+          $('#count-total').text(
+            (statusStats['active'] || 0) +
+            (statusStats['done'] || 0) +
+            (statusStats['cancelled'] || 0)
+          );
+        }
+      });
+    }
+
+    function updateUserCount() {
+      const enabledCount = $('tbody tr').filter(function() {
+        return $(this).find('td:nth-child(4) .badge').text().trim() === 'Activé';
+      }).length;
+      $('#count-users-enabled').text(enabledCount);
+    }
+
+    function filterPopups() {
+      const status = $('#filter-status').val();
+      $('.popup-item').each(function() {
+        const popupStatus = $(this).data('status');
+        $(this).toggle(status === 'all' || popupStatus === status);
+      });
+    }
+
+    function toggleUserPopup(userId, enabled) {
+      $.ajax({
+        url: '/api/users/' + userId + '/popup-toggle',
+        method: 'PATCH',
+        contentType: 'application/json',
+        data: JSON.stringify({ enabled }),
+        success: function(data) {
+          if (data.success) {
+            window.location.reload();
+          } else {
+            alert(data.error || 'Erreur');
+          }
+        },
+        error: function() {
+          alert('Erreur lors de la mise à jour');
+        }
+      });
+    }
+
+    function toggleStatus(id, newStatus) {
+      // Get current popup data and update only status
+      $.get('/api/popups/' + id, function(data) {
+        if (data.success) {
+          const popup = data.popup;
+          popup.status = newStatus;
+          
+          $.ajax({
+            url: '/api/popups/' + id,
+            method: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(popup),
+            success: function(response) {
+              if (response.success) {
+                window.location.reload();
+              }
+            }
+          });
+        }
+      });
+    }
+
+    function deletePopup(id) {
+      deletePopupId = id;
+      $('#deleteModal').modal('show');
+    }
+
+    $('#confirmDelete').click(function() {
+      if (!deletePopupId) return;
+
+      $.ajax({
+        url: '/api/popups/' + deletePopupId,
+        method: 'DELETE',
+        success: function(data) {
+          if (data.success) {
+            window.location.reload();
+          } else {
+            alert(data.error || 'Erreur');
+          }
+        },
+        error: function() {
+          alert('Erreur lors de la suppression');
+        }
+      });
+
+      $('#deleteModal').modal('hide');
+    });
+  </script>
+</body>
+
+</html>

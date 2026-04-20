@@ -110,6 +110,7 @@ export const normalizeNumber = (value) => {
   return Number.isNaN(n) ? 0 : n;
 };
 export const PUBLIC_BC_SECRET = process.env.PUBLIC_BC_SECRET || 'confonda_public_bc_secret';
+export const PUBLIC_BL_SECRET = process.env.PUBLIC_BL_SECRET || 'confonda_public_bl_secret';
 
 
 
@@ -120,6 +121,12 @@ export const signPublicBcId = (id) => {
     .digest('hex');
 };
 
+export const signPublicBlId = (id) => {
+  return crypto
+    .createHmac('sha256', PUBLIC_BL_SECRET)
+    .update(String(id))
+    .digest('hex');
+};
 
 
 
@@ -127,6 +134,12 @@ export const buildPublicBcUrl = (req, bcId) => {
   const baseUrl = `${req.protocol}://${req.get('host')}`;
   const sig = signPublicBcId(bcId);
   return `${baseUrl}/public/bc/${bcId}?sig=${sig}`;
+};
+
+export const buildPublicBlUrl = (req, blId) => {
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  const sig = signPublicBlId(blId);
+  return `${baseUrl}/public/bl/${blId}?sig=${sig}`;
 };
 
 export const parsedateformat = () => {
