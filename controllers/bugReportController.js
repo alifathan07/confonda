@@ -83,13 +83,16 @@ export const createBugReport = async (req, res) => {
     const { title, description, category, priority, url } = req.body;
     const user = req.session.user;
 
-    if (!title || !description) {
-      return res.status(400).json({ success: false, error: 'Titre et description obligatoires' });
+    if (!description) {
+      return res.status(400).json({ success: false, error: 'Description obligatoire' });
     }
+
+    // Generate title from description if not provided
+    const bugTitle = title || (description.length > 50 ? description.substring(0, 50) + '...' : description);
 
     const bugReport = await prisma.bugReport.create({
       data: {
-        title,
+        title: bugTitle,
         description,
         category: category || 'autre',
         priority: priority || 'moyenne',

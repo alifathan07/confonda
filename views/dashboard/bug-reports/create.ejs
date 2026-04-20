@@ -172,108 +172,21 @@
               <form id="bugForm" enctype="multipart/form-data" novalidate>
                 <input type="hidden" name="url" value="<%= currentUrl %>">
 
-                <!-- ── STEP 1 : Title ── -->
-                <div class="form-group">
-                  <label for="title" class="font-weight-bold">
-                    <span class="step-badge">1</span>Titre du bug <span class="text-danger">*</span>
-                  </label>
-                  <input type="text" class="form-control form-control-lg" id="title" name="title"
-                    placeholder="Ex : Erreur lors de la création d'un bon de commande…" required maxlength="120">
-                  <small class="form-text text-muted">Court et précis — une phrase suffit.</small>
-                </div>
-
-                <!-- ── STEP 2 : Category ── -->
-                <div class="form-group">
-                  <label class="font-weight-bold d-block">
-                    <span class="step-badge">2</span>Catégorie <span class="text-danger">*</span>
-                  </label>
-                  <div class="row">
-                    <div class="col-6 col-md-3 mb-3">
-                      <div class="category-option" data-category="ui" onclick="selectCategory('ui')">
-                        <div class="category-icon text-primary"><i class="fas fa-desktop"></i></div>
-                        <div class="font-weight-bold">Interface</div>
-                        <small class="text-muted">Affichage, design</small>
-                      </div>
-                    </div>
-                    <div class="col-6 col-md-3 mb-3">
-                      <div class="category-option" data-category="fonctionnalite" onclick="selectCategory('fonctionnalite')">
-                        <div class="category-icon text-success"><i class="fas fa-cogs"></i></div>
-                        <div class="font-weight-bold">Fonctionnalité</div>
-                        <small class="text-muted">Fonction cassée</small>
-                      </div>
-                    </div>
-                    <div class="col-6 col-md-3 mb-3">
-                      <div class="category-option" data-category="performance" onclick="selectCategory('performance')">
-                        <div class="category-icon text-warning"><i class="fas fa-tachometer-alt"></i></div>
-                        <div class="font-weight-bold">Performance</div>
-                        <small class="text-muted">Lent ou bloqué</small>
-                      </div>
-                    </div>
-                    <div class="col-6 col-md-3 mb-3">
-                      <div class="category-option" data-category="autre" onclick="selectCategory('autre')">
-                        <div class="category-icon text-secondary"><i class="fas fa-question-circle"></i></div>
-                        <div class="font-weight-bold">Autre</div>
-                        <small class="text-muted">Autre problème</small>
-                      </div>
-                    </div>
-                  </div>
-                  <input type="hidden" name="category" id="category" value="autre" required>
-                </div>
-
-                <!-- ── STEP 3 : Priority ── -->
-                <div class="form-group">
-                  <label class="font-weight-bold d-block">
-                    <span class="step-badge">3</span>Priorité <span class="text-danger">*</span>
-                  </label>
-                  <div class="row">
-                    <div class="col-6 col-md-3 mb-3">
-                      <div class="priority-option priority-basse" data-priority="basse" onclick="selectPriority('basse')">
-                        <div><i class="fas fa-arrow-down text-secondary"></i> <span class="font-weight-bold">Basse</span></div>
-                        <small class="text-muted">Problème mineur</small>
-                      </div>
-                    </div>
-                    <div class="col-6 col-md-3 mb-3">
-                      <div class="priority-option priority-moyenne selected" data-priority="moyenne" onclick="selectPriority('moyenne')">
-                        <div><i class="fas fa-minus text-warning"></i> <span class="font-weight-bold">Moyenne</span></div>
-                        <small class="text-muted">Problème modéré</small>
-                      </div>
-                    </div>
-                    <div class="col-6 col-md-3 mb-3">
-                      <div class="priority-option priority-haute" data-priority="haute" onclick="selectPriority('haute')">
-                        <div><i class="fas fa-arrow-up" style="color:#fd7e14;"></i> <span class="font-weight-bold">Haute</span></div>
-                        <small class="text-muted">Problème important</small>
-                      </div>
-                    </div>
-                    <div class="col-6 col-md-3 mb-3">
-                      <div class="priority-option priority-critique" data-priority="critique" onclick="selectPriority('critique')">
-                        <div><i class="fas fa-exclamation-triangle text-danger"></i> <span class="font-weight-bold">Critique</span></div>
-                        <small class="text-muted">Bloque le travail</small>
-                      </div>
-                    </div>
-                  </div>
-                  <input type="hidden" name="priority" id="priority" value="moyenne" required>
-                </div>
-
-                <!-- ── STEP 4 : Description ── -->
+                <!-- Description -->
                 <div class="form-group">
                   <label for="description" class="font-weight-bold">
-                    <span class="step-badge">4</span>Description <span class="text-danger">*</span>
+                    Description du problÃ¨me <span class="text-danger">*</span>
                   </label>
-                  <textarea class="form-control" id="description" name="description" rows="5"
-                    placeholder="• Que faisiez-vous quand le bug est apparu ?&#10;• Comportement attendu vs comportement réel ?&#10;• Message d'erreur (si applicable) ?"
+                  <textarea class="form-control" id="description" name="description" rows="6"
+                    placeholder="DÃ©crivez le problÃ¨me que vous avez rencontrÃ©..."
                     required maxlength="2000"></textarea>
-                  <div class="d-flex justify-content-between mt-1">
-                    <small class="form-text text-muted">Soyez précis, ça aide à corriger plus vite.</small>
-                    <small class="char-counter" id="descCounter">0 / 2000</small>
-                  </div>
+                  <small class="text-muted" id="descCounter">0 / 2000</small>
                 </div>
 
-                <!-- ── STEP 5 : Screenshot ── -->
-             
-                <!-- ── Current URL ── -->
+                <!-- Current URL -->
                 <% if (currentUrl) { %>
                 <div class="form-group">
-                  <label class="font-weight-bold"><i class="fas fa-link mr-1 text-info"></i>Page concernée</label>
+                  <label class="font-weight-bold"><i class="fas fa-link mr-1 text-info"></i>Page concernÃ©e</label>
                   <div class="alert alert-info py-2 mb-0" style="font-size:0.875rem;word-break:break-all;">
                     <%= currentUrl %>
                   </div>
@@ -287,9 +200,9 @@
                     <i class="fas fa-times mr-1"></i>Annuler
                   </a>
                   <button type="submit" class="btn btn-primary px-4" id="submitBtn">
-                    <span class="btn-text"><i class="fas fa-paper-plane mr-2"></i>Envoyer le rapport</span>
+                    <span class="btn-text"><i class="fas fa-paper-plane mr-2"></i>Envoyer</span>
                     <span class="spinner spinner-border spinner-border-sm mr-2" role="status"></span>
-                    <span class="loading-text" style="display:none;">Envoi en cours…</span>
+                    <span class="loading-text" style="display:none;">Envoi en coursâ¦</span>
                   </button>
                 </div>
               </form>
