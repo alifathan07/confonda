@@ -74,6 +74,9 @@ export const checkPopups = async (req, res, next) => {
 
     res.locals.activePopups = activePopups;
     res.locals.popupDismissUrl = '/api/popups';
+
+    console.log('Session user:', req.session.user?.id);
+    console.log('Session popupEnabled:', req.session.user?.popupEnabled);
     
   } catch (error) {
     console.error('Error checking popups:', error);
