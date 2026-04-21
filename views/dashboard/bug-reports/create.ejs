@@ -164,10 +164,7 @@
           </div>
 
           <div class="card shadow bug-form-card">
-            <div class="card-header py-3 d-flex align-items-center justify-content-between">
-              <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-clipboard-list mr-2"></i>Nouveau rapport de probleme</h6>
-              <small class="text-muted"><span class="text-danger">*</span> champs obligatoires</small>
-            </div>
+           
             <div class="card-body">
               <form id="bugForm" enctype="multipart/form-data" novalidate>
                 <input type="hidden" name="url" value="<%= currentUrl %>">
@@ -187,7 +184,7 @@
                     Description du probleme <span class="text-danger">*</span>
                   </label>
                   <textarea class="form-control" id="description" name="description" rows="6"
-                    placeholder="DÃ©crivez le probleme que vous avez rencontrÃ©..."
+                    placeholder="Decrivez le probleme que vous avez rencontrer..."
                     required maxlength="2000"></textarea>
                   <small class="text-muted" id="descCounter">0 / 2000</small>
                 </div>
