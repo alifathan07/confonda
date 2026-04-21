@@ -72,7 +72,7 @@ export const createPopup = async (req, res) => {
         targetUsers: targetUsers || null,
         targetRoles: targetRoles || null,
         createdBy: creatorId,
-        displayMode: displayMode || 'after_login',
+        displayMode: displayMode || 'always',
         showOnce: showOnce === 'true' || showOnce === true,
         startDate: startDate ? new Date(startDate) : new Date(),
         endDate: endDate ? new Date(endDate) : null,
