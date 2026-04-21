@@ -614,7 +614,7 @@ export const editBL = async (req, res) => {
 
     const publicBlUrl = buildPublicBlUrl(req, bl.id);
 
-    res.render('dashboard/Achats/bl/edit', {
+    res.render('dashboard/achats/bl/edit', {
       bl,
       publicBlUrl,
       pageTitle: `Éditer BL ${bl.numero}`
