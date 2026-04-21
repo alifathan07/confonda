@@ -141,7 +141,12 @@ export const createBugReport = async (req, res) => {
       } catch (tgError) {
         console.error('Failed to send Telegram notification:', tgError);
       }
+
+
     })();
+    // In createBugReport
+    console.log('User creating bug:', user);
+    console.log('User id:', user?.id);
   } catch (error) {
     console.error('Erreur createBugReport:', error);
     res.status(500).json({ success: false, error: 'Erreur serveur' });

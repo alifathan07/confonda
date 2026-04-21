@@ -177,6 +177,7 @@
                   <input type="text" class="form-control" id="title" name="title"
                     placeholder="Titre court du probleme" required maxlength="100">
                 </div>
+                
 
                 <!-- Description -->
                 <div class="form-group">
@@ -191,11 +192,13 @@
 
                 <!-- Current URL -->
                 <% if (currentUrl) { %>
+
                 <div class="form-group">
                   <label class="font-weight-bold"><i class="fas fa-link mr-1 text-info"></i>Page concernÃ©e</label>
                   <div class="alert alert-info py-2 mb-0" style="font-size:0.875rem;word-break:break-all;">
                     <%= currentUrl %>
                   </div>
+                  
                 </div>
                 <% } %>
 
