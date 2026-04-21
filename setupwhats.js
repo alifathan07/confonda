@@ -4,48 +4,76 @@ import qrcode from "qrcode-terminal";
 
 const { Client, LocalAuth } = pkg;
 
-// Initialize WhatsApp client
-export const client = new Client({
-    authStrategy: new LocalAuth({
-    dataPath: './.wwebjs_auth' // optional but clean
+const createClient = () => new Client({
+  authStrategy: new LocalAuth({
+    dataPath: './.wwebjs_auth'
   }),
- puppeteer: {
- headless: true,
- args: [
- "--no-sandbox",
- "--disable-setuid-sandbox",
- "--disable-dev-shm-usage",
- "--disable-gpu",
- "--no-zygote",
- "--single-process"
- ]
- }
+  puppeteer: {
+    headless: true,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--no-zygote",
+      // ❌ REMOVED --single-process (causes CPU leaks)
+    ]
+  }
 });
+
+export let client = createClient();
 export let _isReady = false;
 let _readyResolve;
-export const readyPromise = new Promise((resolve) => {
-    _readyResolve = resolve;
+
+export let readyPromise = new Promise((resolve) => {
+  _readyResolve = resolve;
 });
 
-client.on("qr", qr => {
+const setupListeners = () => {
+  client.on("qr", qr => {
     qrcode.generate(qr, { small: true });
     console.log("Scan the QR code with WhatsApp");
-    
-});
+  });
 
-client.on("ready", () => {
+  client.on("ready", () => {
     _isReady = true;
     if (_readyResolve) _readyResolve(true);
-    console.log("WhatsApp is ready!");
-});
+    console.log("✅ WhatsApp is ready!");
+  });
 
-client.on("auth_failure", (msg) => {
-    console.error("WhatsApp auth failure:", msg);
-});
+  client.on("auth_failure", (msg) => {
+    console.error("❌ WhatsApp auth failure:", msg);
+    scheduleReconnect();
+  });
 
-client.on("disconnected", (reason) => {
+  client.on("disconnected", (reason) => {
     _isReady = false;
-    console.error("WhatsApp disconnected:", reason);
-});
+    console.warn("⚠️ WhatsApp disconnected:", reason);
+    scheduleReconnect();
+  });
+};
 
+// Auto-reconnect with 30s delay
+let reconnectTimer = null;
+const scheduleReconnect = () => {
+  if (reconnectTimer) return; // already scheduled
+  console.log("🔄 Reconnecting in 30s...");
+  reconnectTimer = setTimeout(async () => {
+    reconnectTimer = null;
+    try {
+      await client.destroy(); // cleanly kill Chrome
+    } catch (e) { /* ignore */ }
+
+    // Reset ready promise
+    readyPromise = new Promise((resolve) => {
+      _readyResolve = resolve;
+    });
+
+    client = createClient();
+    setupListeners();
+    client.initialize();
+  }, 30_000);
+};
+
+setupListeners();
 client.initialize();
