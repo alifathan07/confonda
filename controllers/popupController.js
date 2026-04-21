@@ -63,19 +63,21 @@ export const createPopup = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Titre et message obligatoires' });
     }
 
+    // Delete all existing active popups first (only one popup at a time)
+   
     const popup = await prisma.popup.create({
       data: {
         title,
         message,
         type: type || 'info',
         status: 'active',
-        targetUsers: targetUsers || null,
-        targetRoles: targetRoles || null,
+        targetUsers: null,
+        targetRoles: null,
         createdBy: creatorId,
-        displayMode: displayMode || 'always',
-        showOnce: showOnce === 'true' || showOnce === true,
-        startDate: startDate ? new Date(startDate) : new Date(),
-        endDate: endDate ? new Date(endDate) : null,
+        displayMode: 'always',
+        showOnce: false,
+        startDate: new Date(),
+        endDate: null,
         dismissedBy: ''
       }
     });
