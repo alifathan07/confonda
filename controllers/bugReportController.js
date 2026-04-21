@@ -80,15 +80,15 @@ export const createBugReportForm = async (req, res) => {
  */
 export const createBugReport = async (req, res) => {
   try {
-    const { description } = req.body;
+    const { title, description } = req.body;
     const user = req.session.user;
 
+    if (!title) {
+      return res.status(400).json({ success: false, error: 'Titre obligatoire' });
+    }
     if (!description) {
       return res.status(400).json({ success: false, error: 'Description obligatoire' });
     }
-
-    // Generate title from description
-    const title = description.length > 50 ? description.substring(0, 50) + '...' : description;
 
     const bugReport = await prisma.bugReport.create({
       data: {

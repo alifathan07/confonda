@@ -174,8 +174,6 @@
                       <tr>
                         <th>ID</th>
                         <th>Titre</th>
-                        <th>Catégorie</th>
-                        <th>Priorité</th>
                         <th>Statut</th>
                         <th>Signalé par</th>
                         <th>Date</th>
@@ -191,17 +189,6 @@
                             <% if (bug.screenshot) { %>
                               <i class="fas fa-image text-info ml-1" title="Capture d'écran attachée"></i>
                             <% } %>
-                          </td>
-                          <td>
-                            <span class="badge badge-light">
-                              <%= bug.category === 'ui' ? 'UI' : 
-                                  bug.category === 'fonctionnalite' ? 'Fonctionnalité' :
-                                  bug.category === 'performance' ? 'Performance' :
-                                  bug.category === 'securite' ? 'Sécurité' : 'Autre' %>
-                            </span>
-                          </td>
-                          <td class="priority-<%= bug.priority %>">
-                            <%= bug.priority.charAt(0).toUpperCase() + bug.priority.slice(1) %>
                           </td>
                           <td>
                             <span class="badge status-badge badge-<%= 
