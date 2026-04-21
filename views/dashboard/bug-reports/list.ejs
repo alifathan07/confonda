@@ -49,69 +49,7 @@
           </div>
 
           <!-- Stats Cards -->
-          <div class="row mb-4">
-            <div class="col-xl-3 col-md-6">
-              <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Nouveaux</div>
-                      <div class="h5 mb-0 font-weight-bold text-gray-800" id="count-nouveau">0</div>
-                    </div>
-                    <div class="col-auto">
-                      <i class="fas fa-exclamation-circle fa-2x text-gray-300"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-              <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                      <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">En Cours</div>
-                      <div class="h5 mb-0 font-weight-bold text-gray-800" id="count-en_cours">0</div>
-                    </div>
-                    <div class="col-auto">
-                      <i class="fas fa-spinner fa-2x text-gray-300"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-              <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                      <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Résolus</div>
-                      <div class="h5 mb-0 font-weight-bold text-gray-800" id="count-resolu">0</div>
-                    </div>
-                    <div class="col-auto">
-                      <i class="fas fa-check-circle fa-2x text-gray-300"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-xl-3 col-md-6">
-              <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                      <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total</div>
-                      <div class="h5 mb-0 font-weight-bold text-gray-800" id="count-total">0</div>
-                    </div>
-                    <div class="col-auto">
-                      <i class="fas fa-bug fa-2x text-gray-300"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
+         
           <!-- Filters -->
           <div class="card shadow mb-4">
             <div class="card-header py-3">
@@ -128,25 +66,7 @@
                     <option value="ferme">Fermé</option>
                   </select>
                 </div>
-                <div class="col-md-3">
-                  <select class="form-control" id="filter-priority" onchange="filterBugs()">
-                    <option value="all">Toutes les priorités</option>
-                    <option value="critique">Critique</option>
-                    <option value="haute">Haute</option>
-                    <option value="moyenne">Moyenne</option>
-                    <option value="basse">Basse</option>
-                  </select>
-                </div>
-                <div class="col-md-3">
-                  <select class="form-control" id="filter-category" onchange="filterBugs()">
-                    <option value="all">Toutes les catégories</option>
-                    <option value="ui">Intealrface (UI)</option>
-                    <option value="fonctionnalite">Fonctionnalité</option>
-                    <option value="performance">Performance</option>
-                    <option value="securite">Sécurité</option>
-                    <option value="autre">Autre</option>
-                  </select>
-                </div>
+          
                 <div class="col-md-3">
                   <input type="text" class="form-control" id="filter-search" placeholder="Rechercher..." onkeyup="filterBugs()">
                 </div>
@@ -288,22 +208,16 @@
 
     function filterBugs() {
       const status = $('#filter-status').val();
-      const priority = $('#filter-priority').val();
-      const category = $('#filter-category').val();
       const search = $('#filter-search').val().toLowerCase();
 
       $('.bug-row').each(function() {
         const rowStatus = $(this).data('status');
-        const rowPriority = $(this).data('priority');
-        const rowCategory = $(this).data('category');
         const rowText = $(this).text().toLowerCase();
 
         const matchStatus = status === 'all' || rowStatus === status;
-        const matchPriority = priority === 'all' || rowPriority === priority;
-        const matchCategory = category === 'all' || rowCategory === category;
         const matchSearch = rowText.includes(search);
 
-        $(this).toggle(matchStatus && matchPriority && matchCategory && matchSearch);
+        $(this).toggle(matchStatus && matchSearch);
       });
     }
 
