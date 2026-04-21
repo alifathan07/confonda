@@ -71,7 +71,7 @@ export const createPopup = async (req, res) => {
         message,
         type: type || 'info',
         status: 'active',
-        targetUsers: null,
+        targetUsers: targetUsers || null,
         targetRoles: null,
         createdBy: creatorId,
         displayMode: 'always',
