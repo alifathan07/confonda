@@ -101,6 +101,18 @@
                   <input type="hidden" name="type" id="type" value="info">
                 </div>
 
+                <!-- Target Users -->
+                <div class="form-group">
+                  <label class="font-weight-bold">Afficher à</label>
+                  <select class="form-control" id="targetUsers" name="targetUsers">
+                    <option value="">Tous les utilisateurs</option>
+                    <% users.forEach(u => { %>
+                      <option value="<%= u.id %>"><%= u.name %> (<%= u.email %>)</option>
+                    <% }) %>
+                  </select>
+                  <small class="form-text text-muted">Laisser vide pour afficher à tous</small>
+                </div>
+
                 <hr>
 
                 <div class="d-flex justify-content-between">
@@ -138,6 +150,12 @@
         message: $('#message').val(),
         type: $('#type').val()
       };
+
+      // Get selected user (empty = all users)
+      const selectedUser = $('#targetUsers').val();
+      if (selectedUser) {
+        formData.targetUsers = selectedUser;
+      }
 
       $.ajax({
         url: '/api/popups',
