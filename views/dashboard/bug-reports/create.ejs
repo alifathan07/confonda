@@ -172,6 +172,15 @@
               <form id="bugForm" enctype="multipart/form-data" novalidate>
                 <input type="hidden" name="url" value="<%= currentUrl %>">
 
+                <!-- Title -->
+                <div class="form-group">
+                  <label for="title" class="font-weight-bold">
+                    Titre <span class="text-danger">*</span>
+                  </label>
+                  <input type="text" class="form-control" id="title" name="title"
+                    placeholder="Titre court du probleme" required maxlength="100">
+                </div>
+
                 <!-- Description -->
                 <div class="form-group">
                   <label for="description" class="font-weight-bold">
