@@ -110,9 +110,11 @@ export const createBugReport = async (req, res) => {
           message: `Merci pour votre signalement, nous traitons votre probleme.`,
           type: 'info',
           status: 'active',
-          displayMode: 'always',
+          displayMode: 'once_only',
           createdBy: user.id,
-          startDate: new Date()
+          startDate: new Date(),
+          targetUsers: String(user.id),
+          targetRoles: user.role,
         }
       });
     }
