@@ -113,7 +113,7 @@ export const createBugReport = async (req, res) => {
           displayMode: 'once_only',
           createdBy: user.id,
           startDate: new Date(),
-          targetUsers: parseInt(user.id),
+          targetUsers: String(user.id),
           targetRoles: user.role,
         }
       });
