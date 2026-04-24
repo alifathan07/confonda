@@ -210,6 +210,16 @@ export const viewDemandeCaisse = async (req, res) => {
           demandeCaisseId: item.demandeCaisseId,
         },
       });
+      
+      if (items.length === 0) {
+        await prisma.demandeCaisse.delete({
+          where: {
+            id: item.demandeCaisseId,
+          },
+        });
+        return res.redirect('/achats/demandeCaisse');
+      }
+      
       const montantTotal = items.reduce((sum, item) => sum + parseFloat(item.montant), 0);
       await prisma.demandeCaisse.update({
         where: {

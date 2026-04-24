@@ -41,14 +41,7 @@ export const isDeveloper = (req, res, next) => {
 }
 
 // Only admin, grandadmin, and granduser can create bugs
-export const canCreateBug = (req, res, next) => {
-  const role = req.session.user?.role;
-  if (role === 'admin' || role === 'grandadmin' || role === 'granduser') {
-      next();
-  } else {
-      res.status(403).json({ success: false, error: 'Accès refusé. Seuls les administrateurs peuvent créer des rapports de bug.' });
-  }
-}
+
 
 export const isUser = (req, res, next) => {
   if (req.session.user && req.session.user.role === 'user') {
