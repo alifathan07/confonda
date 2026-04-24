@@ -75,11 +75,11 @@ export const checkPopups = async (req, res, next) => {
     res.locals.activePopups = activePopups;
     res.locals.popupDismissUrl = '/api/popups';
 
-    console.log('=== POPUP DEBUG ===');
-    console.log('User ID:', user?.id);
-    console.log('Total popups in DB:', popups.length);
-    console.log('Popups after filtering:', activePopups.map(p => ({id: p.id, mode: p.displayMode, target: p.targetUsers})));
-    console.log('===================');
+    // console.log('=== POPUP DEBUG ===');
+    // console.log('User ID:', user?.id);
+    // console.log('Total popups in DB:', popups.length);
+    // console.log('Popups after filtering:', activePopups.map(p => ({id: p.id, mode: p.displayMode, target: p.targetUsers})));
+    // console.log('===================');
     
   } catch (error) {
     console.error('Error checking popups:', error);
