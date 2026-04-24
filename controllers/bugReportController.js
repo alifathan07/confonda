@@ -41,7 +41,11 @@ export const uploadBugScreenshot = multer({
  */
 export const listBugReports = async (req, res) => {
   try {
+    const user = req.session.user;
+    const isRegularUser = user.role === 'user';
+
     const bugReports = await prisma.bugReport.findMany({
+      where: isRegularUser ? { userId: user.id } : undefined,
       include: {
         user: {
           select: { id: true, name: true, email: true }
@@ -52,7 +56,7 @@ export const listBugReports = async (req, res) => {
 
     res.render('dashboard/bug-reports/list', {
       bugReports,
-      user: req.session.user
+      user: user
     });
   } catch (error) {
     console.error('Erreur listBugReports:', error);

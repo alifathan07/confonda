@@ -210,129 +210,128 @@
     </button>
 
     <!-- Sidebar -->
-    <ul class="navbar-nav sidebar sidebar-dark accordion" id="accordionSidebar">
-        <!-- Sidebar - Brand -->
-        <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/dashboard">
-            <div class="sidebar-brand-icon rotate-n-15">
-                <i class="fas fa-boxes"></i>
-            </div>
-            <div class="sidebar-brand-text mx-3">Confonda</div>
-        </a>
+   <!-- sidebar.ejs -->
+<ul class="navbar-nav sidebar sidebar-dark accordion" id="accordionSidebar">
 
-        <!-- Divider -->
-        <hr class="sidebar-divider my-0">
+  <!-- Brand -->
+  <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/dashboard">
+    <div class="sidebar-brand-icon">
+      <i class="fas fa-boxes"></i>
+    </div>
+    <div class="sidebar-brand-text mx-3">Confonda</div>
+  </a>
 
-        <!-- Nav Item - Dashboard -->
-     
+  <hr class="sidebar-divider my-0">
 
-        <!-- Divider -->
-        <hr class="sidebar-divider">
+  <% if (user && (user.role === 'grandadmin' || user.role === 'admin' || user.role === 'developer')) { %>
 
-        <!-- Nav Item - Payment Methods -->
-        <% if (user && (user.role === 'grandadmin' || user.role === 'admin' || user.role === 'developer')) { %>
-            <li class="nav-item">
-                <a class="nav-link py-3" href="/tresorerie">
-                    <i class="fas fa-fw fa-credit-card" style="font-size: 17px;"></i>
-                    <span>Trésorerie</span>
-                </a>
-            </li>
-            <hr class="sidebar-divider">
-             <li class="nav-item">
-                <a class="nav-link py-3" href="/achats/fourniture">
-                    <i class="fas fa-fw fa-truck" style="font-size: 17px;"></i>
-                    <span>Demande Fournitures</span>
-                </a>
-            </li>
-            <hr class="sidebar-divider">
-             <li class="nav-item">
-                <a class="nav-link py-3" href="/achats/caisse">
-                    <i class="fas fa-fw fa-cash-register" style="font-size: 17px;"></i>
-                    <span>Caisse</span>
-                </a>
-            </li>
-    
-            <hr class="sidebar-divider">
-            <li class="nav-item">
-                <a class="nav-link py-3" href="/achats">
-                    <i class="fas fa-fw fa-shopping-cart" style="font-size: 17px;"></i>
-                    <span>Achats</span>
-                </a>
-            </li>
-            <hr class="sidebar-divider">
-           
-    
-            <li class="nav-item">
-                <a class="nav-link py-3" href="/ventes">
-                    <i class="fas fa-fw fa-money-bill-alt" style="font-size: 17px;"></i>
-                    <span>Ventes</span>
-                </a>
-            </li>
-            <hr class="sidebar-divider">
-            <li class="nav-item">
-                <a class="nav-link py-3" href="/virementpay">
-                    <i class="fas fa-fw fa-hand-holding-usd" style="font-size: 17px;"></i>
-                    <span>Virement Des Salaires</span>
-                </a>
-            </li>
+    <!-- Section: Finance -->
+    <div class="sidebar-heading">Finance</div>
 
-            <hr class="sidebar-divider">
-            <% if (user && user.role === 'developer') { %>
-            <li class="nav-item">
-                <a class="nav-link py-3" href="/popups">
-                    <i class="fas fa-fw fa-bullhorn" style="font-size: 17px;"></i>
-                    <span>Gestion Popups</span>
-                </a>
-            </li>
-            <% } %>
-            <% if (user && (user.role === 'admin' || user.role === 'grandadmin' || user.role === 'granduser' || user.role === 'developer')) { %>
-            <li class="nav-item">
-                <a class="nav-link py-3" href="/bug-reports">
-                    <i class="fas fa-fw fa-bug" style="font-size: 17px;"></i>
-                    <span>Signaler un problème</span>
-                </a>
-            </li>
-            <% } %>
-            <li class="nav-item">
-                <a class="nav-link py-3" href="/settings">
-                    <i class="fas fa-fw fa-cog" style="font-size: 17px;"></i>
-                    <span>Paramètres</span>
-                </a>
-            </li>
+    <li class="nav-item">
+      <a class="nav-link" href="/tresorerie">
+        <i class="fas fa-fw fa-credit-card"></i>
+        <span>Trésorerie</span>
+      </a>
+    </li>
 
-          <% } else if (user && user.role === 'user' || user.role === 'granduser') { %>
-            <li class="nav-item">
-                <a class="nav-link py-3" href="/achats/caisse">
-                    <i class="fas fa-fw fa-cash-register" style="font-size: 17px;"></i>
-                    <span>Caisse</span>
-                </a>
-            </li>
-            <hr class="sidebar-divider">
-             <li class="nav-item">
-                <a class="nav-link py-3" href="/achats/fourniture">
-                    <i class="fas fa-fw fa-shopping-cart" style="font-size: 17px;"></i>
-                    <span>Demande Fournitures</span>
-                </a>
-            </li>
-          <% } %>
-        <hr class="sidebar-divider">
+    <li class="nav-item">
+      <a class="nav-link" href="/achats/caisse">
+        <i class="fas fa-fw fa-cash-register"></i>
+        <span>Caisse</span>
+      </a>
+    </li>
 
-        <% if (user && (user.role === 'grandadmin' || user.role === 'developer')) { %>
-        <li class="nav-item">
-            <a class="nav-link py-3" href="/users">
-                <i class="fas fa-fw fa-users" style="font-size: 17px;"></i>
-                <span>Utilisateurs</span>
+    <li class="nav-item">
+      <a class="nav-link" href="/virementpay">
+        <i class="fas fa-fw fa-hand-holding-usd"></i>
+        <span>Virement Des Salaires</span>
+      </a>
+    </li>
+
+    <hr class="sidebar-divider">
+
+    <!-- Section: Achats -->
+    <div class="sidebar-heading">Achats</div>
+
+    <li class="nav-item">
+      <a class="nav-link" href="/achats/fourniture">
+        <i class="fas fa-fw fa-truck"></i>
+        <span>Demande Fournitures</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a class="nav-link" href="/achats">
+        <i class="fas fa-fw fa-shopping-cart"></i>
+        <span>Achats</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a class="nav-link" href="/ventes">
+        <i class="fas fa-fw fa-money-bill-alt"></i>
+        <span>Ventes</span>
+      </a>
+    </li>
+
+    <hr class="sidebar-divider">
+
+    <!-- Section: Admin -->
+    <div class="sidebar-heading">Administration</div>
+
+    <li class="nav-item">
+      <a class="nav-link" href="/settings">
+        <i class="fas fa-fw fa-cog"></i>
+        <span>Paramètres</span>
+      </a>
+    </li>
+
+    <% if (user && (user.role === 'grandadmin' || user.role === 'developer')) { %>
+    <li class="nav-item">
+      <a class="nav-link" href="/users">
+        <i class="fas fa-fw fa-users"></i>
+        <span>Utilisateurs</span>
+      </a>
+    </li>
+    <% } %>
+
+    <% if (user && user.role === 'developer') { %>
+    <li class="nav-item">
+      <a class="nav-link" href="/popups">
+        <i class="fas fa-fw fa-bullhorn"></i>
+        <span>Gestion Popups</span>
+      </a>
+    </li>
+    <% } %>
+
+  <% } else if (user && (user.role === 'user' || user.role === 'granduser')) { %>
+
+    <div class="sidebar-heading">Menu</div>
+
+    <li class="nav-item">
+      <a class="nav-link" href="/achats/caisse">
+        <i class="fas fa-fw fa-cash-register"></i>
+        <span>Caisse</span>
+      </a>
+    </li>
+
+    <li class="nav-item">
+      <a class="nav-link" href="/achats/fourniture">
+        <i class="fas fa-fw fa-truck"></i>
+        <span>Demande Fournitures</span>
+      </a>
+    </li>
+
+  <% } %>
+  <li class="nav-item">
+            <a class="nav-link py-3" href="/bug-reports">
+                <i class="fas fa-fw fa-bug" style="font-size: 17px;"></i>
+                <span>Signaler un problème</span>
             </a>
         </li>
-        <% } %>
-       
 
-        <!-- Divider -->
-
-        <!-- Sidebar Toggler (Desktop) -->
-        <!-- <div class="text-center d-none d-md-inline">
-            <button class="rounded-circle border-0" id="sidebarToggle"></button>
-        </div> -->
-    </ul>
+</ul>
     <!-- End of Sidebar -->
 
     <!-- Main Content -->
@@ -382,3 +381,6 @@
     </script>
 </body>
 </html>
+
+
+       

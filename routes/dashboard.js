@@ -1,5 +1,5 @@
 import express from 'express';
-import { isGrandAdmin, isAuthenticated, isAdmin, isUser, isDeveloper, canCreateBug } from '../middlewares/auth.js';
+import { isGrandAdmin, isAuthenticated, isAdmin, isUser, isDeveloper } from '../middlewares/auth.js';
 import { create, update, show, deleteSupplier, importExel, upload, atess } from '../controllers/supplierController.js';
 import multer from 'multer';
 import ExcelJS from 'exceljs';
@@ -655,10 +655,10 @@ dashboardRouter.post('/settings/whatsapp-recipients/:id/delete', isGrandAdmin, d
 dashboardRouter.get('/bug-reports', isAuthenticated, listBugReports);
 
 // Create bug report form - only admin, grandadmin, granduser
-dashboardRouter.get('/bug-reports/create', canCreateBug, createBugReportForm);
+dashboardRouter.get('/bug-reports/create',   createBugReportForm);
 
 // Create bug report API - only admin, grandadmin, granduser
-dashboardRouter.post('/api/bug-reports', canCreateBug, uploadBugScreenshot.single('screenshot'), createBugReport);
+dashboardRouter.post('/api/bug-reports',   uploadBugScreenshot.single('screenshot'), createBugReport);
 
 // Edit bug report form - ONLY developer can access
 dashboardRouter.get('/bug-reports/:id/edit', isDeveloper, editBugReportForm);
