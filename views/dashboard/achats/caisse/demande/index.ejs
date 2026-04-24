@@ -394,12 +394,16 @@
                                               <i class="fas fa-file-excel"></i> Excel
                                             </a>
 
-                                            <% if (user.role==='admin' || user.role==='grandadmin' ) { %>
+                                            <% 
+                                              const canDelete = user.role === 'admin' || user.role === 'grandadmin' || 
+                                                                (d.userId === user.id && d.status === 'En Attente');
+                                              if (canDelete) { 
+                                            %>
                                               <button onclick="supprimerdemande(<%= d.id %>)"
                                                 class="excel-delete-btn">
                                                 <i class="fas fa-trash"></i>
                                               </button>
-                                              <% } %>
+                                            <% } %>
                                           </div>
                                         </td>
                               </tr>
