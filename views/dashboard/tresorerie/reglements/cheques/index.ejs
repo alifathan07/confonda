@@ -87,6 +87,23 @@
       justify-content: flex-end;
     }
 
+    .cheque-table {
+      overflow: visible;
+    }
+
+    .cheque-table thead th:last-child,
+    .cheque-table tbody td:last-child {
+      position: sticky;
+      right: 0;
+      background: #fff;
+      z-index: 10;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+    }
+
+    .cheque-table thead th:last-child {
+      background: #f8f9fa;
+    }
+
     .cell-edit {
       min-width: 120px;
     }
@@ -172,6 +189,10 @@
 
     .bottom-hscroll-inner {
       height: 1px;
+    }
+
+    tr .table-actions {
+      opacity: 1 !important;
     }
   </style>
 </head>
@@ -306,7 +327,7 @@
                     </div>
                   </div>
 
-                  <div class="table-responsive" id="chequesTableResponsive">
+                  <div class="table-responsive" id="chequesTableResponsive" style="overflow-x: auto;">
                     <table class="table table-sm table-hover table-bordered cheque-table" style="min-width: 1250px;">
                       <thead class="thead-light">
                         <tr>
@@ -413,7 +434,7 @@
                             <td class="cell-edit obs-cell" contenteditable="true" data-field="obs">
                               <%= c.obs || '' %>
                             </td>
-                            <td class="text-right">
+                            <td class="text-right actions-col">
                               <div class="table-actions">
                                 <button class="btn btn-sm btn-outline-secondary btn-alloc" title="Chantiers">
                                   <i class="fas fa-project-diagram"></i>
