@@ -54,11 +54,45 @@ export async function getSituationGenerale(req, res) {
       orderBy: { date: 'desc' }
     });
 
-    // Flatten rows
+    // Fetch ALL BCs for global KPIs (lightweight query without nested includes)
+    const allBCs = await prisma.bondeCommande.findMany({
+      include: {
+        fournisseur: true,
+        chantier: true,
+        commandesItems: {
+          include: {
+            bondeLivraisonItems: {
+              include: {
+                bondeLivraison: {
+                  include: {
+                    items: true,
+                    factureLinks: {
+                      include: {
+                        facture: {
+                          include: {
+                            cheques: { include: { cheque: true } },
+                            effets: { include: { effet: true } },
+                            virements: { include: { virement: true } }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      orderBy: { date: 'desc' }
+    });
+
+    // Flatten rows for display
     const rows = flattenRows(bcs);
 
-    // Compute KPIs (only from current page for accuracy)
-    const kpis = computeKPIs(rows);
+    // Compute global KPIs from all data
+    const allRows = flattenRows(allBCs);
+    const kpis = computeKPIs(allRows);
 
     res.render('dashboard/achats/situation', { rows, kpis, page, totalPages, totalBCs });
   } catch (error) {
