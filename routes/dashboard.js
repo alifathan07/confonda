@@ -27,13 +27,14 @@ import { addpricingforDemande, createDemandeFourniture, deleteDemandeFourniture,
 import { fileURLToPath } from 'url';
 import { EditDemandePrix, listDemandePrix, postDemandePrixViaFourniture, updateDemandePrix, viewDemandePrix, deleteDemandePrix, deleteArticle, createDemandePrix, storeDemandePrix, generateDemandePrixPDF, sendDemandePrixEmail } from '../controllers/demandeprixController.js';
 import { editBc, postBcDemandeFourniture, updateBc, deleteBcItem, createBcForm, storeBc, generateBcPDF, sendBcEmail, listBc, deleteBc, updateBcItemDistribution, updateBcItem, importBcInfo, updateSupplier, getArticlesRemaining, createBondeLivraison,affecterBL, getBCDashboard } from '../controllers/bcController.js';
-import { searchBLs, getBLArticles, affecterBCToBL, listBL, uploadBLFileHandler, downloadBLFile, uploadBLFile, editBL, updateBL, deleteBL, viewFacture, viewFactureAvoir, viewBL } from '../controllers/blController.js';
-import { listFactures, getFacture, createFacture, updateFacture, deleteFacture, affecterBLToFacture, listFactureAvoirs, createFactureAvoir, deleteFactureAvoir, affecterBLToFactureAvoir, getFacturesByFournisseur, getFactureAvoirsByFournisseur, getFactureAvoirsByFacture, getFactureAvoir, getBLFactureStatus, uploadFactureFile, downloadFactureFile, uploadFactureFileMulter } from '../controllers/factureController.js';
+import { searchBLs, getBLArticles, affecterBCToBL, listBL, uploadBLFileHandler, downloadBLFile, uploadBLFile, editBL, updateBL, deleteBL, viewFacture, viewFactureAvoir, viewBL, getBL } from '../controllers/blController.js';
+import { listFactures, getFacture, createFacture, updateFacture, deleteFacture, affecterBLToFacture, listFactureAvoirs, createFactureAvoir, deleteFactureAvoir, affecterBLToFactureAvoir, getFacturesByFournisseur, getFactureAvoirsByFournisseur, getFactureAvoirsByFacture, getFactureAvoir, getBLFactureStatus, uploadFactureFile, downloadFactureFile, uploadFactureFileMulter, getFactureReglements, searchReglements, affecterReglement } from '../controllers/factureController.js';
 import { listBugReports, createBugReportForm, createBugReport, editBugReportForm, updateBugReport, deleteBugReport, getBugReport, getBugStats, uploadBugScreenshot } from '../controllers/bugReportController.js';
 import { listPopups, createPopupForm, createPopup, editPopupForm, updatePopup, deletePopup, getActivePopupsForUser, dismissPopup, toggleUserPopup, getPopupStats } from '../controllers/popupController.js';
 import { bmceDelete, bmceDownload, bmcePay, bmcePreview, bmceUpload, indexVirementPay } from '../controllers/virementpayController.js';
 import { getListFourniture } from '../controllers/listfournitureController.js';
 import { addNumbers, deleteNum, editSettingNum, settingsIndex } from '../controllers/settingsController.js';
+import { getSituationGenerale } from '../controllers/situationachats.js';
 
 const virementpayUpload = multer({
   dest: 'uploads/',
@@ -568,6 +569,8 @@ dashboardRouter.post('/api/bons-livraison', createBondeLivraison);
 // Get unlinked BLs
 // Search BLs for affectation (by fournisseur)
 dashboardRouter.get('/api/bons-livraison/search', searchBLs);
+// Get single BL by ID
+dashboardRouter.get('/api/bons-livraison/:id', getBL);
 // Get articles of an existing BL
 dashboardRouter.get('/api/bons-livraison/:bl_id/articles', getBLArticles);
 // Affecter BC articles to an existing BL (new 2-step flow)
@@ -591,6 +594,10 @@ dashboardRouter.get('/achats/factures', listFactures);
 dashboardRouter.get('/achats/factures/:id/view', viewFacture);
 // dashboardRouter.get('/achats/factures/:id/edit', editFacture);
 dashboardRouter.put('/achats/factures/:id', updateFacture);
+
+// -----------Situation Générale Achats-----------------
+dashboardRouter.get('/achats/situation-generale', getSituationGenerale);
+
 dashboardRouter.get('/api/factures', listFactures);
 dashboardRouter.get('/api/factures/:id', getFacture);
 dashboardRouter.post('/api/factures', createFacture);
@@ -614,6 +621,10 @@ dashboardRouter.get('/api/factures-avoir/by-fournisseur/:fournisseurId', getFact
 // -----------BL Facture Status-----------------
 dashboardRouter.get('/api/bons-livraison/:id/facture-status', getBLFactureStatus);
 
+// -----------Facture Règlements (Cheque, Effet, Virement)-----------------
+dashboardRouter.get('/api/factures/:id/reglements', getFactureReglements);
+dashboardRouter.get('/api/reglements/search', searchReglements);
+dashboardRouter.post('/api/factures/:id/affecter-reglement', affecterReglement);
 
 
 // virement payment 

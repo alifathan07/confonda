@@ -9,96 +9,100 @@
   <link href="/css/sb-admin-2.min.css" rel="stylesheet">
 
   <style>
+    /* ── Main table ── */
     #factureTable {
-      font-size: 0.9rem;
+      font-size: 0.82rem;
     }
 
     #factureTable th,
     #factureTable td {
-      padding: 0.5rem 0.75rem !important;
+      padding: 0.45rem 0.6rem !important;
       vertical-align: middle;
+      white-space: nowrap;
     }
 
     #factureTable th {
-      background-color: #f8f9fa;
+      background-color: #4e73df;
+      color: #fff;
       font-weight: 600;
       text-align: center;
+      border-color: #3a5fc8 !important;
     }
 
+    #factureTable tbody tr:hover {
+      background-color: #f0f4ff;
+    }
+
+    /* ── Status badges ── */
     .badge-status {
-      padding: 5px 10px;
-      border-radius: 20px;
-      font-size: 0.75rem;
-    }
-
-    .badge-en_attente {
-      background-color: #ffc107;
-      color: #000;
-    }
-
-    .badge-payee {
-      background-color: #28a745;
-      color: #fff;
-    }
-
-    .badge-partielle {
-      background-color: #17a2b8;
-      color: #fff;
-    }
-
-    .bl-dropdown {
-      position: relative;
       display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
     }
 
-    .bl-dropdown-btn {
-      background: #4e73df;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.9rem;
+    .badge-en_attente { background-color: #ffc107; color: #000; }
+    .badge-payee      { background-color: #1cc88a; color: #fff; }
+    .badge-partielle  { background-color: #36b9cc; color: #fff; }
+
+    /* ── Compact pill tags (BL / Avoir / Règlement) ── */
+    .pill-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      white-space: nowrap;
+      margin: 2px 2px;
+      text-decoration: none;
     }
 
-    .bl-dropdown-btn:hover {
-      background: #2e59d9;
+    .pill-tag:hover { opacity: 0.85; text-decoration: none; }
+
+    .pill-bl      { background: transparent; border: 2px solid #4e73df; color: #4e73df; }
+    .pill-avoir   { background: transparent; border: 2px solid #e74a3b; color: #e74a3b; }
+    .pill-cheque  { background: transparent; border: 2px solid #36b9cc; color: #36b9cc; }
+    .pill-effet   { background: transparent; border: 2px solid #36b9cc; color: #36b9cc; }
+    .pill-virement{ background: transparent; border: 2px solid #36b9cc; color: #36b9cc; }
+
+    /* ── Règlements / BL cell: wrap nicely ── */
+    .pills-cell {
+      white-space: normal !important;
+      min-width: 110px;
+      max-width: 200px;
+      line-height: 1.8;
     }
 
-    .bl-dropdown-menu {
-      display: none;
-      position: absolute;
-      right: 0;
-      background: white;
-      min-width: 200px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      border-radius: 6px;
-      z-index: 1000;
-      overflow: hidden;
-    }
-
-    .bl-dropdown-menu.show {
-      display: block;
-    }
-
-    .bl-dropdown-item {
-      padding: 10px 15px;
-      cursor: pointer;
+    /* ── Action buttons ── */
+    .action-group {
       display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #333;
+      gap: 4px;
+      justify-content: center;
+      flex-wrap: nowrap;
     }
 
-    .bl-dropdown-item:hover {
-      background: #f8f9fa;
+    .action-group .btn {
+      padding: 3px 7px;
+      font-size: 0.75rem;
+      line-height: 1.4;
     }
 
-    .bl-dropdown-divider {
-      height: 1px;
-      background: #e9ecef;
-      margin: 4px 0;
+    /* ── Upload popover ── */
+    .upload-popover {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      background: #fff;
+      border: 1px solid #dde1e7;
+      border-radius: 8px;
+      padding: 12px 14px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      min-width: 260px;
     }
+
+    .upload-popover.show { display: block; }
   </style>
 </head>
 
@@ -118,21 +122,23 @@
 
         <div class="card shadow mb-4">
           <div class="card-body">
-            <div class="table-responsive">
-              <table class="table table-bordered" id="factureTable" width="100%" cellspacing="0">
+            <div class="table-responsive" style="overflow-x: auto;">
+              <table class="table table-bordered table-sm table-hover" id="factureTable" style="min-width: 1100px;">
                 <thead>
                   <tr>
-                    <th>Numéro</th>
-                    <th>Date</th>
-                    <th>Fournisseur</th>
-                    <th>Total HT</th>
-                    <th>Taux TVA</th>
-                    <th>Total TTC</th>
-                    <th>Statut</th>
-                    <th>BLs Liés</th>
-                    <th>Facture Avoir</th>
-                    <th>Fichier</th>
-                    <th>Actions</th>
+                    <th style="width: 75px;">N°</th>
+                    <th style="width: 85px;">Date</th>
+                    <th style="min-width: 140px;">Fournisseur</th>
+                    <th style="width: 95px;">Total HT</th>
+                    <th style="width: 60px;">TVA</th>
+                    <th style="width: 105px;">Total TTC</th>
+                    <th style="width: 85px;">Statut</th>
+                    <th style="min-width: 110px;" class="pills-cell">BLs Liés</th>
+                    <th style="min-width: 200px;" class="pills-cell">Règlements</th>
+                    <th style="width: 105px;">Solde</th>
+                    <th style="min-width: 90px;" class="pills-cell">Avoir</th>
+                    <th style="width: 75px;">Fichier</th>
+                    <th style="width: 120px;">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -150,57 +156,136 @@
                             <%= facture.statut === 'payee' ? 'Payée' : facture.statut === 'partielle' ? 'Partielle' : 'En attente' %>
                           </span>
                         </td>
-                        <td class="text-center">
+                        <td class="pills-cell">
                           <% if (facture.bondeLivraisonLinks && facture.bondeLivraisonLinks.length > 0) { %>
                             <% let blCount = 0; %>
                             <% facture.bondeLivraisonLinks.forEach((link) => { %>
                               <% if (link.bondeLivraison) { %>
                                 <% blCount++; %>
-                                <a href="/achats/bons-livraison/<%= link.bondeLivraison.id %>/edit" class="badge badge-info" title="Voir BL">
-                                  BL N° <%= link.bondeLivraison.numero %>
+                                <a href="/achats/bons-livraison/<%= link.bondeLivraison.id %>/edit" class="pill-tag pill-bl" title="Voir BL N°<%= link.bondeLivraison.numero %>">
+                                  BL&nbsp;<%= link.bondeLivraison.numero %>
                                 </a>
                               <% } %>
                             <% }) %>
-                            <% if (blCount === 0) { %>-<% } %>
+                            <% if (blCount === 0) { %><span class="text-muted">—</span><% } %>
                           <% } else { %>
-                            -
+                            <span class="text-muted">—</span>
                           <% } %>
                         </td>
-                        <td class="text-center">
+                        <td class="pills-cell">
+                          <% 
+                            const allReglements = [];
+                            if (facture.cheques) {
+                              facture.cheques.forEach(r => {
+                                if (r.cheque) {
+                                  allReglements.push({ type: 'cheque', label: 'Chq', numero: r.cheque.numero, banque: r.cheque.banque?.name || '-', montant: r.montantAffecte });
+                                }
+                              });
+                            }
+                            if (facture.effets) {
+                              facture.effets.forEach(r => {
+                                if (r.effet) {
+                                  allReglements.push({ type: 'effet', label: 'Eff', numero: r.effet.numero, banque: null, montant: r.montantAffecte });
+                                }
+                              });
+                            }
+                            if (facture.virements) {
+                              facture.virements.forEach(r => {
+                                if (r.virement) {
+                                  allReglements.push({ type: 'virement', label: 'Vir', numero: r.virement.numero, banque: null, montant: r.montantAffecte });
+                                }
+                              });
+                            }
+                          %>
+                          <% if (allReglements.length > 0) { %>
+                            <% allReglements.forEach(reg => { %>
+                              <% 
+                                let pillText, fullTitle;
+                                if (reg.type === 'cheque') {
+                                  const bank = reg.banque || '-';
+                                  const mnt = typeof reg.montant === 'number' ? reg.montant.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : reg.montant;
+                                  pillText = 'Chéque ' + reg.numero + ' ' + bank.substring(0, 6) + ' ' + mnt + ' DH';
+                                  fullTitle = 'Cheque N°' + reg.numero + ' - ' + bank + ' - ' + mnt + ' DH';
+                                } else {
+                                  const mnt = typeof reg.montant === 'number' ? reg.montant.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : reg.montant;
+                                  pillText = reg.label + ' ' + reg.numero + ' ' + mnt + ' DH';
+                                  fullTitle = reg.label + ' N°' + reg.numero + ' - ' + mnt + ' DH';
+                                }
+                              %>
+                              <span class="pill-tag pill-<%= reg.type %>" title="<%= fullTitle %>">
+                                <%= pillText %>
+                              </span>
+                            <% }) %>
+                          <% } else { %>
+                            <span class="text-muted">—</span>
+                          <% } %>
+                        </td>
+                        <td class="text-right">
+                          <% 
+                            const totalAffecte = (facture.cheques || []).reduce((sum, fc) => sum + (fc.montantAffecte || 0), 0) 
+                                              + (facture.effets || []).reduce((sum, fe) => sum + (fe.montantAffecte || 0), 0)
+                                              + (facture.virements || []).reduce((sum, fv) => sum + (fv.montantAffecte || 0), 0);
+                            const resteAPayer = Math.max(0, facture.totalTtc - totalAffecte);
+                          %>
+                          <% if (resteAPayer > 0) { %>
+                            <span class="text-danger font-weight-bold"><%= resteAPayer.toFixed(2) %> DH</span>
+                          <% } else { %>
+                            <span class="text-success">—</span>
+                          <% } %>
+                        </td>
+                        <td class="pills-cell">
                           <% if (facture.avoirs && facture.avoirs.length > 0) { %>
                             <% facture.avoirs.forEach((avoir) => { %>
-                              <a href="/achats/factures-avoir/<%= avoir.id %>/view" class="badge badge-danger" title="Voir Avoir">
-                                Avoir N° <%= avoir.numero %>
+                              <a href="/achats/factures-avoir/<Objet%= avoir.id %>/view" class="pill-tag pill-avoir" title="Voir Avoir N°<%= avoir.numero %>">
+                                AV&nbsp;<%= avoir.numero %>
                               </a>
                             <% }) %>
                           <% } else { %>
-                            -
+                            <span class="text-muted">—</span>
                           <% } %>
                         </td>
                         <td class="text-center">
-                          <% if (facture.fichier) { %>
-                            <a href="/api/factures/<%= facture.id %>/download" class="btn btn-sm btn-success" title="Télécharger">
-                              <i class="fas fa-download"></i>
-                            </a>
-                          <% } %>
-                          <button type="button" class="btn btn-sm btn-primary" onclick="toggleFactureUploadForm(<%= facture.id %>)">
-                            <i class="fas fa-upload"></i>
-                          </button>
-                          <div id="facture-upload-form-<%= facture.id %>" style="display:none; position:absolute; right:0; z-index:100; background:white; border:1px solid #ddd; padding:10px; border-radius:5px; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+                          <div class="action-group">
+                            <% if (facture.fichier) { %>
+                              <a href="/api/factures/<%= facture.id %>/download" class="btn btn-sm btn-success" title="Télécharger">
+                                <i class="fas fa-download"></i>
+                              </a>
+                            <% } %>
+                            <button type="button" class="btn btn-sm btn-secondary" title="Uploader fichier" onclick="toggleFactureUploadForm(<%= facture.id %>, this)">
+                              <i class="fas fa-upload"></i>
+                            </button>
+                          </div>
+                          <div id="facture-upload-form-<%= facture.id %>" class="upload-popover">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                              <small class="font-weight-bold text-gray-700">Uploader un fichier</small>
+                              <button type="button" class="close" style="font-size:1rem;" onclick="toggleFactureUploadForm(<%= facture.id %>)">&times;</button>
+                            </div>
                             <form onsubmit="uploadFactureFile(event, <%= facture.id %>)" enctype="multipart/form-data">
-                              <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required style="font-size:12px;">
-                              <button type="submit" class="btn btn-sm btn-primary mt-1">Envoyer</button>
-                              <button type="button" class="btn btn-sm btn-secondary mt-1" onclick="toggleFactureUploadForm(<%= facture.id %>)">Annuler</button>
+                              <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required style="font-size:12px; display:block; margin-bottom:6px;">
+                              <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-sm btn-primary">Envoyer</button>
+                                <button type="button" class="btn btn-sm btn-secondary" onclick="toggleFactureUploadForm(<%= facture.id %>)">Annuler</button>
+                              </div>
                             </form>
                           </div>
                         </td>
                         <td>
-                          <button class="btn btn-info btn-sm" title="Voir" onclick="viewFacture(<%= facture.id %>)">
-                            <i class="fas fa-eye"></i>
-                          </button>
-                          <button class="btn btn-danger btn-sm" title="Supprimer" onclick="deleteFacture(<%= facture.id %>)">
-                            <i class="fas fa-trash"></i>
-                          </button>
+                          <div class="action-group">
+                            <button class="btn btn-success btn-sm" title="Ajouter règlement" onclick="openAddReglementModal(<%= facture.id %>, <%= facture.fournisseurId || 'null' %>, <%= facture.totalTtc %>, '<%= facture.statut || 'en_attente' %>')">
+                              <i class="fas fa-dollar-sign"></i>
+                            </button>
+                            <button class="btn btn-info btn-sm" title="Voir" onclick="viewFacture(<%= facture.id %>)">
+                              <i class="fas fa-eye"></i>
+                            </button>
+                          
+                            
+                            <button class="btn btn-info btn-sm" title="Modifier affectation" onclick="openEditReglementModal(<%= facture.id %>, <%= facture.fournisseurId || 'null' %>, <%= facture.totalTtc %>, '<%= facture.statut || 'en_attente' %>')">
+                              <i class="fas fa-edit"></i>
+                            </button>
+                              <button class="btn btn-danger btn-sm" title="Supprimer" onclick="deleteFacture(<%= facture.id %>)">
+                              <i class="fas fa-trash"></i>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     <% }) %>
@@ -241,6 +326,139 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
         <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Supprimer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Règlement Modal -->
+<div class="modal fade" id="reglementModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Affecter un Règlement</h5>
+        <button type="button" class="close" data-dismiss="modal" onclick="closeReglementModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Step 1: Choose Type -->
+        <div id="step1" class="reglement-step">
+          <h6 class="mb-3">Étape 1: Choisir le type de règlement</h6>
+          <div class="d-flex justify-content-center gap-3 mb-3">
+            <button type="button" class="btn btn-outline-primary btn-lg" onclick="selectReglementType('cheque')">
+              <i class="fas fa-money-check mr-2"></i>Chèque
+            </button>
+            <button type="button" class="btn btn-outline-primary btn-lg" onclick="selectReglementType('effet')">
+              <i class="fas fa-file-invoice-dollar mr-2"></i>Effet
+            </button>
+            <button type="button" class="btn btn-outline-primary btn-lg" onclick="selectReglementType('virement')">
+              <i class="fas fa-exchange-alt mr-2"></i>Virement
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 2: Choose Règlement -->
+        <div id="step2" class="reglement-step" style="display:none;">
+          <h6 class="mb-3">Étape 2: Choisir le règlement <span id="selectedTypeLabel"></span></h6>
+          <button type="button" class="btn btn-sm btn-secondary mb-3" onclick="backToStep1()">
+            <i class="fas fa-arrow-left mr-1"></i>Retour
+          </button>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover table-bordered" id="reglementTable">
+              <thead>
+                <tr>
+                  <th>Numéro</th>
+                  <th>Montant total</th>
+                  <th>Déjà affecté</th>
+                  <th>Reste disponible</th>
+                  <th>Échéance</th>
+                  <th>Statut</th>
+                </tr>
+              </thead>
+              <tbody id="reglementTableBody">
+                <!-- Dynamic content -->
+              </tbody>
+            </table>
+          </div>
+          <div id="noReglementMessage" class="alert alert-info" style="display:none;">
+            Aucun règlement disponible pour ce fournisseur.
+          </div>
+          <button type="button" class="btn btn-primary mt-3" id="btnNextToStep3" onclick="nextToStep3()" disabled>
+            Suivant <i class="fas fa-arrow-right ml-1"></i>
+          </button>
+        </div>
+
+        <!-- Step 3: Set Montant Affecté -->
+        <div id="step3" class="reglement-step" style="display:none;">
+          <h6 class="mb-3">Étape 3: Définir le montant à affecter</h6>
+          <button type="button" class="btn btn-sm btn-secondary mb-3" onclick="backToStep2()">
+            <i class="fas fa-arrow-left mr-1"></i>Retour
+          </button>
+          
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="font-weight-bold">Type de règlement:</label>
+                <input type="text" class="form-control" id="reglementTypeDisplay" readonly>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="font-weight-bold">Montant facture:</label>
+                <input type="text" class="form-control" id="factureTotalTtc" readonly>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="font-weight-bold">Déjà affecté sur facture:</label>
+                <input type="text" class="form-control" id="dejaAffecteFacture" readonly>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="font-weight-bold">Montant <span class="reg-type-label">règlement</span>:</label>
+                <input type="text" class="form-control" id="reglementMontant" readonly>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="font-weight-bold">Déjà affecté sur  <span class="reg-type-label">règlement</span>:</label>
+                <input type="text" class="form-control" id="dejaAffecteReglement" readonly>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="font-weight-bold">Reste disponible sur <span class="reg-type-label">règlement</span>:</label>
+                <input type="text" class="form-control text-success font-weight-bold" id="resteReglement" readonly>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="font-weight-bold">Reste à payer sur facture:</label>
+                <input type="text" class="form-control" id="resteFacture" readonly>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="font-weight-bold text-primary">Montant à affecter:</label>
+            <input type="number" step="0.01" class="form-control form-control-lg" id="montantAffecter" oninput="updateResteCalcul()">
+            <small class="text-muted">Max: <span id="maxMontant"></span></small>
+          </div>
+          
+          <div class="alert" id="resteAlert" style="display:none;">
+            Reste à affecter sur la facture: <span id="resteAAffecter" class="font-weight-bold"></span>
+          </div>
+          
+          <button type="button" class="btn btn-success btn-lg" id="btnConfirmer" onclick="confirmerAffectation()">
+            <i class="fas fa-check mr-2"></i>Confirmer
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -322,10 +540,41 @@
     $('#deleteModal').modal('hide');
   });
 
-  function toggleFactureUploadForm(factureId) {
-    const form = document.getElementById('facture-upload-form-' + factureId);
-    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+  let currentOpenUploadId = null;
+
+  function toggleFactureUploadForm(factureId, triggerBtn) {
+    // Close any other open popover first
+    if (currentOpenUploadId && currentOpenUploadId !== factureId) {
+      const prev = document.getElementById('facture-upload-form-' + currentOpenUploadId);
+      if (prev) prev.classList.remove('show');
+    }
+
+    const popover = document.getElementById('facture-upload-form-' + factureId);
+    if (!popover) return;
+
+    if (popover.classList.contains('show')) {
+      popover.classList.remove('show');
+      currentOpenUploadId = null;
+    } else {
+      // Position near the trigger button
+      if (triggerBtn) {
+        const rect = triggerBtn.getBoundingClientRect();
+        popover.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+        popover.style.left = Math.max(8, rect.left + window.scrollX - 180) + 'px';
+      }
+      popover.classList.add('show');
+      currentOpenUploadId = factureId;
+    }
   }
+
+  // Close upload popover when clicking outside
+  document.addEventListener('click', function(e) {
+    if (currentOpenUploadId && !e.target.closest('.upload-popover') && !e.target.closest('[onclick*="toggleFactureUploadForm"]')) {
+      const popover = document.getElementById('facture-upload-form-' + currentOpenUploadId);
+      if (popover) popover.classList.remove('show');
+      currentOpenUploadId = null;
+    }
+  });
 
   async function uploadFactureFile(event, factureId) {
     event.preventDefault();
@@ -354,6 +603,356 @@
     } catch (err) {
       alert('Erreur lors de l\'upload');
       console.error(err);
+    }
+  }
+
+  // ========== Règlement Modal Functions ==========
+  let currentFactureId = null;
+  let currentFournisseurId = null;
+  let currentTotalTtc = 0;
+  let currentFactureStatut = '';
+  let selectedReglementType = null;
+  let selectedReglement = null;
+  let availableReglements = [];
+  let totalDejaAffecteFacture = 0;
+  let isEditMode = false;
+
+  // ========== ADD NEW ALLOCATION ==========
+  function openAddReglementModal(factureId, fournisseurId, totalTtc, statut) {
+    console.log('openAddReglementModal called:', { factureId, fournisseurId, totalTtc, statut });
+    isEditMode = false;
+    
+    // Check if fournisseurId is valid
+    if (!fournisseurId || fournisseurId === 'null' || fournisseurId === null || fournisseurId === undefined) {
+      alert('Cette facture n\'a pas de fournisseur associé. Impossible d\'affecter un règlement.');
+      return;
+    }
+    
+    currentFactureId = factureId;
+    currentFournisseurId = fournisseurId;
+    currentTotalTtc = totalTtc;
+    currentFactureStatut = statut;
+    
+    // Reset state
+    selectedReglementType = null;
+    selectedReglement = null;
+    availableReglements = [];
+    totalDejaAffecteFacture = 0;
+    
+    // Reset UI
+    document.getElementById('step1').style.display = 'block';
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step3').style.display = 'none';
+    document.getElementById('reglementTableBody').innerHTML = '';
+    document.getElementById('noReglementMessage').style.display = 'none';
+    document.getElementById('btnNextToStep3').disabled = true;
+    
+    // Update modal title
+    document.querySelector('#reglementModal .modal-title').textContent = 'Ajouter un Règlement';
+    
+    // Show modal using jQuery/Bootstrap
+    try {
+      $('#reglementModal').modal('show');
+      console.log('Modal shown successfully');
+    } catch (e) {
+      console.error('Error showing modal:', e);
+      alert('Erreur lors de l\'ouverture du modal: ' + e.message);
+    }
+  }
+
+  function closeReglementModal() {
+    $('#reglementModal').modal('hide');
+  }
+
+  // ========== EDIT EXISTING ALLOCATION ==========
+  async function openEditReglementModal(factureId, fournisseurId, totalTtc, statut) {
+    console.log('openEditReglementModal called:', { factureId, fournisseurId, totalTtc, statut });
+    isEditMode = true;
+    
+    if (!fournisseurId || fournisseurId === 'null' || fournisseurId === null || fournisseurId === undefined) {
+      alert('Cette facture n\'a pas de fournisseur associé.');
+      return;
+    }
+    
+    currentFactureId = factureId;
+    currentFournisseurId = fournisseurId;
+    currentTotalTtc = totalTtc;
+    currentFactureStatut = statut;
+    
+    // Reset state
+    selectedReglementType = null;
+    selectedReglement = null;
+    availableReglements = [];
+    
+    // Update modal title
+    document.querySelector('#reglementModal .modal-title').textContent = 'Modifier les affectations';
+    
+    // Show step 1 for type selection
+    document.getElementById('step1').style.display = 'block';
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step3').style.display = 'none';
+    
+    // Fetch existing allocations for this facture
+    await fetchFactureReglements();
+    
+    // Show modal
+    $('#reglementModal').modal('show');
+  }
+
+  function selectReglementType(type) {
+    selectedReglementType = type;
+    const typeLabels = { cheque: 'Chèque', effet: 'Effet', virement: 'Virement' };
+    document.getElementById('selectedTypeLabel').textContent = '(' + typeLabels[type] + ')';
+    
+    // Load reglements for this type
+    loadReglements();
+    
+    // Show step 2
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('step2').style.display = 'block';
+  }
+
+  function backToStep1() {
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step1').style.display = 'block';
+    selectedReglement = null;
+    availableReglements = [];
+  }
+
+  async function loadReglements() {
+    try {
+      let data;
+      
+      if (isEditMode) {
+        // In edit mode, fetch existing allocations for this facture
+        const res = await fetch(`/api/factures/${currentFactureId}/reglements`);
+        data = await res.json();
+        
+        if (data.success) {
+          // Get the appropriate array based on type
+          const typeKey = selectedReglementType + 's'; // cheque -> cheques, effet -> effets, virement -> virements
+          const reglementArray = data.reglements[typeKey] || [];
+          
+          availableReglements = reglementArray.map(r => ({
+            id: r.id,
+            numero: r.numero,
+            montant: r.montant,
+            montantDejaAffecte: r.montantAffecte,
+            montantRestant: r.montant - r.montantAffecte,
+            dateEcheance: r.dateEcheance,
+            statut: r.statut,
+            beneficiaire: r.beneficiaire,
+            // For edit mode, we know it's already linked
+            alreadyLinkedToThisFacture: true,
+            montantAffecteToThisFacture: r.montantAffecte
+          }));
+        }
+      } else {
+        // In add mode, search for available reglements not yet linked
+        const res = await fetch(`/api/reglements/search?type=${selectedReglementType}&fournisseurId=${currentFournisseurId}`);
+        data = await res.json();
+        
+        if (data.success) {
+          availableReglements = data.results;
+        }
+      }
+      
+      renderReglementTable();
+    } catch (err) {
+      console.error('Erreur loadReglements:', err);
+      alert('Erreur réseau');
+    }
+  }
+
+  function renderReglementTable() {
+    const tbody = document.getElementById('reglementTableBody');
+    tbody.innerHTML = '';
+    
+    if (availableReglements.length === 0) {
+      document.getElementById('noReglementMessage').style.display = 'block';
+      return;
+    }
+    
+    document.getElementById('noReglementMessage').style.display = 'none';
+    
+    availableReglements.forEach((reglement, index) => {
+      const tr = document.createElement('tr');
+      tr.style.cursor = 'pointer';
+      tr.dataset.index = index;
+      tr.onclick = () => selectReglement(index);
+      
+      const dateStr = reglement.dateEcheance ? new Date(reglement.dateEcheance).toLocaleDateString('fr-FR') : '-';
+      
+      tr.innerHTML = `
+        <td>${reglement.numero || '-'}</td>
+        <td class="text-right">${reglement.montant?.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0,00'} DH</td>
+        <td class="text-right">${reglement.montantDejaAffecte?.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0,00'} DH</td>
+        <td class="text-right text-success font-weight-bold">${reglement.montantRestant?.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0,00'} DH</td>
+        <td>${dateStr}</td>
+        <td><span class="badge badge-${reglement.statut === 'paye' ? 'success' : 'warning'}">${reglement.statut || '-'}</span></td>
+      `;
+      
+      tbody.appendChild(tr);
+    });
+  }
+
+  function selectReglement(index) {
+    // Remove previous selection
+    document.querySelectorAll('#reglementTableBody tr').forEach(tr => {
+      tr.classList.remove('table-primary');
+    });
+    
+    // Highlight selected row
+    const selectedRow = document.querySelector(`#reglementTableBody tr[data-index="${index}"]`);
+    if (selectedRow) {
+      selectedRow.classList.add('table-primary');
+    }
+    
+    selectedReglement = availableReglements[index];
+    document.getElementById('btnNextToStep3').disabled = false;
+  }
+
+  function nextToStep3() {
+    if (!selectedReglement) return;
+    
+    // Get existing reglements to calculate total already affected
+    fetchFactureReglements().then(() => {
+      // Calculate reste facture
+      const resteFacture = Math.max(0, currentTotalTtc - totalDejaAffecteFacture);
+      
+      // Set values in step 3
+      const typeLabels = { cheque: 'Chèque', effet: 'Effet', virement: 'Virement' };
+      const typeLabel = typeLabels[selectedReglementType] || selectedReglementType;
+      document.getElementById('reglementTypeDisplay').value = typeLabel;
+      document.querySelectorAll('.reg-type-label').forEach(el => el.textContent = typeLabel.toLowerCase());
+      document.getElementById('factureTotalTtc').value = currentTotalTtc.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' DH';
+      document.getElementById('dejaAffecteFacture').value = totalDejaAffecteFacture.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' DH';
+      document.getElementById('reglementMontant').value = selectedReglement.montant.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' DH';
+      document.getElementById('dejaAffecteReglement').value = selectedReglement.montantDejaAffecte.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' DH';
+      document.getElementById('resteReglement').value = selectedReglement.montantRestant.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' DH';
+      document.getElementById('resteFacture').value = resteFacture.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' DH';
+      
+      // Pre-fill with existing allocation if updating, otherwise with min of reste reglement and reste facture
+      const existingAlloc = selectedReglement.montantAffecteToThisFacture || 0;
+      const maxReglement = selectedReglement.montantRestant + existingAlloc;
+      const prefillMontant = existingAlloc > 0 ? existingAlloc : Math.min(selectedReglement.montantRestant, resteFacture);
+      document.getElementById('montantAffecter').value = prefillMontant.toFixed(2);
+      document.getElementById('montantAffecter').max = maxReglement;
+      document.getElementById('maxMontant').textContent = Math.min(maxReglement, resteFacture).toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' DH';
+      
+      updateResteCalcul();
+      
+      document.getElementById('step2').style.display = 'none';
+      document.getElementById('step3').style.display = 'block';
+    });
+  }
+
+  function backToStep2() {
+    document.getElementById('step3').style.display = 'none';
+    document.getElementById('step2').style.display = 'block';
+  }
+
+  async function fetchFactureReglements() {
+    try {
+      const res = await fetch(`/api/factures/${currentFactureId}/reglements`);
+      const data = await res.json();
+      
+      if (data.success) {
+        totalDejaAffecteFacture = data.totalAffecte;
+      }
+    } catch (err) {
+      console.error('Erreur fetchFactureReglements:', err);
+    }
+  }
+
+  function updateResteCalcul() {
+    const montantAffecter = parseFloat(document.getElementById('montantAffecter').value) || 0;
+    
+    // If already linked to this facture, we can update (increase or decrease) the allocation
+    // The effective "remaining" on the facture is: total - (already allocated to other reglements)
+    // We need to exclude the current reglement's existing allocation from totalDejaAffecteFacture
+    const currentReglementExistingAllocation = selectedReglement?.montantAffecteToThisFacture || 0;
+    const effectiveDejaAffecteFacture = totalDejaAffecteFacture - currentReglementExistingAllocation;
+    const resteFacture = Math.max(0, currentTotalTtc - effectiveDejaAffecteFacture);
+    
+    // Max is limited by: remaining on reglement + current allocation (for updates) AND remaining on facture
+    const maxReglement = (selectedReglement?.montantRestant || 0) + currentReglementExistingAllocation;
+    const maxMontant = Math.min(maxReglement, resteFacture);
+    
+    // Validate max
+    if (montantAffecter > maxMontant) {
+      document.getElementById('montantAffecter').value = maxMontant.toFixed(2);
+    }
+    
+    const nouveauMontant = Math.min(montantAffecter, maxMontant);
+    const resteAAffecter = currentTotalTtc - totalDejaAffecteFacture - nouveauMontant;
+    
+    const resteAlert = document.getElementById('resteAlert');
+    const resteAAffecterSpan = document.getElementById('resteAAffecter');
+    
+    resteAAffecterSpan.textContent = resteAAffecter.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' DH';
+    resteAlert.style.display = 'block';
+    
+    if (resteAAffecter < 0) {
+      resteAlert.className = 'alert alert-danger';
+    } else if (resteAAffecter === 0) {
+      resteAlert.className = 'alert alert-success';
+    } else {
+      resteAlert.className = 'alert alert-warning';
+    }
+  }
+
+  async function confirmerAffectation() {
+    const montantAffecter = parseFloat(document.getElementById('montantAffecter').value);
+    
+    if (!montantAffecter || montantAffecter <= 0) {
+      alert('Veuillez entrer un montant valide');
+      return;
+    }
+    
+    try {
+      const res = await fetch(`/api/factures/${currentFactureId}/affecter-reglement`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: selectedReglementType,
+          reglementId: selectedReglement.id,
+          montantAffecte: montantAffecter
+        })
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        // Update the status badge in the table without reloading
+        try {
+          const buttonSelector = 'button[onclick*="openReglementModal(' + currentFactureId + ',"]';
+          const btn = document.querySelector(buttonSelector);
+          if (btn) {
+            const row = btn.closest('tr');
+            if (row) {
+              const statusBadge = row.querySelector('.badge-status');
+              if (statusBadge) {
+                statusBadge.className = 'badge badge-status badge-' + data.statut;
+                statusBadge.textContent = data.statut === 'payee' ? 'Payée' : data.statut === 'partielle' ? 'Partielle' : 'En attente';
+              }
+            }
+          }
+        } catch (e) {
+          console.log('Could not update status badge, will reload page');
+        }
+        
+        alert('Règlement affecté avec succès');
+        closeReglementModal();
+        
+        // Reload to show updated status
+        window.location.reload();
+      } else {
+        alert(data.error || 'Erreur lors de l\'affectation');
+      }
+    } catch (err) {
+      console.error('Erreur confirmerAffectation:', err);
+      alert('Erreur réseau');
     }
   }
 </script>

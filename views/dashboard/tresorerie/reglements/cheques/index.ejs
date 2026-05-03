@@ -59,14 +59,82 @@
       gap: 6px;
     }
 
+    /* Objet column — wide enough to show facture badges clearly */
+    .cheque-table td:nth-child(11),
+    .cheque-table th:nth-child(11) {
+      white-space: normal !important;
+      min-width: 260px;
+      max-width: 380px;
+      width: auto !important;
+      height: auto !important;
+      padding-top: 8px;
+      padding-bottom: 8px;
+      vertical-align: top;
+    }
+
+    /* Chantier column */
+    .cheque-table td:nth-child(9),
+    .cheque-table th:nth-child(9) {
+      min-width: 160px;
+      max-width: 220px;
+    }
+
+    /* Montant chantier column */
+    .cheque-table td:nth-child(10),
+    .cheque-table th:nth-child(10) {
+      white-space: nowrap;
+      min-width: 120px;
+    }
+
+    /* Total affecté column */
+    .cheque-table td:nth-child(12),
+    .cheque-table th:nth-child(12) {
+      white-space: nowrap;
+      min-width: 110px;
+    }
+
+    /* Écart column */
+    .cheque-table td:nth-child(13),
+    .cheque-table th:nth-child(13) {
+      white-space: nowrap;
+      min-width: 100px;
+    }
+
+    /* Facture badge links inside Objet column */
+    .facture-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: flex-start;
+    }
+
+    .facture-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 9px;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 0.76rem;
+      font-weight: 600;
+      text-decoration: none;
+      white-space: nowrap;
+      line-height: 1.4;
+    }
+
+    .facture-badge:hover {
+      opacity: 0.85;
+      color: #fff;
+      text-decoration: none;
+    }
+
     .alloc-line {
       display: flex;
       justify-content: space-between;
       gap: 10px;
-      padding: 6px 10px;
+      padding: 4px 8px;
       border: 1px solid #e9ecef;
-      border-radius: 10px;
-      background: #fff;
+      border-radius: 8px;
+      background: #f8f9fc;
     }
 
     .alloc-name {
@@ -328,7 +396,7 @@
                   </div>
 
                   <div class="table-responsive" id="chequesTableResponsive" style="overflow-x: auto;">
-                    <table class="table table-sm table-hover table-bordered cheque-table" style="min-width: 1250px;">
+                    <table class="table table-sm table-hover table-bordered cheque-table" style="min-width: 1600px;">
                       <thead class="thead-light">
                         <tr>
                           <th>Date</th>
@@ -341,6 +409,9 @@
                           <th>Date règlement</th>
                           <th>Chantier</th>
                           <th>Montant chantier</th>
+                          <th>Facture Liée</th>
+                          <th class="text-right">Total affecté</th>
+                          <th class="text-right">Reste à affecter sur chèque</th>
                           <th>Observation</th>
                           <th class="text-right">Actions</th>
                         </tr>
@@ -431,6 +502,37 @@
                               </div>
                             </td>
 
+                            <td>
+                              <% 
+                                const totalAffecte = (c.factures || []).reduce((sum, fc) => sum + (fc.montantAffecte || 0), 0);
+                              %>
+                              <div class="facture-badges">
+                              <% 
+                                c.factures.forEach((fc, idx) => {
+                                  if (fc.facture) {
+                                    const color = idx % 2 === 0 ? '#1cc88a' : '#36b9cc';
+                              %>
+                                <a href="/achats/factures/<%= fc.facture.id %>/view" target="_blank" class="facture-badge" style="background:<%= color %>;">FA N°&nbsp;<%= fc.facture.numero %>&nbsp;·&nbsp;<%= Math.round(fc.montantAffecte || 0).toLocaleString('fr-FR') %>&nbsp;DH</a>
+                              <% 
+                                  }
+                                });
+                              %>
+                              </div>
+                            </td>
+                            <td class="text-right">
+                              <%= totalAffecte > 0 ? totalAffecte.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' DH' : '-' %>
+                            </td>
+                            <td class="text-right">
+                              <% 
+                                const ecart = (c.montant || 0) - totalAffecte;
+                                if (ecart !== 0) { 
+                              %>
+                                <span class="<%= ecart > 0 ? 'text-danger' : 'text-info' %>"><%= ecart.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %> DH</span>
+                              <% } else { %>
+                                <span class="text-success">0</span>
+                              <% } %>
+                            </td>
+
                             <td class="cell-edit obs-cell" contenteditable="true" data-field="obs">
                               <%= c.obs || '' %>
                             </td>
@@ -451,12 +553,12 @@
                         <tr>
                           <th colspan="2" class="text-right">Total</th>
                           <th class="text-right" id="totalMontantCell">0,00</th>
-                          <th colspan="9"></th>
+                          <th colspan="12"></th>
                         </tr>
                         <tr id="totalChantierRow" style="display:none;">
                           <th colspan="9" class="text-right">Total chantier</th>
                           <th class="text-right" id="totalMontantChantierCell">0,00</th>
-                          <th colspan="2"></th>
+                          <th colspan="5"></th>
                         </tr>
                       </tfoot>
                     </table>
@@ -836,6 +938,20 @@
 
                 const statutBadge = statutBadgeHtml(c.statut);
 
+                // Calculate new columns
+                const totalAffecte = (c.factures || []).reduce((sum, fc) => sum + (fc.montantAffecte || 0), 0);
+                const objet = (c.factures || []).map((fc, idx) => {
+                  if (fc.facture) {
+                    const color = idx % 2 === 0 ? '#1cc88a' : '#36b9cc';
+                    return `<a href="/achats/factures/${fc.facture.id}/view" target="_blank" style="display:inline-block;padding:2px 8px;border-radius:10px;background:${color};color:#fff;font-size:0.75rem;margin:2px 0;text-decoration:none;">FA N° ${fc.facture.numero}, Montant :  ${Math.round(fc.montantAffecte || 0).toLocaleString('fr-FR')} DH</a><br>`;
+                  }
+                  return '';
+                }).filter(Boolean).join('');
+                const ecart = (c.montant || 0) - totalAffecte;
+                const ecartHtml = ecart !== 0 
+                  ? `<span class="${ecart > 0 ? 'text-danger' : 'text-info'}">${moneyFr(ecart)} DH</span>` 
+                  : '<span class="text-success">0</span>';
+
                 tr.innerHTML = `
                 <td class="cell-edit" contenteditable="true" data-field="dateEtablissement">${formatFrDateFromAny(c.dateEtablissement)}</td>
                 <td class="cell-edit" contenteditable="true" data-field="numero">${c.numero || ''}</td>
@@ -847,13 +963,16 @@
                 <td class="cell-edit" contenteditable="true" data-field="dateReglement">${formatFrDateFromAny(c.dateReglement)}</td>
                 <td><div class="allocations">${chantierHtml}</div></td>
                 <td><div class="allocations">${chantierAmountHtml}</div></td>
+                <td>${objet || '-'}</td>
+                <td class="text-right">${totalAffecte > 0 ? moneyFr(totalAffecte) + ' DH' : '-'}</td>
+                <td class="text-right">${ecartHtml}</td>
                 <td class="cell-edit obs-cell" contenteditable="true" data-field="obs">${c.obs || ''}</td>
                 <td class="text-right">
                   <div class="table-actions">
                     <button class="btn btn-sm btn-outline-secondary btn-alloc" title="Chantiers">
                       <i class="fas fa-project-diagram"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer">
+                    <button class="btn btn-sm btn-outline-dang  er btn-delete" title="Supprimer">
                       <i class="fas fa-trash"></i>
                     </button>
                   </div>

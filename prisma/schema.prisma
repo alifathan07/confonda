@@ -233,90 +233,7 @@ model Fournisseur {
 
 }
 
-model Cheque {
-  id                Int       @id @default(autoincrement())
-  montant           Float?
-  dateEtablissement DateTime?
-  dateEcheance      DateTime?
-  statut            String
 
-  dateReglement DateTime?
-  fournisseur   Fournisseur @relation(fields: [fournisseurId], references: [id])
-  fournisseurId Int
-  beneficiaire  String
-  validation    Boolean?    @default(false)
-  banque        Banque      @relation("BanqueCheques", fields: [banqueId], references: [id])
-  banqueId      Int
-  chantier      Chantier?   @relation("ChequesChantier", fields: [chantierId], references: [id])
-  chantierId    Int?
-
-  numero String // remove the @unique here ❌
-
-  obs            String?
-  montantLettres String?
-  ville          String?
-  allocations    ChequeAllocation[]
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-
-  @@unique([banqueId, numero]) // ✅ compound unique constraint
-}
-
-// Add this new model
-model ChequeAllocation {
-  id         Int      @id @default(autoincrement())
-  cheque     Cheque   @relation(fields: [chequeId], references: [id], onDelete: Cascade)
-  chequeId   Int
-  chantier   Chantier @relation(fields: [chantierId], references: [id])
-  chantierId Int
-  montant    Float
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Effet {
-  id                Int         @id @default(autoincrement())
-  montant           Float?
-  dateEtablissement DateTime?
-  dateEcheance      DateTime?
-  statut            String // en circulation, payé, impayé, annulé
-  // dateReglement is the date when the cheque was actually paid. NULL if it has not been paid yet.
-  dateReglement     DateTime?
-  fournisseur       Fournisseur @relation(fields: [fournisseurId], references: [id])
-  fournisseurId     Int
-  beneficiaire      String // beneficiaire
-  validation        Boolean?    @default(false)
-
-  banque         Banque            @relation("BanqueEffets", fields: [banqueId], references: [id])
-  banqueId       Int
-  chantier       Chantier?         @relation("EffetsChantier", fields: [chantierId], references: [id])
-  chantierId     Int?
-  numero         String // ✅ Add this line if it's not already
-  obs            String?
-  dateaujou      DateTime?
-  montantLettres String?
-  ville          String?
-  allocations    EffetAllocation[]
-  // facture             Facture? @relation(fields: [factureId], references: [id])
-  // factureId           Int?
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-
-  @@unique([banqueId, numero]) // ✅ compound unique constraint
-}
-
-model EffetAllocation {
-  id         Int      @id @default(autoincrement())
-  effet      Effet    @relation(fields: [effetId], references: [id], onDelete: Cascade)
-  effetId    Int
-  chantier   Chantier @relation(fields: [chantierId], references: [id])
-  chantierId Int
-  montant    Float
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
 model Prelevement {
   id              Int         @id @default(autoincrement())
@@ -371,45 +288,7 @@ model Recavenir {
   updatedAt     DateTime  @updatedAt
 }
 
-model Virement {
-  id             Int                  @id @default(autoincrement())
-  designation    String?
-  beneficiaire   String? // beneficiaire
-  montant        Float?
-  date           DateTime?
-  dateReglement  DateTime?
-  obs            String?
-  objet          String?
-  cause          String?
-  rtgs           Boolean              @default(false)
-  srbm           Boolean              @default(false)
-  instantane     Boolean              @default(false)
-  rib            Int?
-  montantLettres String?
-  fournisseur    Fournisseur?         @relation(fields: [fournisseurId], references: [id])
-  fournisseurId  Int?
-  banque         Banque               @relation("BanqueVirements", fields: [banqueId], references: [id])
-  banqueId       Int
-  chantier       Chantier?            @relation("VirementsChantier", fields: [chantierId], references: [id])
-  chantierId     Int?
-  allocations    VirementAllocation[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// Add this new model
-model VirementAllocation {
-  id         Int      @id @default(autoincrement())
-  virement   Virement @relation(fields: [virementId], references: [id], onDelete: Cascade)
-  virementId Int
-  chantier   Chantier @relation(fields: [chantierId], references: [id])
-  chantierId Int
-  montant    Float
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
 model Miseadis {
   id             Int                          @id @default(autoincrement())
@@ -791,27 +670,6 @@ model BondeLivraisonItem {
   updatedAt        DateTime         @updatedAt
 }
 
-model Facture {
-  id            Int      @id @default(autoincrement())
-  numero        String
-  date          DateTime
-  totalHt       Float
-  tauxTva       Float
-  totalTtc      Float    // totalHt + (totalHt * tauxTva / 100)
-  statut        String   @default("en_attente") // en_attente | payee | partielle
-
-  fournisseurId Int
-  fournisseur   Fournisseur @relation(fields: [fournisseurId], references: [id])
-  fichier               String?
-  items               FactureItem[]
-  bondeLivraisonLinks FactureBondeLivraison[]
-  bondeCommandeLinks  FactureBondecommande[]
-  avoirs              FactureAvoir[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 model FactureBondeLivraison {
   id               Int            @id @default(autoincrement())
   factureId        Int
@@ -834,23 +692,7 @@ model FactureBondecommande {
   @@unique([factureId, bondeCommandeId])
 }
 
-model FactureItem {
-  id           Int     @id @default(autoincrement())
-  designation  String
-  unite        String?
-  reference    String?
-  quantite     Float
-  prixUnitaire Float
-  totalHt      Float   // quantite * prixUnitaire
 
-  factureId            Int
-  facture              Facture             @relation(fields: [factureId], references: [id], onDelete: Cascade)
-  bondeLivraisonItemId Int?
-  bondeLivraisonItem   BondeLivraisonItem? @relation(fields: [bondeLivraisonItemId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 
 model FactureAvoir {
   id       Int      @id @default(autoincrement())
@@ -928,4 +770,221 @@ model Popup {
   dismissedBy String?   // Comma-separated user IDs who dismissed it
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+
+
+
+
+model Facture {
+  id            Int      @id @default(autoincrement())
+  numero        String
+  date          DateTime
+  totalHt       Float
+  tauxTva       Float
+  totalTtc      Float    // totalHt + (totalHt * tauxTva / 100)
+  statut        String   @default("en_attente") // en_attente | payee | partielle
+
+  fournisseurId Int
+  fournisseur   Fournisseur @relation(fields: [fournisseurId], references: [id])
+  fichier               String?
+  items               FactureItem[]
+  bondeLivraisonLinks FactureBondeLivraison[]
+  bondeCommandeLinks  FactureBondecommande[]
+  avoirs              FactureAvoir[]
+  cheques             FactureCheque[]
+  effets              FactureEffet[]
+  virements           FactureVirement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model FactureItem {
+  id           Int     @id @default(autoincrement())
+  designation  String
+  unite        String?
+  reference    String?
+  quantite     Float
+  prixUnitaire Float
+  totalHt      Float   // quantite * prixUnitaire
+
+  factureId            Int
+  facture              Facture             @relation(fields: [factureId], references: [id], onDelete: Cascade)
+  bondeLivraisonItemId Int?
+  bondeLivraisonItem   BondeLivraisonItem? @relation(fields: [bondeLivraisonItemId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+
+model Cheque {
+  id                Int       @id @default(autoincrement())
+  montant           Float?
+  dateEtablissement DateTime?
+  dateEcheance      DateTime?
+  statut            String
+
+  dateReglement DateTime?
+  fournisseur   Fournisseur @relation(fields: [fournisseurId], references: [id])
+  fournisseurId Int
+  beneficiaire  String
+  validation    Boolean?    @default(false)
+  banque        Banque      @relation("BanqueCheques", fields: [banqueId], references: [id])
+  banqueId      Int
+  chantier      Chantier?   @relation("ChequesChantier", fields: [chantierId], references: [id])
+  chantierId    Int?
+
+  numero String // remove the @unique here ❌
+
+  obs            String?
+  factures  FactureCheque[]
+  montantLettres String?
+  ville          String?
+  allocations    ChequeAllocation[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@unique([banqueId, numero]) // ✅ compound unique constraint
+}
+
+
+
+
+// Add this new model
+model ChequeAllocation {
+  id         Int      @id @default(autoincrement())
+  cheque     Cheque   @relation(fields: [chequeId], references: [id], onDelete: Cascade)
+  chequeId   Int
+  chantier   Chantier @relation(fields: [chantierId], references: [id])
+  chantierId Int
+  montant    Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Effet {
+  id                Int         @id @default(autoincrement())
+  montant           Float?
+  dateEtablissement DateTime?
+  dateEcheance      DateTime?
+  statut            String // en circulation, payé, impayé, annulé
+  // dateReglement is the date when the cheque was actually paid. NULL if it has not been paid yet.
+  dateReglement     DateTime?
+  fournisseur       Fournisseur @relation(fields: [fournisseurId], references: [id])
+  fournisseurId     Int
+  beneficiaire      String // beneficiaire
+  validation        Boolean?    @default(false)
+
+  banque         Banque            @relation("BanqueEffets", fields: [banqueId], references: [id])
+  banqueId       Int
+  chantier       Chantier?         @relation("EffetsChantier", fields: [chantierId], references: [id])
+  chantierId     Int?
+  numero         String // ✅ Add this line if it's not already
+  obs            String?
+  dateaujou      DateTime?
+  montantLettres String?
+  ville          String?
+  allocations    EffetAllocation[]
+  factures  FactureEffet[]
+  // facture             Facture? @relation(fields: [factureId], references: [id])
+  // factureId           Int?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@unique([banqueId, numero]) // ✅ compound unique constraint
+}
+
+model EffetAllocation {
+  id         Int      @id @default(autoincrement())
+  effet      Effet    @relation(fields: [effetId], references: [id], onDelete: Cascade)
+  effetId    Int
+  chantier   Chantier @relation(fields: [chantierId], references: [id])
+  chantierId Int
+  montant    Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Virement {
+  id             Int                  @id @default(autoincrement())
+  designation    String?
+  beneficiaire   String? // beneficiaire
+  montant        Float?
+  date           DateTime?
+  dateReglement  DateTime?
+  obs            String?
+  objet          String?
+  cause          String?
+  rtgs           Boolean              @default(false)
+  srbm           Boolean              @default(false)
+  instantane     Boolean              @default(false)
+  rib            Int?
+  montantLettres String?
+  fournisseur    Fournisseur?         @relation(fields: [fournisseurId], references: [id])
+  fournisseurId  Int?
+  banque         Banque               @relation("BanqueVirements", fields: [banqueId], references: [id])
+  banqueId       Int
+  chantier       Chantier?            @relation("VirementsChantier", fields: [chantierId], references: [id])
+  chantierId     Int?
+  allocations    VirementAllocation[]
+  factures  FactureVirement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Add this new model
+model VirementAllocation {
+  id         Int      @id @default(autoincrement())
+  virement   Virement @relation(fields: [virementId], references: [id], onDelete: Cascade)
+  virementId Int
+  chantier   Chantier @relation(fields: [chantierId], references: [id])
+  chantierId Int
+  montant    Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+
+
+model FactureCheque {
+  id             Int      @id @default(autoincrement())
+  factureId      Int
+  facture        Facture  @relation(fields: [factureId], references: [id], onDelete: Cascade)
+  chequeId       Int
+  cheque         Cheque   @relation(fields: [chequeId], references: [id], onDelete: Cascade)
+  montantAffecte Float    // how much of this cheque covers this facture
+  createdAt      DateTime @default(now())
+
+  @@unique([factureId, chequeId])
+}
+
+model FactureEffet {
+  id             Int      @id @default(autoincrement())
+  factureId      Int
+  facture        Facture  @relation(fields: [factureId], references: [id], onDelete: Cascade)
+  effetId        Int
+  effet          Effet    @relation(fields: [effetId], references: [id], onDelete: Cascade)
+  montantAffecte Float
+  createdAt      DateTime @default(now())
+
+  @@unique([factureId, effetId])
+}
+
+model FactureVirement {
+  id             Int      @id @default(autoincrement())
+  factureId      Int
+  facture        Facture  @relation(fields: [factureId], references: [id], onDelete: Cascade)
+  virementId     Int
+  virement       Virement @relation(fields: [virementId], references: [id], onDelete: Cascade)
+  montantAffecte Float
+  createdAt      DateTime @default(now())
+
+  @@unique([factureId, virementId])
 }

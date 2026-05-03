@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Situation Générale Achats</title>
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+
+  <style>
+    .kpi-card {
+      border-radius: 8px;
+      padding: 1.25rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      transition: transform 0.2s;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .kpi-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .kpi-card.solde-du {
+      background: linear-gradient(135deg, #e74a3b 0%, #c0392b 100%);
+      color: white;
+    }
+
+    .kpi-card.solde-du .kpi-value {
+      color: white;
+    }
+
+    .kpi-card.commande {
+      background: linear-gradient(135deg, #4e73df 0%, #3a5fc8 100%);
+      color: white;
+    }
+
+    .kpi-card.facture {
+      background: linear-gradient(135deg, #36b9cc 0%, #258a96 100%);
+      color: white;
+    }
+
+    .kpi-card.regle {
+      background: linear-gradient(135deg, #1cc88a 0%, #13895c 100%);
+      color: white;
+    }
+
+    .bc-header {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-left: 4px solid #4e73df;
+    }
+
+    .bc-header th {
+      padding: 12px 16px !important;
+      font-size: 0.9rem;
+    }
+
+    .badge-statut {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-en_attente_bl {
+      background: #ffc107;
+      color: #000;
+    }
+
+    .badge-partiel {
+      background: #9b59b6;
+      color: #fff;
+    }
+
+    .badge-livre, .badge-complet {
+      background: #1cc88a;
+      color: #fff;
+    }
+
+    .badge-annule {
+      background: #e74a3b;
+      color: #fff;
+    }
+
+    .reglement-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .reglement-badge.cheque {
+      background: #4e73df;
+      color: #fff;
+    }
+
+    .reglement-badge.effet {
+      background: #ffc107;
+      color: #000;
+    }
+
+    .reglement-badge.virement {
+      background: #1cc88a;
+      color: #fff;
+    }
+
+    .situation-table {
+      font-size: 0.8rem;
+    }
+
+    .situation-table th,
+    .situation-table td {
+      padding: 0.5rem 0.75rem !important;
+      vertical-align: middle;
+    }
+
+    .situation-table thead th {
+      background: #4e73df;
+      color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .situation-table tbody tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    .bc-separator {
+      border-top: 2px dashed #dee2e6;
+    }
+
+    .empty-cell {
+      color: #adb5bd;
+      font-style: italic;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="h3 mb-1 text-gray-800">Situation Générale Achats</h1>
+        <p class="text-muted mb-0">Vue d'ensemble de la chaîne d'approvisionnement</p>
+      </div>
+      <a href="/achats" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left mr-2"></i>Retour
+      </a>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="kpi-card commande">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-white-50 small text-uppercase">Commandé HT</div>
+              <div class="kpi-value"><%= kpis.commandeHT.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %> DH</div>
+            </div>
+            <div class="text-white-50">
+              <i class="fas fa-shopping-cart fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="kpi-card facture">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-white-50 small text-uppercase">Facturé TTC</div>
+              <div class="kpi-value"><%= kpis.factureTTC.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %> DH</div>
+            </div>
+            <div class="text-white-50">
+              <i class="fas fa-file-invoice fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="kpi-card regle">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-white-50 small text-uppercase">Total Réglé</div>
+              <div class="kpi-value"><%= kpis.totalRegle.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %> DH</div>
+            </div>
+            <div class="text-white-50">
+              <i class="fas fa-check-circle fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="kpi-card <%= kpis.soldeDu > 0 ? 'solde-du' : 'regle' %>">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-white-50 small text-uppercase">Solde Dû</div>
+              <div class="kpi-value"><%= kpis.soldeDu.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) %> DH</div>
+            </div>
+            <div class="text-white-50">
+              <i class="fas fa-exclamation-circle fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-bordered situation-table mb-0">
+            <thead>
+              <tr>
+                <th style="width: 80px;">BC N°</th>
+                <th style="width: 90px;">Date BC</th>
+                <th style="width: 120px;">Fournisseur</th>
+                <th style="width: 100px;">Chantier</th>
+                <th>Désignation</th>
+                <th style="width: 80px;">Référence</th>
+                <th style="width: 60px; text-align: right;">Qté</th>
+                <th style="width: 80px; text-align: right;">Reste à livrer</th>
+                <th style="width: 100px;">Imputation</th>
+                <th style="width: 80px; text-align: right;">PU HT</th>
+                <th style="width: 70px; text-align: right;">Remise %</th>
+                <th style="width: 90px; text-align: right;">Total HT</th>
+                <th style="width: 80px;">BL lié</th>
+                <th style="width: 80px;">Facture</th>
+                <th style="width: 90px; text-align: right;">Mnt TTC</th>
+                <th style="width: 90px; text-align: right;">Mnt réglé</th>
+                <th style="width: 90px; text-align: right;">Reste à payer</th>
+                <th style="width: 80px;">Type règl.</th>
+                <th style="width: 90px; text-align: right;">Mnt règl.</th>
+              </tr>
+            </thead>
+            <tbody>
+              <%
+              function fmtDate(d) {
+                if (!d) return '';
+                const dt = (d instanceof Date) ? d : new Date(d);
+                if (!dt || isNaN(dt.getTime())) return '';
+                return String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0') + '/' + dt.getFullYear();
+              }
+
+              function getStatutLabel(statut) {
+                const labels = {
+                  'en_attente_bl': 'En attente BL',
+                  'partiel': 'Partiel',
+                  'livre': 'Livré',
+                  'complet': 'Complet',
+                  'annule': 'Annulé'
+                };
+                return labels[statut] || statut;
+              }
+
+              // Group rows by bcId to compute rowspan counts
+              // and collect unique BL / Facture per BC
+              const bcGroups = [];
+              const bcIndexMap = {};
+              for (const row of rows) {
+                if (bcIndexMap[row.bcId] === undefined) {
+                  bcIndexMap[row.bcId] = bcGroups.length;
+                  bcGroups.push({
+                    bcId: row.bcId,
+                    count: 0,
+                    bls: [],
+                    blIds: [],
+                    factures: [],
+                    factureIds: [],
+                    factureTTC: [],
+                    chantier: [],
+                    reglementMontant: 0
+                  });
+                }
+                const g = bcGroups[bcIndexMap[row.bcId]];
+                g.count++;
+                // Collect unique BLs
+                if (row.blNumero && !g.bls.includes(row.blNumero)) {
+                  g.bls.push(row.blNumero);
+                  g.blIds.push(row.blId || null);
+                }
+                // Collect unique Factures with their TTC amounts
+                if (row.factureId && row.montantTtc != null && !g.factureIds.includes(row.factureId)) {
+                  g.factures.push(row.factureNumero);
+                  g.factureIds.push(row.factureId);
+                  g.factureTTC.push(row.montantTtc);
+                }
+                // Collect unique Chantiers (from BC or item imputation)
+                const chantierVal = row.chantier || row.imputation || '';
+                if (chantierVal && !g.chantier.includes(chantierVal)) {
+                  g.chantier.push(chantierVal);
+                }
+                // Sum reglementMontant (only once per unique reglement)
+                if (row.reglementId && row.reglementMontant != null) {
+                  g.reglementMontant += row.reglementMontant;
+                }
+              }
+
+              // Calculate total TTC and reste à payer per BC
+              const bcTotalTTC = {};
+              const bcTotalRegle = {};
+              const bcResteAPayer = {};
+              bcGroups.forEach(g => {
+                bcTotalTTC[g.bcId] = g.factureTTC.reduce((sum, val) => sum + val, 0);
+                bcTotalRegle[g.bcId] = g.reglementMontant;
+                bcResteAPayer[g.bcId] = bcTotalTTC[g.bcId] - g.reglementMontant;
+              });
+
+              const bcRowCounters = {};
+              let lastBCId = null;
+
+              for (const row of rows) {
+                const isFirstOfBC = (lastBCId !== row.bcId);
+                const g = bcGroups[bcIndexMap[row.bcId]];
+
+                if (isFirstOfBC) {
+                  if (lastBCId !== null) {
+              %>
+              <tr class="bc-separator">
+                <td colspan="17" style="padding: 0 !important;"></td>
+              </tr>
+              <%
+                  }
+                  lastBCId = row.bcId;
+                  bcRowCounters[row.bcId] = 0;
+              %>
+              <tr class="bc-header">
+                <th colspan="4">
+                  <a href="/achat/bc/<%= row.bcId %>/edit" class="font-weight-bold">BC N° <%= row.bcNumero || '-' %></a>
+                  <span class="badge badge-statut badge-<%= row.statut %> ml-2"><%= getStatutLabel(row.statut) %></span>
+                </th>
+              
+              </tr>
+              <% } %>
+
+              <tr>
+                <% if (isFirstOfBC) { %>
+                  <td rowspan="<%= g.count %>"><%= row.bcNumero || '' %></td>
+                  <td rowspan="<%= g.count %>"><%= fmtDate(row.bcDate) %></td>
+                  <td rowspan="<%= g.count %>"><%= row.fournisseur %></td>
+                  <td rowspan="<%= g.count %>">
+                    <% g.chantier.forEach(function(c) { %>
+                      <span class="d-block"><%= c %></span>
+                    <% }); %>
+                  </td>
+                <% } %>
+                <td><%= row.designation || '' %></td>
+                <td><%= row.reference || '' %></td>
+                <td class="text-right"><%= row.quantite != null ? row.quantite : '' %></td>
+                <td class="text-right"><%= row.resteRecue != null ? row.resteRecue : '' %></td>
+                <td><%= row.imputation || '' %></td>
+                <td class="text-right"><%= row.prixUnitaire != null ? row.prixUnitaire.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '' %></td>
+                <td class="text-right"><%= row.remise != null ? row.remise : '' %></td>
+                <td class="text-right font-weight-bold"><%= row.totalHt != null ? row.totalHt.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '' %></td>
+                <% if (isFirstOfBC) { %>
+                  <td rowspan="<%= g.count %>" style="vertical-align: middle;">
+                    <% g.bls.forEach(function(blNum, i) { %>
+                      <% if (g.blIds[i]) { %>
+                        <a href="#" class="text-primary d-block" data-toggle="modal" data-target="#blModal" data-bl-id="<%= g.blIds[i] %>">BL N° <%= blNum %></a>
+                      <% } else { %>
+                        <span class="d-block">BL N° <%= blNum %></span>
+                      <% } %>
+                    <% }); %>
+                    <% if (g.bls.length === 0) { %><span class="empty-cell">—</span><% } %>
+                  </td>
+                  <td rowspan="<%= g.count %>" style="vertical-align: middle;">
+                    <% g.factures.forEach(function(facNum, i) { %>
+                      <% if (g.factureIds[i]) { %>
+                        <a href="#" class="text-primary d-block" data-toggle="modal" data-target="#factureModal" data-facture-id="<%= g.factureIds[i] %>">Facture N° <%= facNum %></a>
+                      <% } else { %>
+                        <span class="d-block">Facture N° <%= facNum %></span>
+                      <% } %>
+                    <% }); %>
+                    <% if (g.factures.length === 0) { %><span class="empty-cell">—</span><% } %>
+                  </td>
+                <% } %>
+                <% if (isFirstOfBC) { %>
+                  <td rowspan="<%= g.count %>" class="text-right font-weight-bold" style="vertical-align: middle;"><%= bcTotalTTC[row.bcId] > 0 ? bcTotalTTC[row.bcId].toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—' %></td>
+                  <td rowspan="<%= g.count %>" class="text-right" style="vertical-align: middle;"><%= bcTotalRegle[row.bcId] > 0 ? bcTotalRegle[row.bcId].toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '—' %></td>
+                  <td rowspan="<%= g.count %>" class="text-right font-weight-bold" style="vertical-align: middle;"><%= bcResteAPayer[row.bcId] > 0 ? bcResteAPayer[row.bcId].toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : (bcResteAPayer[row.bcId] < 0 ? '0.00' : '—') %></td>
+                <% } %>
+                <td>
+                  <% if (row.reglementType === 'cheque') { %>
+                    <span class="reglement-badge cheque">Chèque N° <%= row.reglementNumero || '' %></span>
+                  <% } else if (row.reglementType === 'effet') { %>
+                    <span class="reglement-badge effet">Effet N° <%= row.reglementNumero || '' %></span>
+                  <% } else if (row.reglementType === 'virement') { %>
+                    <span class="reglement-badge virement">Virement</span>
+                  <% } else { %>
+                    <span class="empty-cell">—</span>
+                  <% } %>
+                </td>
+                <td class="text-right font-weight-bold"><%= row.reglementMontant != null ? row.reglementMontant.toLocaleString('fr-FR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '' %></td>
+              </tr>
+              <% } %>
+
+              <% if (!rows || rows.length === 0) { %>
+              <tr>
+                <td colspan="17" class="text-center text-muted py-4">
+                  <i class="fas fa-inbox fa-2x mb-2"></i>
+                  <div>Aucune donnée disponible</div>
+                </td>
+              </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <!-- BL Modal -->
+  <div class="modal" id="blModal" tabindex="-1" role="dialog" data-backdrop="static">
+    <div class="modal-dialog modal-lg modal-draggable" role="document">
+      <div class="modal-content">
+        <div class="modal-header cursor-move">
+          <h5 class="modal-title">Détails Bon de Livraison</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body" id="blModalBody">
+          <div class="text-center"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Facture Modal -->
+  <div class="modal" id="factureModal" tabindex="-1" role="dialog" data-backdrop="static">
+    <div class="modal-dialog modal-lg modal-draggable" role="document">
+      <div class="modal-content">
+        <div class="modal-header cursor-move">
+          <h5 class="modal-title">Détails Facture</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body" id="factureModalBody">
+          <div class="text-center"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .cursor-move { cursor: move; }
+    .modal-draggable .modal-content { overflow: hidden; }
+  </style>
+
+  <script>
+    // Make modals draggable
+    $(document).on('mousedown', '.modal-draggable .modal-header', function(e) {
+      if ($(e.target).hasClass('close') || $(e.target).hasClass('data-dismiss')) return;
+      
+      var $dialog = $(this).closest('.modal-dialog');
+      var offset = $dialog.offset();
+      var $backdrop = $('.modal-backdrop');
+      
+      $dialog.css('position', 'fixed');
+      
+      var startX = e.pageX - offset.left;
+      var startY = e.pageY - offset.top;
+      
+      $(document).on('mousemove.draggable', function(e) {
+        $dialog.css({
+          'left': e.pageX - startX,
+          'top': e.pageY - startY
+        });
+      });
+      
+      $(document).on('mouseup.draggable', function() {
+        $(document).off('mousemove.draggable mouseup.draggable');
+      });
+      
+      e.preventDefault();
+    });
+
+    $('#blModal').on('show.bs.modal', function(e) {
+      const blId = $(e.relatedTarget).data('bl-id');
+      const modal = $(this);
+      modal.find('#blModalBody').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>');
+      fetch('/api/bons-livraison/' + blId)
+        .then(res => res.json())
+        .then(data => {
+          const bl = data.bl || data;
+          let html = '<table class="table table-sm table-bordered">';
+          html += '<tr><th>N° BL</th><td>' + (bl.numero || '') + '</td></tr>';
+          html += '<tr><th>Date</th><td>' + (bl.date ? new Date(bl.date).toLocaleDateString('fr-FR') : '') + '</td></tr>';
+          html += '<tr><th>Fournisseur</th><td>' + (bl.fournisseur?.name || '') + '</td></tr>';
+          if (bl.fichier) {
+            html += '<tr><th>Fichier</th><td><a href="/api/bons-livraison/' + bl.id + '/download" class="btn btn-sm btn-primary" target="_blank"><i class="fas fa-download"></i> Télécharger</a></td></tr>';
+          }
+          html += '</table>';
+          if (bl.items && bl.items.length > 0) {
+            html += '<h6>Articles</h6><table class="table table-sm table-bordered"><thead><tr><th>Désignation</th><th>Référence</th><th>Unité</th><th>Qté commandée</th><th>Qté reçue</th><th>Qté Retournée</th><th>Qté reste à liver</th><th>Prix U.</th></tr></thead><tbody>';
+            bl.items.forEach(item => {
+              const qteCommandee = item.commandesItems?.quantite || item.quantiteCommandee || '-';
+              const qteRecue = item.quantite || item.quantiteRecue || '-';
+              const qteRetour = item.quantiteRetournee || 0;
+              const resteLivrer = (parseFloat(qteCommandee) || 0) - (parseFloat(qteRecue) || 0) - (parseFloat(qteRetour) || 0);
+              html += '<tr>';
+              html += '<td>' + (item.designation || '') + '</td>';
+              html += '<td>' + (item.reference || '') + '</td>';
+              html += '<td>' + (item.unite || '-') + '</td>';
+              html += '<td>' + qteCommandee + '</td>';
+              html += '<td>' + qteRecue + '</td>';
+              html += '<td>' + qteRetour + '</td>';
+              html += '<td>' + (resteLivrer > 0 ? resteLivrer : '0') + '</td>';
+              html += '<td>' + (item.prixUnitaire ? item.prixUnitaire.toLocaleString('fr-FR', {minimumFractionDigits: 2}) : '-') + '</td>';
+              html += '</tr>';
+            });
+            html += '</tbody></table>';
+          }
+          modal.find('#blModalBody').html(html);
+        })
+        .catch(err => {
+          modal.find('#blModalBody').html('<div class="text-danger">Erreur: ' + err.message + '</div>');
+        });
+    });
+
+    $('#factureModal').on('show.bs.modal', function(e) {
+      const factureId = $(e.relatedTarget).data('facture-id');
+      const modal = $(this);
+      modal.find('#factureModalBody').html('<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>');
+      fetch('/api/factures/' + factureId)
+        .then(res => res.json())
+        .then(data => {
+          const facture = data.facture || data;
+          let html = '<table class="table table-sm table-bordered">';
+          html += '<tr><th>N° Facture</th><td>' + (facture.numero || '') + '</td></tr>';
+          html += '<tr><th>Date</th><td>' + (facture.date ? new Date(facture.date).toLocaleDateString('fr-FR') : '') + '</td></tr>';
+          html += '<tr><th>Fournisseur</th><td>' + (facture.fournisseur?.name || '') + '</td></tr>';
+          if (facture.fichier) {
+            html += '<tr><th>Fichier</th><td><a href="/api/factures/' + facture.id + '/download" class="btn btn-sm btn-primary" target="_blank"><i class="fas fa-download"></i> Télécharger</a></td></tr>';
+          }
+          html += '<tr><th>Total HT</th><td>' + (facture.totalHt ? facture.totalHt.toLocaleString('fr-FR', {minimumFractionDigits: 2}) + ' DH' : '') + '</td></tr>';
+          html += '<tr><th>Total TTC</th><td>' + (facture.totalTtc ? facture.totalTtc.toLocaleString('fr-FR', {minimumFractionDigits: 2}) + ' DH' : '') + '</td></tr>';
+          html += '<tr><th>Statut</th><td><span class="badge badge-' + (facture.statut === 'payee' ? 'success' : 'warning') + '">' + (facture.statut || '') + '</span></td></tr>';
+          html += '</table>';
+          modal.find('#factureModalBody').html(html);
+        })
+        .catch(err => {
+          modal.find('#factureModalBody').html('<div class="text-danger">Erreur: ' + err.message + '</div>');
+        });
+    });
+  </script>
+</body>
+
+</html>

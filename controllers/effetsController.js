@@ -65,6 +65,7 @@ export const updateEffetAllocations = async (req, res) => {
         banque: true,
         chantier: true,
         allocations: { include: { chantier: true } },
+        factures: { include: { facture: true } },
       },
     });
 
@@ -425,6 +426,7 @@ export const showEffets = async (req, res) => {
         banque: true,
         chantier: true,
         allocations: { include: { chantier: true } },
+        factures: { include: { facture: true } },
       },
     });
     console.log(`✅ Found ${effets.length} effets`);
@@ -508,6 +510,7 @@ export const showEffetsForbanque = async (req, res) => {
       },
       chantier: true,
       allocations: { include: { chantier: true } },
+      factures: { include: { facture: true } },
     },
   });
   const banqueName = await prisma.banque.findUnique({where:{id:Number(id)}})

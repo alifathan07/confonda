@@ -8,23 +8,24 @@ export function signJwt(payload, options = {}) {
   });
 }
 
-export function verifyJwt(req, res, next) {
-  try {
-    const header = req.headers.authorization || req.headers.Authorization;
-    const value = Array.isArray(header) ? header[0] : header;
-  
-    if (!value || typeof value !== 'string' || !value.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Missing Authorization Bearer token' });
-    }
+  export function verifyJwt(req, res, next) {
+    try {
+      const header = req.headers.authorization || req.headers.Authorization;
+      const value = Array.isArray(header) ? header[0] : header;
+      
+      if (!value || typeof value !== 'string' || !value.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Missing Authorization Bearer token' });
+      }
 
-    const token = value.slice('Bearer '.length).trim();
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
-    return next();
-  } catch (err) {
-    return res.status(401).json({ error: 'Invalid or expired token' });
+      const token = value.slice('Bearer '.length).trim();
+      const decoded = jwt.verify(token, JWT_SECRET);
+      req.user = decoded;
+      console.log(header)
+      return next();
+    } catch (err) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
   }
-}
 
 export function requireRole(roles = []) {
   return (req, res, next) => {

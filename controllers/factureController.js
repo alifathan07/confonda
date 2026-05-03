@@ -50,9 +50,36 @@ export const listFactures = async (req, res) => {
             bondeLivraison: true
           }
         },
-        avoirs: true
+        avoirs: true,
+        cheques: {
+          include: {
+            cheque: {
+              include: {
+                banque: true
+              }
+            }
+          }
+        },
+        effets: {
+          include: {
+            effet: {
+              include: {
+                banque: true
+              }
+            }
+          }
+        },
+        virements: {
+          include: {
+            virement: {
+              include: {
+                banque: true
+              }
+            }
+          }
+        }
       },
-      orderBy: { date: 'desc' }
+      orderBy: { createdAt: 'desc' }
     });
 
     // If request accepts HTML, render the page
@@ -93,7 +120,7 @@ export const getFacture = async (req, res) => {
     if (!facture) {
       return res.status(404).json({ success: false, error: 'Facture non trouvée' });
     }
-    res.json(facture);
+    res.json({ facture });
   } catch (error) {
     console.error('Erreur getFacture:', error);
     res.status(500).json({ success: false, error: 'Erreur serveur' });
@@ -757,3 +784,400 @@ export const downloadFactureFile = async (req, res) => {
     return res.status(500).json({ success: false, error: 'Erreur serveur' });
   }
 };
+
+/**
+ * GET /api/factures/:id/reglements
+ * Get all règlements (cheques, effets, virements) linked to a facture
+ */
+export const getFactureReglements = async (req, res) => {
+  try {
+    const factureId = parseInt(req.params.id);
+
+    // Fetch the facture with its règlements
+    const facture = await prisma.facture.findUnique({
+      where: { id: factureId },
+      include: {
+        fournisseur: true,
+        cheques: {
+          include: {
+            cheque: true
+          }
+        },
+        effets: {
+          include: {
+            effet: true
+          }
+        },
+        virements: {
+          include: {
+            virement: true
+          }
+        }
+      }
+    });
+
+    if (!facture) {
+      return res.status(404).json({ success: false, error: 'Facture non trouvée' });
+    }
+
+    // Calculate totalAffecte
+    const totalAffecte =
+      facture.cheques.reduce((sum, fc) => sum + fc.montantAffecte, 0) +
+      facture.effets.reduce((sum, fe) => sum + fe.montantAffecte, 0) +
+      facture.virements.reduce((sum, fv) => sum + fv.montantAffecte, 0);
+
+    // Format règlements
+    const reglements = {
+      cheques: facture.cheques.map(fc => ({
+        id: fc.cheque.id,
+        numero: fc.cheque.numero,
+        montant: fc.cheque.montant,
+        montantAffecte: fc.montantAffecte,
+        dateEcheance: fc.cheque.dateEcheance,
+        statut: fc.cheque.statut,
+        beneficiaire: fc.cheque.beneficiaire
+      })),
+      effets: facture.effets.map(fe => ({
+        id: fe.effet.id,
+        numero: fe.effet.numero,
+        montant: fe.effet.montant,
+        montantAffecte: fe.montantAffecte,
+        dateEcheance: fe.effet.dateEcheance,
+        statut: fe.effet.statut,
+        beneficiaire: fe.effet.beneficiaire
+      })),
+      virements: facture.virements.map(fv => ({
+        id: fv.virement.id,
+        numero: fv.virement.id.toString(),
+        montant: fv.virement.montant,
+        montantAffecte: fv.montantAffecte,
+        dateEcheance: fv.virement.date,
+        statut: 'paye',
+        beneficiaire: fv.virement.beneficiaire
+      }))
+    };
+
+    res.json({
+      success: true,
+      factureId,
+      totalTtc: facture.totalTtc,
+      totalAffecte,
+      statut: facture.statut,
+      reglements
+    });
+  } catch (error) {
+    console.error('Erreur getFactureReglements:', error);
+    res.status(500).json({ success: false, error: 'Erreur serveur' });
+  }
+};
+
+/**
+ * GET /api/reglements/search?type=cheque|effet|virement&fournisseurId=X
+ * Search for available règlements that can be linked to a facture
+ */
+export const searchReglements = async (req, res) => {
+  try {
+    const { type, fournisseurId } = req.query;
+
+    if (!type || !fournisseurId) {
+      return res.status(400).json({ success: false, error: 'Type et fournisseurId sont requis' });
+    }
+
+    const fournisseurIdInt = parseInt(fournisseurId);
+    let results = [];
+
+    if (type === 'cheque') {
+      // Get all cheques for this fournisseur that are not cancelled
+      const cheques = await prisma.cheque.findMany({
+        where: {
+          fournisseurId: fournisseurIdInt,
+          statut: { not: 'annulé' }
+        },
+        include: {
+          factures: true,
+          fournisseur: true
+        }
+      });
+
+      // For each cheque, calculate montantDejaAffecte
+      results = cheques.map(cheque => {
+        const montantDejaAffecte = cheque.factures.reduce((sum, fc) => sum + fc.montantAffecte, 0);
+        return {
+          id: cheque.id,
+          numero: cheque.numero,
+          montant: cheque.montant,
+          montantDejaAffecte,
+          montantRestant: cheque.montant - montantDejaAffecte,
+          dateEcheance: cheque.dateEcheance,
+          statut: cheque.statut,
+          beneficiaire: cheque.beneficiaire
+        };
+      }).filter(c => c.montantRestant > 0); // Only return cheques with remaining amount
+
+    } else if (type === 'effet') {
+      // Get all effets for this fournisseur that are not cancelled
+      const effets = await prisma.effet.findMany({
+        where: {
+          fournisseurId: fournisseurIdInt,
+          statut: { not: 'Annulé' }
+        },
+        include: {
+          factures: true,
+          fournisseur: true
+        }
+      });
+
+      // For each effet, calculate montantDejaAffecte
+      results = effets.map(effet => {
+        const montantDejaAffecte = effet.factures.reduce((sum, fe) => sum + fe.montantAffecte, 0);
+        return {
+          id: effet.id,
+          numero: effet.numero,
+          montant: effet.montant,
+          montantDejaAffecte,
+          montantRestant: effet.montant - montantDejaAffecte,
+          dateEcheance: effet.dateEcheance,
+          statut: effet.statut,
+          beneficiaire: effet.beneficiaire
+        };
+      }).filter(e => e.montantRestant > 0);
+
+    } else if (type === 'virement') {
+      // Get all virements for this fournisseur
+      const virements = await prisma.virement.findMany({
+        where: {
+          fournisseurId: fournisseurIdInt
+        },
+        include: {
+          factures: true,
+          fournisseur: true
+        }
+      });
+
+      // For each virement, calculate montantDejaAffecte
+      results = virements.map(virement => {
+        const montantDejaAffecte = virement.factures.reduce((sum, fv) => sum + fv.montantAffecte, 0);
+        return {
+          id: virement.id,
+          numero: virement.id.toString(),
+          montant: virement.montant,
+          montantDejaAffecte,
+          montantRestant: virement.montant - montantDejaAffecte,
+          dateEcheance: virement.date,
+          statut: 'paye',
+          beneficiaire: virement.beneficiaire
+        };
+      }).filter(v => v.montantRestant > 0);
+    } else {
+      return res.status(400).json({ success: false, error: 'Type invalide. Utilisez cheque, effet ou virement' });
+    }
+
+    res.json({ success: true, type, results });
+  } catch (error) {
+    console.error('Erreur searchReglements:', error);
+    res.status(500).json({ success: false, error: 'Erreur serveur' });
+  }
+};
+
+/**
+ * POST /api/factures/:id/affecter-reglement
+ * Link a règlement to a facture with a specific amount
+ */
+export const affecterReglement = async (req, res) => {
+  try {
+    const factureId = parseInt(req.params.id);
+    const { type, reglementId, montantAffecte } = req.body;
+
+    // Validate inputs
+    if (!type || !reglementId || !montantAffecte) {
+      return res.status(400).json({ success: false, error: 'Type, reglementId et montantAffecte sont requis' });
+    }
+
+    const montantAffecteFloat = parseFloat(montantAffecte);
+    if (montantAffecteFloat <= 0) {
+      return res.status(400).json({ success: false, error: 'Le montant affecté doit être positif' });
+    }
+
+    // Fetch facture
+    const facture = await prisma.facture.findUnique({
+      where: { id: factureId },
+      include: {
+        cheques: { include: { cheque: true } },
+        effets: { include: { effet: true } },
+        virements: { include: { virement: true } }
+      }
+    });
+
+    if (!facture) {
+      return res.status(404).json({ success: false, error: 'Facture non trouvée' });
+    }
+
+    // Check if facture is already fully paid
+    if (facture.statut === 'payee') {
+      return res.status(400).json({ success: false, error: 'La facture est déjà entièrement payée' });
+    }
+
+    const reglementIdInt = parseInt(reglementId);
+    let reglement;
+    let montantRestant = 0;
+
+    // Validate montantRestant based on type
+    if (type === 'cheque') {
+      const cheque = await prisma.cheque.findUnique({
+        where: { id: reglementIdInt },
+        include: { factures: true }
+      });
+      if (!cheque) {
+        return res.status(404).json({ success: false, error: 'Chèque non trouvé' });
+      }
+      const montantDejaAffecte = cheque.factures.reduce((sum, fc) => sum + fc.montantAffecte, 0);
+      montantRestant = cheque.montant - montantDejaAffecte;
+      reglement = cheque;
+    } else if (type === 'effet') {
+      const effet = await prisma.effet.findUnique({
+        where: { id: reglementIdInt },
+        include: { factures: true }
+      });
+      if (!effet) {
+        return res.status(404).json({ success: false, error: 'Effet non trouvé' });
+      }
+      const montantDejaAffecte = effet.factures.reduce((sum, fe) => sum + fe.montantAffecte, 0);
+      montantRestant = effet.montant - montantDejaAffecte;
+      reglement = effet;
+    } else if (type === 'virement') {
+      const virement = await prisma.virement.findUnique({
+        where: { id: reglementIdInt },
+        include: { factures: true }
+      });
+      if (!virement) {
+        return res.status(404).json({ success: false, error: 'Virement non trouvé' });
+      }
+      const montantDejaAffecte = virement.factures.reduce((sum, fv) => sum + fv.montantAffecte, 0);
+      montantRestant = virement.montant - montantDejaAffecte;
+      reglement = virement;
+    } else {
+      return res.status(400).json({ success: false, error: 'Type invalide' });
+    }
+
+    // Create or update the junction record using upsert
+    // If record exists: replace montantAffecte (not increment) with the new value
+    // Validation: ensure total allocated to this reglement doesn't exceed reglement.montant
+    let junctionRecord;
+    
+    if (type === 'cheque') {
+      // Get existing allocation to this facture (if any) to calculate remaining correctly
+      const existingLink = await prisma.factureCheque.findUnique({
+        where: { factureId_chequeId: { factureId, chequeId: reglementIdInt } }
+      });
+      const existingAmountToThisFacture = existingLink ? existingLink.montantAffecte : 0;
+      
+      // Calculate how much is allocated to OTHER factures (excluding this one)
+      const otherAllocations = reglement.factures
+        .filter(fc => fc.factureId !== factureId)
+        .reduce((sum, fc) => sum + fc.montantAffecte, 0);
+      
+      // New total would be: otherAllocations + montantAffecteFloat
+      const newTotalAllocated = otherAllocations + montantAffecteFloat;
+      if (newTotalAllocated > reglement.montant) {
+        return res.status(400).json({
+          success: false,
+          error: `Le montant total affecté (${newTotalAllocated}) dépasserait le montant du chèque (${reglement.montant})`
+        });
+      }
+      
+      // Upsert: create if not exists, update if exists (replace amount, not increment)
+      junctionRecord = await prisma.factureCheque.upsert({
+        where: { factureId_chequeId: { factureId, chequeId: reglementIdInt } },
+        create: { factureId, chequeId: reglementIdInt, montantAffecte: montantAffecteFloat },
+        update: { montantAffecte: montantAffecteFloat }
+      });
+    } else if (type === 'effet') {
+      const existingLink = await prisma.factureEffet.findUnique({
+        where: { factureId_effetId: { factureId, effetId: reglementIdInt } }
+      });
+      const existingAmountToThisFacture = existingLink ? existingLink.montantAffecte : 0;
+      
+      const otherAllocations = reglement.factures
+        .filter(fe => fe.factureId !== factureId)
+        .reduce((sum, fe) => sum + fe.montantAffecte, 0);
+      
+      const newTotalAllocated = otherAllocations + montantAffecteFloat;
+      if (newTotalAllocated > reglement.montant) {
+        return res.status(400).json({
+          success: false,
+          error: `Le montant total affecté (${newTotalAllocated}) dépasserait le montant de l'effet (${reglement.montant})`
+        });
+      }
+      
+      junctionRecord = await prisma.factureEffet.upsert({
+        where: { factureId_effetId: { factureId, effetId: reglementIdInt } },
+        create: { factureId, effetId: reglementIdInt, montantAffecte: montantAffecteFloat },
+        update: { montantAffecte: montantAffecteFloat }
+      });
+    } else if (type === 'virement') {
+      const existingLink = await prisma.factureVirement.findUnique({
+        where: { factureId_virementId: { factureId, virementId: reglementIdInt } }
+      });
+      const existingAmountToThisFacture = existingLink ? existingLink.montantAffecte : 0;
+      
+      const otherAllocations = reglement.factures
+        .filter(fv => fv.factureId !== factureId)
+        .reduce((sum, fv) => sum + fv.montantAffecte, 0);
+      
+      const newTotalAllocated = otherAllocations + montantAffecteFloat;
+      if (newTotalAllocated > reglement.montant) {
+        return res.status(400).json({
+          success: false,
+          error: `Le montant total affecté (${newTotalAllocated}) dépasserait le montant du virement (${reglement.montant})`
+        });
+      }
+      
+      junctionRecord = await prisma.factureVirement.upsert({
+        where: { factureId_virementId: { factureId, virementId: reglementIdInt } },
+        create: { factureId, virementId: reglementIdInt, montantAffecte: montantAffecteFloat },
+        update: { montantAffecte: montantAffecteFloat }
+      });
+    }
+
+    // Recalculate facture status
+    const updatedFacture = await prisma.facture.findUnique({
+      where: { id: factureId },
+      include: {
+        cheques: true,
+        effets: true,
+        virements: true
+      }
+    });
+
+    const totalAffecte =
+      updatedFacture.cheques.reduce((sum, fc) => sum + fc.montantAffecte, 0) +
+      updatedFacture.effets.reduce((sum, fe) => sum + fe.montantAffecte, 0) +
+      updatedFacture.virements.reduce((sum, fv) => sum + fv.montantAffecte, 0);
+
+    let newStatut;
+    if (totalAffecte === 0) {
+      newStatut = 'en_attente';
+    } else if (totalAffecte >= updatedFacture.totalTtc) {
+      newStatut = 'payee';
+    } else {
+      newStatut = 'partielle';
+    }
+
+    await prisma.facture.update({
+      where: { id: factureId },
+      data: { statut: newStatut }
+    });
+
+    res.json({
+      success: true,
+      message: 'Règlement affecté avec succès',
+      statut: newStatut,
+      totalAffecte,
+      junctionRecord
+    });
+  } catch (error) {
+    console.error('Erreur affecterReglement:', error);
+    res.status(500).json({ success: false, error: 'Erreur serveur: ' + error.message });
+  }
+};
+
