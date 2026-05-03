@@ -414,6 +414,32 @@
         </div>
       </div>
     </div>
+
+    <!-- Pagination -->
+    <% if (totalPages > 1) { %>
+    <div class="d-flex justify-content-between align-items-center mt-3 px-3">
+      <div class="text-muted small">
+        Affichage de <%= ((page - 1) * 20) + 1 %> à <%= Math.min(page * 20, totalBCs) %> sur <%= totalBCs %> BCs
+      </div>
+      <nav>
+        <ul class="pagination mb-0">
+          <% if (page > 1) { %>
+          <li class="page-item"><a class="page-link" href="?page=<%= page - 1 %>">Précédent</a></li>
+          <% } %>
+          <% for (let i = 1; i <= totalPages; i++) { %>
+            <% if (i === page || (i >= page - 2 && i <= page + 2) || i === 1 || i === totalPages) { %>
+            <li class="page-item <%= i === page ? 'active' : '' %>"><a class="page-link" href="?page=<%= i %>"><%= i %></a></li>
+            <% } else if (i === page - 3 || i === page + 3) { %>
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+            <% } %>
+          <% } %>
+          <% if (page < totalPages) { %>
+          <li class="page-item"><a class="page-link" href="?page=<%= page + 1 %>">Suivant</a></li>
+          <% } %>
+        </ul>
+      </nav>
+    </div>
+    <% } %>
   </div>
 
   <script src="/vendor/jquery/jquery.min.js"></script>
