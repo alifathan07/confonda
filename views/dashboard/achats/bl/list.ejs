@@ -275,14 +275,14 @@
                               <button class="btn btn-primary btn-sm" title="Créer Facture" 
                                 data-bl-id="<%= bl.id %>" 
                                 data-fournisseur-name="<%= bl.fournisseur ? bl.fournisseur.name : '' %>"
-                                onclick="openFactureActionMenu(<%= bl.id %>, '<%= encodeURIComponent(bl.fournisseur ? bl.fournisseur.name : '') %>')">
+                                onclick="openFactureActionMenu(<%= bl.id %>, <%= JSON.stringify(bl.fournisseur ? bl.fournisseur.name : '') %>)">
                                 <i class="fas fa-plus"></i> Créer facture
                               </button>
                               <% } else if (hasFactureAction && !hasAvoirAction) { %>
                               <button class="btn btn-outline-success btn-sm" title="Créer Avoir" 
                                 data-bl-id="<%= bl.id %>" 
                                 data-fournisseur-id="<%= bl.fournisseur ? bl.fournisseur.id : '' %>"
-                                data-fournisseur-name="<%= bl.fournisseur ? bl.fournisseur.name : '' %>"
+                                data-fournisseur-name="<%= bl.fournisseur ? (bl.fournisseur.name ? bl.fournisseur.name.replace(/"/g, '&quot;') : '') : '' %>"
                                 onclick="openFactureAvoirActionMenu(this)">
                                 <i class="fas fa-plus"></i> Créer avoir
                               </button>

@@ -5,13 +5,12 @@
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-  <meta name="description" content="effets" />
+  <meta name="description" content="Effets" />
   <meta name="author" content="Confonda" />
   <title>Effets</title>
   <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css" />
   <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet" />
   <link href="/css/sb-admin-2.min.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <style>
     .effet-table td,
     .effet-table th {
@@ -21,47 +20,6 @@
     .effet-table.table-bordered td,
     .effet-table.table-bordered th {
       border-color: #e6e8f0;
-    }
-
-    .badge-statut {
-      display: inline-block;
-      padding: 4px 10px;
-      font-weight: 700;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .3px;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: box-shadow .2s;
-    }
-
-    .badge-statut:hover {
-      box-shadow: 0 2px 8px rgba(0, 0, 0, .18);
-    }
-
-    .badge-statut.en-circulation {
-      background: #fff3cd;
-      color: #856404;
-    }
-
-    .badge-statut.paye {
-      background: #d4edda;
-      color: #155724;
-    }
-
-    .badge-statut.impaye {
-      background: #f8d7da;
-      color: #721c24;
-    }
-
-    .badge-statut.annule {
-      background: #e2e3e5;
-      color: #383d41;
-    }
-
-    .badge-statut.treso {
-      background: #d1ecf1;
-      color: #0c5460;
     }
 
     .allocations {
@@ -91,11 +49,6 @@
       font-weight: 700;
     }
 
-    .statut-select {
-      min-width: 140px;
-      font-weight: 700;
-    }
-
     .table-actions {
       display: flex;
       gap: 6px;
@@ -103,7 +56,7 @@
     }
 
     .cell-edit {
-      min-width: 100px;
+      min-width: 120px;
     }
 
     .cell-edit[contenteditable="true"] {
@@ -112,14 +65,18 @@
 
     .cell-edit[contenteditable="true"]:focus {
       box-shadow: inset 0 0 0 2px rgba(78, 115, 223, .25);
-      border-radius: 4px;
+      border-radius: 6px;
     }
 
     .obs-cell {
-      min-width: 220px;
-      max-width: 380px;
+      min-width: 260px;
+      max-width: 420px;
       white-space: normal;
       line-height: 1.25;
+    }
+
+    .obs-cell[contenteditable="true"] {
+      padding: 8px 10px;
     }
 
     .btn-clear-filters {
@@ -189,15 +146,9 @@
               <!-- Page header -->
               <div class="d-flex align-items-center justify-content-between mb-3">
                 <div>
-                  <h1 class="h3 mb-0 text-gray-800">
-                    <% if (typeof id !=='undefined' && id && typeof banqueName !=='undefined' && banqueName) { %>
-                      Effets — <%= banqueName.name %>
-                        <% } else { %>
-                          Liste des Effets
-                          <% } %>
-                  </h1>
+                  <h1 class="h3 mb-0 text-gray-800">Effets</h1>
                   <div class="small text-muted" id="effetCount">
-                    <% if (typeof effets !=='undefined' ) { %>
+                    <% if (typeof effets !== 'undefined') { %>
                       <%= effets.length %> résultat(s)<% } %>
                   </div>
                 </div>
@@ -208,25 +159,13 @@
                   <button id="btnExportExcel" type="button" class="btn btn-outline-success">
                     <i class="fas fa-file-excel mr-2"></i>Excel
                   </button>
-                  <button id="addRowBtn" type="button" class="btn btn-secondary">
-                    <i class="fas fa-plus mr-2"></i>Ajouter
-                  </button>
-                  <button id="saveTableBtn" type="button" class="btn btn-warning">
-                    <i class="fas fa-save mr-2"></i>Enregistrer
-                  </button>
-                  <% if (typeof id !=='undefined' && id && typeof banqueName !=='undefined' && banqueName) { const
-                    supportedBanks=(banques || []).map(b=> b.name.toLowerCase());
-                    const bankKey = banqueName.name.toLowerCase();
-                    const bankRoute = bankKey === 'credit agricole' ? 'credit_agricole' : bankKey;
-                    if (supportedBanks.includes(bankKey)) { %>
-                    <a href="/tresorerie/effets/create/format/<%= bankRoute %>/<%= id %>" class="btn btn-primary">
-                      <i class="fas fa-file-invoice-dollar mr-2"></i>Établir effet
-                    </a>
-                    <% } } %>
+                  <a href="/tresorerie/effets/nouveau" class="btn btn-primary">
+                    <i class="fas fa-plus mr-2"></i>Nouveau
+                  </a>
                 </div>
               </div>
 
-              <div class="card shadow mb-4" style="position: relative;">
+              <div class="card shadow mb-4">
                 <div class="card-body">
                   <!-- Filters row -->
                   <div class="row mb-3">
@@ -240,60 +179,40 @@
                         <div class="dropdown-menu w-100" id="filterTypeMenu" aria-labelledby="filterTypeBtn">
                           <button class="dropdown-item" type="button"
                             data-filter-type="beneficiaire">Bénéficiaire</button>
-                          <button class="dropdown-item" type="button" data-filter-type="banque">Banque</button>
-                          <button class="dropdown-item" type="button" data-filter-type="statut">Statut</button>
                           <button class="dropdown-item" type="button" data-filter-type="chantier">Chantier</button>
+                          <button class="dropdown-item" type="button" data-filter-type="banque">Banque</button>
                           <button class="dropdown-item" type="button" data-filter-type="montant">Montant</button>
-                          <button class="dropdown-item" type="button" data-filter-type="numero">N° Effet</button>
+                          <button class="dropdown-item" type="button" data-filter-type="statut">Statut</button>
                         </div>
                       </div>
 
                       <div id="filterDynamicContainer" class="mt-2">
                         <div id="filterBoxBeneficiaire" style="display:none;">
-                          <select id="filterBeneficiaire" class="form-control">
-                            <option value="">Tous</option>
-                            <% (fournisseurs || []).forEach(f=> { %>
-                              <option value="<%= f.name %>">
-                                <%= f.name %>
-                              </option>
-                              <% }) %>
-                          </select>
-                        </div>
-                        <div id="filterBoxBanque" style="display:none;">
-                          <select id="filterBanque" class="form-control">
-                            <option value="">Tous</option>
-                            <% (banques || []).forEach(b=> { %>
-                              <option value="<%= b.name %>">
-                                <%= b.name %>
-                              </option>
-                              <% }) %>
-                          </select>
-                        </div>
-                        <div id="filterBoxStatut" style="display:none;">
-                          <select id="filterStatut" class="form-control">
-                            <option value="">Tous</option>
-                            <option value="En Circulation">En Circulation</option>
-                            <option value="PAYÉ">Payé</option>
-                            <option value="Impayé">Impayé</option>
-                            <option value="Annulé">Annulé</option>
-                            <option value="Treso">Treso</option>
-                          </select>
+                          <input id="filterBeneficiaire" class="form-control" placeholder="Bénéficiaire..." />
                         </div>
                         <div id="filterBoxChantier" style="display:none;">
                           <select id="filterChantier" class="form-control">
                             <option value="">Tous</option>
-                            <% (chantiers || []).forEach(c=> { %>
-                              <option value="<%= c.nom %>">
+                            <% (chantiers || []).forEach(c => { %>
+                              <option value="<%= c.id %>">
                                 <%= c.nom %>
                               </option>
-                              <% }) %>
+                            <% }) %>
                           </select>
+                        </div>
+                        <div id="filterBoxBanque" style="display:none;">
+                          <input id="filterBanque" class="form-control" placeholder="Banque..." />
                         </div>
                         <div id="filterBoxMontant" style="display:none;">
                           <input id="filterMontant" class="form-control" placeholder="ex: 1200" />
                         </div>
-                        <div id="filterBoxNumero" style="display:none;">
-                          <input id="filterNumero" class="form-control" placeholder="N° effet..." />
+                        <div id="filterBoxStatut" style="display:none;">
+                          <select id="filterStatut" class="form-control">
+                            <option value="">Tous</option>
+                            <option value="en_cours">En cours</option>
+                            <option value="echu">Échu</option>
+                            <option value="paye">Payé</option>
+                          </select>
                         </div>
                       </div>
                     </div>
@@ -305,163 +224,172 @@
                     </div>
 
                     <div class="col-md-2 mb-2">
-                      <label class="small text-muted mb-1">Échéance du</label>
+                      <label class="small text-muted mb-1">Date émission du</label>
                       <input id="filterDateFrom" type="date" class="form-control" />
                     </div>
                     <div class="col-md-2 mb-2">
-                      <label class="small text-muted mb-1">Échéance au</label>
+                      <label class="small text-muted mb-1">Date émission au</label>
                       <input id="filterDateTo" type="date" class="form-control" />
                     </div>
                   </div>
 
                   <!-- Table -->
                   <div class="table-responsive" id="effetsTableResponsive">
-                    <% function fmtDate(d) { 
-  if (!d) return '';
-  const s = String(d).trim();
-  // Handle ISO date strings from Prisma (2024-03-15T00:00:00.000Z or 2024-03-15)
-  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (isoMatch) {
-    return `${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}`;
-  }
-  // Handle existing DD/MM/YYYY format
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
-  // Fallback to Date parsing for other formats
-  const dt = new Date(s);
-  if (isNaN(dt)) return '';
-  return String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0') + '/' + dt.getFullYear();
-} %>
-<% function statutClass(s) { 
-  return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-'); 
-} %>
-                      %>
-                      <table class="table table-sm table-hover table-bordered effet-table" style="min-width: 1200px;"
-                        id="editableTable">
-                        <thead class="thead-light">
+                    <% function fmtDate(d) { if (!d) return ''; const dt = (d instanceof Date) ? d : new Date(d); if (!dt || isNaN(dt.getTime())) return ''; return String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0') + '/' + dt.getFullYear(); } %>
+                    <table class="table table-sm table-hover table-bordered effet-table"
+                      style="min-width: 1100px;">
+                      <thead class="thead-light">
+                        <tr>
+                          <th>Bénéficiaire</th>
+                          <th>Banque</th>
+                          <th>N° Effet</th>
+                          <th class="text-right">Montant</th>
+                          <th>Date Émission</th>
+                          <th>Date Échéance</th>
+                          <th>Observation</th>
+                          <th>Statut</th>
+                          <th>Chantier</th>
+                          <th>Montant chantier</th>
+                          <th>Facture Liée</th>
+                          <th class="text-right">Total affecté</th>
+                          <th class="text-right">Reste à affecter</th>
+                          <th class="text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="effetTbody">
+                        <% if (typeof effets === 'undefined' || !effets.length) { %>
                           <tr>
-                            <th>Date</th>
-                            <th>N° Effet</th>
-                            <th>Banque</th>
-                            <th>Bénéficiaire</th>
-                            <th class="text-right">Montant</th>
-                            <th>Échéance</th>
-                            <th>Statut</th>
-                            <th>Date Règlement</th>
-                            <th>Chantier</th>
-                            <th>Montant chantier</th>
-                            <th>Observation</th>
-                            <th class="text-right">Actions</th>
+                            <td colspan="14" class="text-center text-muted">Aucun effet disponible.</td>
                           </tr>
-                        </thead>
-                        <tbody id="effetTbody">
-                          <% if (typeof effets==='undefined' || !effets.length) { %>
-                            <tr>
-                              <td colspan="12" class="text-center text-muted">Aucun effet disponible.</td>
-                            </tr>
-                            <% } else { %>
-                              <% effets.forEach(e=> { %>
-                                <tr data-id="<%= e.id %>">
-                                  <td class="cell-edit" contenteditable="true" data-name="dateEtablissement">
-                                    <%= fmtDate(e.dateEtablissement) %>
-                                  </td>
-                                  <td class="cell-edit" contenteditable="true" data-name="numero">
-                                    <%= e.numero || '' %>
-                                  </td>
-                                  <td class="cell-edit" contenteditable="true" data-name="banque">
-                                    <%= e.banque ? e.banque.name : '' %>
-                                  </td>
-                                  <td class="cell-edit" contenteditable="true" data-name="beneficiaire">
-                                    <%= e.beneficiaire || '' %>
-                                  </td>
-                                  <td class="text-right cell-edit" contenteditable="true" data-name="montant">
-                                    <%= e.montant ? Number(e.montant).toLocaleString('fr-FR', { minimumFractionDigits:
-                                      2, maximumFractionDigits: 2 }) : '' %>
-                                  </td>
-                                  <td class="cell-edit" contenteditable="true" data-name="dateEcheance">
-                                    <%= e.dateEcheance ? fmtDate(e.dateEcheance) : '' %>
-                                  </td>
-                                  <td data-name="statut" class="text-center">
-                                    <span class="badge-statut <%= statutClass(e.statut) %>"
-                                      onclick="toggleStatutSelect(this)">
-                                      <%= e.statut %>
-                                    </span>
-                                  </td>
-                                  <td class="cell-edit" contenteditable="true" data-name="dateReglement">
-                                    <%= fmtDate(e.dateReglement) %>
-                                  </td>
-                                  <td data-name="chantier">
-                                    <div class="allocations">
-                                      <% const _displayAllocs=(e.allocations && e.allocations.length) ? e.allocations :
-                                        []; %>
-                                        <% if (_displayAllocs.length) { %>
-                                          <% _displayAllocs.forEach(a=> { %>
-                                            <div class="alloc-line">
-                                              <div class="alloc-name">
-                                                <%= a.chantier ? a.chantier.nom : '' %>
-                                              </div>
-                                            </div>
-                                            <% }) %>
-                                              <% } else if (e.chantier) { %>
-                                                <div class="alloc-line">
-                                                  <div class="alloc-name">
-                                                    <%= e.chantier.nom %>
-                                                  </div>
-                                                </div>
-                                                <% } %>
+                        <% } else { %>
+                          <% effets.forEach(e => { %>
+                            <tr data-id="<%= e.id %>" data-statut="<%= e.statut || 'en_cours' %>">
+                              <td class="cell-edit" contenteditable="true" data-name="beneficiaire">
+                                <%= e.beneficiaire || '' %>
+                              </td>
+                              <td class="cell-edit" contenteditable="true" data-name="banque">
+                                <%= e.banque?.name || '' %>
+                              </td>
+                              <td class="cell-edit" contenteditable="true" data-name="numero">
+                                <%= e.numero || '' %>
+                              </td>
+                              <td class="text-right cell-edit" contenteditable="true" data-name="montant">
+                                <%= Number(e.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                              </td>
+                              <td class="cell-edit" contenteditable="true" data-name="dateEmission">
+                                <%= fmtDate(e.dateEmission ?? e.date ?? e.createdAt) %>
+                              </td>
+                              <td class="cell-edit" contenteditable="true" data-name="dateEcheance">
+                                <%= fmtDate(e.dateEcheance) %>
+                              </td>
+                              <td class="cell-edit obs-cell" contenteditable="true" data-name="obs">
+                                <%= e.obs || '' %>
+                              </td>
+                              <td>
+                                <%
+                                  const statut = e.statut || 'en_cours';
+                                  const statutLabel = statut === 'paye' ? 'Payé' : statut === 'echu' ? 'Échu' : 'En cours';
+                                  const statutClass = statut === 'paye' ? 'badge-success' : statut === 'echu' ? 'badge-danger' : 'badge-warning';
+                                %>
+                                <span class="badge <%= statutClass %>"><%= statutLabel %></span>
+                              </td>
+                              <td>
+                                <div class="allocations">
+                                  <% const _displayAllocs = (e.allocations && e.allocations.length) ? e.allocations : []; %>
+                                  <% if (_displayAllocs.length > 0) { %>
+                                    <% _displayAllocs.forEach(a => { %>
+                                      <div class="alloc-line"
+                                        data-chantier-id="<%= (a.chantierId != null ? a.chantierId : (a.chantier ? a.chantier.id : '')) %>">
+                                        <div class="alloc-name">
+                                          <%= a.chantier ? a.chantier.nom : '' %>
+                                        </div>
+                                      </div>
+                                    <% }) %>
+                                  <% } else if (e.chantier) { %>
+                                    <div class="alloc-line" data-chantier-id="<%= e.chantier.id %>">
+                                      <div class="alloc-name">
+                                        <%= e.chantier.nom %>
+                                      </div>
                                     </div>
-                                  </td>
-                                  <td>
-                                    <div class="allocations">
-                                      <% const _displayAllocs2=(e.allocations && e.allocations.length) ? e.allocations :
-                                        []; %>
-                                        <% if (_displayAllocs2.length) { %>
-                                          <% _displayAllocs2.forEach(a=> { %>
-                                            <div class="alloc-line">
-                                              <div class="alloc-name">&nbsp;</div>
-                                              <div class="alloc-amount">
-                                                <%= (a.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
-                                                  maximumFractionDigits: 2 }) %>
-                                              </div>
-                                            </div>
-                                            <% }) %>
-                                              <% } else if (e.chantier) { %>
-                                                <div class="alloc-line">
-                                                  <div class="alloc-name">&nbsp;</div>
-                                                  <div class="alloc-amount">
-                                                    <%= (e.montant || 0).toLocaleString('fr-FR', {
-                                                      minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
-                                                  </div>
-                                                </div>
-                                                <% } %>
-                                    </div>
-                                  </td>
-                                  <td class="cell-edit obs-cell" contenteditable="true" data-name="obs">
-                                    <%= e.obs || '' %>
-                                  </td>
-                                  <td class="text-right">
-                                    <div class="table-actions">
-                                      <button class="btn btn-sm btn-outline-danger btn-delete-effet" title="Supprimer"
-                                        data-id="<%= e.id %>">
-                                        <i class="fas fa-trash"></i>
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                                <% }) %>
                                   <% } %>
-                        </tbody>
-                        <tfoot>
-                          <tr>
-                            <th colspan="4" class="text-right">Total</th>
-                            <th class="text-right" id="totalMontantCell">
-                              <%= (typeof effets !=='undefined' && effets.length) ? effets.reduce((s, e2)=> s +
-                                Number(e2.montant || 0), 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
-                                maximumFractionDigits: 2 }) : '0,00' %>
-                            </th>
-                            <th colspan="7"></th>
-                          </tr>
-                        </tfoot>
-                      </table>
+                                </div>
+                              </td>
+                              <td>
+                                <div class="allocations">
+                                  <% if (_displayAllocs.length > 0) { %>
+                                    <% _displayAllocs.forEach(a => { %>
+                                      <div class="alloc-line">
+                                        <div class="alloc-name">&nbsp;</div>
+                                        <div class="alloc-amount">
+                                          <%= (a.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                                        </div>
+                                      </div>
+                                    <% }) %>
+                                  <% } else if (e.chantier) { %>
+                                    <div class="alloc-line">
+                                      <div class="alloc-name">&nbsp;</div>
+                                      <div class="alloc-amount">
+                                        <%= (e.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                                      </div>
+                                    </div>
+                                  <% } %>
+                                </div>
+                              </td>
+                              <td>
+                                <% if (e.factures && e.factures.length > 0) { %>
+                                  <% e.factures.forEach(fv => { %>
+                                    <a href="/achats/factures/<%= fv.facture.id %>/view" class="badge badge-info mb-1 d-inline-block" title="Voir facture">
+                                      FA N°<%= fv.facture.numero %> — <%= fv.montantAffecte.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> DH
+                                    </a>
+                                  <% }) %>
+                                <% } else { %>
+                                  <span class="text-muted">—</span>
+                                <% } %>
+                              </td>
+                              <td class="text-right font-weight-bold" style="background-color: #e8f4f8;">
+                                <% const montantDejaAffecteEffet = (e.factures || []).reduce((sum, fv) => sum + (fv.montantAffecte || 0), 0); %>
+                                <%= montantDejaAffecteEffet.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> DH
+                              </td>
+                              <td class="text-right font-weight-bold" style="background-color: #e8f4f8;">
+                                <% const resteEffet = (e.montant || 0) - montantDejaAffecteEffet; %>
+                                <span class="<%= resteEffet > 0 ? 'text-success' : 'text-danger' %> font-weight-bold">
+                                  <%= resteEffet.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> DH
+                                </span>
+                              </td>
+                              <td class="text-right">
+                                <div class="table-actions">
+                                  <button class="btn btn-sm btn-outline-secondary btn-alloc" title="Chantiers"
+                                    data-id="<%= e.id %>"
+                                    data-allocs="<%= escape(JSON.stringify((e.allocations || []).map(a => ({ chantierId: a.chantierId, montant: a.montant })))) %>">
+                                    <i class="fas fa-project-diagram"></i>
+                                  </button>
+                                  <button class="btn btn-sm btn-outline-danger btn-download-pdf"
+                                    title="Télécharger PDF" data-id="<%= e.id %>">
+                                    <i class="fas fa-download"></i>
+                                  </button>
+                                  <button class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"
+                                    data-id="<%= e.id %>">
+                                    <i class="fas fa-trash"></i>
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          <% }) %>
+                        <% } %>
+                      </tbody>
+                      <tfoot>
+                        <tr>
+                          <th colspan="3" class="text-right">Total</th>
+                          <th class="text-right" id="totalMontantCell">0,00</th>
+                          <th colspan="10"></th>
+                        </tr>
+                        <tr id="totalChantierRow" style="display:none;">
+                          <th colspan="9" class="text-right">Total chantier</th>
+                          <th class="text-right" id="totalMontantChantierCell">0,00</th>
+                          <th colspan="4"></th>
+                        </tr>
+                      </tfoot>
+                    </table>
                   </div>
 
                   <!-- Fixed bottom scrollbar -->
@@ -470,9 +398,9 @@
                   </div>
 
                   <!-- Results info -->
-                  <div class="mt-3">
+                  <div class="d-flex align-items-center justify-content-between mt-3">
                     <div class="small text-muted" id="effetInfo">
-                      <% if (typeof effets !=='undefined' ) { %>
+                      <% if (typeof effets !== 'undefined') { %>
                         <%= effets.length %> résultat(s)<% } %>
                     </div>
                   </div>
@@ -480,58 +408,33 @@
               </div>
             </div>
         </div>
-      </div>
-  </div>
 
-  <div class="modal fade" id="createEffetModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Créer un effet</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="small text-muted mb-1">Bénéficiaire (Fournisseur)</label>
-              <select id="createFournisseur" class="form-control"></select>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="small text-muted mb-1">Banque</label>
-              <select id="createBanque" class="form-control"></select>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="small text-muted mb-1">Date d'échéance</label>
-              <input id="createDateEcheance" type="date" class="form-control" />
-            </div>
-            <div class="col-md-6 mb-3">
-              <label class="small text-muted mb-1">Montant (auto)</label>
-              <input id="createMontant" class="form-control" readonly />
-            </div>
-            <div class="col-12 mb-2">
-              <label class="small text-muted mb-1">Observation</label>
-              <input id="createObs" class="form-control" />
+        <!-- Alloc Modal -->
+        <div class="modal fade" id="allocModal" tabindex="-1" role="dialog" aria-hidden="true">
+          <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Chantiers & montants</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <div class="small text-muted" id="allocTotals"></div>
+                <div id="allocList" class="d-grid" style="gap: 10px;"></div>
+                <button id="btnAddAllocLine" class="btn btn-sm btn-outline-primary mt-3">
+                  <i class="fas fa-plus mr-2"></i>Ajouter chantier
+                </button>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-primary" id="btnSaveAlloc">Enregistrer</button>
+              </div>
             </div>
           </div>
-
-          <div class="d-flex align-items-center justify-content-between mt-2 mb-2">
-            <div class="small text-muted">Affectations chantiers</div>
-            <button id="btnCreateAddAlloc" class="btn btn-sm btn-outline-primary" type="button">
-              <i class="fas fa-plus mr-2"></i>Ajouter chantier
-            </button>
-          </div>
-
-          <div id="createAllocList" class="d-grid" style="gap: 10px;"></div>
-          <div class="small text-muted mt-2" id="createAllocTotals"></div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
-          <button type="button" class="btn btn-primary" id="btnCreateEffetConfirm">Créer</button>
-        </div>
+
       </div>
-    </div>
   </div>
 
   <script src="/vendor/jquery/jquery.min.js"></script>
@@ -541,650 +444,594 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+  <script type="application/json" id="effetsPageData">
+    <%- JSON.stringify({
+      chantiers: (typeof chantiers !== 'undefined' ? chantiers : []).map(c => ({ id: c.id, nom: c.nom }))
+    }) %>
+  </script>
 
   <script>
-    /* ── chantier data for add-row ── */
-    const CHANTIERS_DATA = <%- JSON.stringify((chantiers || []).map(c => ({ id: c.id, nom: c.nom }))) %>;
-
-    /* ── helpers ── */
-    function fmtFr(d) {
-      if (!d) return '';
-      const s = String(d).trim();
-      const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-      if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
-      if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
-      const dt = new Date(s);
-      return isNaN(dt) ? '' : dt.toLocaleDateString('fr-FR');
-    }
-
-    function moneyFr(v) {
-      return Number(v || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-
-    function parseMoney(v) {
-      const raw = String(v ?? '').trim();
-      if (!raw) return null;
-      const s = raw.replace(/\s/g, '').replace(/[^\d,.-]/g, '').replace(',', '.');
-      if (!s) return null;
-      const n = Number(s);
-      return isNaN(n) ? null : n;
-    }
-
-    function dateToISO(str) {
-      if (!str) return null;
-      const parts = String(str).trim().split('/');
-      if (parts.length !== 3) return null;
-      const [dd, mm, yyyy] = parts.map(p => p.trim());
-      if (!dd || !mm || !yyyy) return null;
-      const val = `${yyyy.padStart(4, '0')}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
-      return isNaN(new Date(val)) ? null : val;
-    }
-
-    function statutClass(s) {
-      return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
-    }
-
-    /* ── DOM refs ── */
-    const $tbody = document.getElementById('effetTbody');
-    const $totalCell = document.getElementById('totalMontantCell');
-    const $filterTypeBtn = document.getElementById('filterTypeBtn');
-    const $filterTypeDropdown = document.getElementById('filterTypeDropdown');
-    const $filterTypeMenu = document.getElementById('filterTypeMenu');
-    const $btnClearFilters = document.getElementById('btnClearFilters');
-    const $filterBeneficiaire = document.getElementById('filterBeneficiaire');
-    const $filterBanque = document.getElementById('filterBanque');
-    const $filterStatut = document.getElementById('filterStatut');
-    const $filterChantier = document.getElementById('filterChantier');
-    const $filterMontant = document.getElementById('filterMontant');
-    const $filterNumero = document.getElementById('filterNumero');
-    const $filterDateFrom = document.getElementById('filterDateFrom');
-    const $filterDateTo = document.getElementById('filterDateTo');
-
-    let activeFilterType = '';
-
-    /* ── select2 init (beneficiaire) ── */
-    (function initBeneficiaireSelect() {
-      if (!window.jQuery || !$filterBeneficiaire) return;
-      window.jQuery($filterBeneficiaire).select2({
-        width: '100%',
-        placeholder: 'Tous',
-        allowClear: true
-      });
-    })();
-
-    /* ── filter dropdown ── */
-    function setFilterType(type) {
-      const t = String(type || '').trim();
-      activeFilterType = t;
-      document.getElementById('filterBoxBeneficiaire').style.display = t === 'beneficiaire' ? '' : 'none';
-      document.getElementById('filterBoxBanque').style.display = t === 'banque' ? '' : 'none';
-      document.getElementById('filterBoxStatut').style.display = t === 'statut' ? '' : 'none';
-      document.getElementById('filterBoxChantier').style.display = t === 'chantier' ? '' : 'none';
-      document.getElementById('filterBoxMontant').style.display = t === 'montant' ? '' : 'none';
-      document.getElementById('filterBoxNumero').style.display = t === 'numero' ? '' : 'none';
-
-      $filterTypeBtn.textContent =
-        t === 'beneficiaire' ? 'Bénéficiaire' :
-          t === 'banque' ? 'Banque' :
-            t === 'statut' ? 'Statut' :
-              t === 'chantier' ? 'Chantier' :
-                t === 'montant' ? 'Montant' :
-                  t === 'numero' ? 'N° Effet' :
-                    'Filtrer Par';
-
-      updateClearBtn();
-      try {
-        applyFilters();
-      } catch (err) {
-        console.error('applyFilters failed', err);
-        const rows = $tbody ? $tbody.querySelectorAll('tr[data-id]') : [];
-        rows.forEach(tr => { tr.style.display = ''; });
-      }
-    }
-
-    function updateClearBtn() {
-      const active = !!(activeFilterType ||
-        ($filterBeneficiaire && $filterBeneficiaire.value) ||
-        ($filterBanque && $filterBanque.value) ||
-        ($filterStatut && $filterStatut.value) ||
-        ($filterChantier && $filterChantier.value) ||
-        ($filterMontant && $filterMontant.value) ||
-        ($filterNumero && $filterNumero.value) ||
-        ($filterDateFrom && $filterDateFrom.value) ||
-        ($filterDateTo && $filterDateTo.value));
-      $btnClearFilters.style.display = active ? '' : 'none';
-    }
-
-    function clearFilters() {
-      activeFilterType = '';
-      [$filterBeneficiaire, $filterBanque, $filterStatut, $filterChantier, $filterMontant, $filterNumero, $filterDateFrom, $filterDateTo].forEach(el => { if (el) el.value = ''; });
-      if (window.jQuery && $filterBeneficiaire) window.jQuery($filterBeneficiaire).val('').trigger('change');
-      setFilterType('');
-    }
-
-    function toggleMenu(forceOpen) {
-      const open = typeof forceOpen === 'boolean' ? forceOpen : !$filterTypeMenu.classList.contains('show');
-      $filterTypeDropdown.classList.toggle('show', open);
-      $filterTypeMenu.classList.toggle('show', open);
-      $filterTypeBtn.setAttribute('aria-expanded', String(open));
-    }
-
-    $filterTypeBtn.addEventListener('click', e => { e.preventDefault(); toggleMenu(); });
-    document.addEventListener('click', e => { if (!$filterTypeDropdown.contains(e.target)) toggleMenu(false); });
-    $filterTypeDropdown.addEventListener('click', e => {
-      const btn = e.target && e.target.closest ? e.target.closest('[data-filter-type]') : null;
-      if (!btn) return;
-      setFilterType(btn.getAttribute('data-filter-type'));
-      toggleMenu(false);
-    });
-    $btnClearFilters.addEventListener('click', clearFilters);
-
-    /* ── filtering ── */
-    function applyFilters() {
-      const benVal = ($filterBeneficiaire && $filterBeneficiaire.value || '').toLowerCase().trim();
-      const banVal = $filterBanque && $filterBanque.value || '';
-      const stVal = ($filterStatut && $filterStatut.value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-      const chVal = String($filterChantier && $filterChantier.value || '');
-      const mtVal = parseMoney($filterMontant && $filterMontant.value);
-      const numVal = ($filterNumero && $filterNumero.value || '').toLowerCase().trim();
-      const dateFrom = $filterDateFrom && $filterDateFrom.value;
-      const dateTo = $filterDateTo && $filterDateTo.value;
-
-      const hasAnyFilter = !!(
-        benVal || banVal || stVal || chVal || numVal ||
-        (mtVal !== null) || dateFrom || dateTo
-      );
-
-      const rows = $tbody ? $tbody.querySelectorAll('tr[data-id]') : [];
-      let total = 0;
-      let shown = 0;
-
-      rows.forEach(tr => {
-        let show = true;
-
-        if (!hasAnyFilter) {
-          tr.style.display = '';
-          const mc = tr.querySelector('td[data-name="montant"]');
-          const v = parseMoney(mc ? mc.textContent : '');
-          if (v !== null) total += v;
-          shown++;
-          return;
-        }
-
-        if (benVal) {
-          const c = tr.querySelector('td[data-name="beneficiaire"]');
-          show = show && c && c.textContent.toLowerCase().includes(benVal);
-        }
-        if (banVal) {
-          const c = tr.querySelector('td[data-name="banque"]');
-          show = show && c && c.textContent.trim() === banVal;
-        }
-        if (stVal) {
-          const span = tr.querySelector('td[data-name="statut"] .badge-statut');
-          const sel = tr.querySelector('td[data-name="statut"] select');
-          const raw = (sel ? sel.value : (span ? span.textContent : '')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-          show = show && raw === stVal;
-        }
-        if (chVal) {
-          const c = tr.querySelector('td[data-name="chantier"]');
-          const txt = c && c.textContent ? String(c.textContent) : '';
-          show = show && txt.includes(chVal);
-        }
-        if (mtVal !== null) {
-          const c = tr.querySelector('td[data-name="montant"]');
-          const v = parseMoney(c ? c.textContent : '');
-          show = show && v !== null && Math.abs(v - mtVal) < 0.01;
-        }
-        if (numVal) {
-          const c = tr.querySelector('td[data-name="numero"]');
-          show = show && c && c.textContent.toLowerCase().includes(numVal);
-        }
-        if (dateFrom || dateTo) {
-          const c = tr.querySelector('td[data-name="dateEcheance"]');
-          const iso = dateToISO(c ? c.textContent.trim() : '');
-          if (iso) {
-            const d = new Date(iso);
-            if (dateFrom && d < new Date(dateFrom)) show = false;
-            if (dateTo && d > new Date(dateTo)) show = false;
-          } else {
-            show = false;
-          }
-        }
-
-        tr.style.display = show ? '' : 'none';
-        if (show) {
-          const mc = tr.querySelector('td[data-name="montant"]');
-          const v = parseMoney(mc ? mc.textContent : '');
-          if (v !== null) total += v;
-          shown++;
-        }
-      });
-
-      if ($totalCell) $totalCell.textContent = moneyFr(total);
-      const info = document.getElementById('effetInfo');
-      if (info) info.textContent = `${shown} résultat(s)`;
-
-      if (!hasAnyFilter && shown === 0) {
-        rows.forEach(tr => { tr.style.display = ''; });
-      }
-    }
-
-    [$filterMontant, $filterNumero].forEach(el => {
-      if (el) el.addEventListener('input', () => { updateClearBtn(); applyFilters(); });
-    });
-    if ($filterBeneficiaire) {
-      $filterBeneficiaire.addEventListener('change', () => { updateClearBtn(); applyFilters(); });
-    }
-    [$filterBanque, $filterStatut, $filterChantier, $filterDateFrom, $filterDateTo].forEach(el => {
-      if (el) el.addEventListener('change', () => { updateClearBtn(); applyFilters(); });
-    });
-
-    applyFilters();
-
-    /* ── bottom scrollbar sync ── */
-    function updateBottomHScroll() {
-      const sc = document.getElementById('effetsTableResponsive');
-      const bar = document.getElementById('effetsBottomHScroll');
-      const inner = document.getElementById('effetsBottomHScrollInner');
-      if (!sc || !bar || !inner) return;
-      inner.style.width = sc.scrollWidth + 'px';
-      bar.scrollLeft = sc.scrollLeft;
-    }
-
+    const effetsPageData = JSON.parse(document.getElementById('effetsPageData').textContent);
     (function () {
-      const sc = document.getElementById('effetsTableResponsive');
-      const bar = document.getElementById('effetsBottomHScroll');
-      if (!sc || !bar) return;
-      let lock = false;
-      sc.addEventListener('scroll', () => {
-        if (lock) return;
-        lock = true;
-        bar.scrollLeft = sc.scrollLeft;
-        requestAnimationFrame(() => { lock = false; });
-      }, { passive: true });
-      bar.addEventListener('scroll', () => {
-        if (lock) return;
-        lock = true;
-        sc.scrollLeft = bar.scrollLeft;
-        requestAnimationFrame(() => { lock = false; });
-      }, { passive: true });
-      window.addEventListener('resize', updateBottomHScroll);
-      setTimeout(updateBottomHScroll, 0);
-      window.addEventListener('load', () => { updateBottomHScroll(); setTimeout(updateBottomHScroll, 200); });
-    })();
+      /* ── helpers ── */
+      function fmtFr(d) {
+        if (!d) return '';
+        const s = String(d).trim();
+        const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
+        const dt = new Date(s);
+        return isNaN(dt) ? '' : dt.toLocaleDateString('fr-FR');
+      }
 
-    /* ── statut badge → select toggle ── */
-    function toggleStatutSelect(span) {
-      const td = span.closest('td[data-name="statut"]');
-      if (!td) return;
-      span.style.display = 'none';
-      const sel = document.createElement('select');
-      sel.className = 'form-control form-control-sm statut-select';
-      ['En Circulation', 'PAYÉ', 'Impayé', 'Annulé', 'Treso'].forEach(opt => {
-        const o = document.createElement('option');
-        o.value = opt;
-        o.textContent = opt;
-        if (span.textContent.trim() === opt) o.selected = true;
-        sel.appendChild(o);
-      });
-      sel.addEventListener('change', async () => {
-        const tr = td.closest('tr[data-id]');
-        const id = tr && tr.dataset.id;
-        const val = sel.value;
-        if (id) {
-          try {
-            await fetch(`/tresorerie/effets/${id}/`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ statut: val })
-            });
-          } catch (e) { console.error(e); }
+      function moneyFr(v) {
+        return Number(v || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+
+      function parseMoney(v) {
+        const s = String(v || '').trim();
+        if (!s) return null;
+        const n = Number(s.replace(/\s/g, '').replace(/[^0-9,.-]/g, '').replace(',', '.'));
+        return isNaN(n) ? null : n;
+      }
+
+      function dateToISO(str) {
+        if (!str) return null;
+        const parts = str.trim().split('/');
+        if (parts.length !== 3) return null;
+        const [dd, mm, yyyy] = parts.map(p => p.trim());
+        if (!dd || !mm || !yyyy) return null;
+        const val = `${yyyy.padStart(4, '0')}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+        return isNaN(new Date(val)) ? null : val;
+      }
+
+      /* ── DOM refs ── */
+      const $tbody = document.getElementById('effetTbody');
+      const $totalCell = document.getElementById('totalMontantCell');
+      const $filterTypeBtn = document.getElementById('filterTypeBtn');
+      const $filterTypeDropdown = document.getElementById('filterTypeDropdown');
+      const $filterTypeMenu = document.getElementById('filterTypeMenu');
+      const $btnClearFilters = document.getElementById('btnClearFilters');
+      const $filterBoxBeneficiaire = document.getElementById('filterBoxBeneficiaire');
+      const $filterBoxChantier = document.getElementById('filterBoxChantier');
+      const $filterBoxBanque = document.getElementById('filterBoxBanque');
+      const $filterBoxMontant = document.getElementById('filterBoxMontant');
+      const $filterBoxStatut = document.getElementById('filterBoxStatut');
+      const $filterBeneficiaire = document.getElementById('filterBeneficiaire');
+      const $filterChantier = document.getElementById('filterChantier');
+      const $filterBanque = document.getElementById('filterBanque');
+      const $filterMontant = document.getElementById('filterMontant');
+      const $filterStatut = document.getElementById('filterStatut');
+      const $filterDateFrom = document.getElementById('filterDateFrom');
+      const $filterDateTo = document.getElementById('filterDateTo');
+      const $btnExportPdf = document.getElementById('btnExportPdf');
+      const $btnExportExcel = document.getElementById('btnExportExcel');
+
+      let activeFilterType = '';
+
+      /* ── filter visibility ── */
+      function setFilterType(type) {
+        const t = String(type || '').trim();
+        activeFilterType = t;
+        if ($filterBoxBeneficiaire) $filterBoxBeneficiaire.style.display = (t === 'beneficiaire') ? '' : 'none';
+        if ($filterBoxChantier) $filterBoxChantier.style.display = (t === 'chantier') ? '' : 'none';
+        if ($filterBoxBanque) $filterBoxBanque.style.display = (t === 'banque') ? '' : 'none';
+        if ($filterBoxMontant) $filterBoxMontant.style.display = (t === 'montant') ? '' : 'none';
+        if ($filterBoxStatut) $filterBoxStatut.style.display = (t === 'statut') ? '' : 'none';
+
+        if ($filterTypeBtn) {
+          $filterTypeBtn.textContent = t === 'beneficiaire' ? 'Bénéficiaire'
+            : t === 'chantier' ? 'Chantier'
+              : t === 'banque' ? 'Banque'
+                : t === 'montant' ? 'Montant'
+                  : t === 'statut' ? 'Statut'
+                    : 'Filtrer Par';
         }
-        span.textContent = val;
-        span.className = `badge-statut ${statutClass(val)}`;
-        span.style.display = '';
-        sel.remove();
+        updateClearBtn();
         applyFilters();
+      }
+
+      function updateClearBtn() {
+        if (!$btnClearFilters) return;
+        const active = !!(activeFilterType ||
+          ($filterBeneficiaire && $filterBeneficiaire.value) ||
+          ($filterChantier && $filterChantier.value) ||
+          ($filterBanque && $filterBanque.value) ||
+          ($filterMontant && $filterMontant.value) ||
+          ($filterStatut && $filterStatut.value) ||
+          ($filterDateFrom && $filterDateFrom.value) ||
+          ($filterDateTo && $filterDateTo.value));
+        $btnClearFilters.style.display = active ? '' : 'none';
+      }
+
+      function clearFilters() {
+        activeFilterType = '';
+        if ($filterBeneficiaire) $filterBeneficiaire.value = '';
+        if ($filterChantier) $filterChantier.value = '';
+        if ($filterBanque) $filterBanque.value = '';
+        if ($filterMontant) $filterMontant.value = '';
+        if ($filterStatut) $filterStatut.value = '';
+        if ($filterDateFrom) $filterDateFrom.value = '';
+        if ($filterDateTo) $filterDateTo.value = '';
+        setFilterType('');
+      }
+
+      /* ── dropdown toggle ── */
+      function toggleMenu(forceOpen) {
+        if (!$filterTypeDropdown || !$filterTypeMenu) return;
+        const open = typeof forceOpen === 'boolean' ? forceOpen : !$filterTypeMenu.classList.contains('show');
+        $filterTypeDropdown.classList.toggle('show', open);
+        $filterTypeMenu.classList.toggle('show', open);
+        if ($filterTypeBtn) $filterTypeBtn.setAttribute('aria-expanded', String(open));
+      }
+
+      if ($filterTypeBtn) $filterTypeBtn.addEventListener('click', e => { e.preventDefault(); toggleMenu(); });
+      document.addEventListener('click', e => {
+        if ($filterTypeDropdown && !$filterTypeDropdown.contains(e.target)) toggleMenu(false);
       });
-      sel.addEventListener('blur', () => {
-        span.style.display = '';
-        sel.remove();
-      });
-      td.appendChild(sel);
-      sel.focus();
-    }
-
-    /* ── inline edit (blur → PATCH) ── */
-    let dirtyRows = new Set();
-
-    if ($tbody) {
-      $tbody.addEventListener('input', e => {
-        const td = e.target.closest('td[data-name]');
-        if (!td) return;
-        const tr = td.closest('tr[data-id]');
-        if (tr) dirtyRows.add(tr);
-      });
-
-      $tbody.addEventListener('change', e => {
-        return;
-      });
-
-      $tbody.addEventListener('focusout', async e => {
-        const td = e.target.closest('td[data-name]');
-        if (!td) return;
-        const tr = td.closest('tr[data-id]');
-        if (!tr || !dirtyRows.has(tr)) return;
-        await saveRow(tr);
-      }, true);
-    }
-
-    async function saveRow(tr) {
-      const id = tr.dataset.id;
-      if (!id) return;
-      const data = {};
-      tr.querySelectorAll('[data-name]').forEach(el => {
-        const key = el.getAttribute('data-name');
-        if (key === 'chantier') {
-          return;
-        } else if (el.tagName === 'TD' && el.contentEditable === 'true') {
-          let val = el.textContent.trim();
-          if (key === 'montant') {
-            const n = parseMoney(val); if (n !== null) data[key] = n;
-          } else if (['dateEtablissement', 'dateEcheance', 'dateReglement'].includes(key)) {
-            data[key] = dateToISO(val);
-          } else {
-            data[key] = val;
-          }
-        }
-      });
-
-      try {
-        const res = await fetch(`/tresorerie/effets/${id}/`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
+      if ($filterTypeDropdown) {
+        $filterTypeDropdown.addEventListener('click', e => {
+          const btn = e.target && e.target.closest ? e.target.closest('[data-filter-type]') : null;
+          if (!btn) return;
+          setFilterType(btn.getAttribute('data-filter-type'));
+          toggleMenu(false);
         });
-        if (res.ok) {
-          dirtyRows.delete(tr);
-          applyFilters();
-        } else {
-          const j = await res.json().catch(() => ({}));
-          alert(j.message || 'Erreur mise à jour');
-        }
-      } catch (err) { alert(err.message || 'Erreur réseau'); }
-    }
-
-    /* ── "Enregistrer" saves all dirty rows ── */
-    document.getElementById('saveTableBtn').addEventListener('click', async () => {
-      const rows = [...dirtyRows];
-      if (!rows.length) return alert('Aucune modification à enregistrer.');
-      for (const tr of rows) await saveRow(tr);
-      alert('Modifications enregistrées.');
-    });
-
-    /* ── delete ── */
-    if ($tbody) {
-      $tbody.addEventListener('click', async e => {
-        const btn = e.target.closest('.btn-delete-effet');
-        if (!btn) return;
-        const tr = btn.closest('tr[data-id]');
-        const id = tr && tr.dataset.id;
-        if (!id || !confirm('Supprimer cet effet ?')) return;
-        const res = await fetch(`/tresorerie/effets/${id}`, { method: 'DELETE' });
-        if (res.ok) { tr.remove(); applyFilters(); }
-        else alert('Erreur suppression');
-      });
-    }
-
-    /* ── add row via modal ── */
-    const $createEffetModal = $('#createEffetModal');
-    const $createFournisseur = document.getElementById('createFournisseur');
-    const $createBanque = document.getElementById('createBanque');
-    const $createDateEcheance = document.getElementById('createDateEcheance');
-    const $createMontant = document.getElementById('createMontant');
-    const $createObs = document.getElementById('createObs');
-    const $createAllocList = document.getElementById('createAllocList');
-    const $createAllocTotals = document.getElementById('createAllocTotals');
-    const $btnCreateAddAlloc = document.getElementById('btnCreateAddAlloc');
-    const $btnCreateEffetConfirm = document.getElementById('btnCreateEffetConfirm');
-
-    let createAllocations = [];
-
-    document.getElementById('addRowBtn').addEventListener('click', () => {
-      openCreateModal();
-    });
-
-    if ($btnCreateAddAlloc) {
-      $btnCreateAddAlloc.addEventListener('click', () => {
-        createAllocations.push({ chantierId: '', montant: '' });
-        renderCreateAllocEditor();
-      });
-    }
-
-    if ($btnCreateEffetConfirm) {
-      $btnCreateEffetConfirm.addEventListener('click', async () => {
-        try {
-          const beneficiaire = $createFournisseur ? $createFournisseur.options[$createFournisseur.selectedIndex]?.text : '';
-          const banque = $createBanque ? $createBanque.options[$createBanque.selectedIndex]?.text : '';
-          const echeance = $createDateEcheance ? String($createDateEcheance.value || '').trim() : '';
-          const obs = $createObs ? String($createObs.value || '').trim() : '';
-
-          if (!banque || banque.includes('--')) return alert('Banque requise');
-          if (!beneficiaire || beneficiaire.includes('--')) return alert('Fournisseur requis');
-          if (!echeance) return alert("Date d'échéance requise");
-
-          const payloadAllocs = (Array.isArray(createAllocations) ? createAllocations : [])
-            .map(a => ({
-              chantierId: String(a.chantierId || '').trim(),
-              montant: parseMoney(a.montant),
-            }))
-            .filter(a => a.chantierId && a.montant !== null && a.montant > 0)
-            .map(a => ({ chantierId: Number(a.chantierId), montant: Number(a.montant) }));
-
-          if (!payloadAllocs.length) {
-            return alert('Ajoute au moins un chantier avec un montant > 0');
-          }
-
-          const totalMontant = payloadAllocs.reduce((sum, a) => sum + a.montant, 0);
-
-          const res = await fetch('/tresorerie/effets/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              banque: banque,
-              beneficiaire: beneficiaire,
-              dateEcheance: echeance,
-              montant: totalMontant,
-              obs: obs,
-              allocations: payloadAllocs
-            })
-          });
-          const json = await res.json().catch(() => ({}));
-          if (!res.ok) {
-            return alert(json && json.error ? json.error : 'Erreur création');
-          }
-
-          $createEffetModal.modal('hide');
-          location.reload();
-        } catch (err) {
-          alert(err.message || 'Erreur');
-        }
-      });
-    }
-
-    function openCreateModal() {
-      if (!$createFournisseur || !$createBanque) return;
-
-      $createFournisseur.innerHTML = '';
-      const optF0 = document.createElement('option');
-      optF0.value = '';
-      optF0.textContent = '-- Fournisseur --';
-      $createFournisseur.appendChild(optF0);
-      const fournisseursNames = [];
-      document.querySelectorAll('#filterBeneficiaire option').forEach(opt => {
-        if (opt.value) fournisseursNames.push(opt.value);
-      });
-      for (const fn of fournisseursNames) {
-        const o = document.createElement('option');
-        o.value = fn; o.textContent = fn;
-        $createFournisseur.appendChild(o);
       }
 
-      $createBanque.innerHTML = '';
-      const optB0 = document.createElement('option');
-      optB0.value = '';
-      optB0.textContent = '-- Banque --';
-      $createBanque.appendChild(optB0);
-      const banquesNames = [];
-      document.querySelectorAll('#filterBanque option').forEach(opt => {
-        if (opt.value) banquesNames.push(opt.value);
-      });
-      for (const bn of banquesNames) {
-        const o = document.createElement('option');
-        o.value = bn; o.textContent = bn;
-        $createBanque.appendChild(o);
-      }
+      if ($btnClearFilters) $btnClearFilters.addEventListener('click', clearFilters);
 
-      if ($createDateEcheance) $createDateEcheance.value = new Date().toISOString().slice(0, 10);
-      if ($createObs) $createObs.value = '';
+      /* ── filtering ── */
+      function applyFilters() {
+        const benVal = ($filterBeneficiaire && $filterBeneficiaire.value || '').toLowerCase().trim();
+        const chVal = $filterChantier && $filterChantier.value || '';
+        const banVal = ($filterBanque && $filterBanque.value || '').toLowerCase().trim();
+        const mtVal = parseMoney($filterMontant && $filterMontant.value);
+        const statVal = $filterStatut && $filterStatut.value || '';
+        const dateFrom = $filterDateFrom && $filterDateFrom.value;
+        const dateTo = $filterDateTo && $filterDateTo.value;
 
-      createAllocations = [{ chantierId: '', montant: '' }];
-      renderCreateAllocEditor();
-      $createEffetModal.modal('show');
-    }
+        const rows = $tbody ? $tbody.querySelectorAll('tr[data-id]') : [];
+        let total = 0;
+        let totalChantier = 0;
+        let shown = 0;
 
-    function setCreateMontantFromAllocs() {
-      const amounts = (Array.isArray(createAllocations) ? createAllocations : [])
-        .map(a => parseMoney(a.montant))
-        .filter(v => v !== null);
-      const sum = amounts.reduce((acc, v) => acc + Number(v || 0), 0);
-      if ($createMontant) $createMontant.value = moneyFr(sum);
-      if ($createAllocTotals) $createAllocTotals.textContent = `Total affectations: ${moneyFr(sum)}`;
-    }
+        rows.forEach(tr => {
+          let show = true;
 
-    function renderCreateAllocEditor() {
-      if (!$createAllocList) return;
-      $createAllocList.innerHTML = '';
+          if (benVal) {
+            const cell = tr.querySelector('td[data-name="beneficiaire"]');
+            show = show && cell && cell.textContent.toLowerCase().includes(benVal);
+          }
 
-      for (let i = 0; i < createAllocations.length; i++) {
-        const line = createAllocations[i];
-        const wrap = document.createElement('div');
-        wrap.className = 'd-flex align-items-center';
-        wrap.style.gap = '10px';
+          const allocTds = tr.querySelectorAll('td .allocations');
+          const hasAllocs = allocTds.length === 2;
+          let rowHasChantier = false;
+          let rowChantierAmt = 0;
 
-        const sel = document.createElement('select');
-        sel.className = 'form-control';
-        sel.style.flex = '1';
-        const optEmpty = document.createElement('option');
-        optEmpty.value = '';
-        optEmpty.textContent = '-- Chantier --';
-        sel.appendChild(optEmpty);
+          if (hasAllocs) {
+            const nameLines = allocTds[0].querySelectorAll('.alloc-line');
+            const amtLines = allocTds[1].querySelectorAll('.alloc-line');
 
-        // Use chantiers object from PHP data
-        const dropdownChantiers = [];
-        document.querySelectorAll('#filterChantier option').forEach(opt => {
-          if (opt.value) {
-            const cData = CHANTIERS_DATA.find(c => c.nom === opt.value);
-            if (cData && cData.id) {
-              dropdownChantiers.push({ id: cData.id, nom: cData.nom });
+            nameLines.forEach((nLine, i) => {
+              const aLine = amtLines[i];
+              const cId = nLine.getAttribute('data-chantier-id');
+
+              let lineMatch = true;
+              if (chVal) {
+                lineMatch = cId === chVal;
+                if (lineMatch) {
+                  rowHasChantier = true;
+                  if (aLine) {
+                    const amtText = aLine.querySelector('.alloc-amount');
+                    const amt = parseMoney(amtText ? amtText.textContent : '');
+                    if (amt !== null) rowChantierAmt += amt;
+                  }
+                }
+              }
+
+              nLine.style.display = lineMatch ? '' : 'none';
+              if (aLine) aLine.style.display = lineMatch ? '' : 'none';
+            });
+          }
+
+          if (chVal) show = show && rowHasChantier;
+
+          if (banVal) {
+            const cell = tr.querySelector('td[data-name="banque"]');
+            show = show && cell && cell.textContent.toLowerCase().includes(banVal);
+          }
+          if (mtVal !== null) {
+            const cell = tr.querySelector('td[data-name="montant"]');
+            const v = parseMoney(cell ? cell.textContent : '');
+            show = show && v !== null && Math.abs(v - mtVal) < 0.01;
+          }
+          if (statVal) {
+            show = show && tr.dataset.statut === statVal;
+          }
+          if (dateFrom || dateTo) {
+            const cell = tr.querySelector('td[data-name="dateEmission"]');
+            const iso = dateToISO(cell ? cell.textContent.trim() : '');
+            if (iso) {
+              const d = new Date(iso);
+              if (dateFrom && d < new Date(dateFrom)) show = false;
+              if (dateTo && d > new Date(dateTo)) show = false;
             } else {
-              dropdownChantiers.push({ id: opt.value, nom: opt.value });
+              show = false;
+            }
+          }
+
+          tr.style.display = show ? '' : 'none';
+          if (show) {
+            const mc = tr.querySelector('td[data-name="montant"]');
+            const v = parseMoney(mc ? mc.textContent : '');
+            if (v !== null) total += v;
+            if (chVal) totalChantier += rowChantierAmt;
+            shown++;
+          }
+        });
+
+        if ($totalCell) $totalCell.textContent = moneyFr(total);
+        const tcRow = document.getElementById('totalChantierRow');
+        const tcCell = document.getElementById('totalMontantChantierCell');
+
+        if (chVal) {
+          if (tcRow) tcRow.style.display = '';
+          if (tcCell) tcCell.textContent = moneyFr(totalChantier);
+        } else {
+          if (tcRow) tcRow.style.display = 'none';
+          if (tcCell) tcCell.textContent = '0,00';
+        }
+
+        const info = document.getElementById('effetInfo');
+        const count = document.getElementById('effetCount');
+        if (info) info.textContent = `${shown} résultat(s)`;
+        if (count) count.textContent = `${shown} résultat(s)`;
+      }
+
+      /* filter inputs */
+      [$filterBeneficiaire, $filterBanque, $filterMontant].forEach(el => {
+        if (el) el.addEventListener('input', () => { updateClearBtn(); applyFilters(); });
+      });
+      if ($filterChantier) $filterChantier.addEventListener('change', () => { updateClearBtn(); applyFilters(); });
+      if ($filterStatut) $filterStatut.addEventListener('change', () => { updateClearBtn(); applyFilters(); });
+      if ($filterDateFrom) $filterDateFrom.addEventListener('change', () => { updateClearBtn(); applyFilters(); });
+      if ($filterDateTo) $filterDateTo.addEventListener('change', () => { updateClearBtn(); applyFilters(); });
+
+      /* ── total compute on load ── */
+      applyFilters();
+
+      /* ── bottom scrollbar sync ── */
+      function updateBottomHScroll() {
+        const sc = document.getElementById('effetsTableResponsive');
+        const bar = document.getElementById('effetsBottomHScroll');
+        const inner = document.getElementById('effetsBottomHScrollInner');
+        if (!sc || !bar || !inner) return;
+        inner.style.width = sc.scrollWidth + 'px';
+        bar.scrollLeft = sc.scrollLeft;
+      }
+
+      (function initHScroll() {
+        const sc = document.getElementById('effetsTableResponsive');
+        const bar = document.getElementById('effetsBottomHScroll');
+        if (!sc || !bar) return;
+        let lock = false;
+        sc.addEventListener('scroll', () => { if (lock) return; lock = true; bar.scrollLeft = sc.scrollLeft; lock = false; }, { passive: true });
+        bar.addEventListener('scroll', () => { if (lock) return; lock = true; sc.scrollLeft = bar.scrollLeft; lock = false; }, { passive: true });
+        window.addEventListener('resize', updateBottomHScroll);
+        setTimeout(updateBottomHScroll, 0);
+        window.addEventListener('load', () => { updateBottomHScroll(); setTimeout(updateBottomHScroll, 200); });
+      })();
+
+      /* ── inline edit (blur → PATCH) ── */
+      function sanitize(s) {
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+      }
+
+      let dirtyRows = new Set();
+
+      if ($tbody) {
+        $tbody.addEventListener('input', e => {
+          const td = e.target.closest('td[data-name]');
+          if (!td) return;
+          const tr = td.closest('tr[data-id]');
+          if (tr) dirtyRows.add(tr);
+        });
+
+        $tbody.addEventListener('focusout', async e => {
+          const td = e.target.closest('td[data-name]');
+          if (!td) return;
+          const tr = td.closest('tr[data-id]');
+          if (!tr || !dirtyRows.has(tr)) return;
+          await saveRow(tr);
+        }, true);
+      }
+
+      async function saveRow(tr) {
+        const id = tr.dataset.id;
+        if (!id) return;
+        const data = {};
+        tr.querySelectorAll('[data-name]').forEach(el => {
+          const key = el.getAttribute('data-name');
+          if (el.tagName === 'SELECT') {
+            data[key] = el.value || null;
+          } else {
+            let val = el.textContent.trim();
+            if (key === 'montant') {
+              const n = parseMoney(val);
+              if (n === null) return;
+              data[key] = n;
+            } else if (key === 'dateEmission' || key === 'dateEcheance') {
+              data[key] = dateToISO(val);
+            } else {
+              data[key] = val;
             }
           }
         });
 
-        // Populate options
-        for (const c of dropdownChantiers) {
-          const o = document.createElement('option');
-          o.value = c.id; // use id as value!
-          o.textContent = c.nom;
-          if (String(line.chantierId) === String(c.id)) o.selected = true;
-          sel.appendChild(o);
+        try {
+          const res = await fetch(`/tresorerie/effets/update/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          const json = await res.json().catch(() => ({}));
+          if (res.ok) {
+            dirtyRows.delete(tr);
+            applyFilters();
+          } else {
+            alert(json.message || 'Erreur mise à jour');
+          }
+        } catch (err) {
+          alert(err.message || 'Erreur réseau');
         }
-
-        const input = document.createElement('input');
-        input.className = 'form-control';
-        input.placeholder = 'Montant';
-        input.style.width = '200px';
-        input.value = line.montant !== undefined && line.montant !== null ? String(line.montant) : '';
-
-        const btnRemove = document.createElement('button');
-        btnRemove.type = 'button';
-        btnRemove.className = 'btn btn-outline-danger';
-        btnRemove.innerHTML = '<i class="fas fa-times"></i>';
-
-        sel.addEventListener('change', () => { createAllocations[i].chantierId = sel.value; });
-        input.addEventListener('input', () => { createAllocations[i].montant = input.value; setCreateMontantFromAllocs(); });
-        btnRemove.addEventListener('click', () => {
-          createAllocations.splice(i, 1);
-          if (!createAllocations.length) createAllocations.push({ chantierId: '', montant: '' });
-          renderCreateAllocEditor();
-        });
-
-        wrap.appendChild(sel);
-        wrap.appendChild(input);
-        wrap.appendChild(btnRemove);
-        $createAllocList.appendChild(wrap);
       }
 
-      setCreateMontantFromAllocs();
-    }
+      /* ── delete & pdf per-row ── */
+      if ($tbody) {
+        $tbody.addEventListener('click', async e => {
+          const btnDel = e.target.closest('.btn-delete');
+          const btnPdf = e.target.closest('.btn-download-pdf');
+          const tr = e.target.closest('tr[data-id]');
+          const id = tr && tr.dataset.id;
+          if (!id) return;
 
+          if (btnDel) {
+            if (!confirm('Supprimer cet effet ?')) return;
+            const res = await fetch(`/tresorerie/effets/delete/${id}`, { method: 'DELETE' });
+            if (res.ok) { tr.remove(); applyFilters(); }
+            else alert('Erreur suppression');
+            return;
+          }
 
-    /* ── bulk PDF export ── */
-    document.getElementById('btnExportPdf').addEventListener('click', () => {
-      const { jsPDF } = window.jspdf;
-      const headers = Array.from(document.querySelectorAll('#editableTable thead th')).slice(0, -1).map(th => th.innerText);
-      const rows = [];
-      document.querySelectorAll('#effetTbody tr[data-id]').forEach(tr => {
-        if (tr.style.display === 'none') return;
-        const row = [];
-        tr.querySelectorAll('td:not(:last-child)').forEach(td => {
-          const sel = td.querySelector('select:not(.statut-select)');
-          const badge = td.querySelector('.badge-statut');
-          const statSel = td.querySelector('.statut-select');
-          if (sel) row.push(sel.options[sel.selectedIndex].text);
-          else if (statSel) row.push(statSel.value);
-          else if (badge) row.push(badge.textContent.trim());
-          else row.push(td.textContent.trim());
+          if (btnPdf) {
+            try {
+              const res = await fetch(`/tresorerie/effets/${id}/pdf`);
+              if (!res.ok) throw new Error('Erreur téléchargement');
+              const blob = await res.blob();
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url; a.download = `effet_${id}.pdf`;
+              document.body.appendChild(a); a.click(); a.remove();
+              URL.revokeObjectURL(url);
+            } catch (err) { alert(err.message); }
+          }
         });
-        rows.push(row);
-      });
-      if (!rows.length) return alert('Aucune donnée à exporter.');
-      const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
-      doc.text('Liste des Effets', 10, 15);
-      doc.autoTable({ head: [headers], body: rows, startY: 22, theme: 'grid' });
-      doc.save('effets.pdf');
-    });
+      }
 
-    /* ── bulk Excel export ── */
-    document.getElementById('btnExportExcel').addEventListener('click', () => {
-      const headers = Array.from(document.querySelectorAll('#editableTable thead th')).slice(0, -1).map(th => th.innerText);
-      const rows = [];
-      document.querySelectorAll('#effetTbody tr[data-id]').forEach(tr => {
-        if (tr.style.display === 'none') return;
-        const row = [];
-        tr.querySelectorAll('td:not(:last-child)').forEach(td => {
-          const sel = td.querySelector('select:not(.statut-select)');
-          const badge = td.querySelector('.badge-statut');
-          const statSel = td.querySelector('.statut-select');
-          let val;
-          if (sel) val = sel.options[sel.selectedIndex].text;
-          else if (statSel) val = statSel.value;
-          else if (badge) val = badge.textContent.trim();
-          else val = td.textContent.trim();
-          if (td.dataset.name === 'montant') { const n = parseMoney(val); if (n !== null) val = n; }
-          row.push(val);
+      /* ── bulk PDF export ── */
+      if ($btnExportPdf) {
+        $btnExportPdf.addEventListener('click', () => {
+          const { jsPDF } = window.jspdf;
+          const table = document.getElementById('effetsTableResponsive').querySelector('table');
+          const headers = Array.from(table.querySelectorAll('thead th')).slice(0, -1).map(th => th.innerText);
+          const rows = [];
+          document.querySelectorAll('#effetTbody tr[data-id]').forEach(tr => {
+            if (tr.style.display === 'none') return;
+            const row = [];
+            tr.querySelectorAll('td').forEach((td, i) => {
+              if (i === tr.cells.length - 1) return;
+              let val = td.textContent.trim();
+              if (td.querySelector('.allocations')) {
+                const lines = td.querySelectorAll('.alloc-line > div');
+                val = Array.from(lines).map(l => l.innerText || l.textContent).map(t => t.replace(/\u00A0/g, '').trim()).filter(t => t).join(', ');
+              }
+              row.push(val);
+            });
+            rows.push(row);
+          });
+          if (!rows.length) return alert('Aucune donnée à exporter.');
+          const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+          doc.text('Liste des Effets', 10, 15);
+          doc.autoTable({ head: [headers], body: rows, startY: 22, theme: 'grid' });
+          doc.save('effets.pdf');
         });
-        rows.push(row);
-      });
-      if (!rows.length) return alert('Aucune donnée à exporter.');
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-      XLSX.utils.book_append_sheet(wb, ws, 'Effets');
-      XLSX.writeFile(wb, 'effets.xlsx');
-    });
+      }
+
+      /* ── bulk Excel export ── */
+      if ($btnExportExcel) {
+        $btnExportExcel.addEventListener('click', () => {
+          const table = document.getElementById('effetsTableResponsive').querySelector('table');
+          const headers = Array.from(table.querySelectorAll('thead th')).slice(0, -1).map(th => th.innerText);
+          const rows = [];
+          document.querySelectorAll('#effetTbody tr[data-id]').forEach(tr => {
+            if (tr.style.display === 'none') return;
+            const row = [];
+            tr.querySelectorAll('td').forEach((td, i) => {
+              if (i === tr.cells.length - 1) return;
+              let val = td.textContent.trim();
+              if (td.querySelector('.allocations')) {
+                const lines = td.querySelectorAll('.alloc-line > div');
+                val = Array.from(lines).map(l => l.innerText || l.textContent).map(t => t.replace(/\u00A0/g, '').trim()).filter(t => t).join(', ');
+              }
+              if (td.dataset.name === 'montant') {
+                const n = parseMoney(val);
+                if (n !== null) val = n;
+              }
+              row.push(val);
+            });
+            rows.push(row);
+          });
+          if (!rows.length) return alert('Aucune donnée à exporter.');
+          const wb = XLSX.utils.book_new();
+          const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+          XLSX.utils.book_append_sheet(wb, ws, 'Effets');
+          XLSX.writeFile(wb, 'effets.xlsx');
+        });
+      }
+
+      /* ── multi-chantier allocation logic ── */
+      const chantiers = effetsPageData.chantiers;
+      const $allocModal = $('#allocModal');
+      const $allocList = document.getElementById('allocList');
+      const $btnAddAllocLine = document.getElementById('btnAddAllocLine');
+      const $btnSaveAlloc = document.getElementById('btnSaveAlloc');
+
+      let editingAllocEffetId = null;
+      let editingAllocations = [];
+      let editingAllocEffetMontant = null;
+
+      if ($tbody) {
+        $tbody.addEventListener('click', async e => {
+          const btnAlloc = e.target.closest('.btn-alloc');
+          if (btnAlloc) {
+            e.preventDefault();
+            const id = btnAlloc.getAttribute('data-id');
+            const tr = btnAlloc.closest('tr');
+            if (!tr || !id) return;
+
+            editingAllocEffetId = id;
+            const mc = tr.querySelector('td[data-name="montant"]');
+            editingAllocEffetMontant = mc ? parseMoney(mc.textContent) : 0;
+
+            const baseAllocsRaw = btnAlloc.getAttribute('data-allocs');
+            let baseAllocs = [];
+            try {
+              if (baseAllocsRaw) baseAllocs = JSON.parse(unescape(baseAllocsRaw));
+            } catch (e) { }
+
+            editingAllocations = baseAllocs.map(a => ({ chantierId: a.chantierId, montant: a.montant }));
+            if (!editingAllocations.length) editingAllocations = [{ chantierId: '', montant: '' }];
+            renderAllocEditor();
+            $allocModal.modal('show');
+          }
+        });
+      }
+
+      function updateAllocTotals() {
+        const el = document.getElementById('allocTotals');
+        if (!el) return;
+        const amounts = editingAllocations.map(a => parseMoney(a.montant)).filter(v => v !== null);
+        const sum = amounts.reduce((acc, v) => acc + Number(v || 0), 0);
+        const effetM = Number(editingAllocEffetMontant || 0);
+        const eps = 0.01;
+        if (!effetM) {
+          el.textContent = `Total affectations: ${moneyFr(sum)}`;
+          el.className = 'small text-muted';
+          return;
+        }
+        const diff = sum - effetM;
+        const isOver = diff > eps;
+        const isEqual = Math.abs(diff) <= eps;
+        el.textContent = `Total affectations: ${moneyFr(sum)} / Montant effet: ${moneyFr(effetM)}`;
+        el.className = `small ${isEqual ? 'text-success' : (isOver ? 'text-danger' : 'text-warning')}`;
+      }
+
+      function renderAllocEditor() {
+        if (!$allocList) return;
+        $allocList.innerHTML = '';
+        for (let i = 0; i < editingAllocations.length; i++) {
+          const line = editingAllocations[i];
+          const wrap = document.createElement('div');
+          wrap.className = 'd-flex align-items-center';
+          wrap.style.gap = '10px';
+
+          const sel = document.createElement('select');
+          sel.className = 'form-control';
+          sel.style.flex = '1';
+          const optEmpty = document.createElement('option');
+          optEmpty.value = '';
+          optEmpty.textContent = '-- Chantier --';
+          sel.appendChild(optEmpty);
+          for (const c of chantiers) {
+            const o = document.createElement('option');
+            o.value = String(c.id);
+            o.textContent = c.nom;
+            if (String(line.chantierId || '') === String(c.id)) o.selected = true;
+            sel.appendChild(o);
+          }
+
+          const input = document.createElement('input');
+          input.className = 'form-control';
+          input.placeholder = 'Montant';
+          input.style.width = '200px';
+          input.value = line.montant !== undefined && line.montant !== null ? String(line.montant) : '';
+
+          const btnRemove = document.createElement('button');
+          btnRemove.className = 'btn btn-outline-danger';
+          btnRemove.innerHTML = '<i class="fas fa-times"></i>';
+
+          sel.addEventListener('change', () => { editingAllocations[i].chantierId = sel.value; });
+          input.addEventListener('input', () => { editingAllocations[i].montant = input.value; updateAllocTotals(); });
+          btnRemove.addEventListener('click', () => {
+            editingAllocations.splice(i, 1);
+            if (!editingAllocations.length) editingAllocations.push({ chantierId: '', montant: '' });
+            renderAllocEditor();
+          });
+
+          wrap.appendChild(sel);
+          wrap.appendChild(input);
+          wrap.appendChild(btnRemove);
+          $allocList.appendChild(wrap);
+        }
+        updateAllocTotals();
+      }
+
+      if ($btnAddAllocLine) {
+        $btnAddAllocLine.addEventListener('click', () => {
+          editingAllocations.push({ chantierId: '', montant: '' });
+          renderAllocEditor();
+        });
+      }
+
+      if ($btnSaveAlloc) {
+        $btnSaveAlloc.addEventListener('click', async () => {
+          if (!editingAllocEffetId) return;
+
+          const payload = editingAllocations
+            .map(a => ({ chantierId: a.chantierId, montant: parseMoney(a.montant) }))
+            .filter(a => a.chantierId && a.montant !== null);
+
+          const sum = payload.reduce((acc, a) => acc + Number(a.montant || 0), 0);
+          const effetM = Number(editingAllocEffetMontant || 0);
+          const eps = 0.01;
+          if (effetM && (sum - effetM) > eps) {
+            return alert(`Tu as dépassé le montant de l'effet. Total affectations: ${moneyFr(sum)} / Montant effet: ${moneyFr(effetM)}`);
+          }
+          if (effetM && Math.abs(sum - effetM) > eps) {
+            return alert(`Le total des montants chantier doit être égal au montant de l'effet. Total affectations: ${moneyFr(sum)} / Montant effet: ${moneyFr(effetM)}`);
+          }
+
+          try {
+            const res = await fetch(`/tresorerie/effets/${editingAllocEffetId}/allocations`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ allocations: payload })
+            });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok || json.success === false) return alert(json.error || 'Erreur');
+            $allocModal.modal('hide');
+            alert('Enregistré avec succès !');
+            window.location.reload();
+          } catch (err) {
+            alert(err.message || 'Erreur');
+          }
+        });
+      }
+
+    })();
   </script>
 </body>
 

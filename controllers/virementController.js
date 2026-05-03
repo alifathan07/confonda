@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 
 export const index = async (req, res) => {
     const virements = await prisma.virement.findMany({
-        include: { fournisseur: true, banque: true, chantier: true, allocations: { include: { chantier: true } } },
+        include: { fournisseur: true, banque: true, chantier: true, allocations: { include: { chantier: true } }, factures: { include: { facture: true } } },
         orderBy: {
             id: 'desc'
         }

@@ -308,6 +308,11 @@ const chequeInclude = {
   fournisseur: true,
   banque: true,
   chantier: true,
+  factures: {
+    include: {
+      facture: true
+    }
+  }
 };
 
 export const importExelCheques = async (req, res) => {

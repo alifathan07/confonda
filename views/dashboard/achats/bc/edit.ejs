@@ -1078,7 +1078,7 @@
                   <i class="fas fa-save"></i> <span>Sauvegarder</span>
                 </button>
                 <button class="btn btn-sm btn-info d-flex align-items-center gap-1" title="Créer un BL"
-                  onclick="openBLCreationModal(<%= bc.id %>, '<%= (bc.fournisseur && bc.fournisseur.name) || '' %>', <%= (bc.fournisseur && bc.fournisseur.id) || 'null' %>, '<%= bc.numero || bc.id %>')">
+                  onclick="openBLCreationModal(<%= bc.id %>, <%= JSON.stringify((bc.fournisseur && bc.fournisseur.name) || '') %>, <%= (bc.fournisseur && bc.fournisseur.id) || 'null' %>, <%= JSON.stringify(bc.numero || String(bc.id)) %>)">
                   <i class="fas fa-box"></i> <span>Créer BL</span>
                 </button>
               </div>

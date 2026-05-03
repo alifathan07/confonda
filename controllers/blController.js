@@ -570,6 +570,53 @@ export const viewBL = async (req, res) => {
 };
 
 /**
+ * GET /api/bons-livraison/:id
+ * Get single BL as JSON
+ */
+export const getBL = async (req, res) => {
+  try {
+    const blId = parseInt(req.params.id);
+    if (!blId || isNaN(blId)) {
+      return res.status(400).json({ error: 'Invalid BL ID' });
+    }
+
+    const bl = await prisma.bondeLivraison.findUnique({
+      where: { id: blId },
+      include: {
+        fournisseur: true,
+        items: {
+          include: {
+            commandesItems: true
+          }
+        },
+        bondeCommandeLinks: {
+          include: {
+            bondeCommande: true
+          }
+        },
+        factureLinks: {
+          include: {
+            facture: true
+          }
+        }
+      }
+    });
+
+    // Add fichier separately since it's not in the include
+    const blWithFile = { ...bl, fichier: bl?.fichier };
+
+    if (!bl) {
+      return res.status(404).json({ error: 'BL not found' });
+    }
+
+    res.json({ bl: blWithFile });
+  } catch (error) {
+    console.error('Erreur getBL:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
  * GET /achats/bons-livraison/:id/edit
  * Render BL edit page with items
  */

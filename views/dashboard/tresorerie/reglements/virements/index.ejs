@@ -148,7 +148,7 @@
                 <div>
                   <h1 class="h3 mb-0 text-gray-800">Virements</h1>
                   <div class="small text-muted" id="virementCount">
-                    <% if (typeof virements !=='undefined' ) { %>
+                    <% if (typeof virements !== 'undefined') { %>
                       <%= virements.length %> résultat(s)<% } %>
                   </div>
                 </div>
@@ -192,11 +192,11 @@
                         <div id="filterBoxChantier" style="display:none;">
                           <select id="filterChantier" class="form-control">
                             <option value="">Tous</option>
-                            <% (chantiers || []).forEach(c=> { %>
+                            <% (chantiers || []).forEach(c => { %>
                               <option value="<%= c.id %>">
                                 <%= c.nom %>
                               </option>
-                              <% }) %>
+                            <% }) %>
                           </select>
                         </div>
                         <div id="filterBoxBanque" style="display:none;">
@@ -226,128 +226,148 @@
 
                   <!-- Table -->
                   <div class="table-responsive" id="virementsTableResponsive">
-                    <% function fmtDate(d) { if (!d) return '' ; const dt = (d instanceof Date) ? d : new Date(d); if (!dt || isNaN(dt.getTime())) return '' ; return String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0') + '/' + dt.getFullYear(); } %>
-                      <table class="table table-sm table-hover table-bordered virement-table"
-                        style="min-width: 1000px;">
-                        <thead class="thead-light">
+                    <% function fmtDate(d) { if (!d) return ''; const dt = (d instanceof Date) ? d : new Date(d); if (!dt || isNaN(dt.getTime())) return ''; return String(dt.getDate()).padStart(2,'0') + '/' + String(dt.getMonth()+1).padStart(2,'0') + '/' + dt.getFullYear(); } %>
+                    <table class="table table-sm table-hover table-bordered virement-table"
+                      style="min-width: 1000px;">
+                      <thead class="thead-light">
+                        <tr>
+                          <th>Bénéficiaire</th>
+                          <th>Banque</th>
+                          <th class="text-right">Montant</th>
+                          <th>Date Saisie</th>
+                          <th>Observation</th>
+                          <th>Date Règlement</th>
+                          <th>Chantier</th>
+                          <th>Montant chantier</th>
+                          <th>Facture Liée</th>
+                          <th class="text-right">Total affecté</th>
+                          <th class="text-right">Reste à affecter</th>
+                          <th class="text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="virementTbody">
+                        <% if (typeof virements === 'undefined' || !virements.length) { %>
                           <tr>
-                            <th>Bénéficiaire</th>
-                            <th>Banque</th>
-                            <th class="text-right">Montant</th>
-                            <th>Date Saisie</th>
-                            <th>Observation</th>
-                            <th>Date Règlement</th>
-                            <th>Chantier</th>
-                            <th>Montant chantier</th>
-                            <th class="text-right">Actions</th>
+                            <td colspan="12" class="text-center text-muted">Aucun virement disponible.</td>
                           </tr>
-                        </thead>
-                        <tbody id="virementTbody">
-                          <% if (typeof virements==='undefined' || !virements.length) { %>
-                            <tr>
-                              <td colspan="8" class="text-center text-muted">Aucun virement disponible.</td>
-                            </tr>
-                            <% } else { %>
-                              <% virements.forEach(v=> { %>
-                                <tr data-id="<%= v.id %>">
-                                  <td class="cell-edit" contenteditable="true" data-name="beneficiaire">
-                                    <%= v.beneficiaire || '' %>
-                                  </td>
-                                  <td class="cell-edit" contenteditable="true" data-name="banque">
-                                    <%= v.banque?.name || '' %>
-                                  </td>
-                                  <td class="text-right cell-edit" contenteditable="true" data-name="montant">
-                                    <%= Number(v.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
-                                      maximumFractionDigits: 2 }) %>
-                                  </td>
-                                  <td class="cell-edit" contenteditable="true" data-name="dateSaisie">
-                                    <%= fmtDate(v.date ?? v.createdAt ?? v.updatedAt) %>
-                                  </td>
-                                  <td class="cell-edit obs-cell" contenteditable="true" data-name="obs">
-                                    <%= v.obs || '' %>
-                                  </td>
-                                  <td class="cell-edit" contenteditable="true" data-name="dateReglement">
-                                    <%= fmtDate(v.dateReglement) %>
-                                  </td>
-                                  <td>
-                                    <div class="allocations">
-                                      <% const _displayAllocs=(v.allocations && v.allocations.length) ? v.allocations :
-                                        []; %>
-                                        <% if (_displayAllocs.length> 0) { %>
-                                          <% _displayAllocs.forEach(a=> { %>
-                                            <div class="alloc-line"
-                                              data-chantier-id="<%= (a.chantierId != null ? a.chantierId : (a.chantier ? a.chantier.id : '')) %>">
-                                              <div class="alloc-name">
-                                                <%= a.chantier ? a.chantier.nom : '' %>
-                                              </div>
-                                            </div>
-                                            <% }) %>
-                                              <% } else if (v.chantier) { %>
-                                                <div class="alloc-line" data-chantier-id="<%= v.chantier.id %>">
-                                                  <div class="alloc-name">
-                                                    <%= v.chantier.nom %>
-                                                  </div>
-                                                </div>
-                                                <% } %>
+                        <% } else { %>
+                          <% virements.forEach(v => { %>
+                            <tr data-id="<%= v.id %>">
+                              <td class="cell-edit" contenteditable="true" data-name="beneficiaire">
+                                <%= v.beneficiaire || '' %>
+                              </td>
+                              <td class="cell-edit" contenteditable="true" data-name="banque">
+                                <%= v.banque?.name || '' %>
+                              </td>
+                              <td class="text-right cell-edit" contenteditable="true" data-name="montant">
+                                <%= Number(v.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                              </td>
+                              <td class="cell-edit" contenteditable="true" data-name="dateSaisie">
+                                <%= fmtDate(v.date ?? v.createdAt ?? v.updatedAt) %>
+                              </td>
+                              <td class="cell-edit obs-cell" contenteditable="true" data-name="obs">
+                                <%= v.obs || '' %>
+                              </td>
+                              <td class="cell-edit" contenteditable="true" data-name="dateReglement">
+                                <%= fmtDate(v.dateReglement) %>
+                              </td>
+                              <td>
+                                <div class="allocations">
+                                  <% const _displayAllocs = (v.allocations && v.allocations.length) ? v.allocations : []; %>
+                                  <% if (_displayAllocs.length > 0) { %>
+                                    <% _displayAllocs.forEach(a => { %>
+                                      <div class="alloc-line"
+                                        data-chantier-id="<%= (a.chantierId != null ? a.chantierId : (a.chantier ? a.chantier.id : '')) %>">
+                                        <div class="alloc-name">
+                                          <%= a.chantier ? a.chantier.nom : '' %>
+                                        </div>
+                                      </div>
+                                    <% }) %>
+                                  <% } else if (v.chantier) { %>
+                                    <div class="alloc-line" data-chantier-id="<%= v.chantier.id %>">
+                                      <div class="alloc-name">
+                                        <%= v.chantier.nom %>
+                                      </div>
                                     </div>
-                                  </td>
-                                  <td>
-                                    <div class="allocations">
-                                      <% if (_displayAllocs.length> 0) { %>
-                                        <% _displayAllocs.forEach(a=> { %>
-                                          <div class="alloc-line">
-                                            <div class="alloc-name">&nbsp;</div>
-                                            <div class="alloc-amount">
-                                              <%= (a.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
-                                                maximumFractionDigits: 2 }) %>
-                                            </div>
-                                          </div>
-                                          <% }) %>
-                                            <% } else if (v.chantier) { %>
-                                              <div class="alloc-line">
-                                                <div class="alloc-name">&nbsp;</div>
-                                                <div class="alloc-amount">
-                                                  <%= (v.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits:
-                                                    2, maximumFractionDigits: 2 }) %>
-                                                </div>
-                                              </div>
-                                              <% } %>
-                                    </div>
-                                  </td>
-                                  <td class="text-right">
-                                    <div class="table-actions">
-                                      <button class="btn btn-sm btn-outline-secondary btn-alloc" title="Chantiers"
-                                        data-id="<%= v.id %>"
-                                        data-allocs="<%= escape(JSON.stringify((v.allocations || []).map(a => ({ chantierId: a.chantierId, montant: a.montant })))) %>">
-                                        <i class="fas fa-project-diagram"></i>
-                                      </button>
-                                      <button class="btn btn-sm btn-outline-danger btn-download-pdf"
-                                        title="Télécharger PDF" data-id="<%= v.id %>">
-                                        <i class="fas fa-download"></i>
-                                      </button>
-                                      <button class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"
-                                        data-id="<%= v.id %>">
-                                        <i class="fas fa-trash"></i>
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                                <% }) %>
                                   <% } %>
-                        </tbody>
-                        <tfoot>
-                          <tr>
-                            <th colspan="2" class="text-right">Total</th>
-                            <th class="text-right" id="totalMontantCell">0,00</th>
-                            <th colspan="6"></th>
-                          </tr>
-                          <tr id="totalChantierRow" style="display:none;">
-                            <th colspan="7" class="text-right">Total chantier</th>
-                            <th class="text-right" id="totalMontantChantierCell">0,00</th>
-                            <th colspan="1"></th>
-                          </tr>
-                        </tfoot>
-                      </table>
+                                </div>
+                              </td>
+                              <td>
+                                <div class="allocations">
+                                  <% if (_displayAllocs.length > 0) { %>
+                                    <% _displayAllocs.forEach(a => { %>
+                                      <div class="alloc-line">
+                                        <div class="alloc-name">&nbsp;</div>
+                                        <div class="alloc-amount">
+                                          <%= (a.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                                        </div>
+                                      </div>
+                                    <% }) %>
+                                  <% } else if (v.chantier) { %>
+                                    <div class="alloc-line">
+                                      <div class="alloc-name">&nbsp;</div>
+                                      <div class="alloc-amount">
+                                        <%= (v.montant || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                                      </div>
+                                    </div>
+                                  <% } %>
+                                </div>
+                              </td>
+                              <td>
+                                <% if (v.factures && v.factures.length > 0) { %>
+                                  <% v.factures.forEach(fv => { %>
+                                    <a href="/achats/factures/<%= fv.facture.id %>/view" class="badge badge-info mb-1 d-inline-block" title="Voir facture">
+                                      FA N°<%= fv.facture.numero %> — <%= fv.montantAffecte.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> DH
+                                    </a>
+                                  <% }) %>
+                                <% } else { %>
+                                  <span class="text-muted">—</span>
+                                <% } %>
+                              </td>
+                              <td class="text-right">
+                                <% const montantDejaAffecte = (v.factures || []).reduce((sum, fv) => sum + (fv.montantAffecte || 0), 0); %>
+                                <%= montantDejaAffecte.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> DH
+                              </td>
+                              <td class="text-right">
+                                <% const resteVirement = (v.montant || 0) - montantDejaAffecte; %>
+                                <span class="<%= resteVirement > 0 ? 'text-success' : 'text-danger' %> font-weight-bold">
+                                  <%= resteVirement.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> DH
+                                </span>
+                              </td>
+                              <td class="text-right">
+                                <div class="table-actions">
+                                  <button class="btn btn-sm btn-outline-secondary btn-alloc" title="Chantiers"
+                                    data-id="<%= v.id %>"
+                                    data-allocs="<%= escape(JSON.stringify((v.allocations || []).map(a => ({ chantierId: a.chantierId, montant: a.montant })))) %>">
+                                    <i class="fas fa-project-diagram"></i>
+                                  </button>
+                                  <button class="btn btn-sm btn-outline-danger btn-download-pdf"
+                                    title="Télécharger PDF" data-id="<%= v.id %>">
+                                    <i class="fas fa-download"></i>
+                                  </button>
+                                  <button class="btn btn-sm btn-outline-danger btn-delete" title="Supprimer"
+                                    data-id="<%= v.id %>">
+                                    <i class="fas fa-trash"></i>
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          <% }) %>
+                        <% } %>
+                      </tbody>
+                      <tfoot>
+                        <tr>
+                          <th colspan="2" class="text-right">Total</th>
+                          <th class="text-right" id="totalMontantCell">0,00</th>
+                          <th colspan="9"></th>
+                        </tr>
+                        <tr id="totalChantierRow" style="display:none;">
+                          <th colspan="7" class="text-right">Total chantier</th>
+                          <th class="text-right" id="totalMontantChantierCell">0,00</th>
+                          <th colspan="4"></th>
+                        </tr>
+                      </tfoot>
+                    </table>
                   </div>
 
                   <!-- Fixed bottom scrollbar -->
@@ -358,7 +378,7 @@
                   <!-- Results info -->
                   <div class="d-flex align-items-center justify-content-between mt-3">
                     <div class="small text-muted" id="virementInfo">
-                      <% if (typeof virements !=='undefined' ) { %>
+                      <% if (typeof virements !== 'undefined') { %>
                         <%= virements.length %> résultat(s)<% } %>
                     </div>
                   </div>
@@ -366,6 +386,8 @@
               </div>
             </div>
         </div>
+
+        <!-- Alloc Modal -->
         <div class="modal fade" id="allocModal" tabindex="-1" role="dialog" aria-hidden="true">
           <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
@@ -378,8 +400,9 @@
               <div class="modal-body">
                 <div class="small text-muted" id="allocTotals"></div>
                 <div id="allocList" class="d-grid" style="gap: 10px;"></div>
-                <button id="btnAddAllocLine" class="btn btn-sm btn-outline-primary mt-3"><i
-                    class="fas fa-plus mr-2"></i>Ajouter chantier</button>
+                <button id="btnAddAllocLine" class="btn btn-sm btn-outline-primary mt-3">
+                  <i class="fas fa-plus mr-2"></i>Ajouter chantier
+                </button>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
@@ -583,9 +606,7 @@
             });
           }
 
-          if (chVal) {
-            show = show && rowHasChantier;
-          }
+          if (chVal) show = show && rowHasChantier;
 
           if (banVal) {
             const cell = tr.querySelector('td[data-name="banque"]');
@@ -631,7 +652,9 @@
         }
 
         const info = document.getElementById('virementInfo');
+        const count = document.getElementById('virementCount');
         if (info) info.textContent = `${shown} résultat(s)`;
+        if (count) count.textContent = `${shown} résultat(s)`;
       }
 
       /* filter inputs */
@@ -668,12 +691,6 @@
       })();
 
       /* ── inline edit (blur → PATCH) ── */
-      function sanitize(s) {
-        const d = document.createElement('div');
-        d.textContent = s;
-        return d.innerHTML;
-      }
-
       let dirtyRows = new Set();
 
       if ($tbody) {
@@ -682,13 +699,6 @@
           if (!td) return;
           const tr = td.closest('tr[data-id]');
           if (tr) dirtyRows.add(tr);
-        });
-
-        $tbody.addEventListener('change', e => {
-          const sel = e.target.closest('select[data-name="chantier"]');
-          if (!sel) return;
-          const tr = sel.closest('tr[data-id]');
-          if (tr) { dirtyRows.add(tr); saveRow(tr); }
         });
 
         $tbody.addEventListener('focusout', async e => {
@@ -714,7 +724,7 @@
               const n = parseMoney(val);
               if (n === null) return;
               data[key] = n;
-              data.montantLettre = null; // backend will compute if needed
+              data.montantLettre = null;
             } else if (key === 'dateSaisie' || key === 'dateReglement') {
               data[key] = dateToISO(val);
             } else {
@@ -813,13 +823,11 @@
             const row = [];
             tr.querySelectorAll('td').forEach((td, i) => {
               if (i === tr.cells.length - 1) return;
-
               let val = td.textContent.trim();
               if (td.querySelector('.allocations')) {
                 const lines = td.querySelectorAll('.alloc-line > div');
                 val = Array.from(lines).map(l => l.innerText || l.textContent).map(t => t.replace(/\u00A0/g, '').trim()).filter(t => t).join(', ');
               }
-
               if (td.dataset.name === 'montant') {
                 const n = parseMoney(val);
                 if (n !== null) val = n;
@@ -877,11 +885,7 @@
       function updateAllocTotals() {
         const el = document.getElementById('allocTotals');
         if (!el) return;
-
-        const amounts = editingAllocations
-          .map(a => parseMoney(a.montant))
-          .filter(v => v !== null);
-
+        const amounts = editingAllocations.map(a => parseMoney(a.montant)).filter(v => v !== null);
         const sum = amounts.reduce((acc, v) => acc + Number(v || 0), 0);
         const virementM = Number(editingAllocVirementMontant || 0);
         const eps = 0.01;
@@ -890,11 +894,9 @@
           el.className = 'small text-muted';
           return;
         }
-
         const diff = sum - virementM;
         const isOver = diff > eps;
         const isEqual = Math.abs(diff) <= eps;
-
         el.textContent = `Total affectations: ${moneyFr(sum)} / Montant virement: ${moneyFr(virementM)}`;
         el.className = `small ${isEqual ? 'text-success' : (isOver ? 'text-danger' : 'text-warning')}`;
       }
@@ -904,7 +906,6 @@
         $allocList.innerHTML = '';
         for (let i = 0; i < editingAllocations.length; i++) {
           const line = editingAllocations[i];
-
           const wrap = document.createElement('div');
           wrap.className = 'd-flex align-items-center';
           wrap.style.gap = '10px';
@@ -947,7 +948,6 @@
           wrap.appendChild(btnRemove);
           $allocList.appendChild(wrap);
         }
-
         updateAllocTotals();
       }
 
