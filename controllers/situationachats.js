@@ -2,8 +2,18 @@ import prisma from "../db.js";
 
 export async function getSituationGenerale(req, res) {
   try {
-    // Fetch full chain with all necessary includes
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination
+    const totalBCs = await prisma.bondeCommande.count();
+    const totalPages = Math.ceil(totalBCs / limit);
+
+    // Fetch paginated BCs with all necessary includes
     const bcs = await prisma.bondeCommande.findMany({
+      skip: skip,
+      take: limit,
       include: {
         fournisseur: true,
         chantier: true,
@@ -47,10 +57,10 @@ export async function getSituationGenerale(req, res) {
     // Flatten rows
     const rows = flattenRows(bcs);
 
-    // Compute KPIs
+    // Compute KPIs (only from current page for accuracy)
     const kpis = computeKPIs(rows);
 
-    res.render('dashboard/achats/situation', { rows, kpis });
+    res.render('dashboard/achats/situation', { rows, kpis, page, totalPages, totalBCs });
   } catch (error) {
     console.error('Error in getSituationGenerale:', error);
     res.status(500).json({ error: error.message });
