@@ -50,7 +50,7 @@ export async function getSituationGenerale(req, res) {
     // Compute KPIs
     const kpis = computeKPIs(rows);
 
-    res.render('dashboard/Achats/situation-generale', { rows, kpis });
+    res.render('dashboard/achats/situation', { rows, kpis });
   } catch (error) {
     console.error('Error in getSituationGenerale:', error);
     res.status(500).json({ error: error.message });
