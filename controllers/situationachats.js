@@ -382,12 +382,18 @@ function flattenRows(bcs) {
 }
 
 function computeKPIs(rows) {
-  // Commandé HT - sum of totalHT per unique itemId
+  const currentYear = new Date().getFullYear();
+
+  // Commandé HT - sum of totalHT per unique itemId for current year only
   const uniqueItems = new Map();
   for (const row of rows) {
     if (row.isItemRow && row.itemId && row.totalHt != null) {
-      if (!uniqueItems.has(row.itemId)) {
-        uniqueItems.set(row.itemId, row.totalHt);
+      // Check if BC date is in current year
+      const rowYear = row.bcDate ? new Date(row.bcDate).getFullYear() : null;
+      if (rowYear === currentYear) {
+        if (!uniqueItems.has(row.itemId)) {
+          uniqueItems.set(row.itemId, row.totalHt);
+        }
       }
     }
   }
