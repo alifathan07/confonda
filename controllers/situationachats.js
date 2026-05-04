@@ -17,6 +17,9 @@ export async function getSituationGenerale(req, res) {
       include: {
         fournisseur: true,
         chantier: true,
+        BondeCommandeChantierItem: {
+          include: { chantier: true }
+        },
         commandesItems: {
           include: {
             bondeLivraisonItems: {
@@ -59,6 +62,9 @@ export async function getSituationGenerale(req, res) {
       include: {
         fournisseur: true,
         chantier: true,
+        BondeCommandeChantierItem: {
+          include: { chantier: true }
+        },
         commandesItems: {
           include: {
             bondeLivraisonItems: {
@@ -105,12 +111,35 @@ function flattenRows(bcs) {
   const rows = [];
 
   for (const bc of bcs) {
+    // Get chantier from BC, BondeCommandeChantierItem, or items' imputation
+    let bcChantier = bc.chantier?.nom || '';
+    
+    // Check BondeCommandeChantierItem for additional Chantiers
+    const bcChantiers = [];
+    if (bc.chantier?.nom) bcChantiers.push(bc.chantier.nom);
+    if (bc.BondeCommandeChantierItem) {
+      for (const bcItem of bc.BondeCommandeChantierItem) {
+        if (bcItem.chantier?.nom && !bcChantiers.includes(bcItem.chantier.nom)) {
+          bcChantiers.push(bcItem.chantier.nom);
+        }
+      }
+    }
+    
+    // Fallback to items' imputation
+    if (bcChantiers.length === 0 && bc.commandesItems) {
+      for (const item of bc.commandesItems) {
+        if (item.imputation && !bcChantiers.includes(item.imputation)) {
+          bcChantiers.push(item.imputation);
+        }
+      }
+    }
+
     const bcHeader = {
       bcId: bc.id,
       bcNumero: bc.numero,
       bcDate: bc.date,
       fournisseur: bc.fournisseur?.name || '',
-      chantier: bc.chantier?.nom || '',
+      chantier: bcChantiers.join(', '),
       statut: bc.statut || 'en_attente_bl'
     };
 
