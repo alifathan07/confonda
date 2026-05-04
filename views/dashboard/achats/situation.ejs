@@ -156,6 +156,59 @@
       </a>
     </div>
 
+    <!-- Filters -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <form method="get" class="row g-3">
+          <div class="col-md-2">
+            <label class="form-label small">Statut</label>
+            <select name="status" class="form-control form-control-sm">
+              <option value="">Tous</option>
+              <option value="en_attente_bl" <%= filters.status === 'en_attente_bl' ? 'selected' : '' %>>En attente BL</option>
+              <option value="partiel" <%= filters.status === 'partiel' ? 'selected' : '' %>>Partiel</option>
+              <option value="livre" <%= filters.status === 'livre' ? 'selected' : '' %>>Livré</option>
+              <option value="annule" <%= filters.status === 'annule' ? 'selected' : '' %>>Annulé</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small">Fournisseur</label>
+            <select name="supplier" class="form-control form-control-sm">
+              <option value="">Tous</option>
+              <% suppliers.forEach(s => { %>
+                <option value="<%= s.name %>" <%= filters.supplier === s.name ? 'selected' : '' %>><%= s.name %></option>
+              <% }); %>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small">N° BC</label>
+            <input type="text" name="numero" class="form-control form-control-sm" placeholder="Rechercher..." value="<%= filters.numero || '' %>">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small">Montant Min</label>
+            <input type="number" name="minAmount" class="form-control form-control-sm" placeholder="0" value="<%= filters.minAmount || '' %>">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small">Montant Max</label>
+            <input type="number" name="maxAmount" class="form-control form-control-sm" placeholder="0" value="<%= filters.maxAmount || '' %>">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small">Désignation</label>
+            <input type="text" name="designation" class="form-control form-control-sm" placeholder="Rechercher article..." value="<%= filters.designation || '' %>">
+          </div>
+          <div class="col-12">
+            <a href="/achats/situation-generale" class="btn btn-sm btn-secondary">Réinitialiser</a>
+          </div>
+        </form>
+        <script>
+          document.querySelectorAll('.card-body form select, .card-body form input').forEach(el => {
+            el.addEventListener('change', function() {
+              this.closest('form').submit();
+            });
+          });
+        </script>
+      </div>
+    </div>
+
     <!-- KPI Cards -->
     <div class="row mb-4">
       <div class="col-md-3">
@@ -421,20 +474,30 @@
       <div class="text-muted small">
         Affichage de <%= ((page - 1) * 20) + 1 %> à <%= Math.min(page * 20, totalBCs) %> sur <%= totalBCs %> BCs
       </div>
+      <% 
+        const queryParams = new URLSearchParams();
+        if (filters.status) queryParams.set('status', filters.status);
+        if (filters.supplier) queryParams.set('supplier', filters.supplier);
+        if (filters.numero) queryParams.set('numero', filters.numero);
+        if (filters.minAmount) queryParams.set('minAmount', filters.minAmount);
+        if (filters.maxAmount) queryParams.set('maxAmount', filters.maxAmount);
+        if (filters.designation) queryParams.set('designation', filters.designation);
+        const baseQuery = queryParams.toString();
+      %>
       <nav>
         <ul class="pagination mb-0">
           <% if (page > 1) { %>
-          <li class="page-item"><a class="page-link" href="?page=<%= page - 1 %>">Précédent</a></li>
+          <li class="page-item"><a class="page-link" href="?page=<%= page - 1 %><%= baseQuery ? '&' + baseQuery : '' %>">Précédent</a></li>
           <% } %>
           <% for (let i = 1; i <= totalPages; i++) { %>
             <% if (i === page || (i >= page - 2 && i <= page + 2) || i === 1 || i === totalPages) { %>
-            <li class="page-item <%= i === page ? 'active' : '' %>"><a class="page-link" href="?page=<%= i %>"><%= i %></a></li>
+            <li class="page-item <%= i === page ? 'active' : '' %>"><a class="page-link" href="?page=<%= i %><%= baseQuery ? '&' + baseQuery : '' %>"><%= i %></a></li>
             <% } else if (i === page - 3 || i === page + 3) { %>
             <li class="page-item disabled"><span class="page-link">...</span></li>
             <% } %>
           <% } %>
           <% if (page < totalPages) { %>
-          <li class="page-item"><a class="page-link" href="?page=<%= page + 1 %>">Suivant</a></li>
+          <li class="page-item"><a class="page-link" href="?page=<%= page + 1 %><%= baseQuery ? '&' + baseQuery : '' %>">Suivant</a></li>
           <% } %>
         </ul>
       </nav>

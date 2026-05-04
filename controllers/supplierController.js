@@ -189,6 +189,9 @@ export const update = async (req, res) => {
 export const show = async (req, res) => {
   try {
     const suppliers = await prisma.fournisseur.findMany({
+      include: {
+        emails: true
+      },
       orderBy: {
         name: 'asc' // ou 'createdAt': 'desc' si tu as ce champ
       }

@@ -1870,17 +1870,68 @@
         }
 
         function sendEmail() {
+          // Build email list from supplier
+          const emails = [];
+          <% if (bc.fournisseur && bc.fournisseur.email) { %>
+            emails.push('<%= bc.fournisseur.email %>');
+          <% } %>
+          <% if (bc.fournisseur && bc.fournisseur.emails && bc.fournisseur.emails.length) { %>
+            <% bc.fournisseur.emails.forEach(function(e) { %>
+              emails.push('<%= e.email %>');
+            <% }); %>
+          <% } %>
+
+          if (emails.length === 0) {
+            alert('Aucun email trouvé pour ce fournisseur.');
+            return;
+          }
+
+          if (emails.length === 1) {
+            // Single email - send directly
+            sendToEmail(emails[0]);
+          } else {
+            // Multiple emails - show selection modal
+            showEmailSelectionModal(emails);
+          }
+        }
+
+        function showEmailSelectionModal(emails) {
+          const modal = document.getElementById('emailSelectModal');
+          const list = document.getElementById('emailList');
+          list.innerHTML = '';
+          emails.forEach(email => {
+            const label = document.createElement('label');
+            label.className = 'd-block mb-2';
+            label.innerHTML = `<input type="radio" name="selectedEmail" value="${email}"> ${email}`;
+            list.appendChild(label);
+          });
+          modal.style.display = 'flex';
+        }
+
+        function closeEmailModal() {
+          document.getElementById('emailSelectModal').style.display = 'none';
+        }
+
+        function confirmEmailSend() {
+          const selected = document.querySelector('input[name="selectedEmail"]:checked');
+          if (!selected) {
+            alert('Veuillez sélectionner un email');
+            return;
+          }
+          closeEmailModal();
+          sendToEmail(selected.value);
+        }
+
+        function sendToEmail(email) {
           const btn = $('#btnSend');
           btn.html('<i class="fas fa-spinner fa-spin"></i> Envoi...').prop('disabled', true);
 
-          $.post('/api/bc/<%= bc.id %>/send-email', {
-            email: '<%= bc.fournisseur.email %>'
-          })
+          $.post('/api/bc/<%= bc.id %>/send-email', { email: email })
             .done(() => {
-              alert('Email envoyé avec succès !');
+              alert('Email envoyé avec succès à ' + email + ' !');
             })
             .fail(() => {
-              alert('Échec de l\'envoi !');
+              alert('Échec de l\'envoi à ' + email + ' !');
             })
             .always(() => {
               btn.html('<i class="fas fa-paper-plane"></i> <span>Envoyer</span>').prop('disabled', false);
@@ -3323,6 +3374,28 @@
 
       <!-- Toast Container -->
       <div class="toast-container" id="toastContainer"></div>
+
+      <!-- Email Selection Modal -->
+      <div class="bl-modal-overlay" id="emailSelectModal" style="display:none;">
+        <div class="bl-modal" style="max-width:400px;">
+          <div class="bl-modal-header">
+            <div>
+              <h5>Sélectionner un email</h5>
+              <div class="subtitle">Choisir l'email du fournisseur</div>
+            </div>
+            <button class="bl-modal-close" onclick="closeEmailModal()">&times;</button>
+          </div>
+          <div class="bl-modal-body">
+            <div id="emailList"></div>
+          </div>
+          <div class="bl-modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeEmailModal()">Annuler</button>
+            <button type="button" class="btn btn-primary" onclick="confirmEmailSend()">
+              <i class="fas fa-paper-plane"></i> Envoyer
+            </button>
+          </div>
+        </div>
+      </div>
 
 </body>
 

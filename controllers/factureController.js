@@ -134,26 +134,73 @@ export const getFacture = async (req, res) => {
  */
 export const createFacture = async (req, res) => {
   try {
-    const { numero, date, totalHt, tauxTva, bondeLivraisonIds, items } = req.body;
+    const { numero, date, totalHt, tauxTva, fournisseurId, items, createBC, createBL, bcNumero, blNumero, bondeLivraisonIds, bondeCommandeId } = req.body;
 
-    if (!numero || !date || !totalHt || !bondeLivraisonIds || bondeLivraisonIds.length === 0) {
+    if (!numero || !date || !totalHt || !fournisseurId) {
       return res.status(400).json({ success: false, error: 'Champs obligatoires manquants' });
-    }
-
-    // Get fournisseurId from first BL
-    const firstBL = await prisma.bondeLivraison.findUnique({
-      where: { id: bondeLivraisonIds[0] },
-      select: { fournisseurId: true }
-    });
-
-    if (!firstBL) {
-      return res.status(400).json({ success: false, error: 'BL non trouvé' });
     }
 
     const totalTtc = parseFloat(totalHt) + (parseFloat(totalHt) * parseFloat(tauxTva || 0) / 100);
 
     const facture = await prisma.$transaction(async (tx) => {
+      let newBC = null;
+      let newBL = null;
+
+      // Create BC if requested
+      if (createBC) {
+        newBC = await tx.bondeCommande.create({
+          data: {
+            numero: bcNumero || `BC-${Date.now()}`,
+            date: new Date(date),
+            fournisseurId: parseInt(fournisseurId),
+            statut: 'livre',
+            commandesItems: items && items.length > 0 ? {
+              create: items.map(item => ({
+                designation: item.designation,
+                quantite: parseFloat(item.quantite),
+                prixUnitaire: parseFloat(item.prixUnitaire),
+                totalHt: parseFloat(item.quantite) * parseFloat(item.prixUnitaire)
+              }))
+            } : undefined
+          },
+          include: { commandesItems: true }
+        });
+      }
+
+      // Create BL if requested
+      if (createBL) {
+        // If BC exists, use its items; otherwise use items directly
+        const blItems = newBC ? newBC.commandesItems : (items || []);
+        
+        newBL = await tx.bondeLivraison.create({
+          data: {
+            numero: blNumero || `BL-${Date.now()}`,
+            date: new Date(date),
+            fournisseurId: parseInt(fournisseurId),
+            bondeCommandeLinks: newBC ? { create: { bondeCommandeId: newBC.id } } : undefined,
+            items: blItems && blItems.length > 0 ? {
+              create: blItems.map(item => ({
+                designation: item.designation,
+                quantite: item.quantite,
+                prixUnitaire: item.prixUnitaire
+              }))
+            } : undefined
+          },
+          include: { items: true }
+        });
+      }
+
       // Create the facture
+      // If BL was created, link items to BL items
+      let factureItems = items;
+      if (newBL && newBL.items && newBL.items.length > 0 && items && items.length > 0) {
+        // Map items to BL items
+        factureItems = items.map((item, idx) => ({
+          ...item,
+          bondeLivraisonItemId: newBL.items[idx] ? newBL.items[idx].id : null
+        }));
+      }
+
       const newFacture = await tx.facture.create({
         data: {
           numero,
@@ -161,9 +208,9 @@ export const createFacture = async (req, res) => {
           totalHt: parseFloat(totalHt),
           tauxTva: parseFloat(tauxTva || 0),
           totalTtc,
-          fournisseurId: firstBL.fournisseurId,
-          items: items && items.length > 0 ? {
-            create: items.map(item => ({
+          fournisseurId: parseInt(fournisseurId),
+          items: factureItems && factureItems.length > 0 ? {
+            create: factureItems.map(item => ({
               designation: item.designation,
               unite: item.unite,
               reference: item.reference,
@@ -173,9 +220,11 @@ export const createFacture = async (req, res) => {
               bondeLivraisonItemId: item.bondeLivraisonItemId || null
             }))
           } : undefined,
-          bondeLivraisonLinks: {
+          bondeLivraisonLinks: newBL ? {
+            create: [{ bondeLivraisonId: newBL.id }]
+          } : (bondeLivraisonIds ? {
             create: bondeLivraisonIds.map(blId => ({ bondeLivraisonId: parseInt(blId) }))
-          }
+          } : undefined)
         },
         include: {
           items: true,
@@ -189,6 +238,17 @@ export const createFacture = async (req, res) => {
 
       // Get all unique BCs linked to these BLs and create FactureBondecommande records
       const bcIdsSet = new Set();
+      
+      // Add direct BC if provided
+      if (bondeCommandeId) {
+        bcIdsSet.add(parseInt(bondeCommandeId));
+      }
+      
+      // Add newly created BC
+      if (newBC) {
+        bcIdsSet.add(newBC.id);
+      }
+      
       for (const link of newFacture.bondeLivraisonLinks) {
         const bl = link.bondeLivraison;
         if (bl && bl.bondeCommandeLinks) {

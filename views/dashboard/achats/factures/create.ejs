@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Nouvelle Facture</title>
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+</head>
+<body>
+  <div id="wrapper">
+    <%- include('../../../layouts/sidebar') %>
+    <div id="content-wrapper" class="d-flex flex-column">
+      <%- include('../../../layouts/topbar') %>
+      <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h1 class="h3 mb-1 text-gray-800">Nouvelle Facture</h1>
+            <p class="text-muted mb-0">Créer une nouvelle facture</p>
+          </div>
+          <a href="/achats/factures" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>Retour
+          </a>
+        </div>
+
+        <form id="factureForm">
+          <div class="row">
+            <!-- Left: Facture Info & Articles -->
+            <div class="col-md-8">
+              <!-- Facture Details -->
+              <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                  <h5 class="mb-0"><i class="fas fa-file-invoice mr-2"></i>Informations Facture</h5>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-4">
+                      <div class="form-group">
+                        <label>Numéro Facture *</label>
+                        <input type="text" class="form-control" name="numero" required placeholder="FAC-2026-001">
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-group">
+                        <label>Date *</label>
+                        <input type="date" class="form-control" name="date" required value="<%= new Date().toISOString().split('T')[0] %>">
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-group">
+                        <label>Fournisseur *</label>
+                        <select class="form-control" name="fournisseurId" required id="fournisseurSelect">
+                          <option value="">-- Choisir --</option>
+                          <% fournisseurs.forEach(f => { %>
+                            <option value="<%= f.id %>"><%= f.name %></option>
+                          <% }); %>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-4">
+                      <div class="form-group">
+                        <label>Taux TVA (%)</label>
+                        <input type="number" step="0.01" class="form-control" name="tauxTva" value="20" id="tauxTva">
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-group">
+                        <label>Total HT</label>
+                        <input type="text" class="form-control" id="totalHt" readonly>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-group">
+                        <label>Total TTC</label>
+                        <input type="text" class="form-control" id="totalTtc" readonly>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Articles -->
+              <div class="card mb-4">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                  <h5 class="mb-0"><i class="fas fa-box mr-2"></i>Articles</h5>
+                  <button type="button" class="btn btn-sm btn-light" onclick="addItem()">
+                    <i class="fas fa-plus"></i> Ajouter Article
+                  </button>
+                </div>
+                <div class="card-body p-0">
+                  <table class="table table-sm mb-0" id="itemsTable">
+                    <thead class="thead-light">
+                      <tr>
+                        <th>Désignation</th>
+                        <th>Référence</th>
+                        <th>Unité</th>
+                        <th style="width:80px;">Qté</th>
+                        <th style="width:100px;">Prix Unit.</th>
+                        <th style="width:100px;">Total</th>
+                        <th style="width:50px;"></th>
+                      </tr>
+                    </thead>
+                    <tbody id="itemsBody">
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Options -->
+            <div class="col-md-4">
+              <!-- Link to BC/BL -->
+              <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                  <h5 class="mb-0"><i class="fas fa-link mr-2"></i>Lier à BC/BL</h5>
+                </div>
+                <div class="card-body">
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="linkType" id="linkNone" value="none" checked>
+                    <label class="form-check-label" for="linkNone">
+                      Aucune liaison
+                    </label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="linkType" id="linkBC" value="bc">
+                    <label class="form-check-label" for="linkBC">
+                      Créer un nouveau BC
+                    </label>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="linkType" id="linkBL" value="bl">
+                    <label class="form-check-label" for="linkBL">
+                      Créer un nouveau BL
+                    </label>
+                  </div>
+                  <div id="bcFields" style="display:none;" class="mt-3">
+                    <label>Numéro BC</label>
+                    <input type="text" class="form-control form-control-sm" name="bcNumero" placeholder="BC-2026-001">
+                  </div>
+                  <div id="blFields" style="display:none;" class="mt-3">
+                    <label>Numéro BL</label>
+                    <input type="text" class="form-control form-control-sm" name="blNumero" placeholder="BL-2026-001">
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block btn-lg">
+                <i class="fas fa-save mr-2"></i>Créer la Facture
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/sb-admin-2.min.js"></script>
+  <script>
+    const fournitureData = <% if (listfourniture && listfourniture.length > 0) { %><%- JSON.stringify(listfourniture) %><% } else { %>[]<% } %>;
+
+    // Show/hide BC/BL fields
+    document.querySelectorAll('input[name="linkType"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        document.getElementById('bcFields').style.display = this.value === 'bc' ? 'block' : 'none';
+        document.getElementById('blFields').style.display = this.value === 'bl' ? 'block' : 'none';
+      });
+    });
+
+    // Autocomplete for designation
+    let activeAutocomplete = null;
+    const normalize = (v) => (v == null ? '' : String(v)).trim().toLowerCase();
+    
+    function setupAutocomplete(input) {
+      input.addEventListener('input', function() {
+        const query = normalize(this.value);
+        if (query.length < 2) {
+          hideAutocomplete();
+          return;
+        }
+        
+        const matches = fournitureData.filter(f => normalize(f.designation).includes(query));
+        if (matches.length === 0) {
+          hideAutocomplete();
+          return;
+        }
+        
+        showAutocomplete(this, matches.slice(0, 10));
+      });
+      
+      input.addEventListener('focus', function() {
+        const query = normalize(this.value);
+        if (query.length >= 2) {
+          const matches = fournitureData.filter(f => normalize(f.designation).includes(query));
+          if (matches.length > 0) {
+            showAutocomplete(this, matches.slice(0, 10));
+          }
+        }
+      });
+      
+      input.addEventListener('blur', function() {
+        setTimeout(hideAutocomplete, 200);
+      });
+    }
+
+    function showAutocomplete(input, matches) {
+      hideAutocomplete();
+      
+      const list = document.createElement('ul');
+      list.className = 'list-group position-absolute';
+      list.style.zIndex = '1000';
+      list.style.width = input.offsetWidth + 'px';
+      
+      matches.forEach((m, i) => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item list-group-item-action py-2';
+        li.style.cursor = 'pointer';
+        li.innerHTML = `<strong>${m.designation}</strong><br><small class="text-muted">Réf: ${m.reference || '---'} | ${m.unite || '---'}</small>`;
+        li.addEventListener('click', () => {
+          const row = input.closest('tr');
+          row.querySelector('[name="designation"]').value = m.designation || '';
+          row.querySelector('[name="reference"]').value = m.reference || '';
+          row.querySelector('[name="unite"]').value = m.unite || '';
+          if (m.prixUnitaire) {
+            row.querySelector('.item-prix').value = m.prixUnitaire;
+            calcRowTotal(row.querySelector('.item-prix'));
+          }
+          hideAutocomplete();
+        });
+        list.appendChild(li);
+      });
+      
+      const rect = input.getBoundingClientRect();
+      list.style.top = (rect.bottom + window.scrollY) + 'px';
+      list.style.left = (rect.left + window.scrollX) + 'px';
+      document.body.appendChild(list);
+      activeAutocomplete = list;
+    }
+
+    function hideAutocomplete() {
+      if (activeAutocomplete) {
+        activeAutocomplete.remove();
+        activeAutocomplete = null;
+      }
+    }
+
+    // Add item
+    function addItem() {
+      const tbody = document.getElementById('itemsBody');
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><input type="text" class="form-control form-control-sm" name="designation" placeholder="Désignation" autocomplete="off"></td>
+        <td><input type="text" class="form-control form-control-sm" name="reference" placeholder="Référence"></td>
+        <td><input type="text" class="form-control form-control-sm" name="unite" placeholder="Unité"></td>
+        <td><input type="number" step="0.01" class="form-control form-control-sm item-qty" value="1" onchange="calcRowTotal(this)"></td>
+        <td><input type="number" step="0.01" class="form-control form-control-sm item-prix" value="0" onchange="calcRowTotal(this)"></td>
+        <td class="item-total text-right">0.00</td>
+        <td><button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove(); calcTotals();"><i class="fas fa-trash"></i></button></td>
+      `;
+      tbody.appendChild(row);
+      setupAutocomplete(row.querySelector('[name="designation"]'));
+      calcRowTotal(row.querySelector('.item-prix'));
+    }
+
+    function calcRowTotal(input) {
+      const row = input.closest('tr');
+      const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+      const prix = parseFloat(input.value) || 0;
+      row.querySelector('.item-total').textContent = (qty * prix).toFixed(2);
+      calcTotals();
+    }
+
+    function calcTotals() {
+      let total = 0;
+      document.querySelectorAll('.item-total').forEach(el => {
+        total += parseFloat(el.textContent) || 0;
+      });
+      const tva = parseFloat(document.getElementById('tauxTva').value) || 0;
+      const ttc = total + (total * tva / 100);
+      document.getElementById('totalHt').value = total.toFixed(2);
+      document.getElementById('totalTtc').value = ttc.toFixed(2);
+    }
+
+    document.getElementById('tauxTva').addEventListener('input', calcTotals);
+
+    // Form submit
+    document.getElementById('factureForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      // Collect items
+      const items = [];
+      document.querySelectorAll('#itemsBody tr').forEach(row => {
+        const designation = row.querySelector('[name="designation"]').value;
+        const reference = row.querySelector('[name="reference"]').value;
+        const unite = row.querySelector('[name="unite"]').value;
+        const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+        const prix = parseFloat(row.querySelector('.item-prix').value) || 0;
+        if (designation && qty > 0) {
+          items.push({ designation, reference, unite, quantite: qty, prixUnitaire: prix, totalHt: qty * prix });
+        }
+      });
+
+      if (items.length === 0) {
+        alert('Veuillez ajouter au moins un article');
+        return;
+      }
+
+      const linkType = document.querySelector('input[name="linkType"]:checked').value;
+      
+      const formData = {
+        numero: this.numero.value,
+        date: this.date.value,
+        fournisseurId: parseInt(this.fournisseurId.value),
+        totalHt: parseFloat(document.getElementById('totalHt').value) || 0,
+        tauxTva: parseFloat(this.tauxTva.value) || 0,
+        items: items,
+        createBC: linkType === 'bc',
+        createBL: linkType === 'bl',
+        bcNumero: linkType === 'bc' ? this.bcNumero.value : null,
+        blNumero: linkType === 'bl' ? this.blNumero.value : null
+      };
+
+      try {
+        const response = await fetch('/api/factures', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+        const result = await response.json();
+        if (result.success) {
+          alert('Facture créée avec succès!');
+          window.location.href = '/achats/factures/' + result.facture.id + '/view';
+        } else {
+          alert('Erreur: ' + result.error);
+        }
+      } catch (error) {
+        alert('Erreur: ' + error.message);
+      }
+    });
+  </script>
+</body>
+</html>

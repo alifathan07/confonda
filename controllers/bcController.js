@@ -527,7 +527,7 @@ export const editBc = async (req, res) => {
             BondeCommandeChantierItem: { include: { chantier: { select: { id: true, nom: true } } } }
           },
         },
-        fournisseur: { select: { id: true, name: true, telFournisseur: true, email: true } },
+        fournisseur: { include: { emails: true } },
         bondeLivraisonLinks: {
           include: {
             bondeLivraison: {

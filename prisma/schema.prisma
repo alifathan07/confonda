@@ -199,6 +199,13 @@ model Affectation {
   montant  Float
 }
 
+model FournisseurEmail {
+  id          Int         @id @default(autoincrement())
+  email       String
+  fournisseur Fournisseur @relation(fields: [fournisseurId], references: [id], onDelete: Cascade)
+  fournisseurId Int
+}
+
 model Fournisseur {
   id                    Int                     @id @default(autoincrement())
   name                  String
@@ -213,6 +220,7 @@ model Fournisseur {
   contact               String
   telContact            String
   address               String?
+  emails                FournisseurEmail[]
   attestations          Attestation[] // One-to-many: a supplier can have many attestations
   demandeandfournisseur demandeandfournisseur[]
 

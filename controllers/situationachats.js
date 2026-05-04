@@ -6,12 +6,33 @@ export async function getSituationGenerale(req, res) {
     const limit = 20;
     const skip = (page - 1) * limit;
 
-    // Get total count for pagination
-    const totalBCs = await prisma.bondeCommande.count();
+    // Filter parameters
+    const { status, supplier, numero, minAmount, maxAmount, designation } = req.query;
+
+    // Build where clause for filtering
+    const whereClause = {};
+    
+    if (status) {
+      whereClause.statut = status;
+    }
+    
+    if (supplier) {
+      whereClause.fournisseur = {
+        name: { contains: supplier }
+      };
+    }
+    
+    if (numero) {
+      whereClause.numero = { contains: numero };
+    }
+
+    // Get total count for pagination with filters
+    const totalBCs = await prisma.bondeCommande.count({ where: whereClause });
     const totalPages = Math.ceil(totalBCs / limit);
 
     // Fetch paginated BCs with all necessary includes
     const bcs = await prisma.bondeCommande.findMany({
+      where: whereClause,
       skip: skip,
       take: limit,
       include: {
@@ -59,6 +80,7 @@ export async function getSituationGenerale(req, res) {
 
     // Fetch ALL BCs for global KPIs (lightweight query without nested includes)
     const allBCs = await prisma.bondeCommande.findMany({
+      where: whereClause,
       include: {
         fournisseur: true,
         chantier: true,
@@ -93,22 +115,73 @@ export async function getSituationGenerale(req, res) {
       orderBy: { date: 'desc' }
     });
 
-    // Flatten rows for display
-    const rows = flattenRows(bcs);
+    // Flatten ALL BCs first, then apply post-process filters
+    const allFlattenedRows = flattenRows(bcs);
+    
+    // Apply amount and designation filters (post-process)
+    let filteredAllRows = allFlattenedRows;
+    if (designation) {
+      const searchTerm = designation.toLowerCase();
+      filteredAllRows = filteredAllRows.filter(row => {
+        if (row.isHeaderRow) return true;
+        return row.designation && row.designation.toLowerCase().includes(searchTerm);
+      });
+    }
+    if (minAmount || maxAmount) {
+      filteredAllRows = filteredAllRows.filter(row => {
+        if (row.isHeaderRow) return true;
+        const amount = row.totalHt || 0;
+        if (minAmount && amount < parseFloat(minAmount)) return false;
+        if (maxAmount && amount > parseFloat(maxAmount)) return false;
+        return true;
+      });
+    }
 
-    // Compute global KPIs from all data
+    // Now paginate the filtered results
+    const totalFiltered = Math.ceil(filteredAllRows.length / 20);
+    const paginatedRows = filteredAllRows.slice(skip, skip + limit);
+
+    // Compute global KPIs from all filtered data
     const allRows = flattenRows(allBCs);
-    const kpis = computeKPIs(allRows);
+    let filteredKpiRows = allRows;
+    if (designation) {
+      const searchTerm = designation.toLowerCase();
+      filteredKpiRows = filteredKpiRows.filter(row => {
+        if (row.isHeaderRow) return true;
+        return row.designation && row.designation.toLowerCase().includes(searchTerm);
+      });
+    }
+    if (minAmount || maxAmount) {
+      filteredKpiRows = filteredKpiRows.filter(row => {
+        if (row.isHeaderRow) return true;
+        const amount = row.totalHt || 0;
+        if (minAmount && amount < parseFloat(minAmount)) return false;
+        if (maxAmount && amount > parseFloat(maxAmount)) return false;
+        return true;
+      });
+    }
+    const kpis = computeKPIs(filteredKpiRows);
 
-    res.render('dashboard/achats/situation', { rows, kpis, page, totalPages, totalBCs });
+    // Get suppliers list for filter dropdown
+    const suppliers = await prisma.fournisseur.findMany({
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' }
+    });
+
+    res.render('dashboard/achats/situation', { 
+      rows: paginatedRows, kpis, page, totalPages: totalFiltered, totalBCs: filteredAllRows.length, 
+      filters: { status, supplier, numero, minAmount, maxAmount, designation },
+      suppliers
+    });
   } catch (error) {
     console.error('Error in getSituationGenerale:', error);
     res.status(500).json({ error: error.message });
   }
 }
 
-function flattenRows(bcs) {
+function flattenRows(bcs, filters = {}) {
   const rows = [];
+  const { minAmount, maxAmount, designation } = filters;
 
   for (const bc of bcs) {
     // Get chantier from BC, BondeCommandeChantierItem, or items' imputation
@@ -378,7 +451,28 @@ function flattenRows(bcs) {
     }
   }
 
-  return rows;
+  // Apply amount and designation filters (post-process)
+  let filteredRows = rows;
+  
+  if (designation) {
+    const searchTerm = designation.toLowerCase();
+    filteredRows = filteredRows.filter(row => {
+      if (row.isHeaderRow) return true; // Keep BC header rows
+      return row.designation && row.designation.toLowerCase().includes(searchTerm);
+    });
+  }
+
+  if (minAmount || maxAmount) {
+    filteredRows = filteredRows.filter(row => {
+      if (row.isHeaderRow) return true;
+      const amount = row.totalHt || 0;
+      if (minAmount && amount < parseFloat(minAmount)) return false;
+      if (maxAmount && amount > parseFloat(maxAmount)) return false;
+      return true;
+    });
+  }
+
+  return filteredRows;
 }
 
 function computeKPIs(rows) {
