@@ -247,6 +247,25 @@ dashboardRouter.post('/achats/fournisseurs/create', create);
 dashboardRouter.patch('/achats/fournisseurs/:id', update);
 dashboardRouter.get('/achats/fournisseurs', show);
 dashboardRouter.delete('/achats/fournisseurs/:id', deleteSupplier);
+dashboardRouter.post('/achats/fournisseurs/:id/emails', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email requis' });
+    }
+    await prisma.fournisseurEmail.create({
+      data: {
+        email,
+        fournisseurId: parseInt(id)
+      }
+    });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error adding email:', error);
+    res.status(500).json({ error: 'Erreur lors de l\'ajout de l\'email' });
+  }
+});
 // -----------Achats :  Upload Fournisseur -----------------
 /// multer logic 
 
@@ -591,6 +610,18 @@ dashboardRouter.delete('/api/bons-livraison/:id', deleteBL);
 
 // -----------Factures-----------------
 dashboardRouter.get('/achats/factures', listFactures);
+dashboardRouter.get('/achats/factures/create', async (req, res) => {
+  try {
+    const fournisseurs = await prisma.fournisseur.findMany({
+      orderBy: { name: 'asc' }
+    });
+    const listfourniture = await prisma.fourniture_list.findMany();
+    res.render('dashboard/achats/factures/create', { fournisseurs, listfourniture });
+  } catch (error) {
+    console.error('Error loading create facture page:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
 dashboardRouter.get('/achats/factures/:id/view', viewFacture);
 // dashboardRouter.get('/achats/factures/:id/edit', editFacture);
 dashboardRouter.put('/achats/factures/:id', updateFacture);

@@ -250,7 +250,15 @@
                       <% suppliers.forEach(supplier => { %>
                         <tr data-id="<%= supplier.id %>">
                           <td contenteditable="true" data-name="name"><%= supplier.name %></td>
-                          <td contenteditable="true" data-name="email"><%= supplier.email %></td>
+                          <td>
+                            <% const allEmails = []; %>
+                            <% if (supplier.email) { allEmails.push(supplier.email); } %>
+                            <% if (supplier.emails && supplier.emails.length) { %>
+                              <% supplier.emails.forEach(e => { if (e.email) allEmails.push(e.email); }); %>
+                            <% } %>
+                            <%= allEmails.join(', ') %>
+                            <button class="btn btn-sm btn-link p-0 ml-1 add-email-btn" title="Ajouter email" data-supplier-id="<%= supplier.id %>"><i class="fas fa-plus-circle text-success"></i></button>
+                          </td>
                           <td contenteditable="true" data-name="address"><%= supplier.address %></td>
                           <td contenteditable="true" data-name="phone"><%= supplier.telFournisseur %></td>
                           <td contenteditable="true" data-name="contact"><%= supplier.contact %></td>
@@ -535,5 +543,71 @@
 
   <!-- Page level custom scripts -->
   <script src="/js/demo/datatables-demo.js"></script>
+
+  <!-- Add Email Modal -->
+  <div class="modal" id="addEmailModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Ajouter un email</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="emailSupplierId">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" class="form-control" id="newEmailInput" placeholder="exemple@email.com">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-primary" id="saveEmailBtn">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Add email button handler
+    document.querySelectorAll('.add-email-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const supplierId = this.getAttribute('data-supplier-id');
+        document.getElementById('emailSupplierId').value = supplierId;
+        document.getElementById('newEmailInput').value = '';
+        $('#addEmailModal').modal('show');
+      });
+    });
+
+    // Save email handler
+    document.getElementById('saveEmailBtn').addEventListener('click', async function() {
+      const supplierId = document.getElementById('emailSupplierId').value;
+      const email = document.getElementById('newEmailInput').value.trim();
+      
+      if (!email) {
+        alert('Veuillez entrer un email');
+        return;
+      }
+
+      try {
+        const response = await fetch('/achats/fournisseurs/' + supplierId + '/emails', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        
+        if (response.ok) {
+          $('#addEmailModal').modal('hide');
+          location.reload();
+        } else {
+          const err = await response.json();
+          alert(err.error || 'Erreur lors de l\'ajout de l\'email');
+        }
+      } catch (e) {
+        alert('Erreur: ' + e.message);
+      }
+    });
+  </script>
 </body>
 </html>
