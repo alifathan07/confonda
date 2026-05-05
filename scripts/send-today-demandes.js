@@ -1,6 +1,6 @@
+import { generateDemandeFourniturePDFBuffer } from '../controllers/demandeFourniture.js';
 import prisma from '../db.js';
 import { whatsappService } from '../services/whatssapservice.js';
-import { generateDemandeFourniturePDFBuffer } from '../controllers/urgent.js';
 
 async function sendTodayDemandes() {
   console.log('🔄 Starting to send today\'s demande fourniture...');
