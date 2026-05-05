@@ -45,6 +45,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 export const dashboardRouter = express.Router();
 dashboardRouter.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
+
+// Public API for sending WhatsApp (no auth required)
+dashboardRouter.get('/api/demandes-fourniture/send-whatsapp', sendTodayDemandesWhatsApp);
+
 dashboardRouter.use(isAuthenticated)
 
 dashboardRouter.use((req, res, next) => {
@@ -527,7 +531,6 @@ dashboardRouter.delete("/achats/fourniture/:id", deleteDemandeFourniture);
 dashboardRouter.patch('/achat/fourniture/:id/validate', updateValidationFourniture);
 dashboardRouter.patch('/achat/fourniture/validate-all/:id', validateAllFourniture);
 dashboardRouter.patch('/achats/demandes/fourniture/updateStatus/:id', updateDemandeStatus);
-dashboardRouter.get('/api/demandes-fourniture/send-whatsapp', sendTodayDemandesWhatsApp);
 dashboardRouter.patch('/achats/demandes/fourniture/update/:id', updateDemandeFourniture);
 dashboardRouter.put('/achats/fourniture/update/pricing/:id', addpricingforDemande);
 dashboardRouter.post('/achat/fourniture/:id/upload-image', uploadFour.single('image'), uploadImageFourniture);
