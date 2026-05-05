@@ -1455,3 +1455,78 @@ export const updateEtat = async (req, res) => {
     });
   }
 };
+
+/* -------------------------- SEND TODAY DEMANDES -------------------------- */
+export const sendTodayDemandesWhatsApp = async (req, res) => {
+  try {
+    const { numero } = req.query;
+    
+    let demandes;
+    
+    if (numero) {
+      demandes = await prisma.demandeFourniture.findMany({
+        where: { numero: parseInt(numero) },
+        include: { user: true, chantier: true, items: true }
+      });
+    } else {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      demandes = await prisma.demandeFourniture.findMany({
+        where: {
+          dateDemande: { gte: today, lt: tomorrow }
+        },
+        include: { user: true, chantier: true, items: true }
+      });
+    }
+
+    if (demandes.length === 0) {
+      return res.json({ success: true, message: 'Aucune demande trouvée' });
+    }
+
+    const recipients = await prisma.whatsAppNotificationRecipient.findMany({
+      where: { active: true, notifyFourniture: true },
+      select: { phone: true },
+    });
+
+    const numbers = recipients.map(r => r.phone);
+    if (numbers.length === 0) {
+      return res.status(400).json({ success: false, error: 'Aucun destinataire WhatsApp configuré' });
+    }
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const demande of demandes) {
+      try {
+        const pdfBuffer = await generateDemandeFourniturePDFBuffer(demande.id);
+        const filename = `demande_fourniture_${demande.numero}.pdf`;
+        const message = `Nouvelle commande créée par ${demande.user?.name || 'Unknown'}. Numéro: ${demande.numero}. Date: ${demande.dateDemande.toLocaleDateString('fr-FR')}. Chantier: ${demande.chantier?.nom || 'Unknown'}.`;
+
+        const results = await Promise.allSettled(
+          numbers.map(number => whatsappService.sendMessage(number, message, {
+            data: pdfBuffer,
+            filename,
+            mimetype: 'application/pdf',
+          }))
+        );
+
+        const sent = results.filter(r => r.status === 'fulfilled').length;
+        if (sent > 0) successCount++;
+        else failCount++;
+        
+        console.log(`Demande #${demande.numero}: ${sent}/${numbers.length} sent`);
+      } catch (err) {
+        console.error(`Error sending demande #${demande.numero}:`, err.message);
+        failCount++;
+      }
+    }
+
+    res.json({ success: true, sent: successCount, failed: failCount, total: demandes.length });
+  } catch (error) {
+    console.error('sendTodayDemandesWhatsApp error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
