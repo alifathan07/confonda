@@ -3,35 +3,55 @@ import prisma from '../db.js';
 import { whatsappService } from '../services/whatssapservice.js';
 
 async function sendTodayDemandes() {
-  console.log('🔄 Starting to send today\'s demande fourniture...');
+  // Check for specific demande number argument
+  const demandeNumero = process.argv[2] ? parseInt(process.argv[2]) : null;
+  
+  console.log('🔄 Starting to send demande fourniture...');
+  if (demandeNumero) {
+    console.log(`📌 Targeting specific demande #${demandeNumero}`);
+  }
   
   // Wait for WhatsApp to be ready
   console.log('⏳ Waiting for WhatsApp to be ready...');
   await whatsappService.waitUntilReady();
   console.log('✅ WhatsApp is ready');
 
-  // Get start and end of today
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-
-  // Find today's demandes
-  const demandes = await prisma.demandeFourniture.findMany({
-    where: {
-      dateDemande: {
-        gte: today,
-        lt: tomorrow
+  let demandes;
+  
+  if (demandeNumero) {
+    // Get specific demande
+    demandes = await prisma.demandeFourniture.findMany({
+      where: { numero: demandeNumero },
+      include: {
+        user: true,
+        chantier: true,
+        items: true
       }
-    },
-    include: {
-      user: true,
-      chantier: true,
-      items: true
-    }
-  });
+    });
+  } else {
+    // Get start and end of today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-  console.log(`📋 Found ${demandes.length} demandes for today`);
+    // Find today's demandes
+    demandes = await prisma.demandeFourniture.findMany({
+      where: {
+        dateDemande: {
+          gte: today,
+          lt: tomorrow
+        }
+      },
+      include: {
+        user: true,
+        chantier: true,
+        items: true
+      }
+    });
+  }
+
+  console.log(`📋 Found ${demandes.length} demandes`);
 
   if (demandes.length === 0) {
     console.log('No demandes found for today');
