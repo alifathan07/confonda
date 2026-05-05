@@ -344,6 +344,7 @@
                     <th>Montant Non Justifié</th>
                     <th>Validation</th>
                     <th>Validé par</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -366,11 +367,16 @@
                           </div>
                         </td>
                         <td><%= d.validerPar || '-' %></td>
+                        <td>
+                          <button type="button" class="btn btn-sm btn-danger" onclick="deleteDepense('<%= d._id %>')">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </td>
                       </tr>
                     <% }) %>
                   <% } else { %>
                     <tr class="no-data">
-                      <td colspan="8" class="text-center">Aucune dépense enregistrée.</td>
+                      <td colspan="9" class="text-center">Aucune dépense enregistrée.</td>
                     </tr>
                   <% } %>
                 </tbody>
@@ -474,6 +480,25 @@
               // Re-enable button
               validBtn.disabled = false;
               validBtn.style.opacity = '1';
+            }
+          }
+
+          // Delete depense function
+          async function deleteDepense(id) {
+            if (!confirm('Êtes-vous sûr de vouloir supprimer cette dépense?')) return;
+            
+            try {
+              const res = await fetch(`/achats/caisse/justification/depenses/${id}`, {
+                method: 'DELETE'
+              });
+              const data = await res.json();
+              if (data.success) {
+                location.reload();
+              } else {
+                alert('Erreur: ' + data.error);
+              }
+            } catch (err) {
+              alert('Erreur lors de la suppression');
             }
           }
           </script>
