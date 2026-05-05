@@ -1,25 +1,56 @@
-// This script calls the API which uses the existing WhatsApp from the running app
-import http from 'http';
+import prisma from '../db.js';
+import { whatsappService, getClient } from '../services/whatssapservice.js';
+import { generateDemandeFourniturePDFBuffer } from '../controllers/demandeFourniture.js';
 
-const options = {
-  hostname: 'localhost',
-  port: 3000,
-  path: '/api/demandes-fourniture/send-whatsapp?numero=169',
-  method: 'GET'
-};
+async function send169() {
+  console.log('🔄 Sending demande #169...');
+  
+  // Wait for WhatsApp (uses existing session from main app)
+  await whatsappService.waitUntilReady();
+  console.log('✅ WhatsApp ready');
 
-console.log('🔄 Sending demande #169 via API...');
-
-const req = http.request(options, (res) => {
-  let data = '';
-  res.on('data', (chunk) => data += chunk);
-  res.on('end', () => {
-    console.log('Response:', data);
+  // Get demande #169
+  const demandes = await prisma.demandeFourniture.findMany({
+    where: { numero: 169 },
+    include: { user: true, chantier: true, items: true }
   });
-});
 
-req.on('error', (e) => {
-  console.error('Error:', e.message);
-});
+  if (demandes.length === 0) {
+    console.log('❌ Demande #169 not found');
+    return;
+  }
 
-req.end();
+  const demande = demandes[0];
+  console.log(`📋 Found demande #${demande.numero}`);
+
+  // Get recipients
+  const recipients = await prisma.whatsAppNotificationRecipient.findMany({
+    where: { active: true, notifyFourniture: true },
+    select: { phone: true },
+  });
+
+  const numbers = recipients.map(r => r.phone);
+  console.log(`📱 Recipients: ${numbers.join(', ')}`);
+
+  // Generate PDF and send
+  const pdfBuffer = await generateDemandeFourniturePDFBuffer(demande.id);
+  const filename = `demande_fourniture_${demande.numero}.pdf`;
+  const message = `Nouvelle commande créée par ${demande.user?.name || 'Unknown'}. Numéro: ${demande.numero}. Date: ${demande.dateDemande.toLocaleDateString('fr-FR')}. Chantier: ${demande.chantier?.nom || 'Unknown'}.`;
+
+  for (const number of numbers) {
+    try {
+      await whatsappService.sendMessage(number, message, {
+        data: pdfBuffer,
+        filename,
+        mimetype: 'application/pdf',
+      });
+      console.log(`✅ Sent to ${number}`);
+    } catch (err) {
+      console.error(`❌ Failed to send to ${number}:`, err.message);
+    }
+  }
+
+  console.log('✅ Done!');
+}
+
+send169().catch(console.error);
