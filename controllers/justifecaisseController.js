@@ -697,22 +697,41 @@ export const deleteDepense = async (req, res) => {
   try {
     const { id } = req.params;
     const user = req.session.user;
-    const depense = await prisma.depenseCaisse.findUnique({ where: { id: parseInt(id) } });
-    if (!depense || depense.userId !== user.id) {
-      return res.status(403).json({ success: false, error: 'Accès refusé — vous n\'êtes pas autorisé à supprimer cette dépense.' });
+    const depenseId = parseInt(id);
+    
+    if (isNaN(depenseId)) {
+      return res.status(400).json({ success: false, error: 'ID invalide' });
+    }
+    
+    const depense = await prisma.depenseCaisse.findUnique({ 
+      where: { id: depenseId },
+      include: { justifCaisse: true }
+    });
+    
+    if (!depense) {
+      return res.status(404).json({ success: false, error: 'Dépense non trouvée' });
+    }
+    
+    // Allow delete if user is admin/grandadmin OR owns the justifCaisse
+    const isAdmin = user.role === 'admin' || user.role === 'grandadmin';
+    const isOwner = depense.justifCaisse && depense.justifCaisse.userId === user.id;
+    
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ success: false, error: 'Accès refusé' });
     }
 
-    await prisma.depenseCaisse.delete({ where: { id: parseInt(id) } });
+    const justifCaisseId = depense.justifCaisseId;
+    await prisma.depenseCaisse.delete({ where: { id: depenseId } });
 
     // Recalculate totals using helper
-    const { totalRecettes, totalDepenses, soldeFinal } = await recalculateAndUpdateTotals(depense.justifCaisseId);
+    const { totalRecettes, totalDepenses, soldeFinal } = await recalculateAndUpdateTotals(justifCaisseId);
 
     res.json({
       success: true,
       totals: { totalRecettes, totalDepenses, soldeFinal }
     });
   } catch (error) {
-    console.error(error);
+    console.error('deleteDepense error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 };
