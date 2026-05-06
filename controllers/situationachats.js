@@ -12,6 +12,15 @@ export async function getSituationGenerale(req, res) {
     // Build where clause for filtering
     const whereClause = {};
     
+    // Default filter: show only BCs from 2026
+    const yearFilter = req.query.year ? parseInt(req.query.year) : 2026;
+    const startOfYear = new Date(`${yearFilter}-01-01T00:00:00.000Z`);
+    const endOfYear = new Date(`${yearFilter + 1}-01-01T00:00:00.000Z`);
+    whereClause.date = {
+      gte: startOfYear,
+      lt: endOfYear
+    };
+    
     if (status) {
       whereClause.statut = status;
     }
