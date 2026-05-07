@@ -20,8 +20,8 @@ const state = {
   readyPromise: null,
   _readyResolve: null,
   reconnectTimer: null,
-  sendCount: 0,       // track total sends attempted
-  reconnectCount: 0,  // track how many times we've reconnected
+  sendCount: 0,
+  reconnectCount: 0,
 };
 
 export const getClient = () => state.client;
@@ -49,6 +49,16 @@ const resetReadyPromise = () => {
     state._readyResolve = resolve;
   });
 };
+
+// ─── Detect browser-level fatal errors ───────────────────────────────────────
+const isFatalBrowserError = (message = "") =>
+  message.includes("detached") ||
+  message.includes("Detached") ||
+  message.includes("Target closed") ||
+  message.includes("Session closed") ||
+  message.includes("page is closed") ||
+  message.includes("Protocol error") ||
+  message.includes("Connection closed");
 
 const scheduleReconnect = () => {
   if (state.reconnectTimer) {
@@ -79,6 +89,13 @@ const scheduleReconnect = () => {
   }, 30_000);
 };
 
+const triggerReconnect = (tag, reason) => {
+  debug(tag, `Triggering reconnect — reason: ${reason}`);
+  state.isReady = false;
+  resetReadyPromise();
+  scheduleReconnect();
+};
+
 const setupListeners = () => {
   state.client.on("qr", (qr) => {
     qrcode.generate(qr, { small: true });
@@ -101,17 +118,39 @@ const setupListeners = () => {
 
   state.client.on("auth_failure", (msg) => {
     debug("AUTH", `Auth FAILED ❌ — reason: ${msg}`);
-    state.isReady = false;
-    resetReadyPromise();
-    scheduleReconnect();
+    triggerReconnect("AUTH", msg);
   });
 
   state.client.on("disconnected", (reason) => {
     debug("DISCONNECT", `Client disconnected ⚠️ — reason: ${reason}`);
-    state.isReady = false;
-    resetReadyPromise();
-    scheduleReconnect();
+    triggerReconnect("DISCONNECT", reason);
   });
+};
+
+// ─── Puppeteer page health check ─────────────────────────────────────────────
+const assertPageAlive = (tag) => {
+  const client = getClient();
+
+  if (!client) {
+    throw new Error("WhatsApp client is null");
+  }
+
+  const page = client.pupPage;
+
+  if (!page) {
+    triggerReconnect(tag, "pupPage is null");
+    throw new Error("WhatsApp pupPage is null, reconnecting...");
+  }
+
+  if (page.isClosed()) {
+    triggerReconnect(tag, "pupPage.isClosed() === true");
+    throw new Error("WhatsApp page is closed, reconnecting...");
+  }
+
+  // Note: isClosed() does NOT catch detached frames.
+  // Detached frame errors only surface during actual sendMessage() execution,
+  // so we handle them in the sendMessage catch block below.
+  debug(tag, "pupPage check passed ✅ — page is alive");
 };
 
 // ─── Core send (text + optional media) ───────────────────────────────────────
@@ -119,7 +158,7 @@ const sendMessage = async (to, message, media = null) => {
   const sendId = ++state.sendCount;
   const tag = `SEND#${sendId}`;
 
-  debug(tag, `New send request`, {
+  debug(tag, "New send request", {
     to,
     messagePreview: message?.slice(0, 60),
     hasMedia: !!media,
@@ -132,57 +171,25 @@ const sendMessage = async (to, message, media = null) => {
   await waitUntilReady();
   debug(tag, "readyPromise resolved — client is ready");
 
+  // Will throw + trigger reconnect if page is null or closed
+  assertPageAlive(tag);
+
   const client = getClient();
-  if (!client) {
-    debug(tag, "ERROR: client is null after readyPromise resolved ❌");
-    throw new Error("WhatsApp client not initialized");
-  }
-
-  // Guard: check if Puppeteer page is still alive
-  try {
-    const page = client.pupPage;
-    if (!page) {
-      debug(tag, "ERROR: pupPage is null — triggering reconnect ❌");
-      state.isReady = false;
-      resetReadyPromise();
-      scheduleReconnect();
-      throw new Error("WhatsApp pupPage is null, reconnecting...");
-    }
-    if (page.isClosed()) {
-      debug(tag, "ERROR: pupPage is CLOSED (detached frame) — triggering reconnect ❌");
-      state.isReady = false;
-      resetReadyPromise();
-      scheduleReconnect();
-      throw new Error("WhatsApp page is closed, reconnecting...");
-    }
-    debug(tag, "pupPage check passed ✅ — page is alive");
-  } catch (e) {
-    if (e.message.includes("detached") || e.message.includes("closed")) {
-      debug(tag, `pupPage threw detached/closed error — triggering reconnect ❌`, e.message);
-      state.isReady = false;
-      resetReadyPromise();
-      scheduleReconnect();
-    }
-    throw e;
-  }
-
-  // Normalize number
   const chatId = to.includes("@c.us") ? to : `${to.replace(/\D/g, "")}@c.us`;
   debug(tag, `Normalized chatId: ${chatId}`);
 
   try {
     if (media) {
-      debug(tag, `Preparing MessageMedia — size: ${
+      const sizeLabel =
         media.data instanceof Buffer
           ? `${(media.data.length / 1024).toFixed(1)} KB`
-          : "base64 string"
-      }`);
+          : "base64 string";
+
+      debug(tag, `Preparing MessageMedia — size: ${sizeLabel}`);
 
       const messageMedia = new MessageMedia(
         media.mimetype,
-        media.data instanceof Buffer
-          ? media.data.toString("base64")
-          : media.data,
+        media.data instanceof Buffer ? media.data.toString("base64") : media.data,
         media.filename
       );
 
@@ -199,6 +206,12 @@ const sendMessage = async (to, message, media = null) => {
       message: e.message,
       stack: e.stack?.split("\n")[1]?.trim(),
     });
+
+    // Detached frame or dead browser context — must reconnect
+    if (isFatalBrowserError(e.message)) {
+      triggerReconnect(tag, e.message);
+    }
+
     throw e;
   }
 };

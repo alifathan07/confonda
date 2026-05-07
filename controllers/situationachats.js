@@ -179,7 +179,7 @@ export async function getSituationGenerale(req, res) {
 
     res.render('dashboard/achats/situation', { 
       rows: paginatedRows, kpis, page, totalPages: totalFiltered, totalBCs: filteredAllRows.length, 
-      filters: { status, supplier, numero, minAmount, maxAmount, designation },
+      filters: { status, supplier, numero, minAmount, maxAmount, designation, year: yearFilter },
       suppliers
     });
   } catch (error) {

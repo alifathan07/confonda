@@ -161,6 +161,14 @@
       <div class="card-body">
         <form method="get" class="row g-3">
           <div class="col-md-2">
+            <label class="form-label small">Année</label>
+            <select name="year" class="form-control form-control-sm">
+              <% for(let y = 2024; y <= 2030; y++) { %>
+                <option value="<%= y %>" <%= filters.year == y ? 'selected' : '' %>><%= y %></option>
+              <% } %>
+            </select>
+          </div>
+          <div class="col-md-2">
             <label class="form-label small">Statut</label>
             <select name="status" class="form-control form-control-sm">
               <option value="">Tous</option>
@@ -196,7 +204,7 @@
             <input type="text" name="designation" class="form-control form-control-sm" placeholder="Rechercher article..." value="<%= filters.designation || '' %>">
           </div>
           <div class="col-12">
-            <a href="/achats/situation-generale" class="btn btn-sm btn-secondary">Réinitialiser</a>
+            <a href="/achats/situation-generale?year=2026" class="btn btn-sm btn-secondary">Réinitialiser</a>
           </div>
         </form>
         <script>
