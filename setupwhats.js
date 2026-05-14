@@ -24,6 +24,7 @@ const createClient = () =>
     authStrategy: new LocalAuth({ dataPath: "./.wwebjs_auth" }),
     puppeteer: {
       headless: true,
+       protocolTimeout: 600_000, // ← just add this
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
