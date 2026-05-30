@@ -270,6 +270,19 @@ dashboardRouter.post('/achats/fournisseurs/:id/emails', async (req, res) => {
     res.status(500).json({ error: 'Erreur lors de l\'ajout de l\'email' });
   }
 });
+
+dashboardRouter.delete('/achats/fournisseurs/emails/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.fournisseurEmail.delete({
+      where: { id: parseInt(id) }
+    });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting email:', error);
+    res.status(500).json({ error: 'Erreur lors de la suppression de l\'email' });
+  }
+});
 // -----------Achats :  Upload Fournisseur -----------------
 /// multer logic 
 

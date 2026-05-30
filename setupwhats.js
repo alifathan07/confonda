@@ -34,6 +34,8 @@ const createClient = () =>
       ],
     },
   });
+  
+  
 
 // ─── Reset the ready promise (called on each reconnect cycle) ─────────────────
 const resetReadyPromise = () => {
@@ -46,6 +48,7 @@ const resetReadyPromise = () => {
 const scheduleReconnect = () => {
   if (state.reconnectTimer) return; // already scheduled
   console.log("🔄 Reconnecting in 30s...");
+  
 
   state.reconnectTimer = setTimeout(async () => {
     state.reconnectTimer = null;

@@ -1194,8 +1194,13 @@
                     </div>
 
                     <div class="fournisseur-box">
-                      <h5><i class="fas fa-building"></i> Fournisseur</h5>
-                      <select id="fournisseurSelectBc" class="form-control mb-2" name="supplier">
+                      <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="m-0"><i class="fas fa-building"></i> Fournisseur</h5>
+                        <button type="button" onclick="openSupplierEmailManager()" class="btn btn-xs btn-outline-primary" style="font-size: 0.7rem;">
+                          <i class="fas fa-envelope-open-text"></i> Gérer Emails
+                        </button>
+                      </div>
+                      <select id="fournisseurSelectBc" class="form-control mb-3" name="supplier">
                         <option value="">-- Choisir un fournisseur --</option>
                         <% fournisseurs.forEach(f=> { %>
                           <option value="<%= f.id %>" <%=f.id===bc.fournisseur.id ? 'selected' : '' %>><%= f.name %>
@@ -1204,21 +1209,25 @@
                           <% }) %>
                       </select>
                       <div class="small mt-auto">
-                        <input type="hidden" id="fournisseurId" hidden>
-                        <div class="info-line"><i class="fas fa-user-tie"></i>
-                          <input type="text" id="fourNameBc" name="name" class="form-control"
-                            value="<%= bc.fournisseur.name %>">
+                        <input type="hidden" id="fournisseurId" value="<%= bc.fournisseur.id %>" hidden>
+                        <div class="info-line">
+                          <i class="fas fa-user-tie"></i>
+                          <input type="text" id="fourNameBc" name="name" class="form-control" value="<%= bc.fournisseur.name %>">
                         </div>
-                        <div class="info-line"><i class="fas fa-envelope"></i>
+                        <div class="info-line">
+                          <i class="fas fa-envelope"></i>
                           <input type="text" id="fourEmailBc" name="email" class="form-control"
-                            value="<%= bc.fournisseur.email %>">
+                            value="<%= [bc.fournisseur.email, ...(bc.fournisseur.emails || []).map(e => e.email)].filter(Boolean).join(', ') %>">
                         </div>
-                        <div class="info-line"><i class="fas fa-phone"></i>
+                        <div class="info-line">
+                          <i class="fas fa-phone"></i>
                           <input type="text" id="fourTelBc" name="telFournisseur" class="form-control"
                             value="<%= bc.fournisseur.telFournisseur || '' %>">
                         </div>
-                        <div class="info-line">
-                          <button onclick="editSupplier()">Sauvegarder</button>
+                        <div class="mt-2 text-right">
+                          <button type="button" class="btn btn-sm btn-outline-success" onclick="updateSupplierDetails()">
+                            <i class="fas fa-save"></i> Mettre à jour Fournisseur
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -1540,15 +1549,147 @@
         </div>
       </div>
 
-      <!-- Scripts -->
-      <script src="/vendor/jquery/jquery.min.js"></script>
-      <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+  <!-- Supplier Email Manager Modal -->
+  <div class="modal fade" id="supplierEmailModal" tabindex="-1" role="dialog" style="z-index: 1060;">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title"><i class="fas fa-envelope-open-text mr-2"></i> Gérer les emails</h5>
+          <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="manageSupplierId">
+          <div class="form-group">
+            <label class="small font-weight-bold">Ajouter un email</label>
+            <div class="input-group">
+              <input type="email" id="newSupplierEmail" class="form-control form-control-sm" placeholder="exemple@domaine.com">
+              <div class="input-group-append">
+                <button class="btn btn-sm btn-success" type="button" onclick="addNewSupplierEmail()">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <hr>
+          <div id="supplierEmailsList">
+            <!-- Emails will be loaded here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-      <script>
+  <!-- Scripts -->
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+  <script>
+    function openSupplierEmailManager() {
+      const supplierId = document.getElementById('fournisseurSelectBc').value;
+      if (!supplierId) {
+        alert('Veuillez d\'abord sélectionner un fournisseur');
+        return;
+      }
+      $('#manageSupplierId').val(supplierId);
+      $('#newSupplierEmail').val('');
+      
+      renderSupplierEmails(supplierId);
+      $('#supplierEmailModal').modal('show');
+    }
+
+    function renderSupplierEmails(supplierId) {
+      fetch('/api/fournisseurs')
+        .then(r => r.json())
+        .then(data => {
+          const supplier = (data.fournisseurs || data).find(f => String(f.id) === String(supplierId));
+          const list = $('#supplierEmailsList');
+          list.empty();
+          
+          if (supplier) {
+            if (supplier.email) {
+              list.append(`
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded border-left border-primary">
+                  <span class="small font-weight-bold">${supplier.email} (Principal)</span>
+                </div>
+              `);
+            }
+            if (supplier.emails && supplier.emails.length) {
+              supplier.emails.forEach(e => {
+                list.append(`
+                  <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded border-left">
+                    <span class="small">${e.email}</span>
+                    <button class="btn btn-xs btn-link text-danger p-0" onclick="deleteSupplierEmail(${e.id}, ${supplierId})">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </div>
+                `);
+              });
+            }
+          }
+        });
+    }
+
+    function addNewSupplierEmail() {
+      const supplierId = $('#manageSupplierId').val();
+      const email = $('#newSupplierEmail').val().trim();
+      if (!email || !email.includes('@')) {
+        alert('Veuillez entrer un email valide');
+        return;
+      }
+
+      $.post(`/achats/fournisseurs/${supplierId}/emails`, { email: email }, function(res) {
+        renderSupplierEmails(supplierId);
+        $('#newSupplierEmail').val('');
+      });
+    }
+
+    function deleteSupplierEmail(emailId, supplierId) {
+      if (confirm('Supprimer cet email ?')) {
+        $.ajax({
+          url: `/achats/fournisseurs/emails/${emailId}`,
+          type: 'DELETE',
+          success: function() {
+            renderSupplierEmails(supplierId);
+          }
+        });
+      }
+    }
+
+    async function updateSupplierDetails() {
+      const id = document.getElementById('fournisseurSelectBc').value;
+      if (!id) {
+        alert('Sélectionnez un fournisseur !');
+        return;
+      }
+
+      const nameVal = document.getElementById('fourNameBc').value;
+      const emailVal = document.getElementById('fourEmailBc').value;
+      const telVal = document.getElementById('fourTelBc').value;
+
+      try {
+        const res = await fetch(`/achat/bc/supplier/update`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            supplierId: id,
+            name: nameVal,
+            email: emailVal,
+            telFournisseur: telVal,
+          })
+        });
+        if (res.ok) {
+          alert('Informations fournisseur mises à jour !');
+        } else {
+          throw new Error('Erreur lors de la mise à jour');
+        }
+      } catch (e) {
+        alert(e.message);
+      }
+    }
         // BL Creation Modal Functions
         function openBLCreationModal(bcId, fourName, fourId, bcNumero) {
           document.getElementById('blActionModal').style.display = 'flex';
@@ -1881,29 +2022,43 @@
             <% }); %>
           <% } %>
 
-          if (emails.length === 0) {
+          // Unique emails
+          const uniqueEmails = [...new Set(emails.map(e => e.trim().toLowerCase()))];
+
+          if (uniqueEmails.length === 0) {
             alert('Aucun email trouvé pour ce fournisseur.');
             return;
           }
 
-          if (emails.length === 1) {
-            // Single email - send directly
-            sendToEmail(emails[0]);
-          } else {
-            // Multiple emails - show selection modal
-            showEmailSelectionModal(emails);
-          }
+          showEmailSelectionModal(uniqueEmails);
         }
 
         function showEmailSelectionModal(emails) {
           const modal = document.getElementById('emailSelectModal');
           const list = document.getElementById('emailList');
           list.innerHTML = '';
+          
+          if (emails.length > 1) {
+            const allBtn = document.createElement('button');
+            allBtn.className = 'btn btn-primary btn-block mb-3';
+            allBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer à tous';
+            allBtn.onclick = () => sendToAllEmails(emails);
+            list.appendChild(allBtn);
+            
+            const divider = document.createElement('hr');
+            list.appendChild(divider);
+          }
+
           emails.forEach(email => {
-            const label = document.createElement('label');
-            label.className = 'd-block mb-2';
-            label.innerHTML = `<input type="radio" name="selectedEmail" value="${email}"> ${email}`;
-            list.appendChild(label);
+            const div = document.createElement('div');
+            div.className = 'd-flex justify-content-between align-items-center mb-2 p-2 border rounded';
+            div.innerHTML = `
+              <span class="text-truncate mr-2">${email}</span>
+              <button class="btn btn-sm btn-outline-primary" onclick="sendToEmail('${email}')">
+                <i class="fas fa-paper-plane"></i> Envoyer
+              </button>
+            `;
+            list.appendChild(div);
           });
           modal.style.display = 'flex';
         }
@@ -1912,19 +2067,28 @@
           document.getElementById('emailSelectModal').style.display = 'none';
         }
 
-        function confirmEmailSend() {
-          const selected = document.querySelector('input[name="selectedEmail"]:checked');
-          if (!selected) {
-            alert('Veuillez sélectionner un email');
-            return;
-          }
+        function sendToAllEmails(emails) {
+          if (!confirm('Voulez-vous vraiment envoyer cet email à toutes les adresses ?')) return;
+          const btn = $('#btnSend');
+          btn.html('<i class="fas fa-spinner fa-spin"></i> Envoi...').prop('disabled', true);
           closeEmailModal();
-          sendToEmail(selected.value);
+
+          $.post('/api/bc/<%= bc.id %>/send-email', { email: emails.join(',') })
+            .done(() => {
+              alert('Emails envoyés avec succès à tous !');
+            })
+            .fail(() => {
+              alert('Échec de l\'envoi groupé !');
+            })
+            .always(() => {
+              btn.html('<i class="fas fa-paper-plane"></i> <span>Envoyer</span>').prop('disabled', false);
+            });
         }
 
         function sendToEmail(email) {
           const btn = $('#btnSend');
           btn.html('<i class="fas fa-spinner fa-spin"></i> Envoi...').prop('disabled', true);
+          closeEmailModal();
 
           $.post('/api/bc/<%= bc.id %>/send-email', { email: email })
             .done(() => {
@@ -1947,12 +2111,22 @@
         const fournisseursDataBc = <%-JSON.stringify(fournisseurs.map(f => ({
           id: String(f.id),
           name: f.name ?? '',
-          email: f.email ?? '',
+          email: [f.email, ...(f.emails || []).map(e => e.email)].filter(Boolean).join(', '),
           tel: f.telFournisseur ?? ''
         }))) %>;
 
         const selectBc = document.getElementById('fournisseurSelectBc');
         if (selectBc) {
+          // Initialize Choices.js for searchable supplier select
+          const supplierChoices = new Choices(selectBc, {
+            removeItemButton: false,
+            searchResultLimit: 10,
+            placeholderValue: '-- Choisir un fournisseur --',
+            searchPlaceholderValue: 'Rechercher un fournisseur...',
+            shouldSort: false,
+            itemSelectText: '',
+          });
+
           selectBc.addEventListener('change', function () {
             const f = fournisseursDataBc.find(x => x.id === this.value);
             if (f) {
@@ -3211,48 +3385,7 @@
           }
         }
 
-        async function editSupplier() {
-          const id = document.getElementById('fournisseurId').value;
-          if (!id) {
-            alert('Sélectionnez un fournisseur !');
-            return;
-          }
 
-          // Get values from the correct input fields
-          const nameVal = document.getElementById('fourNameBc').value;
-          const emailVal = document.getElementById('fourEmailBc').value;
-          const telVal = document.getElementById('fourTelBc').value;
-
-          try {
-            const res = await fetch(`/achat/bc/supplier/update`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                supplierId: id,
-                name: nameVal,
-                email: emailVal,
-                telFournisseur: telVal,
-              })
-              
-            });
-            if (!res.ok) { throw new Error(`Modification échouée (${res.status})`); }
-            // Show success without reloading
-            const btn = document.querySelector('button[onclick="editSupplier()"]');
-            const originalText = btn ? btn.textContent : '';
-            if (btn) {
-              btn.textContent = 'Sauvegardé !';
-              btn.classList.add('btn-success');
-              btn.classList.remove('btn-primary');
-              setTimeout(() => {
-                btn.textContent = originalText;
-                btn.classList.remove('btn-success');
-                btn.classList.add('btn-primary');
-              }, 2000);
-            }
-          } catch (e) {
-            alert(e.message);
-          }
-        }
 
       </script>
 
@@ -3377,11 +3510,11 @@
 
       <!-- Email Selection Modal -->
       <div class="bl-modal-overlay" id="emailSelectModal" style="display:none;">
-        <div class="bl-modal" style="max-width:400px;">
-          <div class="bl-modal-header">
+        <div class="bl-modal" style="max-width:450px;">
+          <div class="bl-modal-header" style="background: #16a34a;">
             <div>
-              <h5>Sélectionner un email</h5>
-              <div class="subtitle">Choisir l'email du fournisseur</div>
+              <h5><i class="fas fa-envelope-open-text"></i> Envoyer le BC</h5>
+              <div class="subtitle">Sélectionner les destinataires</div>
             </div>
             <button class="bl-modal-close" onclick="closeEmailModal()">&times;</button>
           </div>
@@ -3389,10 +3522,7 @@
             <div id="emailList"></div>
           </div>
           <div class="bl-modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="closeEmailModal()">Annuler</button>
-            <button type="button" class="btn btn-primary" onclick="confirmEmailSend()">
-              <i class="fas fa-paper-plane"></i> Envoyer
-            </button>
+            <button type="button" class="btn btn-secondary" onclick="closeEmailModal()">Fermer</button>
           </div>
         </div>
       </div>

@@ -547,7 +547,7 @@ export const editBc = async (req, res) => {
     if (!bc) {
       return res.status(404).json({ success: false, error: "Bon de commande non trouvée" });
     }
-    const fournisseurs = await prisma.fournisseur.findMany()
+    const fournisseurs = await prisma.fournisseur.findMany({ include: { emails: true } })
     const publicBcUrl = buildPublicBcUrl(req, bc.id);
     const listfourniture = await prisma.fourniture_list.findMany();
 
@@ -836,7 +836,7 @@ export const updateBcItemDistribution = async (req, res) => {
 
 export const createBcForm = async (req, res) => {
   try {
-    const fournisseurs = await prisma.fournisseur.findMany();
+    const fournisseurs = await prisma.fournisseur.findMany({ include: { emails: true } });
     const chantiers = await prisma.chantier.findMany();
     const listfourniture = await prisma.fourniture_list.findMany();
     console.log("Headers:", req.headers);
