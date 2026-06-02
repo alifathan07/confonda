@@ -1,6 +1,7 @@
 import prisma from "./db.js";
 
 
+
 async function main() {
     console.log('🚀 Starting migration of existing cheques...');
 
@@ -14,6 +15,7 @@ async function main() {
     });
 
     console.log(`Found ${cheques.length} cheques to migrate.`);
+    
 
     let count = 0;
     for (const cheque of cheques) {

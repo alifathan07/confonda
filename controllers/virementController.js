@@ -438,7 +438,9 @@ export const generateVirementPDF = async (req, res) => {
 };
 
 export const suppliersList = async (req, res) => {
-    const fournisseurs = await prisma.fournisseur.findMany();
+    const fournisseurs = await prisma.fournisseur.findMany({
+        include: { emails: true }
+    });
     res.json(fournisseurs);
 };
 export const deleteVirement = async (req, res) => {

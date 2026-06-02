@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Créer Bon de Livraison</title>
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+  <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+</head>
+<body id="page-top">
+  <div id="wrapper">
+    <%- include('../../../layouts/sidebar') %>
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <%- include('../../../layouts/topbar') %>
+
+        <div class="container-fluid">
+          <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex align-items-center justify-content-between">
+              <h6 class="m-0 font-weight-bold text-primary">Créer Bon de Livraison</h6>
+              <a href="/achats/bons-livraison" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i> Retour à la liste
+              </a>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label>Numéro BL *</label>
+                    <input type="text" id="createBLNumero" class="form-control" required>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label>Date réception *</label>
+                    <input type="date" id="createBLDate" class="form-control" required>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label>Fournisseur *</label>
+                    <select id="createBLFournisseur" class="form-control" required>
+                      <option value="">-- Sélectionner un fournisseur --</option>
+                      <% (fournisseurs || []).forEach(f => { %>
+                        <option value="<%= f.id %>"><%= f.name %><%= f.ville ? ' (' + f.ville + ')' : '' %></option>
+                      <% }) %>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label>Total HT</label>
+                    <input type="text" id="createBLTotalHt" class="form-control" readonly value="0.00">
+                  </div>
+                </div>
+              </div>
+
+              <h6 class="mt-4">Articles</h6>
+              <button type="button" class="btn btn-sm btn-secondary mb-3" onclick="addCreateBLItemRow()">
+                <i class="fas fa-plus"></i> Ajouter un article
+              </button>
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered" id="createBLItemsTable">
+                  <thead class="thead-light">
+                    <tr>
+                      <th>Désignation</th>
+                      <th>Référence</th>
+                      <th>Unité</th>
+                      <th style="width:100px;">Qté</th>
+                      <th style="width:120px;">Prix U.</th>
+                      <th style="width:120px;">Total HT</th>
+                      <th style="width:60px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="createBLItemsBody"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card-footer text-right">
+              <button type="button" class="btn btn-secondary" onclick="window.location.href='/achats/bons-livraison'">Annuler</button>
+              <button type="button" class="btn btn-primary" onclick="submitCreateBondeLivraison()">Créer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/jquery/jquery.min.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+  <script src="/js/sb-admin-2.min.js"></script>
+  <script>
+    const fournitureData = <% if (listfourniture && listfourniture.length > 0) { %><%- JSON.stringify(listfourniture) %><% } else { %>[]<% } %>;
+    let activeAutocomplete = null;
+    let activeInput = null;
+
+    // Create global suggestion list
+    const globalList = document.createElement('ul');
+    globalList.id = 'global-autocomplete-list';
+    globalList.className = 'list-group position-absolute shadow';
+    globalList.style.zIndex = '1050';
+    globalList.style.display = 'none';
+    globalList.style.background = '#ffffff';
+    globalList.style.maxHeight = '240px';
+    globalList.style.overflowY = 'auto';
+    document.body.appendChild(globalList);
+
+    const normalize = (v) => (v == null ? '' : String(v)).trim().toLowerCase();
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('createBLDate').value = new Date().toISOString().split('T')[0];
+      addCreateBLItemRow();
+    });
+
+    // Hide list on scroll/resize
+    window.addEventListener('scroll', () => hideAutocomplete(), true);
+    window.addEventListener('resize', () => hideAutocomplete());
+
+    function setupAutocomplete(input, type = 'designation') {
+      input.setAttribute('autocomplete', 'off');
+
+      input.addEventListener('input', function() {
+        const query = normalize(this.value);
+        if (query.length < 2) {
+          hideAutocomplete();
+          return;
+        }
+        
+        activeInput = this;
+        let matches = [];
+        
+        if (type === 'designation') {
+          const uniqueDesignations = new Set();
+          for (const item of fournitureData) {
+            const d = (item.designation || "").trim();
+            if (normalize(d).includes(query)) {
+              if (!uniqueDesignations.has(d)) {
+                uniqueDesignations.add(d);
+                matches.push(item);
+              }
+            }
+            if (matches.length >= 15) break;
+          }
+        } else if (type === 'reference') {
+          const row = this.closest('tr');
+          const designation = normalize(row.querySelector('.create-bl-designation').value);
+          matches = fournitureData.filter(item => 
+            normalize(item.designation) === designation && 
+            normalize(item.reference).includes(query)
+          ).slice(0, 10);
+        }
+
+        if (matches.length === 0) {
+          hideAutocomplete();
+          return;
+        }
+
+        showAutocomplete(this, matches, type);
+      });
+
+      input.addEventListener('focus', function() {
+        const query = normalize(this.value);
+        if (query.length >= 2) {
+          this.dispatchEvent(new Event('input'));
+        }
+      });
+
+      input.addEventListener('blur', function() {
+        setTimeout(() => {
+          if (activeAutocomplete && !activeAutocomplete.contains(document.activeElement)) {
+            hideAutocomplete();
+          }
+        }, 200);
+      });
+    }
+
+    function showAutocomplete(input, matches, type) {
+      globalList.innerHTML = '';
+      
+      matches.forEach(match => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item list-group-item-action py-2';
+        li.style.cursor = 'pointer';
+        
+        if (type === 'designation') {
+          li.innerHTML = `<strong>${match.designation || ''}</strong>`;
+        } else {
+          li.innerHTML = `<strong>${match.reference || '---'}</strong><br><small class="text-muted">${match.designation || ''} | ${match.unite || '---'}</small>`;
+        }
+        
+        li.addEventListener('mousedown', (event) => {
+          event.preventDefault();
+          const row = input.closest('tr');
+          
+          if (type === 'designation') {
+            row.querySelector('.create-bl-designation').value = match.designation || '';
+            // If there's only one reference for this designation, fill it too
+            const refs = fournitureData.filter(f => normalize(f.designation) === normalize(match.designation));
+            if (refs.length === 1) {
+              row.querySelector('.create-bl-reference').value = refs[0].reference || '';
+              row.querySelector('.create-bl-unite').value = refs[0].unite || '';
+              if (refs[0].prixUnitaire != null) {
+                row.querySelector('.create-bl-prix').value = refs[0].prixUnitaire;
+              }
+            }
+          } else {
+            row.querySelector('.create-bl-reference').value = match.reference || '';
+            row.querySelector('.create-bl-unite').value = match.unite || '';
+            if (match.prixUnitaire != null) {
+              row.querySelector('.create-bl-prix').value = match.prixUnitaire;
+            }
+          }
+          
+          calcCreateBLItemTotal(row.querySelector('.create-bl-prix'));
+          hideAutocomplete();
+          input.focus();
+        });
+        globalList.appendChild(li);
+      });
+
+      const rect = input.getBoundingClientRect();
+      globalList.style.width = input.offsetWidth + 'px';
+      globalList.style.top = `${rect.bottom + window.scrollY}px`;
+      globalList.style.left = `${rect.left + window.scrollX}px`;
+      globalList.style.display = 'block';
+      activeAutocomplete = globalList;
+    }
+
+    function hideAutocomplete() {
+      globalList.style.display = 'none';
+      activeAutocomplete = null;
+    }
+
+    function addCreateBLItemRow() {
+      const tbody = document.getElementById('createBLItemsBody');
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><input type="text" class="form-control form-control-sm create-bl-designation" autocomplete="off"></td>
+        <td><input type="text" class="form-control form-control-sm create-bl-reference" autocomplete="off"></td>
+        <td><input type="text" class="form-control form-control-sm create-bl-unite"></td>
+        <td><input type="number" class="form-control form-control-sm create-bl-quantite" value="0" min="0" step="0.01" oninput="calcCreateBLItemTotal(this)"></td>
+        <td><input type="number" class="form-control form-control-sm create-bl-prix" value="0" min="0" step="0.01" oninput="calcCreateBLItemTotal(this)"></td>
+        <td class="text-right create-bl-total">0.00</td>
+        <td class="text-center"><button type="button" class="btn btn-sm btn-danger" onclick="removeCreateBLItemRow(this)"><i class="fas fa-trash"></i></button></td>
+      `;
+      tbody.appendChild(row);
+      setupAutocomplete(row.querySelector('.create-bl-designation'), 'designation');
+      setupAutocomplete(row.querySelector('.create-bl-reference'), 'reference');
+    }
+
+    function removeCreateBLItemRow(button) {
+      const row = button.closest('tr');
+      if (row) {
+        row.remove();
+        calcCreateBLTotals();
+      }
+    }
+
+    function calcCreateBLItemTotal(input) {
+      const row = input.closest('tr');
+      const qty = parseFloat(row.querySelector('.create-bl-quantite').value) || 0;
+      const price = parseFloat(row.querySelector('.create-bl-prix').value) || 0;
+      row.querySelector('.create-bl-total').textContent = (qty * price).toFixed(2);
+      calcCreateBLTotals();
+    }
+
+    function calcCreateBLTotals() {
+      let total = 0;
+      document.querySelectorAll('#createBLItemsBody .create-bl-total').forEach(cell => {
+        total += parseFloat(cell.textContent) || 0;
+      });
+      document.getElementById('createBLTotalHt').value = total.toFixed(2);
+    }
+
+    async function submitCreateBondeLivraison() {
+      const numeroBL = document.getElementById('createBLNumero').value.trim();
+      const dateReception = document.getElementById('createBLDate').value;
+      const fournisseurId = document.getElementById('createBLFournisseur').value;
+
+      const articles = [];
+      document.querySelectorAll('#createBLItemsBody tr').forEach(row => {
+        const designation = row.querySelector('.create-bl-designation').value.trim();
+        const reference = row.querySelector('.create-bl-reference').value.trim();
+        const unite = row.querySelector('.create-bl-unite').value.trim();
+        const quantite = parseFloat(row.querySelector('.create-bl-quantite').value) || 0;
+        const prixUnitaire = parseFloat(row.querySelector('.create-bl-prix').value) || 0;
+
+        if (designation || reference || unite || quantite > 0 || prixUnitaire > 0) {
+          articles.push({ designation, reference, unite, quantite, prixUnitaire });
+        }
+      });
+
+      if (!numeroBL || !dateReception || !fournisseurId) {
+        alert('Veuillez remplir tous les champs obligatoires.');
+        return;
+      }
+
+      if (articles.length === 0) {
+        alert('Veuillez ajouter au moins un article.');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/bons-livraison', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fournisseurId, numeroBL, dateReception, articles })
+        });
+
+        const json = await res.json();
+        if (res.ok && json.success) {
+          window.location.href = '/achats/bons-livraison';
+        } else {
+          alert(json.error || 'Erreur lors de la création du BL');
+        }
+      } catch (error) {
+        console.error(error);
+        alert('Erreur serveur lors de la création du BL.');
+      }
+    }
+  </script>
+</body>
+</html>

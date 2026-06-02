@@ -766,7 +766,12 @@
                     </div>
 
                     <div class="fournisseur-box">
-                      <h5 class="mb-3"><i class="fas fa-building"></i> Fournisseur</h5>
+                      <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="m-0"><i class="fas fa-building"></i> Fournisseur</h5>
+                        <button type="button" onclick="openSupplierEmailManager()" class="btn btn-xs btn-outline-primary" style="font-size: 0.7rem;">
+                          <i class="fas fa-envelope-open-text"></i> Gérer Emails
+                        </button>
+                      </div>
                       <select id="fournisseurSelectBc" class="form-control mb-3" name="supplier">
                         <option value="">-- Choisir un fournisseur --</option>
                         <% fournisseurs.forEach(f=> { %>
@@ -777,17 +782,22 @@
                           <% }) %>
                       </select>
                       <div class="small">
-                        <div class="info-line"><i class="fas fa-user-tie"></i>
-                          <input type="text" id="fourNameBc" class="form-control">
-                        </div>
-                        <div class="info-line"><i class="fas fa-envelope"></i>
-                          <input type="text" id="fourEmailBc" class="form-control">
-                        </div>
-                        <div class="info-line"><i class="fas fa-phone"></i>
-                          <input type="text" id="fourTelBc" class="form-control">
+                        <div class="info-line">
+                          <i class="fas fa-user-tie"></i>
+                          <input type="text" id="fourNameBc" class="form-control" placeholder="Nom">
                         </div>
                         <div class="info-line">
-                          <button onclick="editSupplier(document.getElementById('fournisseurSelectBc').value)">Sauvegarder</button>
+                          <i class="fas fa-envelope"></i>
+                          <input type="text" id="fourEmailBc" class="form-control" placeholder="Emails (séparés par virgule)">
+                        </div>
+                        <div class="info-line">
+                          <i class="fas fa-phone"></i>
+                          <input type="text" id="fourTelBc" class="form-control" placeholder="Téléphone">
+                        </div>
+                        <div class="mt-2 text-right">
+                          <button type="button" class="btn btn-sm btn-outline-success" onclick="updateSupplierDetails()">
+                            <i class="fas fa-save"></i> Mettre à jour Fournisseur
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -985,6 +995,36 @@
       </div>
   </div>
 
+  <!-- Supplier Email Manager Modal -->
+  <div class="modal fade" id="supplierEmailModal" tabindex="-1" role="dialog" style="z-index: 1060;">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title"><i class="fas fa-envelope-open-text mr-2"></i> Gérer les emails</h5>
+          <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="manageSupplierId">
+          <div class="form-group">
+            <label class="small font-weight-bold">Ajouter un email</label>
+            <div class="input-group">
+              <input type="email" id="newSupplierEmail" class="form-control form-control-sm" placeholder="exemple@domaine.com">
+              <div class="input-group-append">
+                <button class="btn btn-sm btn-success" type="button" onclick="addNewSupplierEmail()">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <hr>
+          <div id="supplierEmailsList">
+            <!-- Emails will be loaded here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="/vendor/jquery/jquery.min.js"></script>
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
@@ -994,6 +1034,121 @@
   <!-- Choices.js (tag-style multi-select for chantiers) -->
   <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
   <script>
+    function openSupplierEmailManager() {
+      const supplierId = document.getElementById('fournisseurSelectBc').value;
+      if (!supplierId) {
+        alert('Veuillez d\'abord sélectionner un fournisseur');
+        return;
+      }
+      $('#manageSupplierId').val(supplierId);
+      $('#newSupplierEmail').val('');
+      
+      // Load current emails from local data
+      renderSupplierEmails(supplierId);
+      $('#supplierEmailModal').modal('show');
+    }
+
+    function renderSupplierEmails(supplierId) {
+      // In Create mode, we might need to fetch the latest from server to be sure
+      fetch('/api/fournisseurs')
+        .then(r => r.json())
+        .then(data => {
+          const supplier = (data.fournisseurs || data).find(f => String(f.id) === String(supplierId));
+          const list = $('#supplierEmailsList');
+          list.empty();
+          
+          if (supplier) {
+            // Main email
+            if (supplier.email) {
+              list.append(`
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded border-left border-primary">
+                  <span class="small font-weight-bold">${supplier.email} (Principal)</span>
+                </div>
+              `);
+            }
+            
+            // Secondary emails
+            if (supplier.emails && supplier.emails.length) {
+              supplier.emails.forEach(e => {
+                list.append(`
+                  <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded border-left">
+                    <span class="small">${e.email}</span>
+                    <button class="btn btn-xs btn-link text-danger p-0" onclick="deleteSupplierEmail(${e.id}, ${supplierId})">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </div>
+                `);
+              });
+            }
+          }
+        });
+    }
+
+    function addNewSupplierEmail() {
+      const supplierId = $('#manageSupplierId').val();
+      const email = $('#newSupplierEmail').val().trim();
+      if (!email || !email.includes('@')) {
+        alert('Veuillez entrer un email valide');
+        return;
+      }
+
+      $.post(`/achats/fournisseurs/${supplierId}/emails`, { email: email }, function(res) {
+        renderSupplierEmails(supplierId);
+        $('#newSupplierEmail').val('');
+        // Also update the local display if possible, or just refresh
+      });
+    }
+
+    function deleteSupplierEmail(emailId, supplierId) {
+      if (confirm('Supprimer cet email ?')) {
+        $.ajax({
+          url: `/achats/fournisseurs/emails/${emailId}`,
+          type: 'DELETE',
+          success: function() {
+            renderSupplierEmails(supplierId);
+          }
+        });
+      }
+    }
+
+    async function updateSupplierDetails() {
+      const id = document.getElementById('fournisseurSelectBc').value;
+      if (!id) {
+        alert('Sélectionnez un fournisseur !');
+        return;
+      }
+
+      const nameVal = document.getElementById('fourNameBc').value;
+      const emailVal = document.getElementById('fourEmailBc').value;
+      const telVal = document.getElementById('fourTelBc').value;
+
+      try {
+        const res = await fetch(`/achat/bc/supplier/update`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            supplierId: id,
+            name: nameVal,
+            email: emailVal,
+            telFournisseur: telVal,
+          })
+        });
+        if (res.ok) {
+          // Update local data
+          const f = fournisseursDataBc.find(x => x.id === id);
+          if (f) {
+            f.name = nameVal;
+            f.email = emailVal;
+            f.tel = telVal;
+          }
+          alert('Informations fournisseur mises à jour !');
+        } else {
+          throw new Error('Erreur lors de la mise à jour');
+        }
+      } catch (e) {
+        alert(e.message);
+      }
+    }
     (function () {
       const sel = document.getElementById('chantierSelect');
       if (sel && typeof Choices !== 'undefined') {
@@ -1011,7 +1166,7 @@
     const fournisseursDataBc = <%- JSON.stringify(fournisseurs.map(f => ({
       id: String(f.id),
       name: f.name || '',
-      email: f.email || '',
+      email: [f.email, ...(f.emails || []).map(e => e.email)].filter(Boolean).join(', '),
       tel: f.telFournisseur || ''
     }))) %>;
 
@@ -1019,38 +1174,36 @@
 
     const selectBc = document.getElementById('fournisseurSelectBc');
     if (selectBc) {
-      console.log('✅ Supplier select element found');
+      // Initialize Choices.js for searchable supplier select
+      const supplierChoices = new Choices(selectBc, {
+        removeItemButton: false,
+        searchResultLimit: 10,
+        placeholderValue: '-- Choisir un fournisseur --',
+        searchPlaceholderValue: 'Rechercher un fournisseur...',
+        shouldSort: false,
+        itemSelectText: '',
+      });
+
+      console.log('✅ Supplier select element found and Choices initialized');
+      
       selectBc.addEventListener('change', function () {
         const selectedId = this.value;
-        console.log('🔍 Selected ID:', selectedId, 'Type:', typeof selectedId);
-        console.log('🔍 Available IDs:', fournisseursDataBc.map(x => ({ id: x.id, type: typeof x.id })));
-
         const f = fournisseursDataBc.find(x => x.id === selectedId);
-        console.log('🎯 Found supplier:', f);
 
         if (f) {
           const nameEl = document.getElementById('fourNameBc');
           const emailEl = document.getElementById('fourEmailBc');
           const telEl = document.getElementById('fourTelBc');
 
-          console.log('📝 Populating fields with:', { name: f.name, email: f.email, tel: f.tel });
-
           if (nameEl) {
             nameEl.value = f.name ?? '';
-            nameEl.placeholder = f.name ? '' : 'Non renseigné';
           }
           if (emailEl) {
             emailEl.value = f.email ?? '';
-            emailEl.placeholder = f.email ? '' : 'Non renseigné';
           }
           if (telEl) {
             telEl.value = f.tel ?? '';
-            telEl.placeholder = f.tel ? '' : 'Non renseigné';
           }
-          console.log('✅ Fields populated successfully');
-        } else {
-          console.error('❌ Supplier not found for ID:', selectedId);
-          console.log('Available suppliers:', fournisseursDataBc);
         }
       });
     } else {
@@ -2343,34 +2496,7 @@
       }
     }
 
-    async function editSupplier(id) {
-      if (!id) {
-        alert('Selectioner un fournisseur ! ')
-        return;
-      }
 
-      // Get values from the correct input fields
-      const nameVal = document.getElementById('fourNameBc').value;
-      const emailVal = document.getElementById('fourEmailBc').value;
-      const telVal = document.getElementById('fourTelBc').value;
-
-      try {
-        const res = await fetch(`/achat/bc/supplier/update`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            supplierId: id,
-            name: nameVal,
-            email: emailVal,
-            telFournisseur: telVal,
-          })
-        });
-        if (!res.ok) { throw new Error(`Modification échouée (${res.status})`); }
-        window.location.reload();
-      } catch (e) {
-        alert(e.message);
-      }
-    }
 
 
 

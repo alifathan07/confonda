@@ -77,8 +77,13 @@ export const listBL = async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
 
+    const fournisseurs = await prisma.fournisseur.findMany({
+      orderBy: { name: 'asc' }
+    });
+
     res.render('dashboard/achats/bl/list', {
       bls,
+      fournisseurs,
       currentPage: page,
       totalPages,
       totalCount,
@@ -88,6 +93,28 @@ export const listBL = async (req, res) => {
   } catch (error) {
     console.error('Erreur listBL:', error);
     res.status(500).json({ success: false, error: 'Erreur serveur' });
+  }
+};
+
+/**
+ * GET /achats/bons-livraison/create
+ * Render standalone BL creation page
+ */
+export const renderCreateBondeLivraisonPage = async (req, res) => {
+  try {
+    const [fournisseurs, listfourniture] = await Promise.all([
+      prisma.fournisseur.findMany({ orderBy: { name: 'asc' } }),
+      prisma.fourniture_list.findMany()
+    ]);
+
+    res.render('dashboard/achats/bl/create', {
+      fournisseurs,
+      listfourniture,
+      user: req.session.user
+    });
+  } catch (error) {
+    console.error('Erreur renderCreateBondeLivraisonPage:', error);
+    res.status(500).send('Erreur serveur');
   }
 };
 
@@ -660,10 +687,12 @@ export const editBL = async (req, res) => {
     }
 
     const publicBlUrl = buildPublicBlUrl(req, bl.id);
+    const listfourniture = await prisma.fourniture_list.findMany();
 
     res.render('dashboard/achats/bl/edit', {
       bl,
       publicBlUrl,
+      listfourniture,
       pageTitle: `Éditer BL ${bl.numero}`
     });
   } catch (error) {
@@ -702,8 +731,9 @@ export const updateBL = async (req, res) => {
     // Update each BL item
     for (const item of items) {
       if (item.id) {
+        // Update existing item
         await prisma.bondeLivraisonItem.update({
-          where: { id: item.id },
+          where: { id: parseInt(item.id) },
           data: {
             quantite: parseFloat(item.quantite) || 0,
             qtyRetourne: parseFloat(item.qtyRetourne) || 0,
@@ -711,9 +741,24 @@ export const updateBL = async (req, res) => {
             obs: item.remarque || null
           }
         });
+      } else if (item.designation) {
+        // Create new item
+        await prisma.bondeLivraisonItem.create({
+          data: {
+            bondeLivraisonId: blId,
+            designation: item.designation,
+            reference: item.reference || null,
+            unite: item.unite || null,
+            quantite: parseFloat(item.quantite) || 0,
+            qtyRetourne: parseFloat(item.qtyRetourne) || 0,
+            prixUnitaire: item.prixUnitaire ? parseFloat(item.prixUnitaire) : null,
+            obs: item.remarque || null
+          }
+        });
+      }
 
-        // If linked to BC item, recalculate quantiteRecue
-        if (item.commandesItemsId) {
+      // If linked to BC item, recalculate quantiteRecue
+      if (item.commandesItemsId) {
           const bcItemId = parseInt(item.commandesItemsId);
 
           // Sum quantite from ALL BL items linked to this BC item (where BL is not Annulé)
@@ -738,7 +783,6 @@ export const updateBL = async (req, res) => {
           });
         }
       }
-    }
 
     // Update BC status for all linked BCs
     for (const link of bl.bondeCommandeLinks) {

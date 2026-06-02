@@ -996,3 +996,5 @@ model FactureVirement {
 
   @@unique([factureId, virementId])
 }
+
+
