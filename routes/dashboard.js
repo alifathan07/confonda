@@ -27,7 +27,7 @@ import { addpricingforDemande, createDemandeFourniture, deleteDemandeFourniture,
 import { fileURLToPath } from 'url';
 import { EditDemandePrix, listDemandePrix, postDemandePrixViaFourniture, updateDemandePrix, viewDemandePrix, deleteDemandePrix, deleteArticle, createDemandePrix, storeDemandePrix, generateDemandePrixPDF, sendDemandePrixEmail } from '../controllers/demandeprixController.js';
 import { editBc, postBcDemandeFourniture, updateBc, deleteBcItem, createBcForm, storeBc, generateBcPDF, sendBcEmail, listBc, deleteBc, updateBcItemDistribution, updateBcItem, importBcInfo, updateSupplier, getArticlesRemaining, createBondeLivraison,affecterBL, getBCDashboard } from '../controllers/bcController.js';
-import { searchBLs, getBLArticles, affecterBCToBL, listBL, uploadBLFileHandler, downloadBLFile, uploadBLFile, editBL, updateBL, deleteBL, viewFacture, viewFactureAvoir, viewBL, getBL } from '../controllers/blController.js';
+import { searchBLs, getBLArticles, affecterBCToBL, listBL, renderCreateBondeLivraisonPage, uploadBLFileHandler, downloadBLFile, uploadBLFile, editBL, updateBL, deleteBL, viewFacture, viewFactureAvoir, viewBL, getBL } from '../controllers/blController.js';
 import { listFactures, getFacture, createFacture, updateFacture, deleteFacture, affecterBLToFacture, listFactureAvoirs, createFactureAvoir, deleteFactureAvoir, affecterBLToFactureAvoir, getFacturesByFournisseur, getFactureAvoirsByFournisseur, getFactureAvoirsByFacture, getFactureAvoir, getBLFactureStatus, uploadFactureFile, downloadFactureFile, uploadFactureFileMulter, getFactureReglements, searchReglements, affecterReglement } from '../controllers/factureController.js';
 import { listBugReports, createBugReportForm, createBugReport, editBugReportForm, updateBugReport, deleteBugReport, getBugReport, getBugStats, uploadBugScreenshot } from '../controllers/bugReportController.js';
 import { listPopups, createPopupForm, createPopup, editPopupForm, updatePopup, deletePopup, getActivePopupsForUser, dismissPopup, toggleUserPopup, getPopupStats } from '../controllers/popupController.js';
@@ -596,6 +596,7 @@ dashboardRouter.post('/achat/bc/import', upload.single('excelFile'), importBcInf
 
 // -----------Achats: Bons de Livraison-----------------
 dashboardRouter.get("/achats/bons-livraison", listBL);
+dashboardRouter.get('/achats/bons-livraison/create', renderCreateBondeLivraisonPage);
 
 // ==================== API ENDPOINTS FOR BON DE LIVRAISON (BL) ====================
 // Get articles remaining for a BC

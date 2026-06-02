@@ -1714,8 +1714,11 @@
         let removedRemainingArticleIds = new Set();
         let currentAffectationBcId = null;
 
+        let extraArticles = [];
+
         async function openCreateBLModal(bcId) {
           currentArticles = [];
+          extraArticles = [];
           removedArticleIds.clear();
           window.currentBCEditionId = bcId; // Store before closing other modal
           document.getElementById('createBL_bcId').value = bcId;
@@ -1736,16 +1739,40 @@
         function closeCreateBLModal() {
           document.getElementById('createBLModal').style.display = 'none';
           currentArticles = [];
+          extraArticles = [];
           removedArticleIds.clear();
+        }
+
+        function addExtraArticleToBL() {
+          const newArt = {
+            id: 'extra-' + Date.now(),
+            isExtra: true,
+            designation: '',
+            reference: '',
+            unite: '',
+            prixUnitaire: 0,
+            qte_commandee: 0,
+            qte_deja_recue: 0
+          };
+          extraArticles.push(newArt);
+          renderArticles();
+        }
+
+        function removeExtraArticle(id) {
+          extraArticles = extraArticles.filter(a => a.id !== id);
+          renderArticles();
         }
 
         function renderArticles() {
           const container = document.getElementById('articlesContainer');
-          if (currentArticles.length === 0) {
+          if (currentArticles.length === 0 && extraArticles.length === 0) {
             container.innerHTML = '<div class="text-center text-muted py-4">Aucun article à livrer</div>';
             return;
           }
+          
           let html = '<div style="display:grid; grid-template-columns: 2fr 100px 100px 100px 40px; gap:10px; padding:10px; background:#f8f9fc; font-weight:bold; font-size:0.85rem; color:#4e73df;"><div>Article</div><div class="text-center">Cmd/Reçu</div><div class="text-center">Qty Livrer</div><div class="text-center">Prix Unit.</div><div></div></div>';
+          
+          // BC Articles
           currentArticles.forEach(article => {
             if (removedArticleIds.has(article.id)) return;
             const qteRestante = article.qte_commandee - article.qte_deja_recue;
@@ -1753,10 +1780,35 @@
               html += '<div class="article-row disabled" style="display:grid; grid-template-columns:2fr 100px 100px 100px; gap:10px; padding:12px 10px; border-bottom:1px solid #e3e6f0; align-items:center; background:#f8f9fa; opacity:0.6;"><div><strong>' + article.designation + '</strong><div style="font-size:0.8rem; color:#6c757d;">Réf: ' + (article.reference || '---') + '</div></div><div class="text-center"><span class="badge badge-success">Complet</span></div><div class="text-center"><input type="number" class="form-control form-control-sm" value="' + article.qte_commandee + '" disabled></div><div class="text-center">' + (article.prixUnitaire || '') + '</div></div>';
             } else {
               const badge = article.qte_deja_recue > 0 ? '<span class="badge badge-warning">' + article.qte_deja_recue + '/' + article.qte_commandee + '</span>' : '<span class="badge badge-info">0/' + article.qte_commandee + '</span>';
-              html += '<div class="article-row" data-id="' + article.id + '" data-qte-commandee="' + article.qte_commandee + '" data-qte-recue="' + article.qte_deja_recue + '" style="display:grid; grid-template-columns:2fr 100px 100px 100px; gap:10px; padding:12px 10px; border-bottom:1px solid #e3e6f0; align-items:center;"><div><strong>' + article.designation + '</strong><div style="font-size:0.8rem; color:#6c757d;">Réf: ' + (article.reference || '---') + '</div></div><div class="text-center">' + badge + '</div><div class="text-center"><input type="number" class="form-control form-control-sm qte-input" data-id="' + article.id + '" value="' + qteRestante + '" min="0" max="' + qteRestante + '"></div><div class="text-center"><input type="number" class="form-control form-control-sm prix-input" data-id="' + article.id + '" value="' + (article.prixUnitaire || '') + '" step="0.01"></div></div>';
+              html += '<div class="article-row" data-id="' + article.id + '" data-qte-commandee="' + article.qte_commandee + '" data-qte-recue="' + article.qte_deja_recue + '" style="display:grid; grid-template-columns:2fr 100px 100px 100px 40px; gap:10px; padding:12px 10px; border-bottom:1px solid #e3e6f0; align-items:center;"><div><strong>' + article.designation + '</strong><div style="font-size:0.8rem; color:#6c757d;">Réf: ' + (article.reference || '---') + '</div></div><div class="text-center">' + badge + '</div><div class="text-center"><input type="number" class="form-control form-control-sm qte-input" data-id="' + article.id + '" value="' + qteRestante + '" min="0" max="' + qteRestante + '"></div><div class="text-center"><input type="number" class="form-control form-control-sm prix-input" data-id="' + article.id + '" value="' + (article.prixUnitaire || '') + '" step="0.01"></div></div>';
             }
           });
+
+          // Extra Articles
+          extraArticles.forEach(article => {
+            html += `
+              <div class="article-row extra-row" data-id="${article.id}" style="display:grid; grid-template-columns:2fr 100px 100px 100px 40px; gap:10px; padding:12px 10px; border-bottom:1px solid #e3e6f0; align-items:center; background:#fffdf0;">
+                <div>
+                  <input type="text" class="form-control form-control-sm extra-designation mb-1" placeholder="Désignation" value="${article.designation}" data-field="designation" autocomplete="off">
+                  <input type="text" class="form-control form-control-xs extra-reference" placeholder="Référence" value="${article.reference}" data-field="reference" style="font-size:0.75rem;" autocomplete="off">
+                </div>
+                <div class="text-center"><span class="badge badge-secondary">Hors BC</span></div>
+                <div class="text-center"><input type="number" class="form-control form-control-sm extra-qte" value="1" min="0" step="0.01"></div>
+                <div class="text-center"><input type="number" class="form-control form-control-sm extra-prix" value="${article.prixUnitaire || 0}" step="0.01" data-field="prixUnitaire"></div>
+                <div class="text-center"><button type="button" class="btn btn-xs btn-danger" onclick="removeExtraArticle('${article.id}')"><i class="fas fa-trash"></i></button></div>
+              </div>
+            `;
+          });
+
           container.innerHTML = html;
+
+          // Re-attach autocomplete to extra rows
+          document.querySelectorAll('.extra-row').forEach(row => {
+            const desInp = row.querySelector('.extra-designation');
+            const refInp = row.querySelector('.extra-reference');
+            if (desInp) desInp.setAttribute('data-field', 'designation');
+            if (refInp) refInp.setAttribute('data-field', 'reference');
+          });
         }
 
         async function submitCreateBL() {
@@ -1766,8 +1818,10 @@
           if (!bcId) { showToast('Erreur: BC non identifié', 'error'); return; }
           if (!numeroBL) { showToast('Le N° BL est requis', 'error'); return; }
           if (!dateReception) { showToast('La date de réception est requise', 'error'); return; }
+          
           const activeArticles = [];
-          document.querySelectorAll('.article-row:not(.disabled)').forEach(row => {
+          // Regular BC articles
+          document.querySelectorAll('.article-row:not(.disabled):not(.extra-row)').forEach(row => {
             const id = parseInt(row.dataset.id);
             const input = row.querySelector('.qte-input');
             const qte = parseFloat(input?.value || 0);
@@ -1775,7 +1829,20 @@
             const prixUnitaire = prixInput?.value ? parseFloat(prixInput.value) : null;
             if (qte > 0) activeArticles.push({ id, qte, prixUnitaire });
           });
+
+          // Extra articles
+          document.querySelectorAll('.extra-row').forEach(row => {
+            const designation = row.querySelector('.extra-designation').value.trim();
+            const reference = row.querySelector('.extra-reference').value.trim();
+            const qte = parseFloat(row.querySelector('.extra-qte').value) || 0;
+            const prixUnitaire = parseFloat(row.querySelector('.extra-prix').value) || 0;
+            if (designation && qte > 0) {
+              activeArticles.push({ designation, reference, qte, prixUnitaire, isExtra: true });
+            }
+          });
+
           if (activeArticles.length === 0) { showToast('Au moins un article actif est requis', 'error'); return; }
+          
           const btn = document.getElementById('btnSaveBL');
           btn.disabled = true;
           btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement...';
@@ -3435,7 +3502,12 @@
                 <input type="date" class="form-control" id="dateReception" name="dateReception" required>
               </div>
               <div class="form-group">
-                <label class="font-weight-bold">Articles à livrer</label>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <label class="font-weight-bold m-0">Articles à livrer</label>
+                  <button type="button" class="btn btn-xs btn-outline-primary" onclick="addExtraArticleToBL()">
+                    <i class="fas fa-plus"></i> Ajouter un article hors BC
+                  </button>
+                </div>
                 <div id="articlesContainer"></div>
               </div>
             </form>

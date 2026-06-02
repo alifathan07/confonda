@@ -134,13 +134,55 @@ export const getFacture = async (req, res) => {
  */
 export const createFacture = async (req, res) => {
   try {
+    // DEBUG LOGS
+    console.log('=== CREATEFACTURE DEBUG ===');
+    console.log('Full req.body:', JSON.stringify(req.body, null, 2));
+    
     const { numero, date, totalHt, tauxTva, fournisseurId, items, createBC, createBL, bcNumero, blNumero, bondeLivraisonIds, bondeCommandeId } = req.body;
 
+    // DEBUG: Log each extracted field
+    console.log('Extracted fields:');
+    console.log('  numero:', numero, '(type:', typeof numero, ')');
+    console.log('  date:', date, '(type:', typeof date, ')');
+    console.log('  totalHt:', totalHt, '(type:', typeof totalHt, ')');
+    console.log('  fournisseurId:', fournisseurId, '(type:', typeof fournisseurId, ')');
+    console.log('  tauxTva:', tauxTva);
+    console.log('  items:', items ? `Array with ${items.length} items` : 'undefined/null');
+    console.log('  createBC:', createBC);
+    console.log('  createBL:', createBL);
+    console.log('  bcNumero:', bcNumero);
+    console.log('  blNumero:', blNumero);
+    console.log('  bondeLivraisonIds:', bondeLivraisonIds);
+    console.log('  bondeCommandeId:', bondeCommandeId);
+
+    // DEBUG: Check validation conditions
+    console.log('Validation checks:');
+    console.log('  !numero:', !numero);
+    console.log('  !date:', !date);
+    console.log('  !totalHt:', !totalHt);
+    console.log('  !fournisseurId:', !fournisseurId);
+
     if (!numero || !date || !totalHt || !fournisseurId) {
+      console.log('❌ VALIDATION FAILED - Missing required fields');
+      console.log('Missing:', {
+        numero: !numero ? 'MISSING' : 'OK',
+        date: !date ? 'MISSING' : 'OK',
+        totalHt: !totalHt ? 'MISSING' : 'OK',
+        fournisseurId: !fournisseurId ? 'MISSING' : 'OK'
+      });
       return res.status(400).json({ success: false, error: 'Champs obligatoires manquants' });
     }
+    
+    console.log('✅ Validation passed - proceeding...');
 
     const totalTtc = parseFloat(totalHt) + (parseFloat(totalHt) * parseFloat(tauxTva || 0) / 100);
+    
+    console.log('Calculation:');
+    console.log('  totalHt (parsed):', parseFloat(totalHt));
+    console.log('  tauxTva (parsed):', parseFloat(tauxTva || 0));
+    console.log('  totalTtc (calculated):', totalTtc);
+    console.log('  items count:', items ? items.length : 0);
+    console.log('Starting transaction...');
 
     const facture = await prisma.$transaction(async (tx) => {
       let newBC = null;
@@ -290,9 +332,14 @@ export const createFacture = async (req, res) => {
       });
     });
 
+    console.log('✅ Transaction completed successfully');
+    console.log('Created facture ID:', facture.id);
     res.json({ success: true, facture });
   } catch (error) {
-    console.error('Erreur createFacture:', error);
+    console.error('❌ CREATEFACTURE ERROR:');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Full error:', error);
     res.status(500).json({ success: false, error: 'Erreur serveur: ' + error.message });
   }
 };

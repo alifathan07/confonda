@@ -1547,92 +1547,142 @@ export const getArticlesRemaining = async (req, res) => {
  */
 export const createBondeLivraison = async (req, res) => {
   try {
-    const { bcId, numeroBL, dateReception, articles } = req.body;
+    const { bcId, fournisseurId, numeroBL, dateReception, articles } = req.body;
 
-    if (!bcId || !numeroBL || !dateReception || !articles || !Array.isArray(articles) || articles.length === 0) {
+    if (!numeroBL || !dateReception || !articles || !Array.isArray(articles) || articles.length === 0) {
       return res.status(400).json({ success: false, error: 'Données incomplètes' });
     }
 
-    const bcIdInt = parseInt(bcId);
-    const bc = await prisma.bondeCommande.findUnique({
-      where: { id: bcIdInt },
-      include: { commandesItems: true, fournisseur: true }
-    });
+    let blData = {
+      numero: numeroBL,
+      dateReception: new Date(dateReception),
+      items: {
+        create: articles.map(art => ({
+          designation: art.designation || '',
+          unite: art.unite || '',
+          reference: art.reference || '',
+          quantite: parseFloat(art.quantite) || 0,
+          prixUnitaire: art.prixUnitaire != null ? parseFloat(art.prixUnitaire) : null,
+          commandesItemsId: art.commandesItemsId ? parseInt(art.commandesItemsId) : null
+        }))
+      }
+    };
 
-    if (!bc) {
-      return res.status(404).json({ success: false, error: 'Bon de commande non trouvé' });
+    let bcIdInt = null;
+    if (bcId) {
+      bcIdInt = parseInt(bcId);
+      if (isNaN(bcIdInt)) {
+        return res.status(400).json({ success: false, error: 'BC ID invalide' });
+      }
+
+      const bc = await prisma.bondeCommande.findUnique({
+        where: { id: bcIdInt },
+        include: { commandesItems: true, fournisseur: true }
+      });
+
+      if (!bc) {
+        return res.status(404).json({ success: false, error: 'Bon de commande non trouvé' });
+      }
+
+      blData.fournisseurId = bc.fournisseurId;
+      blData.bondeCommandeLinks = {
+        create: {
+          bondeCommandeId: bcIdInt
+        }
+      };
+      blData.items = {
+        create: articles.map(art => {
+          if (art.isExtra) {
+            return {
+              designation: art.designation || '',
+              unite: art.unite || '',
+              reference: art.reference || '',
+              quantite: parseFloat(art.qte) || 0,
+              prixUnitaire: art.prixUnitaire != null ? parseFloat(art.prixUnitaire) : null,
+              commandesItemsId: null
+            };
+          }
+          const item = bc.commandesItems.find(i => i.id === parseInt(art.id));
+          return {
+            designation: item?.designation || '',
+            unite: item?.unite || '',
+            reference: item?.reference || '',
+            quantite: parseFloat(art.qte) || 0,
+            prixUnitaire: art.prixUnitaire != null ? parseFloat(art.prixUnitaire) : item?.prixUnitaire || null,
+            commandesItemsId: parseInt(art.id)
+          };
+        })
+      };
+    } else {
+      if (!fournisseurId) {
+        return res.status(400).json({ success: false, error: 'Fournisseur requis pour un BL sans BC' });
+      }
+
+      const fournisseurIdInt = parseInt(fournisseurId);
+      if (isNaN(fournisseurIdInt)) {
+        return res.status(400).json({ success: false, error: 'Fournisseur invalide' });
+      }
+
+      const fournisseur = await prisma.fournisseur.findUnique({
+        where: { id: fournisseurIdInt }
+      });
+
+      if (!fournisseur) {
+        return res.status(404).json({ success: false, error: 'Fournisseur non trouvé' });
+      }
+
+      blData.fournisseurId = fournisseurIdInt;
     }
 
-    // Create BL with items
     const bl = await prisma.bondeLivraison.create({
-      data: {
-        numero: numeroBL,
-        dateReception: new Date(dateReception),
-        fournisseurId: bc.fournisseurId,
-        bondeCommandeLinks: {
-          create: {
-            bondeCommandeId: bcIdInt
-          }
-        },
-        items: {
-          create: articles.map(art => {
-            const item = bc.commandesItems.find(i => i.id === parseInt(art.id));
-            return {
-              designation: item?.designation || '',
-              unite: item?.unite || '',
-              reference: item?.reference || '',
-              quantite: parseFloat(art.qte),
-              prixUnitaire: art.prixUnitaire != null ? parseFloat(art.prixUnitaire) : null,
-              commandesItemsId: parseInt(art.id)
-            };
-          })
-        }
-      },
+      data: blData,
       include: { items: true }
     });
 
-    // Update quantiteRecue on commandesItems based on all linked BLs
-    await prisma.$transaction(async (tx) => {
-      for (const art of articles) {
-        const bcItemId = parseInt(art.id);
-        // Calculate total received from all BLs linked to this BC
-        const bcWithLinks = await tx.bondeCommande.findUnique({
-          where: { id: bcIdInt },
-          include: {
-            bondeLivraisonLinks: {
-              include: {
-                bondeLivraison: {
-                  include: { items: true }
+    if (bcIdInt) {
+      await prisma.$transaction(async (tx) => {
+        for (const art of articles) {
+          if (art.isExtra || !art.id || isNaN(parseInt(art.id))) continue;
+          
+          const bcItemId = parseInt(art.id);
+          const bcWithLinks = await tx.bondeCommande.findUnique({
+            where: { id: bcIdInt },
+            include: {
+              bondeLivraisonLinks: {
+                include: {
+                  bondeLivraison: {
+                    include: { items: true }
+                  }
                 }
               }
             }
-          }
-        });
-        const qteRecue = bcWithLinks.bondeLivraisonLinks.reduce((sum, link) => {
-          const bl = link.bondeLivraison;
-          if (!bl || bl.status === 'Annulé') return sum;
-          const blItems = (bl.items || []).filter(i => i.commandesItemsId === bcItemId);
-          return sum + blItems.reduce((s, it) => s + (it?.quantite || 0), 0);
-        }, 0);
-        await tx.commandesItems.update({
-          where: { id: bcItemId },
-          data: { quantiteRecue: qteRecue }
-        });
-      }
-    });
+          });
+          const qteRecue = bcWithLinks.bondeLivraisonLinks.reduce((sum, link) => {
+            const bl = link.bondeLivraison;
+            if (!bl || bl.status === 'Annulé') return sum;
+            const blItems = (bl.items || []).filter(i => i.commandesItemsId === bcItemId);
+            return sum + blItems.reduce((s, it) => s + (it?.quantite || 0), 0);
+          }, 0);
+          await tx.commandesItems.update({
+            where: { id: bcItemId },
+            data: { quantiteRecue: qteRecue }
+          });
+        }
+      });
 
-    // Update BC status in DB and get status info
-    const statusInfo = await updateBCStatusInDB(bcIdInt);
+      const statusInfo = await updateBCStatusInDB(bcIdInt);
+      return res.json({ 
+        success: true, 
+        bl, 
+        bc_statut: statusInfo.status,
+        articles_recus: statusInfo.articlesRecus,
+        articles_total: statusInfo.articlesTotal,
+        status_label: statusInfo.label,
+        status_color: statusInfo.color
+      });
+    }
 
-    return res.json({ 
-      success: true, 
-      bl, 
-      bc_statut: statusInfo.status,
-      articles_recus: statusInfo.articlesRecus,
-      articles_total: statusInfo.articlesTotal,
-      status_label: statusInfo.label,
-      status_color: statusInfo.color
-    });
+    return res.json({ success: true, bl });
   } catch (error) {
     console.error('Erreur createBondeLivraison:', error);
     return res.status(500).json({ success: false, error: 'Erreur serveur' });

@@ -447,6 +447,12 @@
 
             <!-- Items Table -->
             <div class="table-section">
+              <div class="mb-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-secondary"><i class="fas fa-boxes"></i> Articles du BL</h6>
+                <button type="button" class="btn btn-sm btn-info" onclick="addEditBLItemRow()">
+                  <i class="fas fa-plus"></i> Ajouter un article
+                </button>
+              </div>
               <div class="table-container">
                 <table class="table-doc">
                   <thead>
@@ -461,6 +467,7 @@
                       <th style="width:100px; text-align:center; background-color: #0d9488; color: white;">Qté reste à livrer</th>
                       <th style="width:110px; text-align:right;">Prix U.</th>
                       <th>Remarque</th>
+                      <th style="width:40px;"></th>
                     </tr>
                   </thead>
                   <tbody id="blBody">
@@ -470,13 +477,13 @@
                           <div class="num-circle"><%= i + 1 %></div>
                         </td>
                         <td>
-                          <input type="text" class="table-input table-input-readonly" readonly value="<%= item.designation || '' %>">
+                          <input type="text" class="table-input table-input-readonly designation-input" readonly value="<%= item.designation || '' %>">
                         </td>
                         <td style="text-align:center;">
-                          <%= item.reference || '---' %>
+                          <input type="text" class="table-input table-input-readonly reference-input" readonly value="<%= item.reference || '' %>">
                         </td>
                         <td style="text-align:center;">
-                          <%= item.unite || '---' %>
+                          <input type="text" class="table-input table-input-readonly unite-input" readonly value="<%= item.unite || '' %>">
                         </td>
                         <td style="text-align:center; background-color: #f8fafc;">
                           <%= item.commandesItemsId && item.commandesItems ? item.commandesItems.quantite : '---' %>
@@ -499,13 +506,14 @@
                         </td>
                         <td style="text-align:right;">
                           <input type="text" class="table-input price-input"
-                            value="<%= item.prixUnitaire ? item.prixUnitaire.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '' %>"
+                            value="<%= item.prixUnitaire ? item.prixUnitaire : '' %>"
                             data-field="prixUnitaire" placeholder="0.00">
                         </td>
                         <td>
                           <input type="text" class="table-input" value="<%= item.obs || '' %>"
                             data-field="remarque" placeholder="...">
                         </td>
+                        <td></td>
                       </tr>
                     <% }) %>
                   </tbody>
@@ -1121,6 +1129,182 @@
       window.location.href = '/achats/factures-avoir/' + avoirId + '/view';
     }
 
+    // Article Suggestions for Edit Page
+    const fournitureData = <% if (locals.listfourniture && listfourniture.length > 0) { %><%- JSON.stringify(listfourniture) %><% } else { %>[]<% } %>;
+    let activeAutocomplete = null;
+    let activeInput = null;
+
+    // Create global suggestion list
+    const globalList = document.createElement('ul');
+    globalList.id = 'global-autocomplete-list';
+    globalList.className = 'list-group position-absolute shadow';
+    globalList.style.zIndex = '1050';
+    globalList.style.display = 'none';
+    globalList.style.background = '#ffffff';
+    globalList.style.maxHeight = '240px';
+    globalList.style.overflowY = 'auto';
+    document.body.appendChild(globalList);
+
+    const normalize = (v) => (v == null ? '' : String(v)).trim().toLowerCase();
+
+    // Hide list on scroll/resize
+    window.addEventListener('scroll', () => hideAutocomplete(), true);
+    window.addEventListener('resize', () => hideAutocomplete());
+
+    function setupAutocomplete(input, type = 'designation') {
+      input.setAttribute('autocomplete', 'off');
+
+      input.addEventListener('input', function() {
+        const query = normalize(this.value);
+        if (query.length < 2) {
+          hideAutocomplete();
+          return;
+        }
+        
+        activeInput = this;
+        let matches = [];
+        
+        if (type === 'designation') {
+          const uniqueDesignations = new Set();
+          for (const item of fournitureData) {
+            const d = (item.designation || "").trim();
+            if (normalize(d).includes(query)) {
+              if (!uniqueDesignations.has(d)) {
+                uniqueDesignations.add(d);
+                matches.push(item);
+              }
+            }
+            if (matches.length >= 15) break;
+          }
+        } else if (type === 'reference') {
+          const row = this.closest('tr');
+          const designation = normalize(row.querySelector('.designation-input').value);
+          matches = fournitureData.filter(item => 
+            normalize(item.designation) === designation && 
+            normalize(item.reference).includes(query)
+          ).slice(0, 10);
+        }
+
+        if (matches.length === 0) {
+          hideAutocomplete();
+          return;
+        }
+
+        showAutocomplete(this, matches, type);
+      });
+
+      input.addEventListener('focus', function() {
+        const query = normalize(this.value);
+        if (query.length >= 2) {
+          this.dispatchEvent(new Event('input'));
+        }
+      });
+
+      input.addEventListener('blur', function() {
+        setTimeout(() => {
+          if (activeAutocomplete && !activeAutocomplete.contains(document.activeElement)) {
+            hideAutocomplete();
+          }
+        }, 200);
+      });
+    }
+
+    function showAutocomplete(input, matches, type) {
+      globalList.innerHTML = '';
+      
+      matches.forEach(match => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item list-group-item-action py-2';
+        li.style.cursor = 'pointer';
+        
+        if (type === 'designation') {
+          li.innerHTML = `<strong>${match.designation || ''}</strong>`;
+        } else {
+          li.innerHTML = `<strong>${match.reference || '---'}</strong><br><small class="text-muted">${match.designation || ''} | ${match.unite || '---'}</small>`;
+        }
+        
+        li.addEventListener('mousedown', (event) => {
+          event.preventDefault();
+          const row = input.closest('tr');
+          
+          if (type === 'designation') {
+            row.querySelector('.designation-input').value = match.designation || '';
+            const refs = fournitureData.filter(f => normalize(f.designation) === normalize(match.designation));
+            if (refs.length === 1) {
+              row.querySelector('.reference-input').value = refs[0].reference || '';
+              row.querySelector('.unite-input').value = refs[0].unite || '';
+              if (refs[0].prixUnitaire != null) {
+                row.querySelector('.price-input').value = refs[0].prixUnitaire;
+              }
+            }
+          } else {
+            row.querySelector('.reference-input').value = match.reference || '';
+            row.querySelector('.unite-input').value = match.unite || '';
+            if (match.prixUnitaire != null) {
+              row.querySelector('.price-input').value = match.prixUnitaire;
+            }
+          }
+          
+          hideAutocomplete();
+          input.focus();
+        });
+        globalList.appendChild(li);
+      });
+
+      const rect = input.getBoundingClientRect();
+      globalList.style.width = input.offsetWidth + 'px';
+      globalList.style.top = `${rect.bottom + window.scrollY}px`;
+      globalList.style.left = `${rect.left + window.scrollX}px`;
+      globalList.style.display = 'block';
+      activeAutocomplete = globalList;
+    }
+
+    function hideAutocomplete() {
+      globalList.style.display = 'none';
+      activeAutocomplete = null;
+    }
+
+    function addEditBLItemRow() {
+      const tbody = document.getElementById('blBody');
+      const rowCount = tbody.querySelectorAll('tr').length;
+      const row = document.createElement('tr');
+      row.className = 'bl-row';
+      row.innerHTML = `
+        <td style="text-align:center;">
+          <div class="num-circle">${rowCount + 1}</div>
+        </td>
+        <td>
+          <input type="text" class="table-input designation-input" data-field="designation" placeholder="Désignation" autocomplete="off">
+        </td>
+        <td style="text-align:center;">
+          <input type="text" class="table-input reference-input" data-field="reference" placeholder="Référence" autocomplete="off">
+        </td>
+        <td style="text-align:center;">
+          <input type="text" class="table-input unite-input" data-field="unite" placeholder="Unité">
+        </td>
+        <td style="text-align:center; background-color: #f8fafc;">---</td>
+        <td style="text-align:center;">
+          <input type="number" step="0.01" min="0" class="table-input qty-input" value="0" data-field="quantite">
+        </td>
+        <td style="text-align:center; background-color: #fff3cd;">
+          <input type="number" step="0.01" min="0" class="table-input qty-input" value="0" data-field="qtyRetourne" style="font-weight: bold; color: #856404;">
+        </td>
+        <td style="text-align:center; background-color: #ccfbf1; font-weight: bold; color: #0f766e;">---</td>
+        <td style="text-align:right;">
+          <input type="text" class="table-input price-input" value="" data-field="prixUnitaire" placeholder="0.00">
+        </td>
+        <td>
+          <input type="text" class="table-input" value="" data-field="remarque" placeholder="...">
+        </td>
+        <td class="text-center">
+          <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="this.closest('tr').remove();"><i class="fas fa-trash"></i></button>
+        </td>
+      `;
+      tbody.appendChild(row);
+      setupAutocomplete(row.querySelector('.designation-input'), 'designation');
+      setupAutocomplete(row.querySelector('.reference-input'), 'reference');
+    }
+
     document.getElementById('btnSaveBl').addEventListener('click', async function() {
       const btn = this;
       const originalText = btn.innerHTML;
@@ -1129,8 +1313,13 @@
 
       const items = [];
       document.querySelectorAll('#blBody .bl-row').forEach(row => {
-        const id = parseInt(row.dataset.id);
+        const id = row.dataset.id ? parseInt(row.dataset.id) : null;
         const commandesItemsId = row.dataset.commandesItemsId || null;
+        
+        const designationInput = row.querySelector('.designation-input');
+        const referenceInput = row.querySelector('.reference-input');
+        const uniteInput = row.querySelector('.unite-input');
+        
         const qtyInput = row.querySelector('input[data-field="quantite"]');
         const qtyRetourneInput = row.querySelector('input[data-field="qtyRetourne"]');
         const priceInput = row.querySelector('input[data-field="prixUnitaire"]');
@@ -1143,8 +1332,14 @@
           if (isNaN(prixUnitaire)) prixUnitaire = null;
         }
 
+        const designation = designationInput.value.trim();
+        if (!designation) return; // Skip empty rows
+
         items.push({
           id: id,
+          designation: designation,
+          reference: referenceInput.value.trim(),
+          unite: uniteInput.value.trim(),
           quantite: parseFloat(qtyInput.value) || 0,
           qtyRetourne: qtyRetourne,
           prixUnitaire: prixUnitaire,
