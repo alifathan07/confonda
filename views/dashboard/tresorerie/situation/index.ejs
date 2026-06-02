@@ -795,8 +795,12 @@
                           <td><%= c.numero %></td>
                           <td><%= c.banque.name %></td>
                           <td><%= c.beneficiaire %></td>
-                          <td class="text-right montant" style="width: 10%;"><%= c.montant.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202F/g, ' ') %></td>
-                          <td><%= new Date(c.dateEcheance).toLocaleDateString('fr-FR') %></td>
+                        <td class="text-right montant" style="width: 10%;">
+                          <%= (parseFloat(c.montant) || 0).toLocaleString('fr-FR', { 
+                            minimumFractionDigits: 2, 
+                            maximumFractionDigits: 2 
+                          }).replace(/\u202F/g, ' ') %>
+                        </td>                          <td><%= new Date(c.dateEcheance).toLocaleDateString('fr-FR') %></td>
                           <td>
                             <span class="badge badge-<%= c.statut.toLowerCase() === 'en circulation' ? 'info' : c.statut.toLowerCase() === 'impayé' ? 'danger' : 'success' %>">
                               <%= c.statut %>
