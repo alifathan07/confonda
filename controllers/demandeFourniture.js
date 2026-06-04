@@ -404,6 +404,24 @@ export const updateDemandeFourniture = async (req, res) => {
     const tva = totalHt * 0.20;
     const totalTTC = totalHt + tva;
 
+    let parsedDate;
+    if (date) {
+      parsedDate = new Date(date);
+      if (isNaN(parsedDate.getTime())) {
+        const [day, month, year] = date.split('/');
+        if (!day || !month || !year) {
+          return res.status(400).json({ success: false, error: "Date invalide" });
+        }
+        parsedDate = new Date(`${year}-${month}-${day}`);
+      }
+    } else {
+      parsedDate = new Date();
+    }
+
+    if (isNaN(parsedDate.getTime())) {
+      return res.status(400).json({ success: false, error: "Date invalide" });
+    }
+
     // -------------------------------------------------
     // 3. Get existing items from DB
     // -------------------------------------------------
@@ -438,6 +456,10 @@ export const updateDemandeFourniture = async (req, res) => {
       .map(it => parseInt(it.id));
 
     const idsToDelete = existingIds.filter(e => !incomingIds.includes(e));
+    const newItems = parsedItems.filter(it => !it.id || isNaN(parseInt(it.id, 10)));
+    const hasNewItems = newItems.length > 0;
+    const hasUpdatedItems = parsedItems.some(it => it.id && !isNaN(parseInt(it.id, 10)));
+    const hasDeletedItems = idsToDelete.length > 0;
 
     // -------------------------------------------------
     // 4. Transaction – delete / create / update
@@ -524,30 +546,9 @@ export const updateDemandeFourniture = async (req, res) => {
       await Promise.all(updatePromises);
 
       // ---- Update header (date / numero) ----
-      let parsedDate;
-      if (date) {
-        // Try ISO first
-        parsedDate = new Date(date);
-        if (isNaN(parsedDate.getTime())) {
-          // Try DD/MM/YYYY
-          const [day, month, year] = date.split('/');
-          if (!day || !month || !year) {
-            return res.status(400).json({ success: false, error: "Date invalide" });
-          }
-          parsedDate = new Date(`${year}-${month}-${day}`);
-        }
-      } else {
-        parsedDate = new Date();
-      }
-
-      if (isNaN(parsedDate.getTime())) {
-        return res.status(400).json({ success: false, error: "Date invalide" });
-      }
-
       await tx.demandeFourniture.update({
         where: { id: parseInt(id, 10) },
         data: {
-          dateDemande: parsedDate,
           dateDemande: parsedDate,
           numero: parseInt(numero, 10),
           totalHt: totalHt,
@@ -556,6 +557,59 @@ export const updateDemandeFourniture = async (req, res) => {
         },
       });
     });
+
+    const updatedDemande = await prisma.demandeFourniture.findUnique({
+      where: { id: parseInt(id, 10) },
+      include: { user: true, chantier: true },
+    });
+
+    const recipients = await prisma.whatsAppNotificationRecipient.findMany({
+      where: {
+        active: true,
+        notifyFourniture: true,
+      },
+      select: { phone: true },
+    });
+
+    const numbers = recipients.map((r) => r.phone);
+    const authorName = req.session?.user?.name || updatedDemande?.demandeur || 'Unknown';
+    const chantierName = updatedDemande?.chantier?.nom || 'Unknown';
+    const safeNumero = parseInt(numero, 10) || updatedDemande?.numero || 'N/A';
+    const safeDate = parsedDate.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    let actionDescription = 'modifiée';
+    if (hasNewItems && !hasUpdatedItems && !hasDeletedItems) {
+      actionDescription = 'mise à jour avec ajout de nouvel(s) article(s)';
+    } else if (!hasNewItems && hasUpdatedItems && !hasDeletedItems) {
+      actionDescription = 'mise à jour avec modification d\'article(s) existant(s)';
+    } else if (!hasNewItems && !hasUpdatedItems && hasDeletedItems) {
+      actionDescription = 'mise à jour avec suppression d\'article(s)';
+    } else if (hasNewItems || hasUpdatedItems || hasDeletedItems) {
+      const parts = [];
+      if (hasNewItems) parts.push('ajout');
+      if (hasUpdatedItems) parts.push('modification');
+      if (hasDeletedItems) parts.push('suppression');
+      actionDescription = `mise à jour (${parts.join(' et ')})`;
+    }
+
+    const message = `Demande ${actionDescription} par ${authorName}. Numéro de commande: ${safeNumero}. Date de modification: ${safeDate}. Chantier: ${chantierName}.`;
+
+    (async () => {
+      if (numbers.length === 0) return;
+
+      const pdfBuffer = await generateDemandeFourniturePDFBuffer(parseInt(id, 10));
+      const filename = `demande_fourniture_${safeNumero}.pdf`;
+
+      await Promise.allSettled(
+        numbers.map((number) =>
+          whatsappService.sendMessage(number, message, {
+            data: pdfBuffer,
+            filename,
+            mimetype: 'application/pdf',
+          })
+        )
+      );
+    })().catch((err) => console.error('WhatsApp PDF send failed on update:', err));
 
     return res.json({ success: true });
 
