@@ -10,3 +10,5 @@ nodemon.json
 prisma/algo.txt
 **/.wwebjs_auth/
 **/uploads/
+**/.wwebjs_cache/
+
