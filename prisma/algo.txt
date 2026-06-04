@@ -229,7 +229,7 @@ Tasks :
 
 
         ssh root@72.60.92.82
-        latest token : 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
+        latest token : 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
         
 
 Paie Tasks : 

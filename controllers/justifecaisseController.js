@@ -8,6 +8,16 @@ import { whatsappService } from "../services/whatssapservice.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import ExcelJS from 'exceljs';
+// Helper to format amounts in French locale with regular spaces as thousand separators
+const formatAmount = (value) => {
+  const n = Number(value ?? 0);
+  return new Intl.NumberFormat('fr-FR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+    .format(n)
+    .replace(/\u202F|\u00A0/g, ' ');
+};
 // Helper: Get previous month's soldé
 const getPreviousSolde = async (userId, chantierId, mois, annee) => {
   let prevMois = mois - 1;
@@ -1776,14 +1786,8 @@ export const generateJustifCaissePDF = async (req, res) => {
 
   const ensureSpace = (currentY, neededHeight, onNewPage) => {
     if (currentY + neededHeight <= getPageBottomY()) return currentY;
-    // Draw footer for the current page before adding a new one so
-    // the footer does not get painted on top of subsequent content.
-    try {
-      drawFooter();
-    } catch (e) {
-      // ignore footer draw errors and continue to add a page
-      console.error('Error drawing footer before page break:', e);
-    }
+    // Do NOT draw the footer on intermediate pages. Reserve space
+    // via getPageBottomY so content won't overlap the eventual footer.
     doc.addPage();
     drawHeader();
     return onNewPage();
@@ -1817,12 +1821,12 @@ export const generateJustifCaissePDF = async (req, res) => {
     doc.text(`Chantier : ${justif.chantier?.nom ?? "-"}`, MARGIN + 10, y + 40);
     doc.text(`Mois : ${justif.designation ?? "-"}`, PAGE_WIDTH / 2, y + 25);
     doc.text(
-      `Solde Précédent : ${Number(justif.soldePrecedent).toFixed(2)} MAD`,
+      `Solde Précédent : ${formatAmount(justif.soldePrecedent)} MAD`,
       MARGIN + 10,
       y + 55
     );
     doc.text(
-      `Solde Final : ${Number(justif.soldeFinal).toFixed(2)} MAD`,
+      `Solde Final : ${formatAmount(justif.soldeFinal)} MAD`,
       PAGE_WIDTH / 2,
       y + 55
     );
@@ -1917,7 +1921,7 @@ export const generateJustifCaissePDF = async (req, res) => {
       const rowValues = [
         new Date(r.dateRecette).toLocaleDateString("fr-FR"),
         r.source ?? "",
-        Number(r.montant ?? 0).toFixed(2),
+        formatAmount(r.montant),
       ];
       const rowHeightMeasured = getRowHeight(rowValues);
       yPosition = ensureSpace(yPosition, rowHeightMeasured, () => {
@@ -1930,7 +1934,7 @@ export const generateJustifCaissePDF = async (req, res) => {
       yPosition += rowHeight;
     });
 
-    const totalValues = ["TOTAL", "", totalRecettes.toFixed(2)];
+    const totalValues = ["TOTAL", "", formatAmount(totalRecettes)];
     const totalHeightMeasured = getRowHeight(totalValues);
     yPosition = ensureSpace(yPosition, totalHeightMeasured, () => {
       const startY = MARGIN + 80;
@@ -2031,8 +2035,8 @@ export const generateJustifCaissePDF = async (req, res) => {
       d.numeroPiece ?? "",
       d.natureDepense ?? "",
       d.imputation ?? "",
-      Number(d.montantJustifie ?? 0).toFixed(2),
-      Number(d.montantNonJustifie ?? 0).toFixed(2),
+      formatAmount(d.montantJustifie),
+      formatAmount(d.montantNonJustifie),
     ];
 
     const measured = depensesTable.getRowHeight(rowValues);
@@ -2056,16 +2060,35 @@ export const generateJustifCaissePDF = async (req, res) => {
   }
 
   // Totals - ensure we have space for both rows
-  const totalRowValues = ["TOTAL", "", "", "", totalJ.toFixed(2), totalNJ.toFixed(2)];
-  const totalGeneralRowValues = ["TOTAL GÉNÉRAL", "", "", "", "", (totalJ + totalNJ).toFixed(2)];
+  const totalRowValues = ["TOTAL", "", "", "", formatAmount(totalJ), formatAmount(totalNJ)];
+  const totalGeneralRowValues = ["TOTAL GÉNÉRAL", "", "", "", "", formatAmount(totalJ + totalNJ)];
   const totalsBlockHeight = depensesTable.getRowHeight(totalRowValues) + depensesTable.getRowHeight(totalGeneralRowValues);
   currentY = ensureSpace(currentY, totalsBlockHeight, () => (MARGIN + 80));
 
   const totalRowHeight = depensesTable.drawRow(currentY, totalRowValues, true);
   currentY += totalRowHeight;
 
-  // General Total
-  depensesTable.drawRow(currentY, totalGeneralRowValues, true);
+  // General Total: draw a custom row where the grand total value is
+  // centered across the two rightmost columns (Justifié + Non Justifié).
+  {
+    const label = totalGeneralRowValues[0];
+    const value = totalGeneralRowValues[5];
+    // Draw empty cells for first 4 columns (with borders)
+    let x = MARGIN;
+    for (let i = 0; i < 4; i++) {
+      const w = depensesTable.cols[i].w;
+      doc.rect(x, currentY, w, depensesTable.getRowHeight([label])).stroke();
+      if (i === 0) {
+        doc.font('Helvetica-Bold').text(label, x + 4, currentY + 6, { width: w - 8, align: 'left' });
+      }
+      x += w;
+    }
+    // Draw merged cell for last two columns
+    const lastTwoWidth = depensesTable.cols[4].w + depensesTable.cols[5].w;
+    doc.rect(x, currentY, lastTwoWidth, depensesTable.getRowHeight([label])).stroke();
+    doc.font('Helvetica-Bold').text(value, x, currentY + 6, { width: lastTwoWidth, align: 'center' });
+    currentY += depensesTable.getRowHeight([label]);
+  }
 
   drawFooter();
   doc.end();
@@ -2105,13 +2128,8 @@ const generateJustifCaissePDFBuffer = async (id) => {
 
   const ensureSpace = (currentY, neededHeight, onNewPage) => {
     if (currentY + neededHeight <= getPageBottomY()) return currentY;
-    // Draw footer on the current page before breaking so the footer
-    // doesn't get rendered over table rows on the next page.
-    try {
-      drawFooter();
-    } catch (e) {
-      console.error('Error drawing footer before page break (buffer):', e);
-    }
+    // Do not render footer on intermediate pages — just add a new page
+    // and redraw the header. Footer will be drawn once at the end.
     doc.addPage();
     drawHeader();
     return onNewPage();
@@ -2145,12 +2163,12 @@ const generateJustifCaissePDFBuffer = async (id) => {
     doc.text(`Chantier : ${justif.chantier?.nom ?? "-"}`, MARGIN + 10, y + 40);
     doc.text(`Mois : ${justif.designation ?? "-"}`, PAGE_WIDTH / 2, y + 25);
     doc.text(
-      `Solde Précédent : ${Number(justif.soldePrecedent).toFixed(2)} MAD`,
+      `Solde Précédent : ${formatAmount(justif.soldePrecedent)} MAD`,
       MARGIN + 10,
       y + 55
     );
     doc.text(
-      `Solde Final : ${Number(justif.soldeFinal).toFixed(2)} MAD`,
+      `Solde Final : ${formatAmount(justif.soldeFinal)} MAD`,
       PAGE_WIDTH / 2,
       y + 55
     );
@@ -2245,7 +2263,7 @@ const generateJustifCaissePDFBuffer = async (id) => {
       const rowValues = [
         new Date(r.dateRecette).toLocaleDateString("fr-FR"),
         r.source ?? "",
-        Number(r.montant ?? 0).toFixed(2),
+        formatAmount(r.montant),
       ];
       const rowHeightMeasured = getRowHeight(rowValues);
       yPosition = ensureSpace(yPosition, rowHeightMeasured, () => {
@@ -2258,7 +2276,7 @@ const generateJustifCaissePDFBuffer = async (id) => {
       yPosition += rowHeight;
     });
 
-    const totalValues = ["TOTAL", "", totalRecettes.toFixed(2)];
+    const totalValues = ["TOTAL", "", formatAmount(totalRecettes)];
     const totalHeightMeasured = getRowHeight(totalValues);
     yPosition = ensureSpace(yPosition, totalHeightMeasured, () => {
       const startY = MARGIN + 80;
@@ -2359,8 +2377,8 @@ const generateJustifCaissePDFBuffer = async (id) => {
       d.numeroPiece ?? "",
       d.natureDepense ?? "",
       d.imputation ?? "",
-      Number(d.montantJustifie ?? 0).toFixed(2),
-      Number(d.montantNonJustifie ?? 0).toFixed(2),
+      formatAmount(d.montantJustifie),
+      formatAmount(d.montantNonJustifie),
     ];
 
     const measured = depensesTable.getRowHeight(rowValues);
@@ -2384,16 +2402,32 @@ const generateJustifCaissePDFBuffer = async (id) => {
   }
 
   // Totals - ensure we have space for both rows
-  const totalRowValues = ["TOTAL", "", "", "", totalJ.toFixed(2), totalNJ.toFixed(2)];
-  const totalGeneralRowValues = ["TOTAL GÉNÉRAL", "", "", "", "", (totalJ + totalNJ).toFixed(2)];
+  const totalRowValues = ["TOTAL", "", "", "", formatAmount(totalJ), formatAmount(totalNJ)];
+  const totalGeneralRowValues = ["TOTAL GÉNÉRAL", "", "", "", "", formatAmount(totalJ + totalNJ)];
   const totalsBlockHeight = depensesTable.getRowHeight(totalRowValues) + depensesTable.getRowHeight(totalGeneralRowValues);
   currentY = ensureSpace(currentY, totalsBlockHeight, () => (MARGIN + 80));
 
   const totalRowHeight = depensesTable.drawRow(currentY, totalRowValues, true);
   currentY += totalRowHeight;
 
-  // General Total
-  depensesTable.drawRow(currentY, totalGeneralRowValues, true);
+  // General Total: draw custom merged-cell row (centered across last two cols)
+  {
+    const label = totalGeneralRowValues[0];
+    const value = totalGeneralRowValues[5];
+    let x = MARGIN;
+    for (let i = 0; i < 4; i++) {
+      const w = depensesTable.cols[i].w;
+      doc.rect(x, currentY, w, depensesTable.getRowHeight([label])).stroke();
+      if (i === 0) {
+        doc.font('Helvetica-Bold').text(label, x + 4, currentY + 6, { width: w - 8, align: 'left' });
+      }
+      x += w;
+    }
+    const lastTwoWidth = depensesTable.cols[4].w + depensesTable.cols[5].w;
+    doc.rect(x, currentY, lastTwoWidth, depensesTable.getRowHeight([label])).stroke();
+    doc.font('Helvetica-Bold').text(value, x, currentY + 6, { width: lastTwoWidth, align: 'center' });
+    currentY += depensesTable.getRowHeight([label]);
+  }
 
   drawFooter();
   doc.end();
