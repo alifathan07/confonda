@@ -1776,6 +1776,14 @@ export const generateJustifCaissePDF = async (req, res) => {
 
   const ensureSpace = (currentY, neededHeight, onNewPage) => {
     if (currentY + neededHeight <= getPageBottomY()) return currentY;
+    // Draw footer for the current page before adding a new one so
+    // the footer does not get painted on top of subsequent content.
+    try {
+      drawFooter();
+    } catch (e) {
+      // ignore footer draw errors and continue to add a page
+      console.error('Error drawing footer before page break:', e);
+    }
     doc.addPage();
     drawHeader();
     return onNewPage();
@@ -2030,7 +2038,7 @@ export const generateJustifCaissePDF = async (req, res) => {
     const measured = depensesTable.getRowHeight(rowValues);
     currentY = ensureSpace(currentY, measured, () => {
       const startY = MARGIN + 80;
-      return drawDepensesTable(startY).yPosition - 25;
+      return drawDepensesTable(startY).yPosition;
     });
 
     const rowHeight = depensesTable.drawRow(currentY, rowValues);
@@ -2041,7 +2049,7 @@ export const generateJustifCaissePDF = async (req, res) => {
   for (let i = 0; i < 8; i++) {
     currentY = ensureSpace(currentY, depensesTable.minRowH, () => {
       const startY = MARGIN + 80;
-      return drawDepensesTable(startY).yPosition - 25;
+      return drawDepensesTable(startY).yPosition;
     });
     const rowHeight = depensesTable.drawRow(currentY, ["", "", "", "", "", ""]);
     currentY += rowHeight;
@@ -2097,6 +2105,13 @@ const generateJustifCaissePDFBuffer = async (id) => {
 
   const ensureSpace = (currentY, neededHeight, onNewPage) => {
     if (currentY + neededHeight <= getPageBottomY()) return currentY;
+    // Draw footer on the current page before breaking so the footer
+    // doesn't get rendered over table rows on the next page.
+    try {
+      drawFooter();
+    } catch (e) {
+      console.error('Error drawing footer before page break (buffer):', e);
+    }
     doc.addPage();
     drawHeader();
     return onNewPage();
@@ -2351,7 +2366,7 @@ const generateJustifCaissePDFBuffer = async (id) => {
     const measured = depensesTable.getRowHeight(rowValues);
     currentY = ensureSpace(currentY, measured, () => {
       const startY = MARGIN + 80;
-      return drawDepensesTable(startY).yPosition - 25;
+      return drawDepensesTable(startY).yPosition;
     });
 
     const rowHeight = depensesTable.drawRow(currentY, rowValues);
@@ -2362,7 +2377,7 @@ const generateJustifCaissePDFBuffer = async (id) => {
   for (let i = 0; i < 8; i++) {
     currentY = ensureSpace(currentY, depensesTable.minRowH, () => {
       const startY = MARGIN + 80;
-      return drawDepensesTable(startY).yPosition - 25;
+      return drawDepensesTable(startY).yPosition;
     });
     const rowHeight = depensesTable.drawRow(currentY, ["", "", "", "", "", ""]);
     currentY += rowHeight;
