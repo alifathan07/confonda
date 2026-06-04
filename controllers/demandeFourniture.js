@@ -563,53 +563,53 @@ export const updateDemandeFourniture = async (req, res) => {
       include: { user: true, chantier: true },
     });
 
-    const recipients = await prisma.whatsAppNotificationRecipient.findMany({
-      where: {
-        active: true,
-        notifyFourniture: true,
-      },
-      select: { phone: true },
-    });
+    // const recipients = await prisma.whatsAppNotificationRecipient.findMany({
+    //   where: {
+    //     active: true,
+    //     notifyFourniture: true,
+    //   },
+    //   select: { phone: true },
+    // });
 
-    const numbers = recipients.map((r) => r.phone);
-    const authorName = req.session?.user?.name || updatedDemande?.demandeur || 'Unknown';
-    const chantierName = updatedDemande?.chantier?.nom || 'Unknown';
-    const safeNumero = parseInt(numero, 10) || updatedDemande?.numero || 'N/A';
-    const safeDate = parsedDate.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    // const numbers = recipients.map((r) => r.phone);
+    // const authorName = req.session?.user?.name || updatedDemande?.demandeur || 'Unknown';
+    // const chantierName = updatedDemande?.chantier?.nom || 'Unknown';
+    // const safeNumero = parseInt(numero, 10) || updatedDemande?.numero || 'N/A';
+    // const safeDate = parsedDate.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-    let actionDescription = 'modifiée';
-    if (hasNewItems && !hasUpdatedItems && !hasDeletedItems) {
-      actionDescription = 'mise à jour avec ajout de nouvel(s) article(s)';
-    } else if (!hasNewItems && hasUpdatedItems && !hasDeletedItems) {
-      actionDescription = 'mise à jour avec modification d\'article(s) existant(s)';
-    } else if (!hasNewItems && !hasUpdatedItems && hasDeletedItems) {
-      actionDescription = 'mise à jour avec suppression d\'article(s)';
-    } else if (hasNewItems || hasUpdatedItems || hasDeletedItems) {
-      const parts = [];
-      if (hasNewItems) parts.push('ajout');
-      if (hasUpdatedItems) parts.push('modification');
-      if (hasDeletedItems) parts.push('suppression');
-      actionDescription = `mise à jour (${parts.join(' et ')})`;
-    }
+    // let actionDescription = 'modifiée';
+    // if (hasNewItems && !hasUpdatedItems && !hasDeletedItems) {
+    //   actionDescription = 'mise à jour avec ajout de nouvel(s) article(s)';
+    // } else if (!hasNewItems && hasUpdatedItems && !hasDeletedItems) {
+    //   actionDescription = 'mise à jour avec modification d\'article(s) existant(s)';
+    // } else if (!hasNewItems && !hasUpdatedItems && hasDeletedItems) {
+    //   actionDescription = 'mise à jour avec suppression d\'article(s)';
+    // } else if (hasNewItems || hasUpdatedItems || hasDeletedItems) {
+    //   const parts = [];
+    //   if (hasNewItems) parts.push('ajout');
+    //   if (hasUpdatedItems) parts.push('modification');
+    //   if (hasDeletedItems) parts.push('suppression');
+    //   actionDescription = `mise à jour (${parts.join(' et ')})`;
+    // }
 
-    const message = `Demande ${actionDescription} par ${authorName}. Numéro de commande: ${safeNumero}. Date de modification: ${safeDate}. Chantier: ${chantierName}.`;
+    // const message = `Demande ${actionDescription} par ${authorName}. Numéro de commande: ${safeNumero}. Date de modification: ${safeDate}. Chantier: ${chantierName}.`;
 
-    (async () => {
-      if (numbers.length === 0) return;
+    // (async () => {
+    //   if (numbers.length === 0) return;
 
-      const pdfBuffer = await generateDemandeFourniturePDFBuffer(parseInt(id, 10));
-      const filename = `demande_fourniture_${safeNumero}.pdf`;
+    //   const pdfBuffer = await generateDemandeFourniturePDFBuffer(parseInt(id, 10));
+    //   const filename = `demande_fourniture_${safeNumero}.pdf`;
 
-      await Promise.allSettled(
-        numbers.map((number) =>
-          whatsappService.sendMessage(number, message, {
-            data: pdfBuffer,
-            filename,
-            mimetype: 'application/pdf',
-          })
-        )
-      );
-    })().catch((err) => console.error('WhatsApp PDF send failed on update:', err));
+    //   await Promise.allSettled(
+    //     numbers.map((number) =>
+    //       whatsappService.sendMessage(number, message, {
+    //         data: pdfBuffer,
+    //         filename,
+    //         mimetype: 'application/pdf',
+    //       })
+    //     )
+    //   );
+    // })().catch((err) => console.error('WhatsApp PDF send failed on update:', err));
 
     return res.json({ success: true });
 
