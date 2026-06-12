@@ -486,8 +486,8 @@ export const createOrUpdateDepenses = async (req, res) => {
     const [moisStr, anneeStr] = designation.split("-");
 
     const moisIndex = [
-      "Janvier","Février","Mars","Avril","Mai","Juin",
-      "Juillet","Août","Septembre","Octobre","Novembre","Décembre"
+      "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+      "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
     ].indexOf(moisStr);
 
     if (moisIndex === -1) {
@@ -708,24 +708,24 @@ export const deleteDepense = async (req, res) => {
     const { id } = req.params;
     const user = req.session.user;
     const depenseId = parseInt(id);
-    
+
     if (isNaN(depenseId)) {
       return res.status(400).json({ success: false, error: 'ID invalide' });
     }
-    
-    const depense = await prisma.depenseCaisse.findUnique({ 
+
+    const depense = await prisma.depenseCaisse.findUnique({
       where: { id: depenseId },
       include: { justifCaisse: true }
     });
-    
+
     if (!depense) {
       return res.status(404).json({ success: false, error: 'Dépense non trouvée' });
     }
-    
+
     // Allow delete if user is admin/grandadmin OR owns the justifCaisse
     const isAdmin = user.role === 'admin' || user.role === 'grandadmin';
     const isOwner = depense.justifCaisse && depense.justifCaisse.userId === user.id;
-    
+
     if (!isAdmin && !isOwner) {
       return res.status(403).json({ success: false, error: 'Accès refusé' });
     }
@@ -2049,20 +2049,25 @@ export const generateJustifCaissePDF = async (req, res) => {
     currentY += rowHeight;
   }
 
-  // Empty rows
-  for (let i = 0; i < 8; i++) {
-    currentY = ensureSpace(currentY, depensesTable.minRowH, () => {
-      const startY = MARGIN + 80;
-      return drawDepensesTable(startY).yPosition;
-    });
-    const rowHeight = depensesTable.drawRow(currentY, ["", "", "", "", "", ""]);
-    currentY += rowHeight;
-  }
-
-  // Totals - ensure we have space for both rows
+  // Totals rows (we need to know their height to calculate available space)
   const totalRowValues = ["TOTAL", "", "", "", formatAmount(totalJ), formatAmount(totalNJ)];
   const totalGeneralRowValues = ["TOTAL GÉNÉRAL", "", "", "", "", formatAmount(totalJ + totalNJ)];
   const totalsBlockHeight = depensesTable.getRowHeight(totalRowValues) + depensesTable.getRowHeight(totalGeneralRowValues);
+
+  // Responsive empty rows: fill remaining space on the current page so totals sit at the bottom
+  const pageBottom = getPageBottomY();
+  const availableSpace = pageBottom - currentY - totalsBlockHeight;
+
+  if (availableSpace > depensesTable.minRowH) {
+    // Calculate how many empty rows fit in the remaining space
+    const emptyRowCount = Math.floor(availableSpace / depensesTable.minRowH);
+    for (let i = 0; i < emptyRowCount; i++) {
+      const rowHeight = depensesTable.drawRow(currentY, ["", "", "", "", "", ""]);
+      currentY += rowHeight;
+    }
+  }
+
+  // If after filling empty rows the totals still don't fit, move to next page
   currentY = ensureSpace(currentY, totalsBlockHeight, () => (MARGIN + 80));
 
   const totalRowHeight = depensesTable.drawRow(currentY, totalRowValues, true);
@@ -2391,20 +2396,25 @@ const generateJustifCaissePDFBuffer = async (id) => {
     currentY += rowHeight;
   }
 
-  // Empty rows
-  for (let i = 0; i < 8; i++) {
-    currentY = ensureSpace(currentY, depensesTable.minRowH, () => {
-      const startY = MARGIN + 80;
-      return drawDepensesTable(startY).yPosition;
-    });
-    const rowHeight = depensesTable.drawRow(currentY, ["", "", "", "", "", ""]);
-    currentY += rowHeight;
-  }
-
-  // Totals - ensure we have space for both rows
+  // Totals rows (we need to know their height to calculate available space)
   const totalRowValues = ["TOTAL", "", "", "", formatAmount(totalJ), formatAmount(totalNJ)];
   const totalGeneralRowValues = ["TOTAL GÉNÉRAL", "", "", "", "", formatAmount(totalJ + totalNJ)];
   const totalsBlockHeight = depensesTable.getRowHeight(totalRowValues) + depensesTable.getRowHeight(totalGeneralRowValues);
+
+  // Responsive empty rows: fill remaining space on the current page so totals sit at the bottom
+  const pageBottom = getPageBottomY();
+  const availableSpace = pageBottom - currentY - totalsBlockHeight;
+
+  if (availableSpace > depensesTable.minRowH) {
+    // Calculate how many empty rows fit in the remaining space
+    const emptyRowCount = Math.floor(availableSpace / depensesTable.minRowH);
+    for (let i = 0; i < emptyRowCount; i++) {
+      const rowHeight = depensesTable.drawRow(currentY, ["", "", "", "", "", ""]);
+      currentY += rowHeight;
+    }
+  }
+
+  // If after filling empty rows the totals still don't fit, move to next page
   currentY = ensureSpace(currentY, totalsBlockHeight, () => (MARGIN + 80));
 
   const totalRowHeight = depensesTable.drawRow(currentY, totalRowValues, true);
