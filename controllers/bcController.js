@@ -646,18 +646,18 @@ export const updateBc = async (req, res) => {
           },
         });
       }
-      
+
       // Handle deleted items
       const existingIds = existing.map(l => l.id);
       const currentBc = await tx.bondeCommande.findUnique({
         where: { id: bcId },
         include: { commandesItems: true }
       });
-      
+
       if (currentBc) {
         const itemsToDelete = currentBc.commandesItems.filter(item => !existingIds.includes(item.id));
         const itemsToDeleteIds = itemsToDelete.map(item => item.id);
-        
+
         if (itemsToDeleteIds.length > 0) {
           // First delete related distribution items
           await tx.bondeCommandeChantierItem.deleteMany({
@@ -801,6 +801,12 @@ export const deleteBcItem = async (req, res) => {
       return res.status(400).json({ success: false, error: "ID invalide" });
     }
 
+    // Delete related distribution items first to prevent foreign key constraint violations
+    await prisma.bondeCommandeChantierItem.deleteMany({
+      where: { itemId: itemId },
+    });
+
+    // Then delete the item itself
     await prisma.commandesItems.delete({
       where: { id: itemId },
     });
