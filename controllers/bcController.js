@@ -646,6 +646,29 @@ export const updateBc = async (req, res) => {
           },
         });
       }
+      
+      // Handle deleted items
+      const existingIds = existing.map(l => l.id);
+      const currentBc = await tx.bondeCommande.findUnique({
+        where: { id: bcId },
+        include: { commandesItems: true }
+      });
+      
+      if (currentBc) {
+        const itemsToDelete = currentBc.commandesItems.filter(item => !existingIds.includes(item.id));
+        const itemsToDeleteIds = itemsToDelete.map(item => item.id);
+        
+        if (itemsToDeleteIds.length > 0) {
+          // First delete related distribution items
+          await tx.bondeCommandeChantierItem.deleteMany({
+            where: { itemId: { in: itemsToDeleteIds } }
+          });
+          // Then delete the items themselves
+          await tx.commandesItems.deleteMany({
+            where: { id: { in: itemsToDeleteIds } }
+          });
+        }
+      }
     });
     // First, perform the main update on BC and items (create/update fields)
     // We ignore distribution in this step
