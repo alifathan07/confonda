@@ -5,8 +5,8 @@ export const mailTransporter = nodemailer.createTransport({
   port: 587,
   secure: false,
   auth: {
-    user: "confonda@gmail.com",
-    pass: "nxwk mycf vzyp ibdl",
+    user: process.env.SMTP_USER || "confonda@gmail.com",
+    pass: process.env.SMTP_PASS || "nxwk mycf vzyp ibdl",
   },
 });
 

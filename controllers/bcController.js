@@ -242,7 +242,7 @@ export const listBc = async (req, res) => {
         bondeLivraisonLinks: {
           include: {
             bondeLivraison: {
-              include: { 
+              include: {
                 items: true,
                 factureLinks: { include: { facture: true } },
                 avoirs: true
@@ -287,7 +287,7 @@ export const listBc = async (req, res) => {
   }
 };
 
-export const generateBcPDF = async (req, res) => {  
+export const generateBcPDF = async (req, res) => {
   const { id } = req.params;
   const bcId = parseInt(id, 10);
   const isMultiPage = true; // Use multi-page logic by default
@@ -494,7 +494,7 @@ export const sendBcEmail = async (req, res) => {
       `,
       attachments: [
         {
-          filename: `bonCommande_${bc.numero}.pdf`,
+          filename: `bonCommande_${(bc.numero || '').replace(/\//g, '-')}.pdf`,
           content: pdfBuffer,
           contentType: 'application/pdf'
         },
@@ -507,7 +507,7 @@ export const sendBcEmail = async (req, res) => {
     })
     console.log(pdfBuffer)
 
-  
+
     return res.json({ success: true });
   } catch (error) {
     console.error('Error in sendBcEmail:', error);
@@ -531,7 +531,7 @@ export const editBc = async (req, res) => {
         bondeLivraisonLinks: {
           include: {
             bondeLivraison: {
-              include: { 
+              include: {
                 items: true,
                 bondeCommandeLinks: true,
                 factureLinks: true,
@@ -973,14 +973,14 @@ export const storeBc = async (req, res) => {
     // Step 2: Create the distribution (BondeCommandeChantierItem)
     // Match by index to ensure correct distribution assignment
     console.log('=== Creating distributions ===');
-    console.log('bc.commandesItems:', JSON.stringify(bc.commandesItems.map(i => ({id: i.id, designation: i.designation})), null, 2));
+    console.log('bc.commandesItems:', JSON.stringify(bc.commandesItems.map(i => ({ id: i.id, designation: i.designation })), null, 2));
     console.log('toCreate distributions:', JSON.stringify(toCreate.map(t => t.chantierDistribution), null, 2));
-    
+
     for (const item of bc.commandesItems) {
       const idx = bc.commandesItems.indexOf(item);
       const itemDistribution = toCreate[idx]?.chantierDistribution || [];
       console.log(`Item ${idx} (${item.designation}): distribution =`, itemDistribution);
-      
+
       for (const d of itemDistribution) {
         if (d.chantierId && d.qty > 0) {
           console.log('Creating distribution:', { bondeCommandeId: bc.id, itemId: item.id, chantierId: d.chantierId, qty: d.qty, montant: d.montant });
@@ -1376,9 +1376,9 @@ export const updateSupplier = async (req, res) => {
  */
 function calculateBCStatus(bc) {
   if (!bc || !bc.commandesItems || bc.commandesItems.length === 0) {
-    return { 
-      status: 'en_attente_bl', 
-      label: 'Att. BL', 
+    return {
+      status: 'en_attente_bl',
+      label: 'Att. BL',
       color: 'secondary',
       articlesRecus: 0,
       articlesTotal: 0
@@ -1438,9 +1438,9 @@ function calculateBCStatus(bc) {
     color = 'info';
   }
 
-  return { 
-    status, 
-    label, 
+  return {
+    status,
+    label,
     color,
     articlesRecus,
     articlesTotal
@@ -1468,7 +1468,7 @@ export async function updateBCStatusInDB(bcId) {
   if (!bc) return null;
 
   const statusInfo = calculateBCStatus(bc);
-  
+
   // Update the statut column in DB
   await prisma.bondeCommande.update({
     where: { id: bcId },
@@ -1497,9 +1497,9 @@ export const getArticlesRemaining = async (req, res) => {
         bondeLivraisonLinks: {
           include: {
             bondeLivraison: {
-              include: { 
+              include: {
                 items: true,
-                factureLinks : true,
+                factureLinks: true,
                 avoirs: true
               }
             }
@@ -1643,7 +1643,7 @@ export const createBondeLivraison = async (req, res) => {
       await prisma.$transaction(async (tx) => {
         for (const art of articles) {
           if (art.isExtra || !art.id || isNaN(parseInt(art.id))) continue;
-          
+
           const bcItemId = parseInt(art.id);
           const bcWithLinks = await tx.bondeCommande.findUnique({
             where: { id: bcIdInt },
@@ -1671,9 +1671,9 @@ export const createBondeLivraison = async (req, res) => {
       });
 
       const statusInfo = await updateBCStatusInDB(bcIdInt);
-      return res.json({ 
-        success: true, 
-        bl, 
+      return res.json({
+        success: true,
+        bl,
         bc_statut: statusInfo.status,
         articles_recus: statusInfo.articlesRecus,
         articles_total: statusInfo.articlesTotal,
@@ -1740,8 +1740,8 @@ export const affecterBL = async (req, res) => {
     // Update BC status in DB and get status info
     const statusInfo = await updateBCStatusInDB(bcId);
 
-    return res.json({ 
-      success: true, 
+    return res.json({
+      success: true,
       bc_statut: statusInfo.status,
       articles_recus: statusInfo.articlesRecus,
       articles_total: statusInfo.articlesTotal,
@@ -1752,7 +1752,7 @@ export const affecterBL = async (req, res) => {
     console.error('Erreur affecterBL:', error);
     return res.status(500).json({ success: false, error: 'Erreur serveur' });
   }
-};  
+};
 
 /**
  * GET /achats/bons-commande/:id/dashboard
